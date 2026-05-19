@@ -1,0 +1,198 @@
+<div class="animate-in">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h4 class="fw-bold mb-0">Ledger Master</h4>
+            <p class="text-muted small mb-0">Create and manage Chart of Accounts (Bank, Customer, Vendor, etc.)</p>
+        </div>
+        <div class="btn-group shadow-sm">
+            <button class="btn btn-white btn-sm border" onclick="App.Router('masters/ledger-cw')">
+                <i class="bi bi-arrow-repeat me-1"></i> Reset
+            </button>
+        </div>
+    </div>
+
+    <form id="LedgerCreationForm" data-category="Masters" autocomplete="off">
+        <div class="row g-3">
+            <!-- 1. Identity & Classification -->
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-person-badge me-2"></i>Primary Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Ledger Code</label>
+                                <input type="text" name="ledgerCode" class="form-control form-control-sm upper-case font-monospace fw-bold" 
+                                       placeholder="LGR10001" maxlength="8" minlength="6" required>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label">Ledger Name</label>
+                                <input type="text" name="name" class="form-control form-control-sm proper-case" 
+                                       placeholder="e.g. HDFC Bank Main A/c" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Ledger Type (Group)</label>
+                                <input class="form-control form-control-sm" list="ledger-groups" id="ledgerType" name="ledgerType" 
+                                       placeholder="Select Type..." required onchange="fetchDynamicFields(this.value)">
+                                <datalist id="ledger-groups">
+                                    <option value="Bank Accounts">
+                                    <option value="Cash-in-Hand">
+                                    <option value="Sundry Debtors">
+                                    <option value="Sundry Creditors">
+                                    <option value="Fixed Assets">
+                                    <option value="Investments">
+                                    <option value="Direct Incomes">
+                                    <option value="Indirect Incomes">
+                                    <option value="Direct Expenses">
+                                    <option value="Indirect Expenses">
+                                    <option value="Duties and Taxes">
+                                    <option value="Capital Account">
+                                </datalist>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Profit Center</label>
+                                <input type="text" name="ProfitCenter" class="form-control form-control-sm upper-case" 
+                                       list="Projectlist" placeholder="Search Project...">
+                                <datalist id="Projectlist"></datalist>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Address & Communication -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-geo-alt me-2"></i>Contact Details</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Address Line 1</label>
+                                <input type="text" name="address1" class="form-control form-control-sm proper-case" placeholder="Street, Building No.">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Address Line 2</label>
+                                <input type="text" name="address2" class="form-control form-control-sm proper-case" placeholder="Area, Landmark">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">State</label>
+                                <input type="text" name="state" class="form-control form-control-sm" list="indian-states" placeholder="Search State">
+                                <datalist id="indian-states">
+                                    <option value="Delhi">
+                                    <option value="Maharashtra">
+                                    <option value="Karnataka">
+                                    <option value="Haryana">
+                                    <option value="Uttar Pradesh">
+                                    <!-- Add more states -->
+                                </datalist>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">PIN Code</label>
+                                <input type="text" name="pin" class="form-control form-control-sm" placeholder="6 Digits" pattern="\d{6}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email ID</label>
+                                <input type="email" name="email" class="form-control form-control-sm" placeholder="office@company.com">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Mobile Number</label>
+                                <input type="tel" name="Mobile" class="form-control form-control-sm" placeholder="10 Digit Number" pattern="\d{10}">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Website</label>
+                                <input type="url" name="website" class="form-control form-control-sm text-lowercase" placeholder="https://">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Right Side: Meta & Dynamic Configuration -->
+            <div class="col-lg-5">
+                <!-- Organization Link -->
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body">
+                        <label class="form-label fw-bold">Link to Company</label>
+                        <input type="text" name="CompanyName" class="form-control form-control-sm" list="companyList" placeholder="Select Company" required>
+                        <datalist id="companyList"></datalist>
+                    </div>
+                </div>
+
+                <!-- Dynamic Fields Container (From your Logic) -->
+                <div class="card border-0 shadow-sm mb-4" id="dynamicFieldsCard" style="display: none;">
+                    <div class="card-header bg-light py-2 border-bottom">
+                        <span class="small fw-bold text-muted text-uppercase">Extended Properties</span>
+                    </div>
+                    <div class="card-body" id="dynamicFieldsContainer">
+                        <!-- Content injected by lcw.js logic -->
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <div class="sticky-bottom pb-4">
+                    <button type="submit" class="btn btn-primary w-100 py-3 shadow-lg rounded-3 fw-bold">
+                        <i class="bi bi-cloud-upload me-2"></i> Create Ledger Account
+                    </button>
+                    <p class="text-center text-muted small mt-3">
+                        <i class="bi bi-shield-check me-1"></i> Data is encrypted and synced to cloud.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    /**
+     * Re-implementation of your lcw.js logic
+     * Fetches additional field requirements based on Ledger Type (Group)
+     */
+    async function fetchDynamicFields(type) {
+        const container = document.getElementById('dynamicFieldsContainer');
+        const card = document.getElementById('dynamicFieldsCard');
+        
+        if (!type) {
+            card.style.display = 'none';
+            return;
+        }
+
+        container.innerHTML = `<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary"></div></div>`;
+        card.style.display = 'block';
+
+        try {
+            // Reusing your GAS logic to fetch field definitions
+            const response = await fetch(`${API.Config.gasUrl}?action=getAllData&sheet_name=Concept`);
+            const text = await response.text();
+            // Standard JSONP Cleanup from your code
+            const jsonData = JSON.parse(text.replace(/^undefined\(/, '').replace(/\)$/, ''));
+
+            if (jsonData.status === "success") {
+                const matched = jsonData.all_data.filter(item => item.Type === type);
+                container.innerHTML = ""; // Clear loader
+
+                if (matched.length === 0) {
+                    card.style.display = 'none';
+                    return;
+                }
+
+                matched.forEach(field => {
+                    const div = document.createElement('div');
+                    div.className = "mb-3";
+                    div.innerHTML = `
+                        <label class="form-label small">${field.Name}</label>
+                        <input type="${field['Input Type'] || 'text'}" name="ext_${field.Name}" 
+                               class="form-control form-control-sm" 
+                               placeholder="${field.placeholder || ''}"
+                               ${field.Required === 'Yes' ? 'required' : ''}>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+        } catch (err) {
+            console.error("Dynamic Fields Error:", err);
+            container.innerHTML = `<p class="text-danger small">Failed to load additional properties.</p>`;
+        }
+    }
+</script>

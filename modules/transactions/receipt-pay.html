@@ -1,0 +1,183 @@
+<div class="animate-in">
+    <!-- Action Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h4 class="fw-bold mb-0">Cash & Bank Management</h4>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 small">
+                    <li class="breadcrumb-item"><a href="#" class="text-decoration-none">Transactions</a></li>
+                    <li class="breadcrumb-item active">Receipts & Payments</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="d-flex gap-2">
+            <div class="btn-group shadow-sm" role="group">
+                <input type="radio" class="btn-check" name="vtype" id="v_receipt" checked onchange="toggleVType('RECEIPT')">
+                <label class="btn btn-outline-success btn-sm px-3" for="v_receipt">Receipt</label>
+                
+                <input type="radio" class="btn-check" name="vtype" id="v_payment" onchange="toggleVType('PAYMENT')">
+                <label class="btn btn-outline-danger btn-sm px-3" for="v_payment">Payment</label>
+            </div>
+        </div>
+    </div>
+
+    <form id="ReceiptPaymentForm" data-category="Transactions">
+        <!-- Hidden input for dynamic logic -->
+        <input type="hidden" name="documentType" id="docType" value="RECEIPT">
+        
+        <!-- Header: Main Account & Reference -->
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body bg-light rounded-3 p-3">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-primary" id="mainAccLabel">Debit Account (Bank/Cash)</label>
+                        <input type="text" name="gl_account" class="form-control form-control-sm font-monospace" 
+                               list="bankCashList" placeholder="Search Bank/Cash A/c..." required>
+                        <datalist id="bankCashList">
+                            <!-- Populated with Ledgers where Type = 'Bank Accounts' or 'Cash-in-Hand' -->
+                        </datalist>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Reference No.</label>
+                        <input type="text" name="paymentRef" class="form-control form-control-sm upper-case" placeholder="CHQ / UTR / NO.">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Posting Date</label>
+                        <input type="date" name="voucher_date" class="form-control form-control-sm" id="postDate" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Value Date</label>
+                        <input type="date" name="valueDate" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Project</label>
+                        <input type="text" name="project" class="form-control form-control-sm upper-case" list="Projectlist">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail: Offsetting Accounts Grid -->
+        <div class="card border-0 shadow-sm overflow-hidden">
+            <div class="card-header bg-white py-2 border-bottom">
+                <span class="small fw-bold text-muted text-uppercase" id="gridTitle">Credit Details (Offsetting Accounts)</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0 align-middle" id="receiptPayTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="ps-3" width="5%">#</th>
+                            <th width="40%">Account / Party Description</th>
+                            <th width="40%">Narration / Specific Remarks</th>
+                            <th class="text-end pe-3" width="15%">Amount</th>
+                            <th width="5%"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="receiptPayBody">
+                        <tr>
+                            <td class="sr-no ps-3">1</td>
+                            <td>
+                                <input type="text" name="offset_account[]" class="form-control form-control-sm border-0 bg-transparent" 
+                                       placeholder="Search Ledger..." list="ledgerList" required>
+                            </td>
+                            <td>
+                                <input type="text" name="row_narration[]" class="form-control form-control-sm border-0 bg-transparent" 
+                                       placeholder="Line specific remark...">
+                            </td>
+                            <td>
+                                <input type="number" name="amount[]" class="form-control form-control-sm border-0 bg-transparent text-end fw-bold row-amt" 
+                                       placeholder="0.00" step="any" required>
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-link btn-sm text-danger p-0" onclick="removeRow(this)">
+                                    <i class="bi bi-dash-circle"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card-footer bg-white border-top-0 d-flex justify-content-between align-items-center py-3">
+                <button type="button" class="btn btn-sm btn-outline-secondary px-3" onclick="addEntryRow()">
+                    <i class="bi bi-plus-lg me-1"></i> Add Split Account
+                </button>
+                <div class="text-end">
+                    <span class="text-muted small fw-bold text-uppercase me-3">Total Transaction Value:</span>
+                    <span class="h4 fw-bold text-dark mb-0">₹ <span id="rp-grand-total">0.00</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Global Narration & Final Post -->
+        <div class="row mt-4">
+            <div class="col-md-8">
+                <textarea class="form-control" name="narration" rows="2" placeholder="Overall transaction narration (e.g. Being cash received from...)"></textarea>
+            </div>
+            <div class="col-md-4 text-end">
+                <button type="submit" id="postBtn" class="btn btn-success btn-lg px-5 shadow rounded-pill">
+                    <i class="bi bi-shield-check me-2"></i> Post Receipt
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    // 1. Initialize Dates
+    document.getElementById('postDate').valueAsDate = new Date();
+
+    // 2. Dynamic UI Toggle (Receipt vs Payment)
+    function toggleVType(type) {
+        const docType = document.getElementById('docType');
+        const mainAccLabel = document.getElementById('mainAccLabel');
+        const gridTitle = document.getElementById('gridTitle');
+        const postBtn = document.getElementById('postBtn');
+
+        docType.value = type;
+        
+        if(type === 'RECEIPT') {
+            mainAccLabel.innerText = "Debit Account (Deposit To)";
+            mainAccLabel.className = "form-label fw-bold text-success";
+            gridTitle.innerText = "Credit Details (Source Accounts)";
+            postBtn.innerText = "Post Receipt";
+            postBtn.className = "btn btn-success btn-lg px-5 shadow rounded-pill";
+        } else {
+            mainAccLabel.innerText = "Credit Account (Withdraw From)";
+            mainAccLabel.className = "form-label fw-bold text-danger";
+            gridTitle.innerText = "Debit Details (Expense/Vendor Accounts)";
+            postBtn.innerText = "Post Payment";
+            postBtn.className = "btn btn-danger btn-lg px-5 shadow rounded-pill";
+        }
+        App.Log(`Voucher Mode Switched: ${type}`);
+    }
+
+    // 3. Grid Operations
+    function addEntryRow() {
+        Utils.AddGridRow('receiptPayTable');
+    }
+
+    function removeRow(btn) {
+        const row = btn.closest('tr');
+        const tbody = document.getElementById('receiptPayBody');
+        if (tbody.rows.length > 1) {
+            row.remove();
+            calculateTotal();
+        }
+    }
+
+    // 4. Real-time Calculation
+    function calculateTotal() {
+        let total = 0;
+        document.querySelectorAll('.row-amt').forEach(input => {
+            total += parseFloat(input.value) || 0;
+        });
+        document.getElementById('rp-grand-total').innerText = total.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    }
+
+    document.getElementById('receiptPayBody').addEventListener('input', (e) => {
+        if (e.target.classList.contains('row-amt')) {
+            calculateTotal();
+        }
+    });
+</script>

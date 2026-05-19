@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniTax Pro | Secure Access</title>
+    
+    <!-- UI Frameworks -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f0f2f5; }
+        .auth-card { width: 100%; max-width: 450px; border: none; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; }
+        .tab-btn { border: none; background: none; padding: 15px; font-weight: 600; color: #6c757d; border-bottom: 2px solid transparent; transition: all 0.3s; }
+        .tab-btn.active { color: #0d6efd; border-bottom: 2px solid #0d6efd; background: #f8faff; }
+        .form-control { border-radius: 8px; padding: 12px; border: 1px solid #dee2e6; }
+        .form-control:focus { box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1); border-color: #0d6efd; }
+        .btn-primary { border-radius: 8px; padding: 12px; font-weight: 600; background: #0d6efd; border: none; }
+        .btn-primary:hover { background: #0b5ed7; }
+        .loader-dots:after { content: ' .'; animation: dots 1s steps(5, end) infinite; }
+        @keyframes dots { 0%, 20% { color: rgba(0,0,0,0); text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0); } 40% { color: white; text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0); } 60% { text-shadow: .25em 0 0 white, .5em 0 0 rgba(0,0,0,0); } 80%, 100% { text-shadow: .25em 0 0 white, .5em 0 0 white; } }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="auth-card bg-white">
+        <!-- Logo Header -->
+        <div class="p-4 text-center border-bottom bg-light">
+            <h2 class="fw-bold text-dark mb-0">UniTax <span class="text-primary">PRO</span></h2>
+            <p class="text-muted small">Enterprise Resource Planning System</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="d-flex">
+            <button id="login-tab" class="tab-btn flex-fill active" onclick="switchTab('login')">Login</button>
+            <button id="signup-tab" class="tab-btn flex-fill" onclick="switchTab('signup')">Create Account</button>
+        </div>
+
+        <div class="p-4">
+            <!-- Login Form -->
+            <form id="loginForm" onsubmit="handleAuth(event, 'login')">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Email Address</label>
+                    <input type="email" name="email" class="form-control" placeholder="name@company.com" required>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label small fw-bold">Password</label>
+                    <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 shadow-sm" id="loginBtn">
+                    Sign In
+                </button>
+            </form>
+
+            <!-- Signup Form (Hidden by default) -->
+            <form id="signupForm" class="hidden" onsubmit="handleAuth(event, 'signup')">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Full Name</label>
+                    <input type="text" name="name" class="form-control" placeholder="Enter your name" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Email Address</label>
+                    <input type="email" name="email" id="regEmail" class="form-control" placeholder="name@company.com" required>
+                    <div id="emailMsg" class="small mt-1"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">State / Region</label>
+                    <input type="text" name="state" list="indian-states" class="form-control" placeholder="Search State..." required>
+                </div>
+                <div class="row g-2 mb-4">
+                    <div class="col-6">
+                        <label class="form-label small fw-bold">Password</label>
+                        <input type="password" name="password" id="regPass" class="form-control" placeholder="Create Password" required>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-bold">Confirm</label>
+                        <input type="password" id="regConfirm" class="form-control" placeholder="Repeat Password" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success w-100 shadow-sm py-3 fw-bold" id="signupBtn">
+                    Complete Registration
+                </button>
+            </form>
+        </div>
+
+        <div class="p-3 bg-light text-center border-top">
+            <p class="small text-muted mb-0">Authorized personnel only. Version 1.0.4 (Stable)</p>
+        </div>
+    </div>
+
+    <!-- Data List -->
+    <datalist id="indian-states">
+        <option value="Andhra Pradesh"><option value="Delhi"><option value="Gujarat"><option value="Haryana"><option value="Karnataka"><option value="Maharashtra"><option value="Tamil Nadu"><option value="Uttar Pradesh"><option value="West Bengal">
+    </datalist>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzpPlNeJL9yaiMVVeg3V38SgJLSBmITT6RYLM4_xnvZJA-FZKpXjKtDjBibv9ngtmTs/exec';
+
+        function switchTab(type) {
+            const loginF = document.getElementById('loginForm');
+            const signupF = document.getElementById('signupForm');
+            const loginT = document.getElementById('login-tab');
+            const signupT = document.getElementById('signup-tab');
+
+            if(type === 'login') {
+                loginF.classList.remove('hidden');
+                signupF.classList.add('hidden');
+                loginT.classList.add('active');
+                signupT.classList.remove('active');
+            } else {
+                loginF.classList.add('hidden');
+                signupF.classList.remove('hidden');
+                loginT.classList.remove('active');
+                signupT.classList.add('active');
+            }
+        }
+
+        async function handleAuth(event, action) {
+            event.preventDefault();
+            const btn = document.getElementById(action === 'login' ? 'loginBtn' : 'signupBtn');
+            const originalText = btn.innerText;
+            
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData.entries());
+
+            // Registration Validation
+            if(action === 'signup') {
+                if(data.password !== document.getElementById('regConfirm').value) {
+                    alert("Passwords do not match.");
+                    return;
+                }
+                data.idstatus = "active";
+                data.action = "saveData";
+            } else {
+                data.action = "getRowData";
+                data.column_to_search = "email";
+                data.document_number = data.email;
+            }
+
+            // Start Loading
+            btn.disabled = true;
+            btn.innerHTML = `<span class="loader-dots">Processing</span>`;
+
+            try {
+                if(action === 'login') {
+                    // LOGIN LOGIC
+                    const response = await fetch(`${API_URL}?action=getRowData&sheet_name=signup&column_to_search=email&document_number=${data.email}`);
+                    const result = await response.json();
+
+                    if(result.status === "SUCCESS" && result.matching_rows.length > 0) {
+                        const user = result.matching_rows[0];
+                        if(user.password === data.password) {
+                            // Session Success
+                            localStorage.setItem('userloginid', user['Document Number']);
+                            localStorage.setItem('userName', user.name);
+                            localStorage.setItem('useremail_we', user.email);
+                            
+                            btn.className = "btn btn-success w-100";
+                            btn.innerHTML = `<i class="bi bi-check-circle me-2"></i> Access Granted`;
+                            
+                            setTimeout(() => window.location.href = 'index.html', 1000);
+                        } else {
+                            throw new Error("Invalid password provided.");
+                        }
+                    } else {
+                        throw new Error("User account not found.");
+                    }
+                } else {
+                    // SIGNUP LOGIC
+                    const postData = new FormData();
+                    postData.append('action', 'saveData');
+                    postData.append('sheet_name', 'signup');
+                    for(let key in data) postData.append(key, data[key]);
+
+                    const response = await fetch(API_URL, { method: 'POST', body: postData });
+                    const result = await response.json();
+
+                    if(result.status === "SUCCESS") {
+                        alert("Signup Successful! Please log in.");
+                        switchTab('login');
+                    } else {
+                        throw new Error(result.message || "Registration failed.");
+                    }
+                }
+            } catch (err) {
+                alert("Authentication Failed: " + err.message);
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        }
+    </script>
+</body>
+</html>

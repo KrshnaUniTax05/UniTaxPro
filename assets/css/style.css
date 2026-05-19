@@ -1,0 +1,349 @@
+/**
+ * UNITAX PRO - Enterprise CSS Framework
+ * Design System: Modern ERP (High Density, Minimalist)
+ */
+
+ :root {
+    --primary-color: #0d6efd;
+    --primary-dark: #0a58ca;
+    --sidebar-bg: #1a1c1e;
+    --sidebar-hover: #2d2f31;
+    --bg-light: #f8f9fa;
+    --border-color: #e9ecef;
+    --text-main: #212529;
+    --text-muted: #6c757d;
+    --card-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 1. Global Resets & Typography */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--text-main);
+    background-color: var(--bg-light);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Hide scrollbars but allow scrolling */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #dee2e6 transparent;
+}
+
+*::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: #ced4da;
+    border-radius: 10px;
+}
+
+/* 2. Professional Loader Overlay */
+.loader-overlay {
+    position: fixed;
+    inset: 0;
+    background: white;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.5s ease;
+}
+
+/* 3. ERP Layout Engine */
+.main-wrapper {
+    display: flex;
+    height: calc(100vh - 60px);
+    overflow: hidden;
+}
+
+/* Left Info Bar (25%) */
+.left-info-bar {
+    width: 25%;
+    min-width: 300px;
+    background: white;
+    border-right: 1px solid var(--border-color);
+    overflow-y: auto;
+    transition: var(--transition);
+}
+
+/* Content Viewport (75%) */
+.content-viewport {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    background-color: var(--bg-light);
+}
+
+/* 4. SAP-Inspired Sidebar (Offcanvas) */
+.offcanvas {
+    width: 300px !important;
+    background-color: var(--sidebar-bg);
+    color: white;
+}
+.offcanvas .nav-item button   {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+}
+.offcanvas .nav-link {
+    color: rgba(255,255,255,0.7) !important;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    margin: 0.2rem 0.8rem;
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.offcanvas .nav-link:hover, 
+.offcanvas .nav-link.active {
+    background-color: var(--sidebar-hover);
+    color: white !important;
+}
+
+.offcanvas .nav-link i {
+    font-size: 1.1rem;
+    width: 25px;
+}
+
+/* 5. Professional Accounting Tables */
+.table-sm {
+    font-size: 0.875rem;
+}
+
+.table thead th {
+    background-color: #f1f3f5;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.025em;
+    color: var(--text-muted);
+    border-bottom: 2px solid var(--border-color);
+    padding: 10px;
+    position: sticky;
+    top: 0;
+}
+
+.table tbody td {
+    padding: 12px 10px;
+    vertical-align: middle;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f0f7ff !important;
+    cursor: pointer;
+}
+
+/* 6. Form Styling (Enterprise High-Density) */
+.form-control-sm, .form-select-sm {
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    padding: 0.4rem 0.75rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+}
+
+label.form-label {
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: #4b5563;
+    margin-bottom: 0.3rem;
+}
+
+/* 7. Components & Widgets */
+.card {
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+}
+
+.badge-xs {
+    font-size: 0.65rem;
+    padding: 2px 5px;
+}
+
+/* 8. Dark Mode Implementation */
+body.dark-mode {
+    --bg-light: #121212;
+    --text-main: #e0e0e0;
+    --text-muted: #a0a0a0;
+    --border-color: #2d2d2d;
+    background-color: var(--bg-light);
+    color: var(--text-main);
+}
+
+body.dark-mode .navbar, 
+body.dark-mode .left-info-bar:not(.card), 
+body.dark-mode .card,
+body.dark-mode #uniquemultimodal {
+    background-color: #1e1e1e !important;
+    color: var(--text-main);
+    font-weight: 400;
+}
+
+body.dark-mode .table thead th {
+    background-color: #252525;
+    color: var(--text-main);
+}
+
+body.dark-mode .form-control, 
+body.dark-mode .form-select {
+    background-color: #2d2d2d;
+    border-color: #404040;
+    color: white;
+}
+/* Fix for brand text in dark mode */
+body.dark-mode .brand .text-dark,
+body.dark-mode i {
+    color: var(--text-main) !important;
+}
+
+body.dark-mode .brand .text-primary {
+    color: #4da3ff !important;
+}
+
+body.dark-mode .brand .bg-secondary {
+    background-color: #2d2d2d !important;
+}
+body.dark-mode .form-control::placeholder,
+body.dark-mode .form-select::placeholder {
+    color: var(--text-muted);
+}
+
+body.dark-mode .btn-outline-primary {
+    color: #4da3ff;
+    border-color: #4da3ff;
+}
+
+/* Make text-muted class work in dark mode */
+body.dark-mode .text-muted {
+    color: var(--text-muted) !important;
+}
+/* Bootstrap Cards in Dark Mode */
+body.dark-mode .card {
+    background-color: #1e1e1e !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-main);
+}
+
+body.dark-mode .card-header {
+    background-color: #252525 !important;
+    border-bottom-color: var(--border-color) !important;
+    color: var(--text-main);
+}
+
+body.dark-mode .card-footer {
+    background-color: #252525 !important;
+    border-top-color: var(--border-color) !important;
+    color: var(--text-main);
+}
+
+body.dark-mode .card-title {
+    color: var(--text-main);
+}
+
+body.dark-mode .card-subtitle {
+    color: var(--text-muted);
+}
+
+body.dark-mode .card-text {
+    color: var(--text-main);
+}
+
+/* Bootstrap Tables in Dark Mode */
+body.dark-mode .table {
+    color: var(--text-main);
+    border-color: var(--border-color);
+}
+
+body.dark-mode .table thead th {
+    background-color: #252525;
+    color: var(--text-main);
+    border-bottom-color: var(--border-color);
+}
+
+body.dark-mode .table tbody td {
+    border-bottom-color: var(--border-color);
+    color: var(--text-main);
+}
+
+body.dark-mode .table tbody tr:hover {
+    background-color: rgba(77, 163, 255, 0.1);
+}
+
+/* Table Variants */
+body.dark-mode .table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: rgba(255, 255, 255, 0.02);
+    color: var(--text-main);
+}
+
+body.dark-mode .table-hover > tbody > tr:hover > * {
+    background-color: rgba(77, 163, 255, 0.1);
+    color: var(--text-main);
+}
+
+body.dark-mode .table-bordered {
+    border-color: var(--border-color);
+}
+
+body.dark-mode .table-bordered td,
+body.dark-mode .table-bordered th {
+    border-color: var(--border-color);
+}
+
+body.dark-mode .table-dark {
+    background-color: #1a1a1a;
+    color: var(--text-main);
+}
+
+body.dark-mode .table-light {
+    background-color: #252525;
+    color: var(--text-main);
+}
+
+/* Card Groups & Decks */
+body.dark-mode .card-group .card,
+body.dark-mode .card-deck .card {
+    background-color: #1e1e1e;
+    border-color: var(--border-color);
+}
+
+/* Badge inside tables */
+body.dark-mode .table .badge {
+    color: var(--text-main);
+}
+
+/* 9. Utility Classes */
+.font-monospace {
+    font-family: 'Fira Code', 'Courier New', monospace !important;
+}
+
+.grow { flex-grow: 1; }
+
+.hidden { display: none !important; }
+
+/* Custom Modal Animation */
+#customModalOverlay:not(.hidden) {
+    display: flex;
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.98); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Mobile Responsive Tweaks */
+@media (max-width: 991px) {
+    .left-info-bar { display: none; }
+    .content-viewport { width: 100%; }
+}
