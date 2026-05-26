@@ -1,104 +1,190 @@
 /**
  * UNITAX PRO - Core Application Brain (Final Stable)
+ * Handles: Routing, Logic Injection, Auto-Fill, Uniqueness, and UI Themes
  */
 const App = {
     State: {
         userId: localStorage.getItem('userloginid'),
         userName: localStorage.getItem('userName'),
-        activeModule: null
+        activeModule: null,
+        isDarkMode: localStorage.getItem('darkMode') === 'enabled'
     },
 
     async Init() {
-        if (!this.State.userId) { window.location.href = 'login.html'; return; }
+        // 1. Auth Guard
+        if (!this.State.userId) { 
+            window.location.href = 'login.html'; 
+            return; 
+        }
         
+        // 2. Initialize Sub-Systems
         API.Init();
+        this.UI.InitTheme();
         this.UI.StartClock();
         this.BindGlobalEvents();
         
-        document.getElementById('usernameDisplay').innerText = this.State.userName;
-        document.getElementById('main_userid_show').innerText = `ID: ${this.State.userId}`;
+        // 3. Set Header Displays
+        document.getElementById('usernameDisplay').innerText = this.State.userName || "User";
+        const userIdEl = document.getElementById('main_userid_show');
+        if(userIdEl) userIdEl.innerText = `ID: ${this.State.userId}`;
 
-        // Load entry module
+        // 4. Load Initial View
         await this.Router('dashboard');
-        document.getElementById('app-loader').style.display = 'none';
+        
+        // 5. Remove Loader
+        const loader = document.getElementById('app-loader');
+        if(loader) loader.style.display = 'none';
     },
 
     /**
-     * MODULE ROUTER
-     * AJAX loads HTML and immediately triggers the ERP Controller
+     * AJAX ROUTER (Force Script Execution)
+     * This ensures JS inside modules like sales-inv.html actually runs.
      */
     async Router(path) {
         const viewport = document.getElementById('main-content');
         const loader = document.getElementById('section-loader');
         
-        loader.style.display = 'block';
+        if(loader) loader.style.display = 'block';
+        viewport.style.opacity = '0.5';
+
         try {
             const res = await fetch(`modules/${path}.html`);
-            viewport.innerHTML = await res.text();
+            if(!res.ok) throw new Error("Module not found");
+            const html = await res.text();
+            
+            // 1. Inject HTML content
+            viewport.innerHTML = html;
             this.State.activeModule = path;
-            
-            // 🔥 INITIALIZE ERP LOGIC FOR NEW MODULE
-            this.InitERPModule(path);
-            
+
+            // 2. 🔥 THE SCRIPT FIX: Manually find and execute scripts in the injected HTML
+            const scripts = viewport.querySelectorAll("script");
+            scripts.forEach(oldScript => {
+                const newScript = document.createElement("script");
+                Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                oldScript.parentNode.replaceChild(newScript, oldScript);
+            });
+
+            // 3. Initialize ERP Logic (Lookups, Uniqueness, etc.)
+            this.InitERPLogic(path);
+
         } catch (e) {
-            viewport.innerHTML = `<div class="alert alert-danger">Failed to load module [${path}]</div>`;
+            console.error("Router Failure:", e);
+            viewport.innerHTML = `<div class="alert alert-danger m-3">Critical Error: Module [${path}] failed to load.</div>`;
         } finally {
-            loader.style.display = 'none';
+            if(loader) loader.style.display = 'none';
+            viewport.style.opacity = '1';
         }
     },
 
     /**
      * ERP MODULE INITIALIZER
-     * Runs every time a new module is loaded
+     * Binds all advanced ERP behaviors to the current module form.
      */
-    async InitERPModule(path) {
+    async InitERPLogic(path) {
         const form = document.querySelector('form');
         if (!form) return;
 
-        // 1. Populate Datalists immediately from Server
+        // 1. Populate Datalists immediately from Firebase (Masters)
         await API.PopulateAllDatalists(form);
 
-        // 2. Bind Auto-Lookup Engine
-        form.addEventListener('change', (e) => {
-            if (e.target.hasAttribute('data-fetch_column')) {
-                API.HandleLookup(e.target);
+        // 2. Debounced Uniqueness Check (e.g., prevents duplicate CompanyCode)
+        form.querySelectorAll('[data-check-unique="true"]').forEach(input => {
+            input.addEventListener('input', Utils.Debounce(async (e) => {
+                const val = e.target.value.trim();
+                const sheet = e.target.dataset.sheet_name;
+                const col = e.target.dataset.column_name;
+                const saveBtn = form.querySelector('[type="submit"]');
+
+                if (val.length < 3) return;
+
+                e.target.style.borderRight = "3px solid #ffc107"; // Yellow: Checking...
+
+                const isDuplicate = await API.CheckUniqueness(sheet, col, val);
+                
+                e.target.classList.toggle('is-invalid', isDuplicate);
+                e.target.classList.toggle('is-valid', !isDuplicate);
+                e.target.style.borderRight = isDuplicate ? "3px solid #dc3545" : "3px solid #198754";
+                
+                if(saveBtn) saveBtn.disabled = isDuplicate;
+                if(isDuplicate) this.UI.Notify('Validation', `Value "${val}" already exists in ${sheet}`, 'danger');
+            }, 500));
+        });
+
+        // 3. Auto-Lookup & Calculation Observer
+        form.addEventListener('input', (e) => {
+            const input = e.target;
+            
+            // A. Trigger Auto-Fill when typing matches a list item
+            if (input.hasAttribute('data-fetch_column')) {
+                const listId = input.getAttribute('list');
+                const list = document.getElementById(listId);
+                if (list) {
+                    const options = Array.from(list.options).map(o => o.value);
+                    if (options.includes(input.value)) {
+                        API.HandleLookup(input);
+                    }
+                }
+            }
+
+            // B. Trigger Real-time Math for Transactions
+            if (path.includes('transactions/')) {
+                if (input.classList.contains('qty') || input.classList.contains('rate')) {
+                    if (typeof window.recalculateVoucher === 'function') window.recalculateVoucher();
+                }
             }
         });
 
-        // 3. Bind Calculator/Math logic for vouchers
-        if (path.includes('transactions/')) {
-            form.addEventListener('input', () => {
-                if (window.recalculateVoucher) recalculateVoucher();
-            });
-        }
-
-        // 4. Handle Submission
+        // 4. Submission Handler (Masters vs. Transactions)
         form.onsubmit = async (e) => {
             e.preventDefault();
+            const btn = form.querySelector('[type="submit"]');
+            const originalBtnHtml = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Processing...`;
+
             const isMaster = form.dataset.category === 'Masters';
-            if (isMaster) {
-                const data = Object.fromEntries(new FormData(form).entries());
-                await API.SaveMaster(form.id, data);
+            const data = Object.fromEntries(new FormData(form).entries());
+            
+            const success = isMaster 
+                ? await API.SaveMaster(form.id, data) 
+                : await API.PostVoucher(form);
+
+            if (success) {
                 form.reset();
-            } else {
-                await API.PostVoucher(form);
+                if (typeof window.recalculateVoucher === 'function') window.recalculateVoucher();
             }
+            
+            btn.disabled = false;
+            btn.innerHTML = originalBtnHtml;
         };
 
         this.Log(`Module Ready: ${path}`);
     },
 
     BindGlobalEvents() {
-        // Navigation
+        // Module Navigation
         document.addEventListener('click', (e) => {
             const link = e.target.closest('[data-module]');
-            if (link) { e.preventDefault(); this.Router(link.dataset.module); }
+            if (link) { 
+                e.preventDefault(); 
+                this.Router(link.dataset.module); 
+            }
         });
 
-        // Global Shortcuts
+        // Dark Mode Toggle
+        const toggle = document.getElementById('darkModeToggle');
+        if(toggle) {
+            toggle.addEventListener('change', (e) => {
+                this.UI.ToggleDarkMode(e.target.checked);
+            });
+        }
+
+        // Global Shortcuts (/) for Search
         document.addEventListener('keydown', (e) => {
             if (e.key === '/') {
-                if (document.activeElement.tagName !== 'INPUT') {
+                if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
                     e.preventDefault();
                     document.getElementById('globalSearch')?.focus();
                 }
@@ -106,38 +192,65 @@ const App = {
         });
 
         // Logout
-        document.getElementById('logoutButton').onclick = () => {
-            localStorage.clear(); window.location.href = 'login.html';
-        };
+        const logoutBtn = document.getElementById('logoutButton');
+        if(logoutBtn) {
+            logoutBtn.onclick = () => {
+                if(confirm("Sign out of UniTax Pro?")) {
+                    localStorage.clear(); 
+                    window.location.href = 'login.html';
+                }
+            };
+        }
     },
 
     UI: {
         Notify(title, message, type = 'primary') {
             const toastEl = document.getElementById('appToast');
-            const toast = new bootstrap.Toast(toastEl);
+            if(!toastEl) return;
             document.getElementById('toastTitle').innerText = title;
             document.getElementById('toastBody').innerText = message;
-            toastEl.className = `toast show bg-${type} text-white`;
+            toastEl.className = `toast show bg-${type} text-white shadow-lg`;
+            const toast = new bootstrap.Toast(toastEl);
             toast.show();
         },
         StartClock() {
-            const elTime = document.getElementById('liveTime');
-            const elDate = document.getElementById('liveDate');
             setInterval(() => {
                 const n = new Date();
-                if(elTime) elTime.innerText = n.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                if(elDate) elDate.innerText = n.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
+                const t = document.getElementById('liveTime');
+                const d = document.getElementById('liveDate');
+                if(t) t.innerText = n.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                if(d) d.innerText = n.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
             }, 1000);
+        },
+        InitTheme() {
+            const isEnabled = localStorage.getItem('darkMode') === 'enabled';
+            if (isEnabled) {
+                document.body.classList.add('dark-mode');
+                const toggle = document.getElementById('darkModeToggle');
+                if(toggle) toggle.checked = true;
+            }
+        },
+        ToggleDarkMode(enable) {
+            if (enable) {
+                document.body.classList.add('dark-mode');
+                localStorage.setItem('darkMode', 'enabled');
+                App.UI.Notify('Appearance', 'Dark Mode Enabled', 'info');
+            } else {
+                document.body.classList.remove('dark-mode');
+                localStorage.setItem('darkMode', 'disabled');
+                App.UI.Notify('Appearance', 'Light Mode Enabled', 'info');
+            }
         }
     },
 
     Log(msg) {
         const logger = document.getElementById('systemLogging');
         if (logger) {
-            logger.innerHTML += `<div><span class="opacity-50">${new Date().toLocaleTimeString()}</span> > ${msg}</div>`;
+            logger.innerHTML += `<div><span class="opacity-50">[${new Date().toLocaleTimeString()}]</span> > ${msg}</div>`;
             logger.scrollTop = logger.scrollHeight;
         }
     }
 };
 
+// Start Engine
 document.addEventListener('DOMContentLoaded', () => App.Init());

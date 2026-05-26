@@ -1,5 +1,6 @@
 /**
- * UNITAX PRO - Data Access Layer (Final Stable)
+ * UNITAX PRO - Data Access Layer (Sanitized for Firebase)
+ * Fixed: Illegal character stripping and empty key prevention
  */
 const API = {
     Config: {
@@ -11,159 +12,175 @@ const API = {
         }
     },
 
-    _Cache: {}, // Stores fetched master data to avoid redundant network hits
+    _MasterCache: {},
 
     Init() {
         if (!firebase.apps.length) firebase.initializeApp(this.Config.firebase);
         this.DB = firebase.database();
-        console.log("📡 API Engine: Online");
+        console.log("%c📡 [API] Database Engine Synchronized", "color: #0d6efd; font-weight: bold;");
     },
 
-    /**
-     * 1. UNIVERSAL DATALIST POPULATOR
-     * Scans form for inputs requiring server data and fills their <datalist>
-     */
+    async CheckUniqueness(sheetName, column, value) {
+        try {
+            const snapshot = await this.DB.ref(`${App.State.userId}/Masters/${sheetName}`).once('value');
+            const data = snapshot.val();
+            if (!data) return false;
+            return Object.values(data).some(record => 
+                String(record[column] || "").trim().toLowerCase() === value.trim().toLowerCase()
+            );
+        } catch (e) { return false; }
+    },
+
     async PopulateAllDatalists(form) {
         const lookupInputs = form.querySelectorAll('[data-fetch_column]');
-        
         for (const input of lookupInputs) {
-            const sheetName = input.dataset.sheet_name;
-            const columnDef = input.dataset.column_name; // e.g. "itemName & Stock Code"
+            const sheet = input.dataset.sheet_name;
+            const colDef = input.dataset.column_name;
             const listId = input.getAttribute('list');
+            if (!sheet || !listId) continue;
 
-            if (!sheetName || !listId) continue;
-
-            // Fetch data (check cache first)
-            let data = this._Cache[sheetName];
+            let data = this._MasterCache[sheet];
             if (!data) {
-                const snapshot = await this.DB.ref(`${App.State.userId}/Masters/${sheetName}`).once('value');
-                data = snapshot.val();
-                this._Cache[sheetName] = data; // Cache for other rows
+                const snap = await this.DB.ref(`${App.State.userId}/Masters/${sheet}`).once('value');
+                data = snap.val();
+                this._MasterCache[sheet] = data;
             }
 
-            if (!data) continue;
-
             const datalist = document.getElementById(listId);
-            if (datalist) {
-                datalist.innerHTML = ""; // Clear old
-                const searchCols = columnDef.split('&').map(c => c.trim());
-
+            if (datalist && data) {
+                datalist.innerHTML = "";
+                const cols = colDef.split('&').map(c => c.trim());
                 Object.values(data).forEach(record => {
-                    searchCols.forEach(col => {
-                        if (record[col]) {
-                            const opt = document.createElement('option');
-                            opt.value = record[col];
-                            datalist.appendChild(opt);
-                        }
-                    });
+                    // Use the last column in the definition as the primary value (e.g. itemName)
+                    const mainVal = record[cols[cols.length-1]];
+                    if (mainVal) {
+                        let opt = document.createElement('option');
+                        opt.value = mainVal;
+                        opt.textContent = cols.map(c => record[c]).filter(v => v).join(' | ');
+                        datalist.appendChild(opt);
+                    }
                 });
             }
         }
     },
 
-    /**
-     * 2. RECORD LOOKUP & AUTO-FILL
-     * Triggered on input 'change'. Finds the full record and fills "auto_" fields.
-     */
     async HandleLookup(input) {
         const val = input.value.trim();
-        const sheetName = input.dataset.sheet_name;
-        const columnDef = input.dataset.column_name;
-        const sourceName = input.name.replace('[]', ''); // Clean name for array inputs
+        const sheet = input.dataset.sheet_name;
+        const colDef = input.dataset.column_name;
+        const sourceName = input.name.replace('[]', '');
 
-        if (!val || !sheetName) return;
+        if (!val || !this._MasterCache[sheet]) return;
 
-        // Visual "Working" State
-        input.classList.add('is-loading-field');
-
-        // Fetch sheet data (from cache or server)
-        let data = this._Cache[sheetName];
-        if (!data) {
-            const snapshot = await this.DB.ref(`${App.State.userId}/Masters/${sheetName}`).once('value');
-            data = snapshot.val();
-            this._Cache[sheetName] = data;
-        }
-
-        if (!data) return;
-
-        // Search logic
-        const searchCols = columnDef.split('&').map(c => c.trim());
-        let foundRecord = null;
-
-        Object.values(data).forEach(record => {
-            const isMatch = searchCols.some(col => 
-                String(record[col]).toLowerCase() === val.toLowerCase()
-            );
-            if (isMatch) foundRecord = record;
+        const columns = colDef.split('&').map(c => c.trim());
+        let match = null;
+        Object.values(this._MasterCache[sheet]).forEach(record => {
+            if (columns.some(col => String(record[col] || "").toLowerCase() === val.toLowerCase())) match = record;
         });
 
-        if (foundRecord) {
+        if (match) {
             const scope = input.closest('tr') || input.closest('form');
-            this._PopulateFields(scope, sourceName, foundRecord);
-            input.style.borderLeft = "4px solid #198754"; // Success Green
-            App.Log(`Fetched: ${val}`);
-        } else {
-            input.style.borderLeft = "4px solid #dc3545"; // Error Red
-        }
-        
-        input.classList.remove('is-loading-field');
-    },
-
-    // Internal helper to map data to UI
-    _PopulateFields(container, sourceName, record) {
-        Object.entries(record).forEach(([key, value]) => {
-            const targetName = `auto_${sourceName}_${key}`;
-            const targets = container.querySelectorAll(`[name="${targetName}"]`);
-            targets.forEach(el => {
-                el.value = value;
-                el.classList.add('bg-success-subtle');
-                setTimeout(() => el.classList.remove('bg-success-subtle'), 1000);
+            Object.entries(match).forEach(([key, value]) => {
+                // Sanitize the key to match how the HTML names are written
+                const safeKey = key.replace(/\s+/g, '_');
+                const targets = scope.querySelectorAll(`[name="auto_${sourceName}_${safeKey}"]`);
+                targets.forEach(el => { 
+                    el.value = value; 
+                    el.classList.add('bg-info-subtle'); 
+                    setTimeout(() => el.classList.remove('bg-info-subtle'), 500); 
+                });
             });
-        });
+            if(window.recalculateVoucher) window.recalculateVoucher();
+        }
     },
 
     /**
-     * 3. VOUCHER POSTING
-     * Saves the entire form (Header + Rows) as one transaction object
+     * 🚀 FIXED VOUCHER POSTING
      */
     async PostVoucher(form) {
+        // Collect Header Data
         const formData = new FormData(form);
         const raw = Object.fromEntries(formData.entries());
 
+        // Standardize the Transaction Object
         const transaction = {
             header: {
                 doc_no: Utils.GenerateDocID(raw.documentType || 'VCH'),
                 date: raw.voucher_date || new Date().toISOString().split('T')[0],
-                entity: raw.customer_ledger || raw.gl_account,
+                entity: raw.customer_ledger || raw.gl_account || "Unknown",
                 project: raw.project || 'General',
                 narration: raw.narration || '',
-                posted_at: firebase.database.ServerValue.TIMESTAMP
+                posted_at: firebase.database.ServerValue.TIMESTAMP,
+                status: 'POSTED'
             },
+            // Get clean sanitized items
             items: this._GetGridItems(form),
-            meta: { user: App.State.userId, form: form.id }
+            meta: { 
+                user: App.State.userId, 
+                form_id: form.id 
+            }
         };
 
         try {
-            await this.DB.ref(`${App.State.userId}/Transactions/${form.id}`).push(transaction);
-            App.UI.Notify('System', 'Voucher Posted Successfully!', 'success');
-            form.reset();
-            if(window.recalculateVoucher) recalculateVoucher();
+            const path = `${App.State.userId}/Transactions/${form.id}`;
+            await this.DB.ref(path).push(transaction);
+            App.UI.Notify('Success', `Document ${transaction.header.doc_no} Posted`, 'success');
             return true;
         } catch (e) {
-            App.UI.Notify('Critical Error', e.message, 'danger');
+            console.error("Firebase Push Error:", e);
+            App.UI.Notify('Firebase Error', "Invalid data format in rows.", 'danger');
             return false;
         }
     },
 
+    async SaveMaster(formId, data) {
+        try {
+            // Sanitize all keys in the Master object
+            const sanitizedData = {};
+            Object.entries(data).forEach(([k, v]) => {
+                const safeK = k.replace(/[\.\#\$\/\[\]\s]/g, '_');
+                sanitizedData[safeK] = v;
+            });
+
+            const path = `${App.State.userId}/Masters/${formId}`;
+            await this.DB.ref(path).push({
+                ...sanitizedData,
+                created_at: firebase.database.ServerValue.TIMESTAMP
+            });
+            delete this._MasterCache[formId]; 
+            App.UI.Notify('Success', 'Master Record Created', 'success');
+            return true;
+        } catch (e) {
+            App.UI.Notify('Error', e.message, 'danger');
+            return false;
+        }
+    },
+
+    /**
+     * 🛠️ INTERNAL HELPER: SANITIZE GRID DATA
+     * Ensures keys don't contain spaces or illegal Firebase characters
+     */
     _GetGridItems(form) {
         const items = [];
         form.querySelectorAll('tbody tr').forEach(row => {
             const item = {};
-            row.querySelectorAll('input, select').forEach(i => {
-                const key = i.name.replace('[]', '');
-                item[key] = i.value;
+            let hasValidData = false;
+
+            row.querySelectorAll('input, select, textarea').forEach(i => {
+                if (!i.name) return; // Skip inputs without names (decorative)
+
+                // 1. Remove brackets from array names (item_name[] -> item_name)
+                // 2. Replace spaces/dots/illegal chars with underscores for Firebase
+                const safeKey = i.name.replace(/\[\]/g, '').replace(/[\.\#\$\/\[\]\s]/g, '_');
+                
+                if (safeKey) {
+                    item[safeKey] = i.value;
+                    if (i.value.trim() !== "") hasValidData = true;
+                }
             });
-            if (item[Object.keys(item)[0]]) items.push(item);
+
+            // Only push the row if it contains at least one piece of actual data
+            if (hasValidData) items.push(item);
         });
         return items;
     }

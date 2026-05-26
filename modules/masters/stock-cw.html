@@ -1,179 +1,96 @@
 <div class="animate-in">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h4 class="fw-bold mb-0">Stock / Material Master</h4>
-            <p class="text-muted small mb-0">Define products, services, and inventory parameters.</p>
-        </div>
-        <div class="btn-group shadow-sm">
-            <button class="btn btn-white btn-sm border" onclick="App.Router('masters/stock-cw')">
-                <i class="bi bi-arrow-repeat me-1"></i> New Item
-            </button>
-            <button class="btn btn-white btn-sm border">
-                <i class="bi bi-download me-1"></i> Template
-            </button>
-        </div>
-    </div>
-
-    <form id="StockMasterForm" data-category="Masters" autocomplete="off">
-        <div class="row g-3">
-            <!-- Left Column: Core Identity -->
-            <div class="col-lg-8">
-                <div class="card border-0 shadow-sm mb-3">
-                    <div class="card-header bg-white py-3">
-                        <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-box-seam me-2"></i>Product Specification</h6>
+    <form id="Stock" data-category="Masters" autocomplete="off">
+        <div class="card border-0 shadow-sm overflow-hidden">
+            <div class="card-body p-0">
+                <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-light">
+                    <div>
+                        <h5 class="fw-bold mb-0">Stock / Material Master</h5>
+                        <p class="text-muted small mb-0">Manage products, services, and valuation rules</p>
                     </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label">Stock Code / SKU</label>
-                                <input type="text" name="Stock Code" class="form-control form-control-sm font-monospace upper-case fw-bold" 
-                                       placeholder="SKU-001" maxlength="10" required>
-                                <div class="form-text" style="font-size: 10px;">Unique identifier for inventory tracking.</div>
-                            </div>
-                            <div class="col-md-8">
-                                <label class="form-label">Item Display Name</label>
-                                <input type="text" name="itemName" class="form-control form-control-sm proper-case" 
-                                       placeholder="e.g. Organic Green Tea 500g" required>
-                            </div>
-                            <div class="col-md-12">
-                                <label class="form-label">Detailed Description</label>
-                                <textarea name="Description" class="form-control form-control-sm" rows="2" placeholder="Specifications, grade, or service details..."></textarea>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Item Group / Category</label>
-                                <input type="text" name="itemGroup" class="form-control form-control-sm" list="Stock-Group" placeholder="Select Group">
-                                <datalist id="Stock-Group"></datalist>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">HSN / SAC Code</label>
-                                <input type="text" name="itemHSN" class="form-control form-control-sm" pattern="\d{4,8}" placeholder="8 Digit Code" required>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Stock Type</label>
-                                <select name="StockType" class="form-select form-select-sm">
-                                    <option value="Goods">Goods (Inventory)</option>
-                                    <option value="Services">Services (Non-Inv)</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm fw-bold">Register Item</button>
                 </div>
 
-                <!-- Advanced Inventory Settings -->
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-white py-3">
-                        <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-gear-wide-connected me-2"></i>Inventory & Valuation</h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <label class="form-label">Base Unit (UOM)</label>
-                                <input type="text" name="ItemUnit" class="form-control form-control-sm" list="ItemUnitList" placeholder="Nos / Kg" required>
-                                <datalist id="ItemUnitList">
-                                    <option value="Piece"><option value="Kg"><option value="Litre"><option value="Meter"><option value="Box"><option value="Unit">
-                                </datalist>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">GST Tax Rate (%)</label>
-                                <select name="ItemTax" class="form-select form-select-sm">
-                                    <option value="0">0% (Exempt)</option>
-                                    <option value="5">5%</option>
-                                    <option value="12">12%</option>
-                                    <option value="18" selected>18%</option>
-                                    <option value="28">28%</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Valuation Method</label>
-                                <select name="valuationMethod" class="form-select form-select-sm">
-                                    <option value="FIFO">FIFO (First In First Out)</option>
-                                    <option value="AVCO">Weighted Average Cost</option>
-                                    <option value="STD">Standard Costing</option>
-                                </select>
-                            </div>
-                            
-                            <!-- Opening Stock -->
-                            <div class="col-md-4 border-end">
-                                <label class="form-label text-primary small fw-bold">Opening Quantity</label>
-                                <input type="number" name="openingQty" class="form-control form-control-sm bg-light" value="0" step="any">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label text-primary small fw-bold">Total Opening Value</label>
-                                <input type="number" name="openingAmount" class="form-control form-control-sm bg-light" value="0.00" step="any">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold">Valuation / Unit</label>
-                                <div id="val-per-unit" class="h6 mt-2 fw-bold text-muted">₹ 0.00</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Column: Control & Logistics -->
-            <div class="col-lg-4">
-                <!-- Company Link -->
-                <div class="card border-0 shadow-sm mb-3">
-                    <div class="card-body">
-                        <label class="form-label fw-bold">Associate with Company</label>
-                        <input type="text" name="CompanyName" class="form-control form-control-sm" list="companyList" required>
-                        <datalist id="companyList"></datalist>
-                    </div>
-                </div>
-
-                <!-- Logistics & Alerts -->
-                <div class="card border-0 shadow-sm mb-3">
-                    <div class="card-header bg-light py-2 border-bottom">
-                        <span class="small fw-bold text-muted text-uppercase">Logistics & Alerts</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">Minimum Reorder Level</label>
-                            <input type="number" name="minLevel" class="form-control form-control-sm border-warning" placeholder="0">
-                        </div>
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <label class="form-label">Weight (Kg)</label>
-                                <input type="number" name="weight" class="form-control form-control-sm" step="0.01">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Dimensions</label>
-                                <input type="text" name="dimensions" class="form-control form-control-sm" placeholder="LxBxH">
+                <div class="p-4">
+                    <div class="row g-4">
+                        <!-- Left: Core Logic -->
+                        <div class="col-lg-8 border-end">
+                            <h6 class="fw-bold text-primary small text-uppercase mb-3">Specification</h6>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">Stock Code (SKU)</label>
+                                    <input type="text" name="Stock_Code" class="form-control form-control-sm font-monospace upper-case fw-bold" 
+                                           data-check-unique="true" data-sheet_name="Stock" data-column_name="Stock_Code" required>
+                                </div>
+                                <div class="col-md-8">
+                                    <label class="form-label small fw-bold">Item Display Name</label>
+                                    <input type="text" name="itemName" class="form-control form-control-sm proper-case" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold">Item Description</label>
+                                    <textarea name="Description" class="form-control form-control-sm" rows="2"></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Item Group / Category</label>
+                                    <input type="text" name="itemGroup" list="Stock-Group-List" class="form-control form-control-sm">
+                                    <datalist id="Stock-Group-List"></datalist>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">HSN/SAC Code</label>
+                                    <input type="text" name="itemHSN" class="form-control form-control-sm font-monospace" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Stock Type</label>
+                                    <select name="StockType" class="form-select form-select-sm">
+                                        <option value="Goods">Inventory Goods</option>
+                                        <option value="Services">Services (Non-Inv)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">Base Unit (UOM)</label>
+                                    <input type="text" name="ItemUnit" list="units-list" class="form-control form-control-sm" required>
+                                    <datalist id="units-list"><option value="Piece"><option value="Kg"><option value="Box"><option value="Set"></datalist>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">GST Rate (%)</label>
+                                    <select name="ItemTax" class="form-select form-select-sm">
+                                        <option value="0">0%</option><option value="5">5%</option><option value="12">12%</option><option value="18" selected>18%</option><option value="28">28%</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold text-danger">Reorder Level</label>
+                                    <input type="number" name="minLevel" class="form-control form-control-sm" value="0">
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Save Action -->
-                <div class="card bg-primary text-white border-0 shadow-lg mt-4">
-                    <div class="card-body p-4 text-center">
-                        <i class="bi bi-cloud-check fs-1 mb-2"></i>
-                        <h5>Ready to Sync</h5>
-                        <p class="small opacity-75">Ensure all tax parameters are correct before saving.</p>
-                        <button type="submit" class="btn btn-light w-100 fw-bold py-2 mt-2 shadow-sm">
-                            <i class="bi bi-plus-circle me-2"></i> Create Stock Item
-                        </button>
+                        <!-- Right: Valuation & Context -->
+                        <div class="col-lg-4">
+                            <h6 class="fw-bold text-primary small text-uppercase mb-3">Inventory Valuation</h6>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold">Linked Company</label>
+                                    <input type="text" name="CompanyName" list="compList_stock" class="form-control form-control-sm" 
+                                           data-fetch_column data-sheet_name="Companies" data-column_name="companyName & CompanyCode" required>
+                                    <datalist id="compList_stock"></datalist>
+                                </div>
+                                <div class="col-12 mt-4 bg-light p-3 rounded-3">
+                                    <label class="form-label small fw-bold text-success">Opening Balance</label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <label class="small opacity-75">Qty</label>
+                                            <input type="number" name="openingQty" class="form-control form-control-sm" value="0">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="small opacity-75">Total Value</label>
+                                            <input type="number" name="openingAmount" class="form-control form-control-sm" value="0">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </form>
 </div>
-
-<script>
-    // Real-time Valuation Display
-    const qInput = document.querySelector('input[name="openingQty"]');
-    const aInput = document.querySelector('input[name="openingAmount"]');
-    const display = document.getElementById('val-per-unit');
-
-    const updateValuation = () => {
-        const qty = parseFloat(qInput.value) || 0;
-        const amt = parseFloat(aInput.value) || 0;
-        const val = qty > 0 ? (amt / qty).toFixed(2) : "0.00";
-        display.innerText = `₹ ${parseFloat(val).toLocaleString('en-IN')}`;
-    };
-
-    qInput.oninput = updateValuation;
-    aInput.oninput = updateValuation;
-</script>

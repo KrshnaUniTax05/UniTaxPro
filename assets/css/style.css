@@ -3,54 +3,65 @@
  * Design System: Modern ERP (High Density, Minimalist)
  */
 
- :root {
+:root {
+    /* Color Palette - Refined for better contrast and modern feel */
     --primary-color: #0d6efd;
-    --primary-dark: #0a58ca;
-    --sidebar-bg: #1a1c1e;
-    --sidebar-hover: #2d2f31;
-    --bg-light: #f8f9fa;
-    --border-color: #e9ecef;
-    --text-main: #212529;
-    --text-muted: #6c757d;
-    --card-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --primary-dark: #0b5ed7;
+    --primary-bg-subtle: #eff5ff;
+    
+    --sidebar-bg: #111827;
+    --sidebar-hover: #1f2937;
+    
+    --bg-light: #f8fafc;
+    --bg-surface: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --border-strong: #cbd5e1;
+    
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    
+    /* Shadows & Transitions */
+    --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+    --focus-ring: 0 0 0 3px rgba(13, 110, 253, 0.25);
+    --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* 1. Global Resets & Typography */
+*, *::before, *::after { box-sizing: border-box; }
+
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     color: var(--text-main);
     background-color: var(--bg-light);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    line-height: 1.5;
 }
 
-/* Hide scrollbars but allow scrolling */
+/* Elegant Scrollbars */
 * {
     scrollbar-width: thin;
-    scrollbar-color: #dee2e6 transparent;
+    scrollbar-color: #cbd5e1 transparent;
 }
-
-*::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
-
-*::-webkit-scrollbar-thumb {
-    background: #ced4da;
-    border-radius: 10px;
-}
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+*::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 /* 2. Professional Loader Overlay */
 .loader-overlay {
     position: fixed;
     inset: 0;
-    background: white;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(4px);
     z-index: 9999;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    transition: opacity 0.5s ease;
+    transition: opacity 0.3s ease;
 }
 
 /* 3. ERP Layout Engine */
@@ -60,17 +71,16 @@ body {
     overflow: hidden;
 }
 
-/* Left Info Bar (25%) */
 .left-info-bar {
     width: 25%;
-    min-width: 300px;
-    background: white;
+    min-width: 280px;
+    max-width: 350px;
+    background: var(--bg-surface);
     border-right: 1px solid var(--border-color);
     overflow-y: auto;
     transition: var(--transition);
 }
 
-/* Content Viewport (75%) */
 .content-viewport {
     flex-grow: 1;
     overflow-y: auto;
@@ -78,272 +88,168 @@ body {
     background-color: var(--bg-light);
 }
 
-/* 4. SAP-Inspired Sidebar (Offcanvas) */
+/* 4. Sidebar (Offcanvas) */
 .offcanvas {
-    width: 300px !important;
+    width: 280px !important;
     background-color: var(--sidebar-bg);
-    color: white;
-}
-.offcanvas .nav-item button   {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0;
-    padding: 0;
-}
-.offcanvas .nav-link {
-    color: rgba(255,255,255,0.7) !important;
-    padding: 0.8rem 1rem;
-    border-radius: 8px;
-    margin: 0.2rem 0.8rem;
-    display: flex;
-    align-items: center;
-    font-size: 0.9rem;
-}
-
-.offcanvas .nav-link:hover, 
-.offcanvas .nav-link.active {
-    background-color: var(--sidebar-hover);
+    border-right: 1px solid #1f2937;
     color: white !important;
 }
 
-.offcanvas .nav-link i {
-    font-size: 1.1rem;
-    width: 25px;
+.offcanvas-body { scrollbar-width: none;  }
+
+.offcanvas h6{
+    color: white !important;
 }
+
+.offcanvas .nav-item button {
+    display: flex; align-items: center; justify-content: center;
+    margin: 0; border-radius: 0; border: none; padding: 0; background: transparent;
+}
+
+.offcanvas .nav-link {
+    color: #9ca3af !important;
+    padding: 0.75rem 1rem; border-radius: 6px; margin: 0.25rem 0.75rem;
+    display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 500;
+    transition: var(--transition); 
+}
+
+.offcanvas .nav-link:hover { background-color: var(--sidebar-hover); color: white !important; }
+.offcanvas .nav-link.active { color: white !important; background-color: var(--primary-color) !important; }
+.offcanvas .nav-link i { font-size: 1.1rem; width: 28px; text-align: left; }
 
 /* 5. Professional Accounting Tables */
-.table-sm {
-    font-size: 0.875rem;
+.table-wrapper {
+    border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;
 }
 
+.table-sm { font-size: 0.8125rem; margin-bottom: 0; }
+
 .table thead th {
-    background-color: #f1f3f5;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.025em;
-    color: var(--text-muted);
-    border-bottom: 2px solid var(--border-color);
-    padding: 10px;
-    position: sticky;
-    top: 0;
+    background-color: #f8fafc; text-transform: uppercase; font-size: 0.7rem; font-weight: 600;
+    letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 1px solid var(--border-strong);
+    padding: 10px 12px; position: sticky; top: 0; z-index: 10;
 }
 
 .table tbody td {
-    padding: 12px 10px;
-    vertical-align: middle;
+    padding: 10px 12px; vertical-align: middle; border-bottom: 1px solid var(--border-color); color: var(--text-main);
 }
 
-.table-hover tbody tr:hover {
-    background-color: #f0f7ff !important;
-    cursor: pointer;
-}
+.table-hover tbody tr { transition: background-color 0.15s ease; }
+.table-hover tbody tr:hover { background-color: var(--primary-bg-subtle) !important; cursor: pointer; }
 
-/* 6. Form Styling (Enterprise High-Density) */
+/* 6. Form Styling */
 .form-control-sm, .form-select-sm {
-    border-radius: 6px;
-    border: 1px solid #d1d5db;
-    padding: 0.4rem 0.75rem;
+    border-radius: 6px; border: 1px solid var(--border-strong);
+    padding: 0.35rem 0.75rem; font-size: 0.875rem; background-color: var(--bg-surface); color: var(--text-main);
 }
-
 .form-control:focus, .form-select:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+    border-color: var(--primary-color); box-shadow: var(--focus-ring); outline: none;
 }
-
 label.form-label {
-    font-weight: 600;
-    font-size: 0.8rem;
-    color: #4b5563;
-    margin-bottom: 0.3rem;
+    font-weight: 600; font-size: 0.8125rem; color: var(--text-main); margin-bottom: 0.25rem;
 }
 
 /* 7. Components & Widgets */
 .card {
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
-    transition: var(--transition);
+    border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-surface);
+    box-shadow: var(--card-shadow); transition: var(--transition);
 }
-
 .badge-xs {
-    font-size: 0.65rem;
-    padding: 2px 5px;
+    font-size: 0.65rem; font-weight: 600; padding: 0.25em 0.6em; border-radius: 4px; text-transform: uppercase;
 }
 
-/* 8. Dark Mode Implementation */
+/* --- 8. DARK MODE SYSTEM (Heavily updated for Contrast Fixes) --- */
 body.dark-mode {
-    --bg-light: #121212;
-    --text-main: #e0e0e0;
-    --text-muted: #a0a0a0;
-    --border-color: #2d2d2d;
+    --bg-light: #0b1121;       /* Deepest Slate for main background */
+    --bg-surface: #1e293b;     /* Lighter Slate for Cards to create depth */
+    --text-main: #f8fafc;      /* Crisp White for main text */
+    --text-muted: #94a3b8;     /* Light Grey for labels */
+    --border-color: #334155;   /* Subtle borders */
+    --border-strong: #475569;
+    --primary-bg-subtle: rgba(13, 110, 253, 0.15);
     background-color: var(--bg-light);
     color: var(--text-main);
 }
 
-body.dark-mode .navbar, 
-body.dark-mode .left-info-bar:not(.card), 
+/* Forcing Backgrounds on Cards (Fixes the white 'Tasks' box and Quick Actions) */
 body.dark-mode .card,
-body.dark-mode #uniquemultimodal {
-    background-color: #1e1e1e !important;
-    color: var(--text-main);
-    font-weight: 400;
-}
-
-body.dark-mode .table thead th {
-    background-color: #252525;
-    color: var(--text-main);
-}
-
-body.dark-mode .form-control, 
-body.dark-mode .form-select {
-    background-color: #2d2d2d;
-    border-color: #404040;
-    color: white;
-}
-/* Fix for brand text in dark mode */
-body.dark-mode .brand .text-dark,
-body.dark-mode i {
+body.dark-mode .navbar,
+body.dark-mode .left-info-bar,
+body.dark-mode .modal-content,
+body.dark-mode .list-group-item {
+    background-color: var(--bg-surface) !important;
+    border-color: var(--border-color) !important;
     color: var(--text-main) !important;
 }
 
-body.dark-mode .brand .text-primary {
-    color: #4da3ff !important;
+/* Forcing Text Colors in Cards (Fixes the invisible Metric numbers) */
+body.dark-mode .card h1,
+body.dark-mode .card h2,
+body.dark-mode .card h3,
+body.dark-mode .card h4,
+body.dark-mode .card h5,
+body.dark-mode .card h6,
+body.dark-mode .card .display-4,
+body.dark-mode .card .display-5 {
+    color: var(--text-main) !important;
 }
 
-body.dark-mode .brand .bg-secondary {
-    background-color: #2d2d2d !important;
-}
-body.dark-mode .form-control::placeholder,
-body.dark-mode .form-select::placeholder {
-    color: var(--text-muted);
-}
-
-body.dark-mode .btn-outline-primary {
-    color: #4da3ff;
-    border-color: #4da3ff;
-}
-
-/* Make text-muted class work in dark mode */
-body.dark-mode .text-muted {
+body.dark-mode .text-muted,
+body.dark-mode .card-subtitle {
     color: var(--text-muted) !important;
 }
-/* Bootstrap Cards in Dark Mode */
-body.dark-mode .card {
-    background-color: #1e1e1e !important;
-    border-color: var(--border-color) !important;
-    color: var(--text-main);
-}
 
-body.dark-mode .card-header {
-    background-color: #252525 !important;
-    border-bottom-color: var(--border-color) !important;
-    color: var(--text-main);
-}
-
-body.dark-mode .card-footer {
-    background-color: #252525 !important;
-    border-top-color: var(--border-color) !important;
-    color: var(--text-main);
-}
-
-body.dark-mode .card-title {
-    color: var(--text-main);
-}
-
-body.dark-mode .card-subtitle {
-    color: var(--text-muted);
-}
-
-body.dark-mode .card-text {
-    color: var(--text-main);
-}
-
-/* Bootstrap Tables in Dark Mode */
+/* Fixing the Table (Stops rows from being pure white) */
 body.dark-mode .table {
     color: var(--text-main);
-    border-color: var(--border-color);
+    background-color: transparent !important;
 }
-
+body.dark-mode .table * {
+    background-color: transparent !important; /* Strips out any inline white backgrounds */
+}
 body.dark-mode .table thead th {
-    background-color: #252525;
-    color: var(--text-main);
-    border-bottom-color: var(--border-color);
+    background-color: #151e2e !important;
+    color: #cbd5e1 !important;
+    border-bottom: 1px solid var(--border-strong) !important;
+}
+body.dark-mode .table tbody td,
+body.dark-mode .table tbody tr {
+    border-bottom: 1px solid var(--border-color) !important;
+    color: var(--text-main) !important;
+}
+body.dark-mode .table-hover tbody tr:hover * {
+    background-color: var(--primary-bg-subtle) !important;
 }
 
-body.dark-mode .table tbody td {
-    border-bottom-color: var(--border-color);
-    color: var(--text-main);
+/* Inputs & Form Fields */
+body.dark-mode .form-control,
+body.dark-mode .form-select,
+body.dark-mode .input-group-text {
+    background-color: #0b1121 !important;
+    border-color: var(--border-strong) !important;
+    color: var(--text-main) !important;
 }
+body.dark-mode .form-control:focus { border-color: var(--primary-color) !important; box-shadow: var(--focus-ring); }
 
-body.dark-mode .table tbody tr:hover {
-    background-color: rgba(77, 163, 255, 0.1);
-}
+/* Utility Overrides for Dark Mode */
+body.dark-mode .text-dark { color: #f8fafc !important; }
+body.dark-mode .bg-light,
+body.dark-mode .bg-white { background-color: var(--bg-surface) !important; }
+body.dark-mode .sticky-top { background-color: var(--bg-surface) !important; z-index: 1020; }
 
-/* Table Variants */
-body.dark-mode .table-striped > tbody > tr:nth-of-type(odd) > * {
-    background-color: rgba(255, 255, 255, 0.02);
-    color: var(--text-main);
-}
-
-body.dark-mode .table-hover > tbody > tr:hover > * {
-    background-color: rgba(77, 163, 255, 0.1);
-    color: var(--text-main);
-}
-
-body.dark-mode .table-bordered {
-    border-color: var(--border-color);
-}
-
-body.dark-mode .table-bordered td,
-body.dark-mode .table-bordered th {
-    border-color: var(--border-color);
-}
-
-body.dark-mode .table-dark {
-    background-color: #1a1a1a;
-    color: var(--text-main);
-}
-
-body.dark-mode .table-light {
-    background-color: #252525;
-    color: var(--text-main);
-}
-
-/* Card Groups & Decks */
-body.dark-mode .card-group .card,
-body.dark-mode .card-deck .card {
-    background-color: #1e1e1e;
-    border-color: var(--border-color);
-}
-
-/* Badge inside tables */
-body.dark-mode .table .badge {
-    color: var(--text-main);
-}
 
 /* 9. Utility Classes */
-.font-monospace {
-    font-family: 'Fira Code', 'Courier New', monospace !important;
-}
-
+.font-monospace { font-family: 'Fira Code', 'Courier New', monospace !important; font-size: 0.85em; }
 .grow { flex-grow: 1; }
-
 .hidden { display: none !important; }
 
 /* Custom Modal Animation */
-#customModalOverlay:not(.hidden) {
-    display: flex;
-    animation: fadeIn 0.2s ease-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.98); }
-    to { opacity: 1; transform: scale(1); }
-}
+#customModalOverlay:not(.hidden) { display: flex; animation: fadeIn 0.15s ease-out forwards; }
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
 
 /* Mobile Responsive Tweaks */
 @media (max-width: 991px) {
     .left-info-bar { display: none; }
-    .content-viewport { width: 100%; }
+    .content-viewport { width: 100%; padding: 1rem; }
 }

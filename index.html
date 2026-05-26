@@ -36,7 +36,7 @@
     </div>
 
     <!-- Top Navigation Bar -->
-    <nav class="navbar sticky-top bg-white border-bottom shadow-sm px-3" style="height: 60px;">
+    <nav class="navbar sticky-top bg-white  shadow-sm px-3" style="height: 60px;">
         <div class="container-fluid justify-content-between">
             <div class="d-flex align-items-center">
                 <button class="btn btn-primary me-3" data-bs-toggle="offcanvas" href="#sidebarMenu">
@@ -44,7 +44,7 @@
                 </button>
                 <div class="brand">
                     <span class="fs-4 fw-bold text-dark">UniTax <span class="text-primary">PRO</span></span>
-                    <div id="main_userid_show" class="badge bg-secondary text-xs" style="font-size: 10px;">ID: Loading...</div>
+                    
                 </div>
             </div>
 
@@ -84,6 +84,7 @@
                 <div class="card bg-primary text-white p-3">
                     <h6 class="mb-0 opacity-75">Good Day,</h6>
                     <h4 id="usernameDisplay" class="fw-bold">User</h4>
+                    <div id="main_userid_show" class="text-xs" style="font-size: 10px;">ID: Loading...</div>
                     <div class="mt-3">
                         <h2 id="liveTime" class="mb-0">00:00</h2>
                         <p id="liveDate" class="small mb-0 opacity-75">Loading date...</p>
@@ -127,8 +128,8 @@
 
     <!-- Navigation Sidebar (Offcanvas) -->
     <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarMenu">
-        <div class="offcanvas-header border-bottom bg-dark text-white">
-            <h5 class="offcanvas-title">Navigation Menu</h5>
+        <div class="offcanvas-header  ">
+            <h5 class="offcanvas-title" style="text-transform: uppercase;">Gateway</h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
         </div>
         <div class="offcanvas-body p-0">
@@ -144,6 +145,7 @@
                         <a href="#" data-module="masters/ledger-cw" class="list-group-item list-group-item-action border-0 rounded mb-1"><i class="bi bi-person-plus me-2"></i> Ledger</a>
                         <a href="#" data-module="masters/stock-cw" class="list-group-item list-group-item-action border-0 rounded mb-1"><i class="bi bi-box-seam me-2"></i> Stock</a>
                         <a href="#" data-module="masters/company-cw" class="list-group-item list-group-item-action border-0 rounded mb-1"><i class="bi bi-building-add me-2"></i> Company</a>
+                        <a href="#" data-module="masters/project-cw" class="list-group-item list-group-item-action border-0 rounded mb-1"><i class="bi bi-building-add me-2"></i> Project</a>
                     </div>
                 </div>
                 <div class="tab-pane fade" id="nav-trans">

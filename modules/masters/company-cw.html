@@ -1,216 +1,157 @@
 <div class="animate-in">
-    <!-- Action Bar -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h4 class="fw-bold mb-0">Company Master</h4>
-            <p class="text-muted small mb-0">Register a new legal entity for accounting and compliance.</p>
-        </div>
-        <div class="btn-group shadow-sm">
-            <button class="btn btn-white btn-sm border" onclick="App.Router('masters/company-cw')">
-                <i class="bi bi-arrow-repeat me-1"></i> New Entry
-            </button>
-        </div>
-    </div>
-
-    <form id="companyForm" data-category="Masters" autocomplete="off">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white p-0">
-                <!-- ERP Style Tabs -->
-                <ul class="nav nav-tabs border-bottom-0" id="companyTab" role="tablist">
-                    <li class="nav-item">
-                        <button class="nav-link active py-3 px-4" data-bs-toggle="tab" data-bs-target="#tab-general" type="button">
-                            <i class="bi bi-info-circle me-2"></i>General Info
-                        </button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link py-3 px-4" data-bs-toggle="tab" data-bs-target="#tab-tax" type="button">
-                            <i class="bi bi-percent me-2"></i>Tax & Compliance
-                        </button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link py-3 px-4" data-bs-toggle="tab" data-bs-target="#tab-bank" type="button">
-                            <i class="bi bi-bank me-2"></i>Banking
-                        </button>
-                    </li>
-                    <li class="nav-item">
-                        <button class="nav-link py-3 px-4" data-bs-toggle="tab" data-bs-target="#tab-legal" type="button">
-                            <i class="bi bi-shield-check me-2"></i>Legal & Signatory
-                        </button>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="card-body p-4">
-                <div class="tab-content" id="companyTabContent">
-                    
-                    <!-- 1. General Information -->
-                    <div class="tab-pane fade show active" id="tab-general">
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <label class="form-label">Company Code</label>
-                                <input type="text" name="CompanyCode" class="form-control form-control-sm font-monospace fw-bold" 
-                                       placeholder="e.g. 1000" maxlength="4" required>
-                            </div>
-                            <div class="col-md-9">
-                                <label class="form-label">Company Name (Full Legal Name)</label>
-                                <input type="text" name="companyName" class="form-control form-control-sm proper-case" required>
-                            </div>
-                            <div class="col-md-12">
-                                <label class="form-label">Street Address</label>
-                                <input type="text" name="companyAddress1" class="form-control form-control-sm" placeholder="Plot No, Building, Street">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">City / Area</label>
-                                <input type="text" name="companyAddress2" class="form-control form-control-sm">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">State</label>
-                                <input type="text" name="Company_State" class="form-control form-control-sm" list="indian-states" required>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">PIN Code</label>
-                                <input type="text" name="Company_Pin" class="form-control form-control-sm" pattern="\d{6}" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Contact Number</label>
-                                <input type="tel" name="companyPhone" class="form-control form-control-sm" pattern="\d{10}">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Official Email</label>
-                                <input type="email" name="Email" class="form-control form-control-sm">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Website</label>
-                                <input type="url" name="Website" class="form-control form-control-sm" placeholder="https://">
-                            </div>
-                        </div>
+    <form id="Companies" data-category="Masters" autocomplete="off">
+        <div class="card border-0 shadow-sm overflow-hidden">
+            <div class="card-body p-0">
+                <!-- Command Header -->
+                <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-light sticky-top z-10">
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark">Company Master</h5>
+                        <p class="text-muted small mb-0">Define legal entity, tax registrations, and banking</p>
                     </div>
-
-                    <!-- 2. Tax Information -->
-                    <div class="tab-pane fade" id="tab-tax">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label">PAN (Income Tax)</label>
-                                <input type="text" name="PAN" class="form-control form-control-sm upper-case font-monospace" maxlength="10" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">GSTIN</label>
-                                <input type="text" name="GSTIN" class="form-control form-control-sm upper-case font-monospace" maxlength="15" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">TIN / Other Tax ID</label>
-                                <input type="text" name="TIN" class="form-control form-control-sm upper-case">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Tax Classification</label>
-                                <select class="form-select form-select-sm" name="taxClassification">
-                                    <option value="Regular Taxpayer">Regular Taxpayer (GST Registered)</option>
-                                    <option value="Composition Taxpayer">Composition Taxpayer</option>
-                                    <option value="Unregistered Person">Unregistered Person</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">FSSAI License No.</label>
-                                <input type="text" name="fssaiLicenseNumber" class="form-control form-control-sm" placeholder="FSSAI-XXXXXXXXXX">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Import Export Code (IEC)</label>
-                                <input type="text" name="importExportCode" class="form-control form-control-sm" maxlength="10">
-                            </div>
-                        </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-white btn-sm border fw-semibold" onclick="App.Router('masters/company-cw')">Reset</button>
+                        <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm fw-bold">
+                            <i class="bi bi-check2-circle me-1"></i> Save Company
+                        </button>
                     </div>
-
-                    <!-- 3. Banking Details -->
-                    <div class="tab-pane fade" id="tab-bank">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Bank Name</label>
-                                <input type="text" name="bankName" class="form-control form-control-sm proper-case">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Bank Branch</label>
-                                <input type="text" name="bankBranch" class="form-control form-control-sm">
-                            </div>
-                            <div class="col-md-5">
-                                <label class="form-label">Account Number</label>
-                                <input type="text" name="accountNumber" class="form-control form-control-sm font-monospace">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">IFSC Code</label>
-                                <input type="text" name="ifscCode" class="form-control form-control-sm upper-case">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">SWIFT Code</label>
-                                <input type="text" name="Swift Code" class="form-control form-control-sm upper-case">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 4. Legal & Signatory -->
-                    <div class="tab-pane fade" id="tab-legal">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <h6 class="fw-bold text-muted small text-uppercase mb-3">Authorized Signatory</h6>
-                                <div class="mb-3">
-                                    <label class="form-label">Full Name</label>
-                                    <input type="text" name="signatoryName" class="form-control form-control-sm proper-case" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Designation</label>
-                                    <input type="text" name="designation" class="form-control form-control-sm proper-case" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Mobile Number</label>
-                                    <input type="tel" name="contactNumber" class="form-control form-control-sm">
-                                </div>
-                            </div>
-                            <div class="col-md-6 border-start ps-4">
-                                <h6 class="fw-bold text-muted small text-uppercase mb-3">Registration Info</h6>
-                                <div class="mb-3">
-                                    <label class="form-label">Legal Status</label>
-                                    <select class="form-select form-select-sm" name="companyLegalStatus">
-                                        <option value="Private Limited">Private Limited</option>
-                                        <option value="Public Limited">Public Limited</option>
-                                        <option value="LLP">LLP</option>
-                                        <option value="Proprietorship">Proprietorship</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">CIN (Registration No.)</label>
-                                    <input type="text" name="registrationNumber" class="form-control form-control-sm font-monospace upper-case">
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Registration Office (ROC)</label>
-                                    <select class="form-select form-select-sm" name="registrationOffice">
-                                        <option value="ROC Delhi">ROC Delhi</option>
-                                        <option value="ROC Mumbai">ROC Mumbai</option>
-                                        <option value="ROC Bangalore">ROC Bangalore</option>
-                                        <option value="ROC Chennai">ROC Chennai</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Incorporation Date</label>
-                                    <input type="date" name="incorporationDate" class="form-control form-control-sm">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
-            </div>
-            
-            <!-- Footer Actions -->
-            <div class="card-footer bg-light p-3 text-end">
-                <button type="button" class="btn btn-link text-decoration-none text-muted me-3" onclick="App.Router('dashboard')">Cancel</button>
-                <button type="submit" class="btn btn-primary px-5 shadow-sm rounded-pill">
-                    <i class="bi bi-save2 me-2"></i> Save Company Profile
-                </button>
+
+                <!-- Detail Content -->
+                <div class="p-4">
+                    <div class="row g-4">
+                        <!-- Primary Identity -->
+                        <div class="col-12">
+                            <div class="p-3 border rounded-3 bg-white">
+                                <h6 class="fw-bold text-primary small text-uppercase mb-3">Primary Identity</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-2">
+                                        <label class="form-label small fw-bold">Company Code</label>
+                                        <input type="text" name="CompanyCode" class="form-control form-control-sm font-monospace upper-case fw-bold" 
+                                               data-check-unique="true" data-sheet_name="Companies" data-column_name="CompanyCode" 
+                                               maxlength="4" minlength="4" placeholder="1000" required>
+                                    </div>
+                                    <div class="col-md-7">
+                                        <label class="form-label small fw-bold">Company Full Name (Legal Name)</label>
+                                        <input type="text" name="companyName" class="form-control form-control-sm proper-case" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold">Incorporation Date</label>
+                                        <input type="date" name="incorporationDate" class="form-control form-control-sm">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Address & Communication -->
+                        <div class="col-md-7">
+                            <div class="p-3 border rounded-3 bg-white h-100">
+                                <h6 class="fw-bold text-primary small text-uppercase mb-3">Communication Details</h6>
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold">Street Address (Line 1)</label>
+                                        <input type="text" name="companyAddress1" class="form-control form-control-sm" required>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold">City / Area (Line 2)</label>
+                                        <input type="text" name="companyAddress2" class="form-control form-control-sm" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">State</label>
+                                        <input type="text" name="Company_State" list="indian-states" class="form-control form-control-sm" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Pin Code</label>
+                                        <input type="text" name="Company_Pin" class="form-control form-control-sm" maxlength="6" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Phone Number</label>
+                                        <input type="tel" name="companyPhone" class="form-control form-control-sm" placeholder="10 Digits">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Email Address</label>
+                                        <input type="email" name="Email" class="form-control form-control-sm">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold">Website</label>
+                                        <input type="url" name="Website" class="form-control form-control-sm text-lowercase" placeholder="https://">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tax & Statutory -->
+                        <div class="col-md-5">
+                            <div class="p-3 border rounded-3 bg-white h-100">
+                                <h6 class="fw-bold text-primary small text-uppercase mb-3">Statutory & Tax</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-12">
+                                        <label class="form-label small fw-bold">PAN (Income Tax)</label>
+                                        <input type="text" name="PAN" class="form-control form-control-sm upper-case font-monospace" maxlength="10" required>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label small fw-bold">GSTIN</label>
+                                        <input type="text" name="GSTIN" class="form-control form-control-sm upper-case font-monospace" maxlength="15" required>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label small fw-bold">Tax Classification</label>
+                                        <select class="form-select form-select-sm" name="taxClassification">
+                                            <option>Regular Taxpayer</option>
+                                            <option>Composition Scheme</option>
+                                            <option>Unregistered Person</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label small fw-bold">FSSAI License No.</label>
+                                        <input type="text" name="fssaiLicenseNumber" class="form-control form-control-sm">
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label small fw-bold">Import Export Code (IEC)</label>
+                                        <input type="text" name="importExportCode" class="form-control form-control-sm" maxlength="10">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Banking -->
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded-3 bg-white">
+                                <h6 class="fw-bold text-primary small text-uppercase mb-3">Default Bank Details</h6>
+                                <div class="row g-3">
+                                    <div class="col-12"><label class="form-label small">Bank Name</label><input type="text" name="bankName" class="form-control form-control-sm proper-case"></div>
+                                    <div class="col-md-6"><label class="form-label small">Account No.</label><input type="text" name="accountNumber" class="form-control form-control-sm font-monospace"></div>
+                                    <div class="col-md-6"><label class="form-label small">IFSC Code</label><input type="text" name="ifscCode" class="form-control form-control-sm upper-case"></div>
+                                    <div class="col-md-6"><label class="form-label small">Branch Name</label><input type="text" name="bankBranch" class="form-control form-control-sm"></div>
+                                    <div class="col-md-6"><label class="form-label small">Swift Code</label><input type="text" name="Swift_Code" class="form-control form-control-sm upper-case"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Legal & Signatory -->
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded-3 bg-white">
+                                <h6 class="fw-bold text-primary small text-uppercase mb-3">Legal & Signatory</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6"><label class="form-label small">Signatory Name</label><input type="text" name="signatoryName" class="form-control form-control-sm proper-case" required></div>
+                                    <div class="col-md-6"><label class="form-label small">Designation</label><input type="text" name="designation" class="form-control form-control-sm" required></div>
+                                    <div class="col-md-12"><label class="form-label small">Company CIN (Identification No.)</label><input type="text" name="registrationNumber" class="form-control form-control-sm upper-case font-monospace"></div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small">Legal Status</label>
+                                        <select class="form-select form-select-sm" name="companyLegalStatus">
+                                            <option>Private Limited</option><option>Public Limited</option><option>LLP</option><option>Sole Proprietorship</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small">ROC Office</label>
+                                        <select class="form-select form-select-sm" name="registrationOffice">
+                                            <option>ROC Delhi</option><option>ROC Mumbai</option><option>ROC Bangalore</option><option>ROC Kolkata</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </form>
 </div>
-
-<!-- Shared Datalists (Can be moved to index if needed) -->
-<datalist id="indian-states">
-    <option value="Andhra Pradesh"><option value="Delhi"><option value="Gujarat"><option value="Haryana"><option value="Karnataka"><option value="Maharashtra"><option value="Tamil Nadu"><option value="Uttar Pradesh"><option value="West Bengal">
-</datalist>

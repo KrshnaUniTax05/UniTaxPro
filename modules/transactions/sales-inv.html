@@ -1,229 +1,214 @@
 <div class="animate-in">
-    <!-- Action Header -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h4 class="fw-bold mb-0">Sales Invoice (GSTR-Ready)</h4>
-            <p class="text-muted small mb-0">Post outward supplies and update accounts receivable.</p>
-        </div>
-        <div class="btn-group shadow-sm">
-            <button class="btn btn-white btn-sm border" onclick="App.Router('transactions/sales-inv')">
-                <i class="bi bi-plus-circle me-1"></i> New Invoice
-            </button>
-            <button class="btn btn-white btn-sm border">
-                <i class="bi bi-printer me-1"></i> Print PDF
-            </button>
-        </div>
-    </div>
-
     <form id="SalesInvoiceForm" data-category="Transactions">
-        <!-- System Metadata -->
         <input type="hidden" name="documentType" value="SALE">
 
-        <!-- HEADER SECTION -->
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-body bg-light rounded-3 p-3">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Customer / Client Account</label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-white"><i class="bi bi-person-check"></i></span>
-                            <!-- Universal Lookup Trigger -->
-                            <input type="text" name="customer_ledger" 
-                                   class="form-control proper-case" 
-                                   placeholder="Search Ledger Name..." 
-                                   data-fetch_column 
-                                   data-sheet_name="LedgerCreation" 
-                                   list="ledgerList" required>
-                        </div>
-                        <!-- Related fields auto-populated by selecting the ledger -->
-                        <div class="d-flex gap-2 mt-1">
-                            <input type="text" name="auto_customer_ledger_state" class="badge-xs border-0 bg-transparent text-muted w-50" readonly placeholder="State: -">
-                            <input type="text" name="auto_customer_ledger_GST" class="badge-xs border-0 bg-transparent text-muted w-50" readonly placeholder="GST: -">
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Invoice Date</label>
-                        <input type="date" name="voucher_date" class="form-control form-control-sm" id="invDate" required>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Place of Supply</label>
-                        <select name="pos" class="form-select form-select-sm" id="supplyType">
-                            <option value="INTRA">Intra-State (CGST/SGST)</option>
-                            <option value="INTER">Inter-State (IGST)</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Project / Cost Center</label>
-                        <input type="text" name="project" class="form-control form-control-sm upper-case" placeholder="General" list="Projectlist">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Ref No.</label>
-                        <input type="text" name="ref_no" class="form-control form-control-sm" placeholder="PO-001">
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ITEM GRID SECTION -->
         <div class="card border-0 shadow-sm overflow-hidden">
-            <div class="table-responsive">
-                <table class="table table-sm table-hover mb-0 align-middle" id="salesItemTable">
-                    <thead class="table-dark">
-                        <tr>
-                            <th class="ps-3" width="5%">#</th>
-                            <th width="40%">Item Name / Service SKU</th>
-                            <th width="10%">Qty</th>
-                            <th width="15%">Rate</th>
-                            <th width="10%">Tax %</th>
-                            <th class="text-end pe-3" width="15%">Line Total</th>
-                            <th width="5%"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="salesItemBody">
-                        <tr>
-                            <td class="sr-no ps-3">1</td>
-                            <td>
-                                <!-- Universal Lookup Trigger for Item -->
-                                <input type="text" name="item_name[]" 
-                                       class="form-control form-control-sm border-0 bg-transparent itemName" 
-                                       placeholder="Search Stock..." 
-                                       data-fetch_column 
-                                       data-sheet_name="Stock" 
-                                       list="stockList" required>
-                                
-                                <!-- Hidden fields auto-populated from Stock Master -->
-                                <input type="hidden" name="auto_item_name_itemHSN">
-                                <input type="hidden" name="auto_item_name_Stock Code">
-                                <div class="small opacity-50 px-1" style="font-size: 9px;">
-                                    HSN: <span class="hsn-display">-</span>
+            <!-- ERP Command Header -->
+            <div class="card-body p-0">
+                <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-light sticky-top z-10">
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark">Sales Invoice</h5>
+                        <p class="text-muted small mb-0">Tax Invoice / Bill of Supply</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-secondary btn-sm shadow-sm" data-bs-toggle="offcanvas" data-bs-target="#additionalDetails">
+                            <i class="bi bi-truck me-1"></i> Shipping & Order
+                        </button>
+                        <button type="button" class="btn btn-white btn-sm border fw-semibold" onclick="App.Router('transactions/sales-inv')">Reset</button>
+                        <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm fw-bold">
+                            <i class="bi bi-check2-all me-1"></i> Post Document
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-4">
+                    <!-- Header: Buyer & Meta -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4 border-end pe-4">
+                            <label class="form-label small fw-bold text-primary">Buyer (Bill To)</label>
+                            <input type="text" name="customer_ledger" 
+                                   class="form-control form-control-sm mb-2" 
+                                   placeholder="Search Customer..." 
+                                   data-fetch_column data-sheet_name="LedgerCreation" data-column_name="name & ledgerCode" 
+                                   list="customerList" required>
+                            <datalist id="customerList"></datalist>
+                            
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label class="badge-xs text-muted">GSTIN</label>
+                                    <input type="text" name="auto_customer_ledger_GST" class="form-control form-control-sm bg-light border-0 px-2" readonly>
                                 </div>
-                            </td>
-                            <td><input type="number" name="qty[]" class="form-control form-control-sm border-0 bg-transparent qty text-center" value="1" step="any"></td>
-                            <td><input type="number" name="rate[]" class="form-control form-control-sm border-0 bg-transparent rate text-end" placeholder="0.00" step="any"></td>
-                            <td>
-                                <!-- This will be auto-filled from Stock Master -->
-                                <select name="auto_item_name_ItemTax" class="form-select form-select-sm border-0 bg-transparent tax">
-                                    <option value="0">0%</option>
-                                    <option value="5">5%</option>
-                                    <option value="12">12%</option>
-                                    <option value="18">18%</option>
-                                    <option value="28">28%</option>
-                                </select>
-                            </td>
-                            <td class="text-end pe-3">
-                                <span class="line-total fw-bold text-dark">0.00</span>
-                            </td>
-                            <td class="text-center">
-                                <button type="button" class="btn btn-link btn-sm text-danger p-0" onclick="removeRow(this)">
-                                    <i class="bi bi-x-circle"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- Dynamic Footer -->
-            <div class="card-footer bg-white border-top-0 d-flex justify-content-between align-items-center py-3">
-                <button type="button" class="btn btn-sm btn-outline-primary px-3 rounded-pill" onclick="addNewRow()">
-                    <i class="bi bi-plus-lg me-1"></i> Add Line
-                </button>
-                <div class="row g-2 justify-content-end w-50">
-                    <div class="col-7 text-end text-muted small fw-bold">TAXABLE VALUE:</div>
-                    <div class="col-5 text-end pe-3 small fw-bold">₹ <span id="taxable-total">0.00</span></div>
-                    
-                    <div class="col-7 text-end text-muted small fw-bold">TOTAL TAX (GST):</div>
-                    <div class="col-5 text-end pe-3 small fw-bold">₹ <span id="gst-total">0.00</span></div>
-                    
-                    <div class="col-12"><hr class="my-1"></div>
-                    
-                    <div class="col-7 text-end fw-bold text-primary">INVOICE GRAND TOTAL:</div>
-                    <div class="col-5 text-end pe-3 fw-bold text-primary">₹ <span id="grand-total">0.00</span></div>
+                                <div class="col-6">
+                                    <label class="badge-xs text-muted">Place of Supply</label>
+                                    <input type="text" name="auto_customer_ledger_state" class="form-control form-control-sm bg-light border-0 px-2" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-8 ps-4">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Invoice No.</label>
+                                    <input type="text" name="Invoice" id="invNoDisplay" class="form-control form-control-sm font-monospace fw-bold bg-white" readonly>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Billing Date</label>
+                                    <input type="date" name="voucher_date" id="invDate" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Project/PC</label>
+                                    <input type="text" name="project" list="Projectlist" class="form-control form-control-sm upper-case" 
+                                           data-fetch_column data-sheet_name="Projects" data-column_name="ProjectName & ProjectCode" placeholder="General">
+                                    <datalist id="Projectlist"></datalist>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Supply Type</label>
+                                    <select name="pos" class="form-select form-select-sm">
+                                        <option value="INTRA">Intra-State</option>
+                                        <option value="INTER">Inter-State</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Item Grid -->
+                    <div class="border rounded-3 overflow-hidden mb-4">
+                        <table class="table table-sm table-hover mb-0 align-middle" id="salesItemTable">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th class="ps-3" width="5%">#</th>
+                                    <th width="40%">Item / Service Description</th>
+                                    <th width="10%">Qty</th>
+                                    <th width="15%">Rate</th>
+                                    <th width="10%">Tax %</th>
+                                    <th class="text-end pe-3" width="15%">Total</th>
+                                    <th width="5%"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="salesItemBody">
+                                <tr>
+                                    <td class="sr-no ps-3">1</td>
+                                    <td>
+                                        <input type="text" name="item_name[]" 
+                                               class="form-control form-control-sm border-0 bg-transparent itemName" 
+                                               placeholder="Select SKU/Item..." 
+                                               data-fetch_column data-sheet_name="Stock" data-column_name="itemName & Stock_Code" 
+                                               list="stockList" required>
+                                        <datalist id="stockList"></datalist>
+                                        <div class="d-flex gap-2 opacity-50 px-1" style="font-size: 9px;">
+                                            
+                                            <span>HSN: <input type="text" name="auto_item_name_itemHSN" class="border-0 bg-transparent p-0" style="width:60px" readonly></span>
+                                            <span>Tax Code: <input type="text" name="auto_item_name_ItemTax" class="border-0 bg-transparent p-0 tax-val" style="width:10px" readonly>%</span>
+                                        </div>
+                                    </td>
+                                    <td><input type="number" name="qty[]" class="form-control form-control-sm border-0 bg-transparent qty text-center" value="1"></td>
+                                    <td><input type="number" name="rate[]" class="form-control form-control-sm border-0 bg-transparent rate text-end" placeholder="0.00"></td>
+                                    <td><input type="text" class="form-control form-control-sm border-0 bg-transparent text-center tax-display" readonly></td>
+                                    <td class="text-end pe-3 fw-bold"><span class="line-total">0.00</span></td>
+                                    <td class="text-center"><button type="button" class="btn btn-link btn-sm text-danger p-0" onclick="removeRow(this)"><i class="bi bi-trash"></i></button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="p-2 bg-light border-top">
+                            <button type="button" class="btn btn-white btn-sm border shadow-sm px-3" onclick="addNewRow()">+ Add Line Item</button>
+                        </div>
+                    </div>
+
+                    <!-- Footer Totals -->
+                    <div class="row justify-content-end">
+                        <div class="col-md-4">
+                            <div class="card bg-light border-0">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted small fw-bold">TAXABLE VALUE</span>
+                                        <span class="fw-bold" id="taxable-total">0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted small fw-bold">TOTAL TAX</span>
+                                        <span class="fw-bold" id="gst-total">0.00</span>
+                                    </div>
+                                    <hr class="my-2">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-primary fw-bold">NET AMOUNT</span>
+                                        <span class="h5 fw-bold text-primary mb-0">₹ <span id="grand-total">0.00</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Footer Remarks & Submission -->
-        <div class="row mt-4">
-            <div class="col-md-8">
-                <textarea class="form-control" name="narration" rows="3" placeholder="Narration / Terms & Conditions..."></textarea>
+        <!-- SHIPPING OFFCANVAS -->
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="additionalDetails" style="width: 450px;">
+            <div class="offcanvas-header bg-dark text-white">
+                <h5 class="offcanvas-title">Shipping & Order Meta</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
             </div>
-            <div class="col-md-4 text-end align-self-end">
-                <button type="submit" class="btn btn-primary btn-lg px-5 shadow-lg rounded-pill w-100 py-3">
-                    <i class="bi bi-cloud-upload me-2"></i> Post Sales Voucher
-                </button>
-                <p class="small text-muted mt-2 text-center">Changes will reflect in GL and Stock Balance instantly.</p>
+            <div class="offcanvas-body">
+                <section class="mb-4">
+                    <p class="fw-bold text-primary small text-uppercase mb-2">Consignee (Ship To)</p>
+                    <div class="bg-light p-3 rounded shadow-sm">
+                        <input type="text" name="consignee_name" class="form-control form-control-sm mb-2" placeholder="Consignee Name">
+                        <textarea name="delivery_address" class="form-control form-control-sm mb-2" placeholder="Shipping Address"></textarea>
+                        <div class="row g-2">
+                            <div class="col-6"><input type="text" name="delivery_state" class="form-control form-control-sm" placeholder="State"></div>
+                            <div class="col-6"><input type="text" name="delivery_pin" class="form-control form-control-sm" placeholder="PIN"></div>
+                        </div>
+                    </div>
+                </section>
+                <section class="mb-4">
+                    <p class="fw-bold text-primary small text-uppercase mb-2">Dispatch Details</p>
+                    <div class="bg-light p-3 rounded shadow-sm">
+                        <div class="row g-2 mb-2">
+                            <div class="col-6"><label class="small text-muted">LR/Doc No.</label><input type="text" name="lr_no" class="form-control form-control-sm"></div>
+                            <div class="col-6"><label class="small text-muted">Vehicle No.</label><input type="text" name="vehicle_no" class="form-control form-control-sm"></div>
+                        </div>
+                        <label class="small text-muted">Transporter</label>
+                        <input type="text" name="transporter" class="form-control form-control-sm">
+                    </div>
+                </section>
+                <button type="button" class="btn btn-primary w-100" data-bs-dismiss="offcanvas">Save Meta Info</button>
             </div>
         </div>
     </form>
 </div>
 
 <script>
-    /**
-     * MODULE LOGIC
-     */
-    
-    // Initial Setup
+    document.getElementById('invNoDisplay').value = Utils.GenerateDocID('SL');
     document.getElementById('invDate').valueAsDate = new Date();
 
     function addNewRow() {
-        const newRow = Utils.AddGridRow('salesItemTable');
-        // Re-bind the lookup engine to the new row items
-        if (newRow) App.BindUniversalLookup(newRow);
+        const tr = Utils.AddGridRow('salesItemTable');
+        if(tr) App.InitERPLogic('transactions/sales-inv'); 
     }
 
     function removeRow(btn) {
-        const row = btn.closest('tr');
-        const tbody = document.getElementById('salesItemBody');
-        if (tbody.rows.length > 1) {
-            row.remove();
+        if(document.querySelectorAll('#salesItemBody tr').length > 1) {
+            btn.closest('tr').remove();
             recalculateVoucher();
         }
     }
 
-    // Calculation Logic (Math Engine)
     function recalculateVoucher() {
-        let taxableTotal = 0;
-        let gstTotal = 0;
-
+        let taxable = 0; let totalGst = 0;
         document.querySelectorAll('#salesItemBody tr').forEach(row => {
-            const qty = parseFloat(row.querySelector('.qty').value) || 0;
-            const rate = parseFloat(row.querySelector('.rate').value) || 0;
+            const q = parseFloat(row.querySelector('.qty').value) || 0;
+            const r = parseFloat(row.querySelector('.rate').value) || 0;
+            const t = parseFloat(row.querySelector('.tax-val').value) || 0;
             
-            // Note: Tax rate input is named auto_item_name_ItemTax
-            const taxInput = row.querySelector('[name="auto_item_name_ItemTax"]');
-            const taxPercent = parseFloat(taxInput.value) || 0;
-
-            const res = Utils.CalculateLine(qty, rate, taxPercent);
+            const line = Utils.CalculateLine(q, r, t);
+            row.querySelector('.line-total').innerText = line.total.toLocaleString('en-IN', {minimumFractionDigits: 2});
+            row.querySelector('.tax-display').value = t + "%";
             
-            row.querySelector('.line-total').innerText = res.total.toLocaleString('en-IN', { minimumFractionDigits: 2 });
-            
-            // Update UI for HSN if auto-populated
-            const hsnVal = row.querySelector('[name="auto_item_name_itemHSN"]').value;
-            row.querySelector('.hsn-display').innerText = hsnVal || '-';
-
-            taxableTotal += res.base;
-            gstTotal += res.tax;
+            taxable += line.base; totalGst += line.tax;
         });
-
-        document.getElementById('taxable-total').innerText = taxableTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 });
-        document.getElementById('gst-total').innerText = gstTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 });
-        document.getElementById('grand-total').innerText = (taxableTotal + gstTotal).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+        document.getElementById('taxable-total').innerText = taxable.toLocaleString('en-IN', {minimumFractionDigits: 2});
+        document.getElementById('gst-total').innerText = totalGst.toLocaleString('en-IN', {minimumFractionDigits: 2});
+        document.getElementById('grand-total').innerText = (taxable + totalGst).toLocaleString('en-IN', {minimumFractionDigits: 2});
     }
 
-    // Bind change listener for calculations
-    document.getElementById('salesItemBody').addEventListener('input', (e) => {
-        if (e.target.classList.contains('qty') || e.target.classList.contains('rate') || e.target.name.includes('Tax')) {
-            recalculateVoucher();
-        }
-    });
-
-    // Special Event: Refresh math when an auto-populated tax rate changes
-    document.addEventListener('change', (e) => {
-        if (e.target.name.includes('auto_')) {
-            setTimeout(recalculateVoucher, 100);
-        }
-    });
-
-    App.Log("Sales Module: Dynamic lookup and math engine active.");
+    document.getElementById('salesItemBody').addEventListener('input', recalculateVoucher);
 </script>
