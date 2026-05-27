@@ -28,9 +28,15 @@ const App = {
         const userIdEl = document.getElementById('main_userid_show');
         if(userIdEl) userIdEl.innerText = `ID: ${this.State.userId}`;
 
-        // 4. Load Initial View
-        await this.Router('dashboard');
-        
+        // 🚀 FIXED STARTUP LOGIC
+        const pinnedModule = localStorage.getItem('pinnedModule');
+        if (pinnedModule) {
+            console.log(`📡 [App] Loading pinned module: ${pinnedModule}`);
+            await this.Router(pinnedModule);
+        } else {
+            await this.Router('dashboard');
+        }
+
         // 5. Remove Loader
         const loader = document.getElementById('app-loader');
         if(loader) loader.style.display = 'none';
@@ -173,6 +179,25 @@ const App = {
             }
         });
 
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F10') {
+                e.preventDefault();
+                const current = this.State.activeModule;
+                const pinned = localStorage.getItem('pinnedModule');
+
+                if (pinned === current) {
+                    // Remove Pin
+                    localStorage.removeItem('pinnedModule');
+                    this.UI.Notify('System', `Module '${current}' unpinned.`, 'warning');
+                } else {
+                    // Set Pin
+                    localStorage.setItem('pinnedModule', current);
+                    this.UI.Notify('System', `Module '${current}' fixed. It will load on startup.`, 'success');
+                }
+            }
+        })
+    
+
         // Dark Mode Toggle
         const toggle = document.getElementById('darkModeToggle');
         if(toggle) {
@@ -204,15 +229,43 @@ const App = {
     },
 
     UI: {
-        Notify(title, message, type = 'primary') {
-            const toastEl = document.getElementById('appToast');
-            if(!toastEl) return;
-            document.getElementById('toastTitle').innerText = title;
-            document.getElementById('toastBody').innerText = message;
-            toastEl.className = `toast show bg-${type} text-white shadow-lg`;
-            const toast = new bootstrap.Toast(toastEl);
-            toast.show();
-        },
+ Notify(title, message, type = 'primary') {
+    const box = document.getElementById('errorNotificationBox');
+    const titleEl = document.getElementById('notifyTitle');
+    const msgEl = document.getElementById('notifyMessage');
+    const iconEl = document.getElementById('notifyIcon');
+
+    if (!box) return;
+
+    // 1. Clear any existing hide-timer to prevent premature sliding down
+    if (window._notifyTimeout) clearTimeout(window._notifyTimeout);
+
+    // 2. Set Content
+    // titleEl.innerText = title;
+    msgEl.innerText = message;
+
+    // 3. Set Professional Icon based on Type
+    let iconClass = "bi-info-circle-fill";
+    if (type === 'success') iconClass = "bi-check-circle-fill";
+    if (type === 'danger' || type === 'error') iconClass = "bi-exclamation-triangle-fill";
+    if (type === 'warning') iconClass = "bi-exclamation-circle-fill";
+    iconEl.className = `bi ${iconClass} me-3 fs-5`;
+
+    // 4. Set Background Color (using Bootstrap classes)
+    const bgClass = type === 'error' ? 'danger' : type; 
+    box.className = `error-notification-bar slide-up bg-${bgClass} text-white shadow-lg`;
+
+    // 5. Auto-Hide Logic: Slide down after 5 seconds
+    window._notifyTimeout = setTimeout(() => {
+        box.classList.remove('slide-up');
+        box.classList.add('slide-down');
+        
+        // Remove animation classes after they finish
+        setTimeout(() => {
+            box.className = 'error-notification-bar';
+        }, 500); 
+    }, 5000);
+},
         StartClock() {
             setInterval(() => {
                 const n = new Date();

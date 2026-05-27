@@ -35,7 +35,7 @@ const API = {
         const lookupInputs = form.querySelectorAll('[data-fetch_column]');
         for (const input of lookupInputs) {
             const sheet = input.dataset.sheet_name;
-            const colDef = input.dataset.column_name;
+            const colDef = input.dataset.column_name; // e.g., "StateCode & StateName"
             const listId = input.getAttribute('list');
             if (!sheet || !listId) continue;
 
@@ -50,14 +50,21 @@ const API = {
             if (datalist && data) {
                 datalist.innerHTML = "";
                 const cols = colDef.split('&').map(c => c.trim());
+                
                 Object.values(data).forEach(record => {
-                    // Use the last column in the definition as the primary value (e.g. itemName)
-                    const mainVal = record[cols[cols.length-1]];
-                    if (mainVal) {
-                        let opt = document.createElement('option');
-                        opt.value = mainVal;
-                        opt.textContent = cols.map(c => record[c]).filter(v => v).join(' | ');
-                        datalist.appendChild(opt);
+                    // Ensure we have enough columns to split
+                    if (cols.length >= 2) {
+                        const textPart = record[cols[0]]; // 1st split as text
+                        const valuePart = record[cols[1]]; // 2nd split as value
+
+                        if (textPart && valuePart) {
+                            let opt = document.createElement('option');
+                            // Use the 2nd column as the hidden value
+                            opt.value = valuePart; 
+                            // Use the 1st column as the visible text
+                            opt.textContent = textPart; 
+                            datalist.appendChild(opt);
+                        }
                     }
                 });
             }
@@ -183,5 +190,40 @@ const API = {
             if (hasValidData) items.push(item);
         });
         return items;
+    },
+    // Add this inside the API object
+    async Fetch(path) {
+        try {
+            // Ensure path starts from userId. If it already includes it, remove it.
+            // Based on your previous code, path looks like 'Transactions/SalesInvoiceForm'
+            const fullPath = `${App.State.userId}/${path}`;
+            const snap = await this.DB.ref(fullPath).once('value');
+            return snap.val();
+        } catch (e) {
+            console.error("API Fetch Error:", e);
+            return null;
+        }
+    },
+
+    async DeleteTransaction(formId, key) {
+        try {
+            await this.DB.ref(`${App.State.userId}/Transactions/${formId}/${key}`).remove();
+            App.UI.Notify('Success', 'Transaction Deleted', 'success');
+            return true;
+        } catch (e) {
+            App.UI.Notify('Error', 'Could not delete.', 'danger');
+            return false;
+        }
+    },
+    // Add to API object in api.js
+    async GetAllTransactionTypes() {
+        try {
+            const path = `${App.State.userId}/Transactions`;
+            const snap = await this.DB.ref(path).once('value');
+            return snap.exists() ? Object.keys(snap.val()) : [];
+        } catch (e) {
+            console.error("Error fetching transaction types:", e);
+            return [];
+        }
     }
 };

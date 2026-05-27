@@ -23,7 +23,7 @@
                             <label class="form-label small fw-bold text-success" id="accLabel">Deposit Into (Bank/Cash)</label>
                             <input type="text" name="gl_account" class="form-control form-control-sm font-monospace" 
                                    list="rpAccList" placeholder="Search Account..." required 
-                                   data-fetch_column data-sheet_name="LedgerCreation" data-column_name="name">
+                                   data-fetch_column data-sheet_name="LedgerCreation" data-column_name="ledgerCode&name">
                             <datalist id="rpAccList"></datalist>
                         </div>
                         <div class="col-md-3">
@@ -56,7 +56,7 @@
                                 <td class="ps-3 sr-no">1</td>
                                 <td>
                                     <input type="text" name="offset_account[]" class="form-control form-control-sm border-0 bg-transparent" 
-                                           data-fetch_column data-sheet_name="LedgerCreation" data-column_name="name" list="offsetList" required>
+                                           data-fetch_column data-sheet_name="LedgerCreation" data-column_name="name&ledgerCode" list="offsetList" required>
                                     <datalist id="offsetList"></datalist>
                                 </td>
                                 <td><input type="text" name="row_narration[]" class="form-control form-control-sm border-0 bg-transparent"></td>

@@ -84,6 +84,7 @@ body {
 .content-viewport {
     flex-grow: 1;
     overflow-y: auto;
+    height: auto;
     padding: 1.5rem;
     background-color: var(--bg-light);
 }
@@ -143,8 +144,23 @@ body {
     border-radius: 6px; border: 1px solid var(--border-strong);
     padding: 0.35rem 0.75rem; font-size: 0.875rem; background-color: var(--bg-surface); color: var(--text-main);
 }
-.form-control:focus, .form-select:focus {
-    border-color: var(--primary-color); box-shadow: var(--focus-ring); outline: none;
+/* Remove shadows during validation focus states */
+.form-control.is-valid:focus, 
+.form-select.is-valid:focus,
+.form-control.is-invalid:focus, 
+.form-control,
+.form-select.is-invalid:focus {
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Ensure Dark Mode validation focus states also remain flat */
+body.dark-mode .form-control.is-valid:focus, 
+body.dark-mode .form-select.is-valid:focus,
+body.dark-mode .form-control.is-invalid:focus, 
+body.dark-mode .form-select.is-invalid:focus {
+    box-shadow: none !important;
+    outline: none !important;
 }
 label.form-label {
     font-weight: 600; font-size: 0.8125rem; color: var(--text-main); margin-bottom: 0.25rem;
@@ -222,6 +238,7 @@ body.dark-mode .table-hover tbody tr:hover * {
     background-color: var(--primary-bg-subtle) !important;
 }
 
+
 /* Inputs & Form Fields */
 body.dark-mode .form-control,
 body.dark-mode .form-select,
@@ -229,6 +246,18 @@ body.dark-mode .input-group-text {
     background-color: #0b1121 !important;
     border-color: var(--border-strong) !important;
     color: var(--text-main) !important;
+}
+/* CORRECTED: Notice the space before ::placeholder */
+body.dark-mode ::placeholder {
+    color: var(--text-muted) !important; /* Muted slate grey (e.g., #94a3b8) */
+    opacity: 1; /* CRITICAL: Firefox automatically fades placeholders, this overrides it */
+}
+
+/* If you want to be extra safe and target ONLY form inputs */
+body.dark-mode .form-control::placeholder,
+body.dark-mode .form-select::placeholder {
+    color: #94a3b8 !important; 
+    opacity: 1; 
 }
 body.dark-mode .form-control:focus { border-color: var(--primary-color) !important; box-shadow: var(--focus-ring); }
 
@@ -252,4 +281,43 @@ body.dark-mode .sticky-top { background-color: var(--bg-surface) !important; z-i
 @media (max-width: 991px) {
     .left-info-bar { display: none; }
     .content-viewport { width: 100%; padding: 1rem; }
+}
+
+/* --- Professional Bottom Notification Bar --- */
+.error-notification-bar {
+    position: fixed;
+    bottom: -60px; /* Hidden below the screen initially */
+    left: 0;
+    width: 100%;
+    height: auto;
+    display: flex;
+    align-items: center;
+    padding: 0 30px;
+    z-index: 10000; /* Highest priority layer */
+    font-size: 14px;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Slide Up Animation */
+.error-notification-bar.slide-up {
+    transform: translateY(-60px); /* Moves up into view */
+}
+
+/* Slide Down Animation */
+.error-notification-bar.slide-down {
+    transform: translateY(60px); /* Moves back down */
+}
+
+/* SAP-Style Color Overrides */
+.error-notification-bar.bg-success { background-color: #10b981 !important; }
+.error-notification-bar.bg-danger { background-color: #ef4444 !important; }
+.error-notification-bar.bg-warning { background-color: #f59e0b !important; color: #000 !important; }
+.error-notification-bar.bg-info { background-color: #3b82f6 !important; }
+
+/* Content Spacing */
+.notify-content {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

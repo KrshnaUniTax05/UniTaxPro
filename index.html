@@ -145,7 +145,7 @@
                         <a href="#" data-module="masters/ledger-cw" class="list-group-item list-group-item-action border-0 rounded mb-1"><i class="bi bi-person-plus me-2"></i> Ledger</a>
                         <a href="#" data-module="masters/stock-cw" class="list-group-item list-group-item-action border-0 rounded mb-1"><i class="bi bi-box-seam me-2"></i> Stock</a>
                         <a href="#" data-module="masters/company-cw" class="list-group-item list-group-item-action border-0 rounded mb-1"><i class="bi bi-building-add me-2"></i> Company</a>
-                        <a href="#" data-module="masters/project-cw" class="list-group-item list-group-item-action border-0 rounded mb-1"><i class="bi bi-building-add me-2"></i> Project</a>
+                        <a href="#" data-module="masters/project-cw" class="list-group-item list-group-item-action border-0 rounded mb-1"><i class="bi bi-kanban me-2"></i> Project</a>
                     </div>
                 </div>
                 <div class="tab-pane fade" id="nav-trans">
@@ -189,6 +189,16 @@
             <div class="toast-body" id="toastBody">Message...</div>
         </div>
     </div>
+    <!-- Professional Bottom Notification Bar -->
+    <div id="errorNotificationBox" class="error-notification-bar">
+        <div class="d-flex align-items-center w-100">
+            <i id="notifyIcon" class="me-3 fs-5"></i>
+            <div class="notify-content">
+                <span id="notifyTitle" class="fw-bold text-uppercase small"></span>
+                <span id="notifyMessage" class="ms-2"></span>
+            </div>
+        </div>
+    </div>
 
     <!-- Firebase & Core Scripts -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -199,5 +209,45 @@
     <script src="assets/js/utils.js"></script>
     <script src="assets/js/api.js"></script>
     <script src="assets/js/app.js"></script>
+
+    <!-- utilities  -->
+     <datalist id="indian-states">
+    <option value="Andhra Pradesh">
+    <option value="Arunachal Pradesh">
+    <option value="Assam">
+    <option value="Bihar">
+    <option value="Chhattisgarh">
+    <option value="Goa">
+    <option value="Gujarat">
+    <option value="Haryana">
+    <option value="Himachal Pradesh">
+    <option value="Jharkhand">
+    <option value="Karnataka">
+    <option value="Kerala">
+    <option value="Madhya Pradesh">
+    <option value="Maharashtra">
+    <option value="Manipur">
+    <option value="Meghalaya">
+    <option value="Mizoram">
+    <option value="Nagaland">
+    <option value="Odisha">
+    <option value="Punjab">
+    <option value="Rajasthan">
+    <option value="Sikkim">
+    <option value="Tamil Nadu">
+    <option value="Telangana">
+    <option value="Tripura">
+    <option value="Uttar Pradesh">
+    <option value="Uttarakhand">
+    <option value="West Bengal">
+    <option value="Delhi">
+    <option value="Jammu and Kashmir">
+    <option value="Ladakh">
+    <option value="Lakshadweep">
+    <option value="Puducherry">
+    <option value="Chandigarh">
+    <option value="Dadra and Nagar Haveli and Daman and Diu">
+    <option value="Andaman and Nicobar Islands">
+</datalist>
 </body>
 </html>
