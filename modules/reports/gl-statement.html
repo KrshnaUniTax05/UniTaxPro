@@ -1,133 +1,386 @@
 <div class="animate-in">
-    <div class="card border-0 shadow-sm">
+    <div class="card border-0 shadow-sm main-card-wrapper">
         <div class="card-body p-0">
-            <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-light">
-                <div>
-                    <h5 class="fw-bold mb-0">General Ledger Statement</h5>
-                    <p class="text-muted small mb-0">View account history and running balance</p>
+            <div class="screen-only">
+                <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-light no-print">
+                    <div>
+                        <h5 class="fw-bold mb-0">General Ledger Statement</h5>
+                        <p class="text-muted small mb-0">View account history and running balance</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+                            <i class="bi bi-printer"></i> Print Statement
+                        </button>
+                        <button type="button" class="btn btn-primary btn-sm px-4 shadow-sm fw-bold" onclick="generateStatement()">
+                            <i class="bi bi-search me-1"></i> View Statement
+                        </button>
+                    </div>
                 </div>
-                <button type="button" class="btn btn-primary btn-sm px-4 shadow-sm fw-bold" onclick="generateStatement()">
-                    <i class="bi bi-search me-1"></i> View Statement
-                </button>
+
+                <div class="p-4 no-print" id="glFilterFormWrapper">
+                    <form id="glFilterForm" class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Select Ledger Account</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white"><i class="bi bi-person-badge"></i></span>
+                                <input type="text" id="targetAccount" name="ledgerSearch" class="form-control" 
+                                       list="ledgerList" placeholder="Search Ledger Name..." required
+                                       data-fetch_column data-sheet_name="LedgerCreation" data-column_name="name&ledgerCode">
+                            </div>
+                            <datalist id="ledgerList"></datalist>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">From Date</label>
+                            <input type="date" id="fromDate" class="form-control form-control-sm">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">To Date</label>
+                            <input type="date" id="toDate" class="form-control form-control-sm">
+                        </div>
+                    </form>
+                </div>
+
+                <div id="statementSummary" class="row g-3 px-4 pb-3 no-print" style="display: none;">
+                    <div class="col-md-4">
+                        <div class="p-2 border rounded bg-white text-center">
+                            <div class="text-muted small text-uppercase">Total Debit</div>
+                            <div class="fw-bold h6 mb-0 text-danger" id="statDebit">₹ 0.00</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-2 border rounded bg-white text-center">
+                            <div class="text-muted small text-uppercase">Total Credit</div>
+                            <div class="fw-bold h6 mb-0 text-success" id="statCredit">₹ 0.00</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-2 border rounded bg-primary text-white text-center shadow-sm">
+                            <div class="opacity-75 small text-uppercase">Closing Balance</div>
+                            <div class="fw-bold h6 mb-0" id="statClosing">₹ 0.00</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="p-4">
-                <form id="glFilterForm" class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label small fw-bold">Select Ledger Account</label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-white"><i class="bi bi-person-badge"></i></span>
-                            <input type="text" id="targetAccount" name="ledgerSearch" class="form-control" 
-                                   list="ledgerList" placeholder="Search Ledger Name..." required
-                                   data-fetch_column data-sheet_name="LedgerCreation" data-column_name="name&ledgerCode">
+            <div class="bank-print-header d-none d-print-block">
+                <div class="bank-banner">
+                    <div class="company-info-box text-start">
+                        <h2 id="print-company-name" class="mb-1" style="font-size: 12pt; font-weight: 800; color: #ffffff !important; letter-spacing: 0.5px;">YOUR COMPANY NAME</h2>
+                        <p id="print-company-address" class="mb-1" style="font-size: 7pt; opacity: 0.9; color: #ffffff !important;">Company Complete Address, City, State, ZIP</p>
+                        <p id="print-company-contact" class="mb-0" style="font-size: 7pt; opacity: 0.9; color: #ffffff !important;">GSTIN: XXXXXXXXXXXXXXX | Ph: +91-0000000000</p>
+                    </div>
+                    <div class="statement-title-box">
+                        <div class="brand">
+                            <span class="fs-4 fw-bold text-white">UniTax <span class="text-white">PRO</span></span>
+                            
                         </div>
-                        <datalist id="ledgerList"></datalist>
+                        <h2>STATEMENT OF ACCOUNT</h2>
+                        <p>Generated: <span id="print-generated-date"></span></p>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label small fw-bold">From Date</label>
-                        <input type="date" id="fromDate" class="form-control form-control-sm">
+                </div>
+
+                <div class="customer-info-box">
+                    <div class="info-left">
+                        <p class="label-text">Account Name</p>
+                        <h3 id="print-acc-name" class="fw-bold m-0 pb-1"></h3>
+                        <p class="sub-text pt-1">A/C Code: <strong id="print-acc-code" class="text-dark"></strong> | Currency: <strong>INR (₹)</strong></p>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label small fw-bold">To Date</label>
-                        <input type="date" id="toDate" class="form-control form-control-sm">
+                    <div class="info-right">
+                        <table class="meta-table">
+                            <tr>
+                                <td>Statement Period:</th>
+                                <td id="print-period-range" class="fw-bold"></td>
+                            </tr>
+                            <tr>
+                                <td>Total Debits:</th>
+                                <td id="print-header-dr" class="text-danger fw-bold">0.00</td>
+                            </tr>
+                            <tr>
+                                <td>Total Credits:</th>
+                                <td id="print-header-cr" class="text-success fw-bold">0.00</td>
+                            </tr>
+                            <tr class="highlight-row">
+                                <td>Closing Balance:</th>
+                                <td id="print-closing-bal" class="fw-bold">0.00</td>
+                            </tr>
+                        </table>
                     </div>
-                </form>
+                </div>
             </div>
             
-            <div class="table-responsive">
-                <table class="table table-sm table-hover mb-0" id="glTable">
-                    <thead class="table-light border-top">
-                        <tr>
-                            <th class="ps-4">Date</th>
-                            <th>Type</th>
-                            <th>Doc No</th>
-                            <th>Narration</th>
-                            <th class="text-end">Debit</th>
-                            <th class="text-end">Credit</th>
-                            <th class="text-end pe-4">Balance</th>
-                            <th class="text-end pe-4">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="glTableBody"></tbody>
-                </table>
+            <table class="master-print-table w-100" style="border: none;">
+                <thead class="d-none d-print-table-header-group">
+                    <tr><td><div class="print-header-spacer"></div></td></tr>
+                </thead>
+                
+                <tbody>
+                    <tr>
+                        <td class="p-0">
+                            <div class="table-responsive print-table-wrapper">
+                                <table class="table table-sm table-hover mb-0 statement-table table-striped" id="glTable">
+                                    <thead>
+                                        <tr>
+                                            <th class="ps-4" width="12%">Date</th>
+                                            <th width="10%">Type</th>
+                                            <th width="15%">Doc No</th>
+                                            <th width="28%">Narration / Particulars</th>
+                                            <th class="text-end" width="12%">Debit (₹)</th>
+                                            <th class="text-end" width="12%">Credit (₹)</th>
+                                            <th class="text-end pe-4" width="11%">Balance</th>
+                                            <th class="text-end pe-4 no-print screen-only" width="5%">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="glTableBody">
+                                        <tr><td colspan="8" class="text-center py-5 text-muted no-print">Please select an account and click "View Statement"</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+
+                <tfoot class="d-none d-print-table-footer-group">
+                    <tr><td><div class="print-footer-spacer"></div></td></tr>
+                </tfoot>
+            </table>
+
+            <div class="bank-print-footer p-1 d-none d-print-block">
+                <p><strong>Disclaimer:</strong> This is a computer-generated statement and does not require a physical signature. If no discrepancy is reported within 7 days from the statement date, the balance will be considered correct and binding.</p>
+                <div class="signatures">
+                    <div class="sig-line">Authorized Signatory</div>
+                    <div class="sig-line">Customer / Auditor Signature</div>
+                </div>
             </div>
+
         </div>
     </div>
 </div>
 
 <script>
 (function() {
-    // 1. Initialize Dates
     const now = new Date();
     document.getElementById('toDate').valueAsDate = now;
     document.getElementById('fromDate').valueAsDate = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    /**
-     * CORE ENGINE: Generate Statement
-     */
-    window.generateStatement = async function() {
-        const account = document.getElementById('targetAccount').value;
-        const tbody = document.getElementById('glTableBody');
-        
-        if (!account) return App.UI.Notify('Validation', 'Please select a ledger account.', 'warning');
-        
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary"></div> Analyzing all transaction types...</td></tr>`;
+    // Populate ledger list
+    async function populateLedgerList() {
+        try {
+            const ledgers = await API.Fetch('Masters/LedgerCreation');
+            const datalist = document.getElementById('ledgerList');
+            if (ledgers && datalist) {
+                datalist.innerHTML = '';
+                Object.values(ledgers).forEach(ledger => {
+                    const option = document.createElement('option');
+                    const displayValue = ledger.ledgerCode ? `${ledger.name} (${ledger.ledgerCode})` : ledger.name;
+                    option.value = displayValue;
+                    datalist.appendChild(option);
+                });
+            }
+        } catch (e) {
+            console.error("Error loading ledgers:", e);
+        }
+    }
 
-        // 🚀 DYNAMIC FETCHING: Get all modules automatically
-        const types = await API.GetAllTransactionTypes(); 
+    window.generateStatement = async function() {
+        const accountInput = document.getElementById('targetAccount');
+        const account = accountInput.value.trim();
+        const tbody = document.getElementById('glTableBody');
+        const fromDate = document.getElementById('fromDate').value;
+        const toDate = document.getElementById('toDate').value;
+        
+        if (!account) {
+            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+                App.UI.Notify('Validation', 'Please select a ledger account.', 'warning');
+            } else {
+                alert('Please select a ledger account.');
+            }
+            return;
+        }
+        
+        // Extract ledger code
+        let ledgerCode = '';
+        let ledgerName = account;
+        const codeMatch = account.match(/\(([^)]+)\)/);
+        if (codeMatch) {
+            ledgerCode = codeMatch[1];
+            ledgerName = account.replace(`(${ledgerCode})`, '').trim();
+        }
+        
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-5 no-print"><div class="spinner-border spinner-border-sm text-primary"></div> Analyzing ledger data...</td></tr>`;
+
+        // --- 1. RESOLVE LEDGER & LINKED COMPANY CODE ---
+        let ledgerMap = {};
+        let linkedCompanyCode = null;
+
+        try {
+            const masterData = await API.Fetch('Masters/LedgerCreation');
+            if (masterData) {
+                const ledgerArray = Object.values(masterData);
+                
+                ledgerArray.forEach(ledger => {
+                    if (ledger.ledgerCode) ledgerMap[ledger.ledgerCode.toString().toLowerCase()] = ledger.name;
+                    if (ledger.name) ledgerMap[ledger.name.toString().toLowerCase()] = ledger.name;
+                });
+
+                const targetLedger = ledgerArray.find(l => 
+                    l.ledgerCode?.toString().toLowerCase() === ledgerCode.toLowerCase() || 
+                    l.name?.toString().toLowerCase() === ledgerName.toLowerCase()
+                );
+
+                if (targetLedger) {
+                    linkedCompanyCode = targetLedger.CompanyName || targetLedger.CompanyCode;
+                }
+            }
+        } catch (e) {
+            console.error("Ledger resolution failed:", e);
+        }
+
+        // --- 2. FETCH LINKED COMPANY DETAILS FOR PRINT ---
+        try {
+            if (linkedCompanyCode) {
+                const companiesData = await API.Fetch('Masters/Companies');
+                if (companiesData) {
+                    const companyInfo = Object.values(companiesData).find(c => 
+                        c.CompanyCode?.toString() === linkedCompanyCode.toString() || 
+                        c.companyName?.toString() === linkedCompanyCode.toString()
+                    );
+
+                    if (companyInfo) {
+                        const companyNameElem = document.getElementById('print-company-name');
+                        const companyAddrElem = document.getElementById('print-company-address');
+                        const companyContactElem = document.getElementById('print-company-contact');
+                        
+                        if (companyNameElem) companyNameElem.innerText = (companyInfo.companyName || "UniTax PRO").toUpperCase();
+                        if (companyAddrElem) companyAddrElem.innerText = `${companyInfo.companyAddress1 || ''} ${companyInfo.companyAddress2 || ''}, ${companyInfo.Company_State || ''} - ${companyInfo.Company_Pin || ''}`;
+                        if (companyContactElem) companyContactElem.innerText = `GSTIN: ${companyInfo.GSTIN || 'N/A'} | Email: ${companyInfo.Email || 'N/A'}`;
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn("Company header resolution skipped:", e);
+        }
+
+        // --- 3. FETCH TRANSACTIONS ---
+        let types = [];
+        try {
+            types = await API.GetAllTransactionTypes();
+        } catch(e) {
+            console.warn("Could not get transaction types:", e);
+            types = ['SalesInvoiceForm', 'PurchaseInvoiceForm', 'PaymentVoucherForm', 'ReceiptVoucherForm', 'JournalVoucherForm'];
+        }
+        
         let allTransactions = [];
 
         for (const type of types) {
-            const data = await API.Fetch(`Transactions/${type}`);
-            if (data) {
-                Object.entries(data).forEach(([key, vch]) => {
-                    vch.key = key; 
-                    vch.formId = type;
-
-                    // Flexible Match: Check if any field in header OR items contains the account name
-                    const match = JSON.stringify(vch).toLowerCase().includes(account.toLowerCase());
-                    
-                    if (match) {
-                        allTransactions.push(vch);
-                    }
-                });
+            try {
+                const data = await API.Fetch(`Transactions/${type}`);
+                if (data && typeof data === 'object') {
+                    Object.entries(data).forEach(([key, vch]) => {
+                        if (vch && typeof vch === 'object') {
+                            const searchTerm = ledgerCode || ledgerName;
+                            const vchStr = JSON.stringify(vch).toLowerCase();
+                            if (searchTerm && vchStr.includes(searchTerm.toLowerCase())) {
+                                allTransactions.push({ ...vch, key, formId: type });
+                            }
+                        }
+                    });
+                }
+            } catch(e) {
+                console.warn(`Error fetching ${type}:`, e);
             }
         }
 
-        allTransactions.sort((a, b) => new Date(a.header.date) - new Date(b.header.date));
-
+        // Sort by Date
+        allTransactions.sort((a, b) => {
+            const dateA = a.header?.date || a.date || '';
+            const dateB = b.header?.date || b.date || '';
+            return new Date(dateA) - new Date(dateB);
+        });
+        
         tbody.innerHTML = '';
+        
         let runningBalance = 0, totalDr = 0, totalCr = 0;
+        const formatMoney = (val) => (val === 0 || isNaN(val) || val === undefined ? '-' : Utils.FormatINR(val));
 
-        if (allTransactions.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" class="text-center py-5 text-muted">No transactions found for this period.</td></tr>`;
+        // Filter by date range
+        let filteredTransactions = allTransactions;
+        if (fromDate && toDate) {
+            filteredTransactions = allTransactions.filter(vch => {
+                const vchDate = vch.header?.date || vch.date || '';
+                return vchDate >= fromDate && vchDate <= toDate;
+            });
+        }
+
+        if (filteredTransactions.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center py-5 text-muted no-print text-danger fw-bold">No transactions found for: ${account}</td></td>`;
+            document.getElementById('statementSummary').style.display = 'none';
             return;
         }
 
-        allTransactions.forEach(vch => {
-            const h = vch.header;
-            const docPrefix = h.doc_no.split('/')[0];
-            const amount = vch.items.reduce((sum, i) => sum + (parseFloat(i.total) || parseFloat(i.amount) || 0), 0);
+        // --- 4. PROCESS TRANSACTIONS & MATH ---
+        filteredTransactions.forEach(vch => {
+            const h = vch.header || vch;
+            const rawFormId = vch.formId || "JournalVoucher";
             
-            // Logic: You can adjust this 'isDr' logic based on your specific ERP accounting rules
-            const isDr = ['SALE', 'PAYMENT', 'DRNOTE'].includes(docPrefix);
-            const dr = isDr ? amount : 0;
-            const cr = !isDr ? amount : 0;
+            let docPrefix = rawFormId.replace('InvoiceForm', '').replace('VoucherForm', '').replace(/([A-Z])/g, ' $1').trim().toUpperCase();
+            if (!docPrefix) docPrefix = "JV";
+            
+            let rawEntity = (h.entity || h.party || h.customer_ledger || ledgerName).toString().trim();
+            let entityDisplayName = ledgerMap[rawEntity.toLowerCase()] || rawEntity;
+
+            // Compute Amount
+            let amount = 0;
+            const items = Array.isArray(vch.items) ? vch.items : (vch.items ? Object.values(vch.items) : []);
+            
+            if (items.length > 0) {
+                amount = items.reduce((sum, i) => {
+                    const qty = parseFloat(i.qty) || 0;
+                    const rate = parseFloat(i.rate) || 0;
+                    const taxRate = parseFloat(i.auto_item_name_ItemTax) || parseFloat(i.taxRate) || 0;
+                    const base = qty * rate;
+                    return sum + (base + (base * (taxRate / 100)));
+                }, 0);
+            } else {
+                amount = parseFloat(h.amount) || parseFloat(h.total) || parseFloat(h.grandTotal) || 0;
+            }
+
+            // Debit/Credit Logic
+            let dr = 0, cr = 0;
+            const formNameLower = rawFormId.toLowerCase();
+            const isDebitForm = formNameLower.includes('sale') || formNameLower.includes('payment') || formNameLower.includes('debit');
+            const isCreditForm = formNameLower.includes('purchase') || formNameLower.includes('receipt') || formNameLower.includes('credit');
+            
+            if (isDebitForm) { 
+                dr = amount; 
+            } else if (isCreditForm) { 
+                cr = amount; 
+            } else {
+                if (h.debitLedger === ledgerName || h.debitLedger === ledgerCode) {
+                    dr = amount;
+                } else if (h.creditLedger === ledgerName || h.creditLedger === ledgerCode) {
+                    cr = amount;
+                } else {
+                    cr = amount;
+                }
+            }
 
             runningBalance += (dr - cr);
             totalDr += dr;
             totalCr += cr;
 
+            const balType = runningBalance >= 0 ? 'Dr' : 'Cr';
+            const balString = `${Utils.FormatINR(Math.abs(runningBalance))} <small class="text-muted ms-1">${balType}</small>`;
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td class="ps-3">${Utils.FormatDate(h.date)}</td>
-                <td><span class="badge border text-dark font-monospace">${docPrefix}</span></td>
-                <td class="fw-bold text-primary">${h.doc_no}</td>
-                <td><div class="fw-bold">${h.entity}</div><div class="text-muted small">${h.narration || ''}</div></td>
-                <td class="text-end text-danger">${dr > 0 ? Utils.FormatINR(dr) : '-'}</td>
-                <td class="text-end text-success">${cr > 0 ? Utils.FormatINR(cr) : '-'}</td>
-                <td class="text-end fw-bold">${Utils.FormatINR(runningBalance)}</td>
-                <td class="text-end pe-3">
+                <td class="ps-3 fw-medium">${Utils.FormatDate(h.date || h.voucher_date || '')}</td>
+                <td><span class="badge border text-dark bg-transparent no-print">${docPrefix}</span><span class="d-none d-print-inline">${docPrefix}</span></td>
+                <td class="fw-bold">${h.doc_no || h.supplier_bill_no || h.invoice_no || 'N/A'}</td>
+                <td><div class="fw-bold text-dark">${entityDisplayName}</div><div class="text-muted small">${h.narration || h.description || 'As per transaction'}</div></td>
+                <td class="text-end text-danger">${formatMoney(dr)}</td>
+                <td class="text-end text-success">${formatMoney(cr)}</td>
+                <td class="text-end fw-bold">${balString}</td>
+                <td class="text-end pe-3 no-print screen-only">
                     <button class="btn btn-sm btn-outline-primary" onclick="editTransaction('${vch.formId}', '${vch.key}')"><i class="bi bi-pencil"></i></button>
                     <button class="btn btn-sm btn-outline-danger" onclick="deleteTransaction('${vch.formId}', '${vch.key}')"><i class="bi bi-trash"></i></button>
                 </td>
@@ -135,25 +388,426 @@
             tbody.appendChild(tr);
         });
 
-        document.getElementById('statementSummary').style.display = 'flex';
-        document.getElementById('statDebit').innerText = Utils.FormatINR(totalDr);
-        document.getElementById('statCredit').innerText = Utils.FormatINR(totalCr);
-        document.getElementById('statClosing').innerText = Utils.FormatINR(runningBalance);
+        // Add grand total row
+        const finalBalType = runningBalance >= 0 ? 'Dr' : 'Cr';
+        const grandTotalRow = document.createElement('tr');
+        grandTotalRow.className = "table-active border-top border-dark fw-bold no-print";
+        grandTotalRow.innerHTML = `
+            <td colspan="4" class="text-end ps-4">GRAND TOTAL</td>
+            <td class="text-end text-danger">${Utils.FormatINR(totalDr)}</td>
+            <td class="text-end text-success">${Utils.FormatINR(totalCr)}</td>
+            <td class="text-end" colspan="2">${Utils.FormatINR(Math.abs(runningBalance))} ${finalBalType}</td>
+        `;
+        tbody.appendChild(grandTotalRow);
+
+        // --- 5. FINALIZE UI & PRINT HEADERS ---
+        const summaryDiv = document.getElementById('statementSummary');
+        if (summaryDiv) summaryDiv.style.display = 'flex';
+        
+        const statDebit = document.getElementById('statDebit');
+        const statCredit = document.getElementById('statCredit');
+        const statClosing = document.getElementById('statClosing');
+        
+        if (statDebit) statDebit.innerText = `₹ ${Utils.FormatINR(totalDr)} DR`;
+        if (statCredit) statCredit.innerText = `₹ ${Utils.FormatINR(totalCr)} CR`;
+        if (statClosing) statClosing.innerHTML = `₹ ${Utils.FormatINR(Math.abs(runningBalance))} <span class="fs-6 opacity-75">${finalBalType}</span>`;
+
+        // Account Print Info
+        const printAccName = document.getElementById('print-acc-name');
+        const printAccCode = document.getElementById('print-acc-code');
+        const printPeriodRange = document.getElementById('print-period-range');
+        const printGeneratedDate = document.getElementById('print-generated-date');
+        const printHeaderDr = document.getElementById('print-header-dr');
+        const printHeaderCr = document.getElementById('print-header-cr');
+        const printClosingBal = document.getElementById('print-closing-bal');
+        
+        if (printAccName) printAccName.innerText = (ledgerName || account).toUpperCase();
+        if (printAccCode) printAccCode.innerText = ledgerCode || "N/A";
+        if (printPeriodRange) printPeriodRange.innerText = `${Utils.FormatDate(fromDate) || 'Start'} to ${Utils.FormatDate(toDate) || 'End'}`;
+        if (printGeneratedDate) printGeneratedDate.innerText = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date()).toLocaleUpperCase();
+        if (printHeaderDr) printHeaderDr.innerText = `₹ ${Utils.FormatINR(totalDr)} DR`;
+        if (printHeaderCr) printHeaderCr.innerText = `₹ ${Utils.FormatINR(totalCr)} CR`;
+        if (printClosingBal) printClosingBal.innerText = `₹ ${Utils.FormatINR(Math.abs(runningBalance))} ${finalBalType}`;
     };
 
-    /**
-     * CRUD: Edit/Delete
-     */
     window.deleteTransaction = async function(formId, key) {
-        if(confirm("Permanently delete this transaction? This cannot be undone.")) {
-            const success = await API.DeleteTransaction(formId, key);
-            if(success) generateStatement();
+        if(confirm("Permanently delete this transaction?")) {
+            try {
+                const success = await API.DeleteTransaction(formId, key);
+                if(success) generateStatement();
+            } catch(e) {
+                console.error("Error deleting transaction:", e);
+                alert("Error deleting transaction");
+            }
         }
     };
 
     window.editTransaction = function(formId, key) {
-        // Redirect to edit mode
-        App.Router(`transactions/edit?type=${formId}&key=${key}`);
+        try {
+            localStorage.setItem('editContext', JSON.stringify({ type: formId, key: key }));
+            if (typeof App !== 'undefined' && App.Router) {
+                App.Router('transactions/edit');
+            } else {
+                console.log("Edit transaction:", formId, key);
+            }
+        } catch(e) {
+            console.error("Error editing transaction:", e);
+        }
     };
+
+    // Initialize
+    populateLedgerList();
 })();
+
+// Ensure Utils is available
+if (typeof Utils === 'undefined') {
+    window.Utils = {
+        FormatINR: function(amount) {
+            if (amount === 0 || isNaN(amount) || amount === undefined) return '0.00';
+            return new Intl.NumberFormat('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount);
+        },
+        FormatDate: function(dateStr) {
+            if (!dateStr) return '';
+            try {
+                const date = new Date(dateStr);
+                if (isNaN(date.getTime())) return dateStr;
+                return date.toLocaleDateString('en-IN');
+            } catch(e) {
+                return dateStr;
+            }
+        }
+    };
+}
 </script>
+
+<style>
+/* -------------------------------------------------------------
+   BANK STATEMENT PRINT STYLESHEET (TRUE EDGE-TO-EDGE)
+------------------------------------------------------------- */
+.d-print-block { display: none; }
+.d-print-inline { display: none; }
+
+/* Screen styles for better header visibility */
+.statement-table thead th {
+    background-color: #0b3d91 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    padding: 12px 10px !important;
+    border-bottom: 3px solid #062b6b !important;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    white-space: nowrap;
+}
+
+/* Striped rows for screen */
+.statement-table tbody tr:nth-child(even) {
+    background-color: #f8f9fa !important;
+}
+
+.statement-table tbody tr:hover {
+    background-color: #e8f0fe !important;
+    cursor: pointer;
+}
+
+@media print {
+    @page { 
+        margin: 0mm !important; 
+        size: A4 portrait; 
+    }
+
+    body, html, #root, #app, #main-wrapper, .container-fluid, .container, main, .content-wrapper, .page-content {
+        background: #ffffff !important; 
+        margin: 0 !important; 
+        padding: 0 !important; 
+        width: 100% !important; 
+        max-width: 100% !important; 
+        box-sizing: border-box !important;
+    }
+
+    .card, .card-body, .animate-in, .table-responsive, .print-table-wrapper {
+        border: none !important; 
+        box-shadow: none !important; 
+        margin: 0 !important; 
+        padding: 0 !important; 
+        width: 100% !important; 
+        display: block !important; 
+        overflow: visible !important;
+    }
+
+    .no-print, header, nav, .sidebar, #glFilterFormWrapper, #statementSummary { 
+        display: none !important; 
+    }
+    
+    .statement-table th:last-child, 
+    .statement-table td:last-child { 
+        display: none !important; 
+    }
+
+    .d-print-block { 
+        display: block !important; 
+    }
+    
+    .d-print-inline { 
+        display: inline !important; 
+    }
+    
+    .d-print-table-header-group { 
+        display: table-header-group !important; 
+    }
+    
+    .d-print-table-footer-group { 
+        display: table-footer-group !important; 
+    }
+
+    .bank-print-header { 
+        position: fixed; 
+        top: 0; 
+        left: 0; 
+        right: 0;
+        width: 100%; 
+        z-index: 1000; 
+        background: white; 
+    }
+    
+    .bank-print-footer { 
+        position: fixed; 
+        bottom: 0; 
+        left: 0; 
+        right: 0;
+        width: 100%; 
+        z-index: 1000; 
+        background: white; 
+        border-top: 2px solid #0b3d91 !important; 
+        padding: 15px 25px !important; 
+        font-size: 8pt; 
+        color: #666 !important; 
+    }
+    
+    .bank-print-footer p { 
+        padding: 0 10px; 
+        margin: 0;
+    }
+
+    .print-header-spacer { 
+        height: 240px; 
+    } 
+    
+    .print-footer-spacer { 
+        height: 120px; 
+    } 
+
+    .bank-banner { 
+        background-color: #0b3d91 !important; 
+        color: #ffffff !important; 
+        padding: 20px 25px !important; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        border-radius: 0 !important; 
+        width: 100% !important; 
+        box-sizing: border-box !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    .statement-title-box { 
+        text-align: right; 
+        color: #ffffff !important; 
+    }
+    
+    .statement-title-box h2 { 
+        margin: 0; 
+        font-size: 14pt; 
+        font-weight: 600; 
+        color: #ffffff !important;
+    }
+    
+    .statement-title-box p { 
+        margin: 5px 0 0 0; 
+        font-size: 9pt; 
+        opacity: 0.9; 
+        color: #ffffff !important;
+    }
+
+    .customer-info-box { 
+        background-color: #f4f7fa !important; 
+        border-bottom: 2px solid #0b3d91 !important; 
+        border-top: none !important; 
+        border-left: none !important; 
+        border-right: none !important; 
+        border-radius: 0 !important; 
+        padding: 15px 25px !important; 
+        display: flex; 
+        margin: 0;
+        justify-content: space-between; 
+        width: 100% !important; 
+        box-sizing: border-box !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    .info-left .label-text { 
+        font-size: 9pt; 
+        color: #555 !important; 
+        text-transform: uppercase; 
+        margin: 0 0 4px 0; 
+    }
+    
+    .info-left h3 { 
+        margin: 0 0 8px 0; 
+        font-size: 14pt; 
+        color: #000 !important; 
+    }
+    
+    .info-left .sub-text { 
+        margin: 0; 
+        font-size: 9pt; 
+        color: #444 !important; 
+    }
+
+    .meta-table { 
+        border-collapse: collapse; 
+        font-size: 9pt; 
+        width: auto;
+    }
+    
+    .meta-table td, 
+    .meta-table th { 
+        padding: 3px 10px; 
+        text-align: right; 
+    }
+    
+    .meta-table td:first-child, 
+    .meta-table th:first-child { 
+        text-align: left; 
+        color: #666 !important; 
+    }
+
+    .highlight-row { 
+        background-color: #e2e8f0 !important; 
+        border-radius: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    .highlight-row td { 
+        padding: 5px 10px; 
+        color: #0b3d91 !important; 
+        font-weight: bold;
+    }
+
+    .master-print-table { 
+        width: 100% !important; 
+        border-collapse: collapse !important; 
+        padding: 0 !important; 
+        margin: 10px 0 !important; 
+    }
+    
+    .master-print-table > tbody > tr > td { 
+        padding: 0 !important; 
+    }
+    
+    .statement-table { 
+        width: 100% !important; 
+        border-collapse: collapse !important; 
+        font-size: 9pt !important; 
+        table-layout: auto !important; 
+        margin: 0 !important; 
+    }
+    
+    .statement-table thead { 
+        display: table-header-group;
+    }
+    
+    .statement-table thead tr {
+        page-break-inside: avoid;
+        page-break-after: avoid;
+    }
+    
+    .statement-table th { 
+        background-color: #0b3d91 !important; 
+        color: #ffffff !important; 
+        padding: 10px 10px !important; 
+        font-weight: 700 !important; 
+        text-transform: uppercase; 
+        font-size: 8pt !important;
+        border: none !important; 
+        border-bottom: 2px solid #ffffff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        white-space: nowrap;
+    }
+    
+    .statement-table td { 
+        padding: 8px 10px !important; 
+        border-left: none !important; 
+        border-right: none !important; 
+        border-bottom: 1px solid #dce4ec !important; 
+        vertical-align: top; 
+        color: #333 !important;
+    }
+
+    /* Striped rows in print */
+    .statement-table tbody tr:nth-child(even) { 
+        background-color: #f5f5f5 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    .statement-table tbody tr:nth-child(odd) { 
+        background-color: #ffffff !important;
+    }
+
+    .statement-table th:first-child, 
+    .statement-table td:first-child { 
+        padding-left: 25px !important; 
+    }
+    
+    .statement-table th:nth-child(7), 
+    .statement-table td:nth-child(7) { 
+        padding-right: 25px !important; 
+    }
+
+    .statement-table tbody tr { 
+        page-break-inside: avoid; 
+        page-break-after: auto;
+    }
+
+    .signatures { 
+        display: flex; 
+        justify-content: space-between; 
+        margin-top: 40px; 
+        padding: 0 25px; 
+        margin-bottom: 20px;
+    }
+    
+    .sig-line { 
+        border-top: 2px solid #000; 
+        width: 250px; 
+        text-align: center; 
+        padding-top: 5px; 
+        font-weight: bold; 
+        color: #000 !important;
+    }
+
+    /* Ensure colors print correctly */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    @page {
+        @top-center {
+            content: none;
+        }
+        
+        @bottom-center {
+            content: none;
+        }
+    }
+}
+</style>

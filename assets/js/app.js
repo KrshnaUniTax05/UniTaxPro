@@ -9,6 +9,35 @@ const App = {
         activeModule: null,
         isDarkMode: localStorage.getItem('darkMode') === 'enabled'
     },
+    
+    async GetPersistentData(path, stateKey) {
+    // 1. Check if already in memory
+    if (this.State[stateKey]) {
+        console.log(`[Cache Hit] Using cached data for: ${stateKey}`);
+        return this.State[stateKey];
+    }
+
+    // 2. DEBUG: Log the path we are trying to fetch
+    console.log(`[Database Fetch] Attempting to fetch path: ${path}`);
+    
+    try {
+        const data = await API.Fetch(path);
+        
+        // 3. DEBUG: Check if response is empty
+        if (!data) {
+            console.error(`[Database Error] No data found at path: ${path}. Verify the userId and node structure.`);
+            return null;
+        }
+
+        console.log(`[Database Success] Successfully cached ${stateKey}`);
+        this.State[stateKey] = data;
+        return data;
+    } catch (err) {
+        console.error(`[Database Error] Exception while fetching ${path}:`, err);
+        return null;
+    }
+},
+
 
     async Init() {
         // 1. Auth Guard
@@ -23,6 +52,11 @@ const App = {
         this.UI.StartClock();
         this.BindGlobalEvents();
         
+
+        // 3. PRE-FETCH COMPANY DATA ON STARTUP
+        // This makes sure it's ready for any statement or report immediately
+        // this.GetPersistentData(`${this.State.userId}/Masters/Companies`, 'Company');
+
         // 3. Set Header Displays
         document.getElementById('usernameDisplay').innerText = this.State.userName || "User";
         const userIdEl = document.getElementById('main_userid_show');
@@ -41,7 +75,43 @@ const App = {
         const loader = document.getElementById('app-loader');
         if(loader) loader.style.display = 'none';
     },
+    Search: {
+        Registry: {
+            "dash": "dashboard",
+            "comp": "masters/company-cw",
+            "ledger": "masters/ledger-cw",
+            "stock": "masters/stock-cw",
+            "project": "masters/project-cw",
+            "sales": "transactions/sales-inv",
+            "pur": "transactions/purchase-inv",
+            "bank": "transactions/receipt-pay",
+            "gl": "reports/gl-statement"
+        },
 
+        HandleSearch(query) {
+            const input = query.toLowerCase().trim();
+            if (!input) return;
+
+            const registryList = document.getElementById('moduleRegistry');
+            const allOptions = registryList ? Array.from(registryList.querySelectorAll('option')).map(o => o.value) : [];
+            const aliasPath = this.Registry[input];
+
+            if (allOptions.includes(input)) {
+                App.Router(input);
+                this.Clear();
+            } else if (aliasPath) {
+                App.Router(aliasPath);
+                this.Clear();
+            } else {
+                App.UI.Notify('Navigation', `Module "${input}" not found.`, 'warning');
+            }
+        },
+
+        Clear() {
+            const s = document.getElementById('globalSearch');
+            if (s) { s.value = ""; s.blur(); }
+        }
+    },
     /**
      * AJAX ROUTER (Force Script Execution)
      * This ensures JS inside modules like sales-inv.html actually runs.
@@ -142,34 +212,72 @@ const App = {
         });
 
         // 4. Submission Handler (Masters vs. Transactions)
-        form.onsubmit = async (e) => {
-            e.preventDefault();
-            const btn = form.querySelector('[type="submit"]');
-            const originalBtnHtml = btn.innerHTML;
-            
-            btn.disabled = true;
-            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Processing...`;
+        // 4. Submission Handler (Masters, Transactions, or Updates)
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = form.querySelector('[type="submit"]');
+        const originalBtnHtml = btn.innerHTML;
+        
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Processing...`;
 
-            const isMaster = form.dataset.category === 'Masters';
-            const data = Object.fromEntries(new FormData(form).entries());
-            
-            const success = isMaster 
-                ? await API.SaveMaster(form.id, data) 
-                : await API.PostVoucher(form);
+        // Detect if we are in "Edit Mode"
+        const urlParams = new URLSearchParams(window.location.search);
+        const vchKey = urlParams.get('key'); // Firebase key
+        const formType = urlParams.get('type'); // e.g., SalesInvoiceForm
 
-            if (success) {
-                form.reset();
-                if (typeof window.recalculateVoucher === 'function') window.recalculateVoucher();
-            }
-            
-            btn.disabled = false;
-            btn.innerHTML = originalBtnHtml;
-        };
+        const isMaster = form.dataset.category === 'Masters';
+        const data = Object.fromEntries(new FormData(form).entries());
+        
+        let success = false;
+
+        if (isMaster) {
+            success = await API.SaveMaster(form.id, data);
+        } else if (vchKey && formType) {
+            // 🚀 UPDATE MODE: Use the new UpdateVoucher function
+            success = await API.UpdateVoucher(form, formType, vchKey);
+        } else {
+            // 🚀 CREATE MODE
+            success = await API.PostVoucher(form);
+        }
+
+        if (success) {
+            if (!vchKey) form.reset(); // Don't reset if we were editing
+            if (typeof window.recalculateVoucher === 'function') window.recalculateVoucher();
+            if (vchKey) App.Router(path); // Return to list view after edit
+        }
+        
+        btn.disabled = false;
+        btn.innerHTML = originalBtnHtml;
+    };
 
         this.Log(`Module Ready: ${path}`);
     },
 
     BindGlobalEvents() {
+        const searchInput = document.getElementById('globalSearch');
+
+        // Global Shortcut: /
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '/') {
+                if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    searchInput?.focus();
+                    searchInput?.select();
+                }
+            }
+            if (e.key === 'Escape' && document.activeElement === searchInput) {
+                App.Search.Clear();
+            }
+        });
+
+        // Global Shortcut: Enter
+        searchInput?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                App.Search.HandleSearch(searchInput.value);
+            }
+        })
         // Module Navigation
         document.addEventListener('click', (e) => {
             const link = e.target.closest('[data-module]');
@@ -293,7 +401,7 @@ const App = {
                 localStorage.setItem('darkMode', 'disabled');
                 App.UI.Notify('Appearance', 'Light Mode Enabled', 'info');
             }
-        }
+        },
     },
 
     Log(msg) {
@@ -305,5 +413,67 @@ const App = {
     }
 };
 
+
+
+// 1. Open Modal
+window.opentaskmodal = function() {
+    new bootstrap.Modal(document.getElementById('taskModal')).show();
+};
+
+// 2. Save Task to LocalStorage
+window.saveTask = function() {
+    const input = document.getElementById('taskInput');
+    if (!input.value.trim()) return;
+
+    let tasks = JSON.parse(localStorage.getItem('userTasks') || '[]');
+    tasks.push({ id: Date.now(), text: input.value, done: false });
+    localStorage.setItem('userTasks', JSON.stringify(tasks));
+    
+    input.value = '';
+    bootstrap.Modal.getInstance(document.getElementById('taskModal')).hide();
+    renderTasks();
+};
+
+// 3. Render Tasks from LocalStorage
+window.renderTasks = function() {
+    const tbody = document.getElementById('taskTableBody');
+    const tasks = JSON.parse(localStorage.getItem('userTasks') || '[]');
+    
+    if (tasks.length === 0) {
+        tbody.innerHTML = '<tr><td class="text-center text-muted py-3">No active tasks</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = tasks.map(t => `
+        <tr class="align-middle">
+            <td class="ps-2">${t.text}</td>
+            <td class="text-end pe-2">
+                <button class="btn btn-xs btn-outline-danger py-0 px-1" onclick="deleteTask(${t.id})"><i class="bi bi-trash"></i></button>
+            </td>
+        </tr>
+    `).join('');
+};
+
+window.deleteTask = function(id) {
+    let tasks = JSON.parse(localStorage.getItem('userTasks') || '[]');
+    tasks = tasks.filter(t => t.id !== id);
+    localStorage.setItem('userTasks', JSON.stringify(tasks));
+    renderTasks();
+};
+
+// 4. F5 Keyboard Listener (Add to app.js - BindGlobalEvents)
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'F5') {
+        e.preventDefault();
+        window.opentaskmodal();
+        // App.UI.Notify('Task Manager', 'F5 Pressed: Creating new task', 'info');
+    }
+});
+
+// Initial load
+document.addEventListener('DOMContentLoaded', renderTasks);
 // Start Engine
 document.addEventListener('DOMContentLoaded', () => App.Init());
+
+
+// search

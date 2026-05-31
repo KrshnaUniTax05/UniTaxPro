@@ -43,6 +43,14 @@ const Utils = {
         return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     },
 
+    FormatTime(dateStr) {
+    return new Intl.DateTimeFormat('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+    }).format(date);
+    },
     /**
      * 5. Input Normalization
      */

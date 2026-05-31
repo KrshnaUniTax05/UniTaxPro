@@ -1,80 +1,214 @@
 <div class="animate-in">
     <form id="PurchaseInvoiceForm" data-category="Transactions">
-        <input type="hidden" name="documentType" value="PURCHASE">
+        <input type="hidden" name="documentType" value="SALE">
+
         <div class="card border-0 shadow-sm overflow-hidden">
+            <!-- ERP Command Header -->
             <div class="card-body p-0">
                 <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-light sticky-top z-10">
                     <div>
-                        <h5 class="fw-bold mb-0">Purchase Bill</h5>
-                        <p class="text-muted small mb-0">Inward Supplies & Input Tax Credit</p>
+                        <h5 class="fw-bold mb-0 text-dark">Purchase Invoice</h5>
+                        <p class="text-muted small mb-0">Tax Invoice / Bill of Supply</p>
                     </div>
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm fw-bold">Post Bill</button>
+                        <button type="button" class="btn btn-secondary btn-sm shadow-sm" data-bs-toggle="offcanvas" data-bs-target="#additionalDetails">
+                            <i class="bi bi-truck me-1"></i> Shipping & Order
+                        </button>
+                        <button type="button" class="btn btn-white btn-sm border fw-semibold" onclick="App.Router('transactions/Purchase-inv')">Reset</button>
+                        <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm fw-bold">
+                            <i class="bi bi-check2-all me-1"></i> Post Document
+                        </button>
                     </div>
                 </div>
 
                 <div class="p-4">
+                    <!-- Header: Buyer & Meta -->
                     <div class="row g-3 mb-4">
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold text-danger">Supplier / Vendor</label>
-                            <input type="text" name="customer_ledger" class="form-control form-control-sm" 
+                        <div class="col-md-4 border-end pe-4">
+                            <label class="form-label small fw-bold text-primary">Buyer (Bill To)</label>
+                            <input type="text" name="customer_ledger" 
+                                   class="form-control form-control-sm mb-2" 
+                                   placeholder="Search Customer..." 
                                    data-fetch_column data-sheet_name="LedgerCreation" data-column_name="name & ledgerCode" 
-                                   list="vendorList" required placeholder="Search Supplier...">
-                            <datalist id="vendorList"></datalist>
+                                   list="customerList" required>
+                            <datalist id="customerList"></datalist>
+                            
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label class="badge-xs text-muted">GSTIN</label>
+                                    <input type="text" name="auto_customer_ledger_GST" class="form-control form-control-sm bg-light border-0 px-2" readonly>
+                                </div>
+                                <div class="col-6">
+                                    <label class="badge-xs text-muted">Place of Supply</label>
+                                    <input type="text" name="auto_customer_ledger_state" class="form-control form-control-sm bg-light border-0 px-2" readonly>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-2">
-                            <label class="form-label small fw-bold">Supplier Bill No.</label>
-                            <input type="text" name="supplier_bill_no" class="form-control form-control-sm upper-case font-monospace" required>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small fw-bold">Bill Date</label>
-                            <input type="date" name="voucher_date" id="purDate" class="form-control form-control-sm" required>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small fw-bold">Project</label>
-                            <input type="text" name="project" list="pcList" class="form-control form-control-sm" data-fetch_column data-sheet_name="Projects" data-column_name="ProjectName">
-                            <datalist id="pcList"></datalist>
+
+                        <div class="col-md-8 ps-4">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Invoice No.</label>
+                                    <input type="text" name="Invoice" id="invNoDisplay" class="form-control form-control-sm fw-bold bg-white" style="text-transform: uppercase;">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Billing Date</label>
+                                    <input type="date" name="voucher_date" id="invDate" class="form-control form-control-sm" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Project/PC</label>
+                                    <input type="text" name="project" list="Projectlist" class="form-control form-control-sm upper-case" 
+                                           data-fetch_column data-sheet_name="Projects" data-column_name="ProjectName & ProjectCode" placeholder="General">
+                                    <datalist id="Projectlist"></datalist>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Supply Type</label>
+                                    <select name="pos" class="form-select form-select-sm">
+                                        <option value="INTRA">Intra-State</option>
+                                        <option value="INTER">Inter-State</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <table class="table table-sm table-hover border rounded-3" id="purchaseTable">
-                        <thead class="table-dark">
-                            <tr>
-                                <th class="ps-3">#</th>
-                                <th width="50%">Item Description</th>
-                                <th>Qty</th>
-                                <th>Rate</th>
-                                <th class="text-end pe-3">Line Total</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="purchaseItemBody">
-                            <tr>
-                                <td class="sr-no ps-3">1</td>
-                                <td>
-                                    <input type="text" name="item_name[]" class="form-control form-control-sm border-0 bg-transparent itemName" 
-                                           data-fetch_column data-sheet_name="Stock" data-column_name="itemName" list="pStockList" required>
-                                    <datalist id="pStockList"></datalist>
-                                    <input type="hidden" name="auto_item_name_ItemTax" class="tax-val">
-                                </td>
-                                <td><input type="number" name="qty[]" class="form-control form-control-sm border-0 qty text-center" value="1"></td>
-                                <td><input type="number" name="rate[]" class="form-control form-control-sm border-0 rate text-end"></td>
-                                <td class="text-end pe-3 fw-bold"><span class="line-total">0.00</span></td>
-                                <td class="text-center"><button type="button" class="btn btn-link text-danger p-0" onclick="this.closest('tr').remove(); recalculateVoucher();">&times;</button></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div class="p-2 mb-3"><button type="button" class="btn btn-white btn-sm border" onclick="Utils.AddGridRow('purchaseTable')">+ Add Line</button></div>
-                    
-                    <div class="text-end border-top pt-3">
-                        <h5 class="fw-bold">Bill Total: ₹ <span id="grand-total">0.00</span></h5>
+                    <!-- Item Grid -->
+                    <div class="border rounded-3 overflow-hidden mb-4">
+                        <table class="table table-sm table-hover mb-0 align-middle" id="PurchaseItemTable">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th class="ps-3" width="5%">#</th>
+                                    <th width="40%">Item / Service Description</th>
+                                    <th width="10%">Qty</th>
+                                    <th width="15%">Rate</th>
+                                    <th width="10%">Tax %</th>
+                                    <th class="text-end pe-3" width="15%">Total</th>
+                                    <th width="5%"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="PurchaseItemBody">
+                                <tr>
+                                    <td class="sr-no ps-3">1</td>
+                                    <td>
+                                        <input type="text" name="item_name[]" 
+                                               class="form-control form-control-sm border-0 bg-transparent itemName" 
+                                               placeholder="Select SKU/Item..." 
+                                               data-fetch_column data-sheet_name="Stock" data-column_name="itemName & Stock_Code" 
+                                               list="stockList" required>
+                                        <datalist id="stockList"></datalist>
+                                        <div class="d-flex gap-2 opacity-50 px-1" style="font-size: 9px;">
+                                            
+                                            <span>HSN: <input type="text" name="auto_item_name_itemHSN" class="border-0 bg-transparent p-0" style="width:60px" readonly></span>
+                                            <span>Tax Code: <input type="text" name="auto_item_name_ItemTax" class="border-0 bg-transparent p-0 tax-val" style="width:10px" readonly>%</span>
+                                        </div>
+                                    </td>
+                                    <td><input type="text" name="qty[]" class="form-control form-control-sm border-0 bg-transparent qty text-center" value="1"></td>
+                                    <td><input type="text" name="rate[]" class="form-control form-control-sm border-0 bg-transparent rate text-end" placeholder="0.00"></td>
+                                    <td><input type="text" class="form-control form-control-sm border-0 bg-transparent text-center tax-display" readonly></td>
+                                    <td class="text-end pe-3 fw-bold"><span class="line-total">0.00</span></td>
+                                    <td class="text-center"><button type="button" class="btn btn-link btn-sm text-danger p-0" onclick="removeRow(this)"><i class="bi bi-trash"></i></button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="p-2 bg-light border-top">
+                            <button type="button" class="btn btn-white btn-sm border shadow-sm px-3" onclick="addNewRow()">+ Add Line Item</button>
+                        </div>
+                    </div>
+
+                    <!-- Footer Totals -->
+                    <div class="row justify-content-end">
+                        <div class="col-md-4">
+                            <div class="card bg-light border-0">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted small fw-bold">TAXABLE VALUE</span>
+                                        <span class="fw-bold" id="taxable-total">0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted small fw-bold">TOTAL TAX</span>
+                                        <span class="fw-bold" id="gst-total">0.00</span>
+                                    </div>
+                                    <hr class="my-2">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-primary fw-bold">NET AMOUNT</span>
+                                        <span class="h5 fw-bold text-primary mb-0">₹ <span id="grand-total">0.00</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- SHIPPING OFFCANVAS -->
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="additionalDetails" style="width: 450px;">
+            <div class="offcanvas-header bg-dark text-white">
+                <h5 class="offcanvas-title">Shipping & Order Meta</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+            </div>
+            <div class="offcanvas-body">
+                <section class="mb-4">
+                    <p class="fw-bold text-primary small text-uppercase mb-2">Consignee (Ship To)</p>
+                    <div class="bg-light p-3 rounded shadow-sm">
+                        <input type="text" name="consignee_name" class="form-control form-control-sm mb-2" placeholder="Consignee Name">
+                        <textarea name="delivery_address" class="form-control form-control-sm mb-2" placeholder="Shipping Address"></textarea>
+                        <div class="row g-2">
+                            <div class="col-6"><input type="text" name="delivery_state" class="form-control form-control-sm" placeholder="State"></div>
+                            <div class="col-6"><input type="text" name="delivery_pin" class="form-control form-control-sm" placeholder="PIN"></div>
+                        </div>
+                    </div>
+                </section>
+                <section class="mb-4">
+                    <p class="fw-bold text-primary small text-uppercase mb-2">Dispatch Details</p>
+                    <div class="bg-light p-3 rounded shadow-sm">
+                        <div class="row g-2 mb-2">
+                            <div class="col-6"><label class="small text-muted">LR/Doc No.</label><input type="text" name="lr_no" class="form-control form-control-sm"></div>
+                            <div class="col-6"><label class="small text-muted">Vehicle No.</label><input type="text" name="vehicle_no" class="form-control form-control-sm"></div>
+                        </div>
+                        <label class="small text-muted">Transporter</label>
+                        <input type="text" name="transporter" class="form-control form-control-sm">
+                    </div>
+                </section>
+                <button type="button" class="btn btn-primary w-100" data-bs-dismiss="offcanvas">Save Meta Info</button>
+            </div>
+        </div>
     </form>
 </div>
+
 <script>
-    document.getElementById('purDate').valueAsDate = new Date();
-    document.getElementById('purchaseItemBody').addEventListener('input', recalculateVoucher);
+    // document.getElementById('invNoDisplay').value = Utils.GenerateDocID('SL');
+    document.getElementById('invDate').valueAsDate = new Date();
+
+    function addNewRow() {
+        const tr = Utils.AddGridRow('PurchaseItemTable');
+        if(tr) App.InitERPLogic('transactions/Purchase-inv'); 
+    }
+
+    function removeRow(btn) {
+        if(document.querySelectorAll('#PurchaseItemBody tr').length > 1) {
+            btn.closest('tr').remove();
+            recalculateVoucher();
+        }
+    }
+
+    function recalculateVoucher() {
+        let taxable = 0; let totalGst = 0;
+        document.querySelectorAll('#PurchaseItemBody tr').forEach(row => {
+            const q = parseFloat(row.querySelector('.qty').value) || 0;
+            const r = parseFloat(row.querySelector('.rate').value) || 0;
+            const t = parseFloat(row.querySelector('.tax-val').value) || 0;
+            
+            const line = Utils.CalculateLine(q, r, t);
+            row.querySelector('.line-total').innerText = line.total.toLocaleString('en-IN', {minimumFractionDigits: 2});
+            row.querySelector('.tax-display').value = t + "%";
+            
+            taxable += line.base; totalGst += line.tax;
+        });
+        document.getElementById('taxable-total').innerText = taxable.toLocaleString('en-IN', {minimumFractionDigits: 2});
+        document.getElementById('gst-total').innerText = totalGst.toLocaleString('en-IN', {minimumFractionDigits: 2});
+        document.getElementById('grand-total').innerText = (taxable + totalGst).toLocaleString('en-IN', {minimumFractionDigits: 2});
+    }
+
+    document.getElementById('PurchaseItemBody').addEventListener('input', recalculateVoucher);
 </script>

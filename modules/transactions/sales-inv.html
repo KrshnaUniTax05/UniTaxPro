@@ -49,7 +49,7 @@
                             <div class="row g-3">
                                 <div class="col-md-3">
                                     <label class="form-label small fw-bold">Invoice No.</label>
-                                    <input type="text" name="Invoice" id="invNoDisplay" class="form-control form-control-sm font-monospace fw-bold bg-white" readonly>
+                                    <input type="text" name="Invoice" id="invNoDisplay" class="form-control form-control-sm  fw-bold bg-white" readonly>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label small fw-bold">Billing Date</label>
@@ -102,8 +102,8 @@
                                             <span>Tax Code: <input type="text" name="auto_item_name_ItemTax" class="border-0 bg-transparent p-0 tax-val" style="width:10px" readonly>%</span>
                                         </div>
                                     </td>
-                                    <td><input type="number" name="qty[]" class="form-control form-control-sm border-0 bg-transparent qty text-center" value="1"></td>
-                                    <td><input type="number" name="rate[]" class="form-control form-control-sm border-0 bg-transparent rate text-end" placeholder="0.00"></td>
+                                    <td><input type="text" name="qty[]" class="form-control form-control-sm border-0 bg-transparent qty text-center" value="1"></td>
+                                    <td><input type="text" name="rate[]" class="form-control form-control-sm border-0 bg-transparent rate text-end" placeholder="0.00"></td>
                                     <td><input type="text" class="form-control form-control-sm border-0 bg-transparent text-center tax-display" readonly></td>
                                     <td class="text-end pe-3 fw-bold"><span class="line-total">0.00</span></td>
                                     <td class="text-center"><button type="button" class="btn btn-link btn-sm text-danger p-0" onclick="removeRow(this)"><i class="bi bi-trash"></i></button></td>

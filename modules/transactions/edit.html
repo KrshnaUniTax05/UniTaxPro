@@ -1,0 +1,187 @@
+    <div class="animate-in">
+        <div id="editControlPanel" class="mb-3"></div>
+        
+        <div id="editContainer">
+            <div class="text-center py-5" id="formLoader">
+                <div class="spinner-border text-primary"></div>
+                <p class="mt-2 text-muted fw-bold">Connecting to Ledger...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    
+    (async function() {
+        const rawContext = localStorage.getItem('editContext');
+        if (!rawContext) {
+            document.getElementById('editContainer').innerHTML = `<div class="alert alert-danger">No edit context found.</div>`;
+            return;
+        }
+        
+        const { type, key } = JSON.parse(rawContext);
+        // alert()
+        // Form Mappings
+        const formRegistry = { "SalesInvoiceForm": "sales-inv", "ReceiptPaymentForm" : "receipt-pay", "PurchaseInvoiceForm": "purchase-inv" };
+        const headerMap = { "date": "voucher_date", "doc_no": "Invoice", "entity": "customer_ledger" };
+        const reverseHeaderMap = Object.fromEntries(Object.entries(headerMap).map(([k, v]) => [v, k]));
+
+        try {
+            // 1. FETCH DATA & HTML TEMPLATE
+            const data = await API.Fetch(`Transactions/${type}/${key}`);
+            if (!data) throw new Error("Transaction data not found.");
+
+            const formBaseName = formRegistry[type] || type.replace('Form', '').toLowerCase();
+            const res = await fetch(`modules/transactions/${formBaseName}.html`);
+            if (!res.ok) throw new Error("Template missing: " + formBaseName);
+            
+            const container = document.getElementById('editContainer');
+            container.innerHTML = await res.text();
+            const form = container.querySelector('form');
+
+            // Re-hydrate native scripts
+            container.querySelectorAll("script").forEach(oldScript => {
+                const newScript = document.createElement("script");
+                newScript.text = oldScript.innerHTML;
+                document.body.appendChild(newScript).parentNode.removeChild(newScript);
+            });
+
+            // 2. POPULATE HEADER
+            if (data.header) {
+                Object.entries(data.header).forEach(([k, v]) => {
+                    const inputName = headerMap[k] || k;
+                    const input = form.querySelector(`[name="${inputName}"]`);
+                    if(input) input.value = v;
+                });
+            }
+
+            // 3. THE CLONE PATTERN (Bulletproof Row Population)
+            const tbody = form.querySelector('tbody');
+            if (tbody && data.items && data.items.length > 0) {
+                // Grab the first row in the HTML and save it as our Master Template
+                const templateRow = tbody.querySelector('tr').cloneNode(true);
+                tbody.innerHTML = ''; // Clear default rows completely
+                
+                data.items.forEach((item, index) => {
+                    // Clone a fresh row from the template
+                    const newRow = templateRow.cloneNode(true);
+                    
+                    // Update Serial Number if it exists
+                    const srNo = newRow.querySelector('.sr-no');
+                    if (srNo) srNo.innerText = index + 1;
+                    
+                    // Map Database values into the Cloned Row
+                    Object.entries(item).forEach(([k, v]) => {
+                        const input = newRow.querySelector(`[name="${k}"], [name="${k}[]"]`);
+                        if(input) input.value = v;
+                    });
+                    
+                    // Attach the fully populated row to the table
+                    tbody.appendChild(newRow);
+                });
+
+                // Trigger ERP Logic to bind datalists to the new cloned rows
+                if (typeof App !== 'undefined' && App.InitERPLogic) {
+                    App.InitERPLogic(`transactions/${formBaseName}`);
+                }
+            }
+
+            // Run totals math
+            if (typeof window.recalculateVoucher === 'function') window.recalculateVoucher();
+
+            // 4. VIEW-ONLY UI (Allows Copying, Prevents Editing)
+            const lockForm = () => {
+                // Use readOnly so user can still click, select, and copy text
+                form.querySelectorAll('input, textarea').forEach(el => el.readOnly = true);
+                form.querySelectorAll('select').forEach(el => el.style.pointerEvents = 'none');
+                
+                // Hide action buttons (Add Line, Trash, Submit) so they don't break the view
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if(submitBtn) submitBtn.style.display = 'none';
+
+                form.querySelectorAll('.btn-danger, .btn-link, [onclick*="addNewRow"], [onclick*="removeRow"]').forEach(btn => {
+                    btn.setAttribute('data-original-display', btn.style.display || 'inline-block');
+                    btn.style.display = 'none';
+                });
+
+                // Inject Unlock Button
+                document.getElementById('editControlPanel').innerHTML = `
+                    <div class="alert alert-warning d-flex justify-content-between align-items-center m-0 shadow-sm border-warning">
+                        <span><i class="bi bi-eye me-2"></i><strong>Viewing Record:</strong> ${data.header?.doc_no || 'Document'}</span>
+                        <button type="button" class="btn btn-warning btn-sm fw-bold shadow-sm" onclick="enableEditing(this)">
+                            <i class="bi bi-pencil-square me-1"></i> Unlock for Editing
+                        </button>
+                    </div>
+                `;
+            };
+            lockForm();
+
+            // 5. CRUD: HANDLE DATABASE UPDATE
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const payload = { header: {}, items: [], meta: data.meta };
+
+                form.querySelectorAll('.card-body > .row input, .card-body > .row select').forEach(el => {
+                    if(el.name) {
+                        let dbKey = reverseHeaderMap[el.name] || el.name;
+                        payload.header[dbKey] = el.value;
+                    }
+                });
+
+                form.querySelectorAll('tbody tr').forEach(row => {
+                    const itemObj = {};
+                    row.querySelectorAll('input, select').forEach(el => {
+                        if(el.name) itemObj[el.name.replace('[]', '')] = el.value;
+                    });
+                    if(Object.keys(itemObj).length > 0) payload.items.push(itemObj);
+                });
+
+                try {
+                    const btn = form.querySelector('button[type="submit"]');
+                    const origText = btn.innerHTML;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+                    btn.disabled = true;
+
+                    await API.DB.ref(`${App.State.userId}/Transactions/${type}/${key}`).update(payload);
+                    App.UI.Notify('Success', 'Transaction successfully updated.', 'success');
+                    App.Router('reports/gl-statement'); 
+
+                } catch (error) {
+                    App.UI.Notify('Update Failed', error.message, 'danger');
+                }
+            });
+
+        } catch (err) {
+            console.error("Edit Flow Exception:", err);
+            document.getElementById('editContainer').innerHTML = `<div class="alert alert-danger shadow-sm">${err.message}</div>`;
+        }
+    })();
+
+
+
+    
+    // UNLOCK FUNCTION (Restores the Form)
+    window.enableEditing = function(btn) {
+        const form = document.querySelector('form');
+        
+        form.querySelectorAll('input, textarea').forEach(el => el.readOnly = false);
+        form.querySelectorAll('select').forEach(el => el.style.pointerEvents = 'auto');
+        
+        // Restore action buttons (Add Line, Trash)
+        form.querySelectorAll('[data-original-display]').forEach(el => {
+            el.style.display = el.getAttribute('data-original-display');
+        });
+        
+        document.getElementById('editControlPanel').innerHTML = `
+            <div class="alert alert-success d-flex justify-content-between align-items-center m-0 shadow-sm border-success">
+                <span><i class="bi bi-unlock-fill me-2"></i><strong>Editing Unlocked.</strong> Modify fields and click Update below.</span>
+            </div>
+        `;
+        
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.style.display = 'inline-block';
+            submitBtn.classList.replace('btn-primary', 'btn-success');
+            submitBtn.innerHTML = '<i class="bi bi-cloud-arrow-up-fill me-1"></i> Update Document';
+        }
+    };
+    </script>

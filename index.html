@@ -48,9 +48,31 @@
                 </div>
             </div>
 
-            <div class="d-flex align-items-center gap-3">
-                <div class="search-box d-none d-md-block">
-                    <input type="text" id="globalSearch" class="form-control form-control-sm rounded-pill" placeholder="Search Module (/)">
+            <div class="d-flex align-items-center gap-3 right-side-window">
+                <!-- Professional Command Search -->
+                <div class="search-box position-relative">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white border-end-0 rounded-pill-start ps-3">
+                            <i class="bi bi-terminal text-muted"></i>
+                        </span>
+                        <input type="text" id="globalSearch" 
+                            class="form-control border-start-0 rounded-pill-end" 
+                            placeholder="Search Module or Type Code..." 
+                            list="moduleRegistry"
+                            autocomplete="off">
+                    </div>
+                    <!-- The Registry of all available modules -->
+                    <datalist id="moduleRegistry">
+                        <option value="dashboard">Financial Overview</option>
+                        <option value="masters/company-cw">Company Creation (Masters)</option>
+                        <option value="masters/ledger-cw">Ledger Account (Masters)</option>
+                        <option value="masters/stock-cw">Stock / Inventory (Masters)</option>
+                        <option value="masters/project-cw">Profit Center (Masters)</option>
+                        <option value="transactions/sales-inv">Sales Invoice (Transaction)</option>
+                        <option value="transactions/purchase-inv">Purchase Voucher (Transaction)</option>
+                        <option value="transactions/receipt-pay">Cash/Bank Book (Transaction)</option>
+                        <option value="reports/gl-statement">General Ledger Statement</option>
+                    </datalist>
                 </div>
                 
                 <div class="form-check form-switch pt-1">
@@ -249,5 +271,20 @@
     <option value="Dadra and Nagar Haveli and Daman and Diu">
     <option value="Andaman and Nicobar Islands">
 </datalist>
+
+<!--  Tasks Secction -->
+<div class="modal fade" id="taskModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-body">
+                <label class="form-label small fw-bold">New Task</label>
+                <input type="text" id="taskInput" class="form-control form-control-sm" placeholder="Enter task name...">
+            </div>
+            <div class="modal-footer p-2">
+                <button type="button" class="btn btn-sm btn-primary w-100" onclick="saveTask()">Save Task</button>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

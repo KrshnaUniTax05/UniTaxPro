@@ -21,7 +21,7 @@
                     <div class="row g-3 bg-white p-3 border rounded-3 mb-4 shadow-sm">
                         <div class="col-md-5 border-end">
                             <label class="form-label small fw-bold text-success" id="accLabel">Deposit Into (Bank/Cash)</label>
-                            <input type="text" name="gl_account" class="form-control form-control-sm font-monospace" 
+                            <input type="text" name="gl_account" class="form-control form-control-sm " 
                                    list="rpAccList" placeholder="Search Account..." required 
                                    data-fetch_column data-sheet_name="LedgerCreation" data-column_name="ledgerCode&name">
                             <datalist id="rpAccList"></datalist>
@@ -36,7 +36,7 @@
                         </div>
                         <div class="col-md-2">
                             <label class="form-label small fw-bold">Project</label>
-                            <input type="text" name="project" list="pcListRP" class="form-control form-control-sm" data-fetch_column data-sheet_name="Projects" data-column_name="ProjectName">
+                            <input type="text" name="project" list="pcListRP" class="form-control form-control-sm" data-fetch_column data-sheet_name="Projects" data-column_name="ProjectName & ProjectCode">
                             <datalist id="pcListRP"></datalist>
                         </div>
                     </div>
@@ -60,7 +60,7 @@
                                     <datalist id="offsetList"></datalist>
                                 </td>
                                 <td><input type="text" name="row_narration[]" class="form-control form-control-sm border-0 bg-transparent"></td>
-                                <td><input type="number" name="amount[]" class="form-control form-control-sm border-0 text-end fw-bold r_amt" placeholder="0.00"></td>
+                                <td><input type="text" name="amount[]" class="form-control form-control-sm border-0 text-end fw-bold r_amt" placeholder="0.00"></td>
                                 <td class="text-center"><button type="button" class="btn btn-link text-danger p-0" onclick="this.closest('tr').remove(); calcRP();">&times;</button></td>
                             </tr>
                         </tbody>
