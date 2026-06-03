@@ -9,179 +9,243 @@
         </div>
     </div>
 
-    <script>
+<script>
+(async function() {
+    const rawContext = localStorage.getItem('editContext');
+    if (!rawContext) {
+        document.getElementById('editContainer').innerHTML = `<div class="alert alert-danger">No edit context found.</div>`;
+        return;
+    }
     
-    (async function() {
-        const rawContext = localStorage.getItem('editContext');
-        if (!rawContext) {
-            document.getElementById('editContainer').innerHTML = `<div class="alert alert-danger">No edit context found.</div>`;
-            return;
-        }
+    const { type, key } = JSON.parse(rawContext);
+    
+    // Form Mappings
+    const formRegistry = { "SalesInvoiceForm": "sales-inv", "ReceiptPaymentForm" : "receipt-pay", "PurchaseInvoiceForm": "purchase-inv", "ReceiptVoucherForm":"receipt-vch", "PaymentVoucherForm": "payment-vch" };
+    
+    // Multi-map to handle both Invoices and Receipts
+    const possibleNames = {
+        date: ['voucher_date', 'valueDate'],
+        doc_no: ['Invoice', 'paymentRef', 'supplier_bill_no'],
+        entity: ['customer_ledger', 'gl_account'],
+        CompanyCode: ['CompanyName']
+    };
+
+    try {
+        // 1. FETCH DATA & HTML TEMPLATE
+        const data = await API.Fetch(`Transactions/${type}/${key}`);
+        if (!data) throw new Error("Transaction data not found.");
+
+        const formBaseName = formRegistry[type] || type.replace('Form', '').toLowerCase();
+        const res = await fetch(`modules/transactions/${formBaseName}.html`);
+        if (!res.ok) throw new Error("Template missing: " + formBaseName);
         
-        const { type, key } = JSON.parse(rawContext);
-        // alert()
-        // Form Mappings
-        const formRegistry = { "SalesInvoiceForm": "sales-inv", "ReceiptPaymentForm" : "receipt-pay", "PurchaseInvoiceForm": "purchase-inv" };
-        const headerMap = { "date": "voucher_date", "doc_no": "Invoice", "entity": "customer_ledger" };
-        const reverseHeaderMap = Object.fromEntries(Object.entries(headerMap).map(([k, v]) => [v, k]));
+        const container = document.getElementById('editContainer');
+        container.innerHTML = await res.text();
+        const form = container.querySelector('form');
 
-        try {
-            // 1. FETCH DATA & HTML TEMPLATE
-            const data = await API.Fetch(`Transactions/${type}/${key}`);
-            if (!data) throw new Error("Transaction data not found.");
+        // Re-hydrate native scripts
+        container.querySelectorAll("script").forEach(oldScript => {
+            const newScript = document.createElement("script");
+            newScript.text = oldScript.innerHTML;
+            document.body.appendChild(newScript).parentNode.removeChild(newScript);
+        });
 
-            const formBaseName = formRegistry[type] || type.replace('Form', '').toLowerCase();
-            const res = await fetch(`modules/transactions/${formBaseName}.html`);
-            if (!res.ok) throw new Error("Template missing: " + formBaseName);
-            
-            const container = document.getElementById('editContainer');
-            container.innerHTML = await res.text();
-            const form = container.querySelector('form');
-
-            // Re-hydrate native scripts
-            container.querySelectorAll("script").forEach(oldScript => {
-                const newScript = document.createElement("script");
-                newScript.text = oldScript.innerHTML;
-                document.body.appendChild(newScript).parentNode.removeChild(newScript);
+        // 2. POPULATE HEADER 
+        if (data.header) {
+            Object.entries(data.header).forEach(([k, v]) => {
+                let inputNameMatches = possibleNames[k] || [k];
+                let input = null;
+                for (let name of inputNameMatches) {
+                    input = form.querySelector(`[name="${name}"]`);
+                    if (input) break;
+                }
+                if(input) input.value = v;
             });
+        }
 
-            // 2. POPULATE HEADER
-            if (data.header) {
-                Object.entries(data.header).forEach(([k, v]) => {
-                    const inputName = headerMap[k] || k;
-                    const input = form.querySelector(`[name="${inputName}"]`);
+        // 3. POPULATE DYNAMIC META FIELDS (e.g., lr_no, transporter)
+        if (data.meta) {
+            Object.entries(data.meta).forEach(([k, v]) => {
+                // Ignore internal tracking meta fields
+                if (k === 'user' || k === 'form_id') return;
+                let input = form.querySelector(`[name="${k}"]`);
+                if(input) input.value = v;
+            });
+        }
+
+        // 4. THE CLONE PATTERN (Bulletproof Row Population)
+        const tbody = form.querySelector('tbody');
+        if (tbody && data.items && data.items.length > 0) {
+            const templateRow = tbody.querySelector('tr').cloneNode(true);
+            tbody.innerHTML = ''; 
+            
+            data.items.forEach((item, index) => {
+                const newRow = templateRow.cloneNode(true);
+                const srNo = newRow.querySelector('.sr-no');
+                if (srNo) srNo.innerText = index + 1;
+                
+                Object.entries(item).forEach(([k, v]) => {
+                    const input = newRow.querySelector(`[name="${k}"], [name="${k}[]"]`);
                     if(input) input.value = v;
                 });
+                tbody.appendChild(newRow);
+            });
+
+            if (typeof App !== 'undefined' && App.InitERPLogic) {
+                App.InitERPLogic(`transactions/${formBaseName}`);
             }
+        }
 
-            // 3. THE CLONE PATTERN (Bulletproof Row Population)
-            const tbody = form.querySelector('tbody');
-            if (tbody && data.items && data.items.length > 0) {
-                // Grab the first row in the HTML and save it as our Master Template
-                const templateRow = tbody.querySelector('tr').cloneNode(true);
-                tbody.innerHTML = ''; // Clear default rows completely
-                
-                data.items.forEach((item, index) => {
-                    // Clone a fresh row from the template
-                    const newRow = templateRow.cloneNode(true);
-                    
-                    // Update Serial Number if it exists
-                    const srNo = newRow.querySelector('.sr-no');
-                    if (srNo) srNo.innerText = index + 1;
-                    
-                    // Map Database values into the Cloned Row
-                    Object.entries(item).forEach(([k, v]) => {
-                        const input = newRow.querySelector(`[name="${k}"], [name="${k}[]"]`);
-                        if(input) input.value = v;
-                    });
-                    
-                    // Attach the fully populated row to the table
-                    tbody.appendChild(newRow);
-                });
+        if (typeof window.recalculateVoucher === 'function') window.recalculateVoucher();
 
-                // Trigger ERP Logic to bind datalists to the new cloned rows
-                if (typeof App !== 'undefined' && App.InitERPLogic) {
-                    App.InitERPLogic(`transactions/${formBaseName}`);
+        // 5. VIEW-ONLY UI WITH BACK & PRINT BUTTONS
+        const lockForm = () => {
+            form.querySelectorAll('input, textarea').forEach(el => el.readOnly = true);
+            form.querySelectorAll('select').forEach(el => el.style.pointerEvents = 'none');
+            
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if(submitBtn) submitBtn.style.display = 'none';
+
+            form.querySelectorAll('.btn-danger, .btn-link, [onclick*="addNewRow"], [onclick*="removeRow"], [onclick*="rvAddRow"]').forEach(btn => {
+                btn.setAttribute('data-original-display', btn.style.display || 'inline-block');
+                btn.style.display = 'none';
+            });
+
+            // Inject Unlock, Back & Print Buttons
+            document.getElementById('editControlPanel').innerHTML = `
+                <div class="alert alert-warning d-flex justify-content-between align-items-center m-0 shadow-sm border-warning">
+                    <span><i class="bi bi-eye me-2"></i><strong>Viewing Record:</strong> ${data.header?.doc_no || 'Document'}</span>
+                    <div>
+                        <button type="button" class="btn btn-outline-primary btn-sm fw-bold shadow-sm  bg-white" onclick="window.printTransaction('${type}', '${key}')">
+                            <i class="bi bi-printer me-1"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-dark btn-sm fw-bold shadow-sm  bg-white" onclick="App.Router('reports/gl-statement')">
+                            <i class="bi bi-arrow-left me-1"></i>
+                        </button>
+                        <button type="button" class="btn btn-warning btn-sm fw-bold shadow-sm" onclick="enableEditing(this)">
+                            <i class="bi bi-pencil-square me-1"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        };
+        lockForm();
+
+        // 6. CRUD: HANDLE DATABASE UPDATE
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Re-extract the form to capture new dynamic meta fields
+            const formDataObj = new FormData(form);
+            const rawFormInputs = Object.fromEntries(formDataObj.entries());
+            
+            const standardKeys = [
+                'Invoice', 'paymentRef', 'supplier_bill_no', 'customer_ledger', 'gl_account',
+                'voucher_date', 'valueDate', 'project', 'CompanyName', 'instrumentDate', 'narration'
+            ];
+
+            const updatedMeta = { ...data.meta };
+            for (let key in rawFormInputs) {
+                // If it's not a standard header key, and not an array item key, it's dynamic meta
+                if (!standardKeys.includes(key) && !key.includes('[]')) {
+                    updatedMeta[key] = rawFormInputs[key];
                 }
             }
 
-            // Run totals math
-            if (typeof window.recalculateVoucher === 'function') window.recalculateVoucher();
-
-            // 4. VIEW-ONLY UI (Allows Copying, Prevents Editing)
-            const lockForm = () => {
-                // Use readOnly so user can still click, select, and copy text
-                form.querySelectorAll('input, textarea').forEach(el => el.readOnly = true);
-                form.querySelectorAll('select').forEach(el => el.style.pointerEvents = 'none');
-                
-                // Hide action buttons (Add Line, Trash, Submit) so they don't break the view
-                const submitBtn = form.querySelector('button[type="submit"]');
-                if(submitBtn) submitBtn.style.display = 'none';
-
-                form.querySelectorAll('.btn-danger, .btn-link, [onclick*="addNewRow"], [onclick*="removeRow"]').forEach(btn => {
-                    btn.setAttribute('data-original-display', btn.style.display || 'inline-block');
-                    btn.style.display = 'none';
-                });
-
-                // Inject Unlock Button
-                document.getElementById('editControlPanel').innerHTML = `
-                    <div class="alert alert-warning d-flex justify-content-between align-items-center m-0 shadow-sm border-warning">
-                        <span><i class="bi bi-eye me-2"></i><strong>Viewing Record:</strong> ${data.header?.doc_no || 'Document'}</span>
-                        <button type="button" class="btn btn-warning btn-sm fw-bold shadow-sm" onclick="enableEditing(this)">
-                            <i class="bi bi-pencil-square me-1"></i> Unlock for Editing
-                        </button>
-                    </div>
-                `;
+            const payload = { 
+                header: { ...data.header }, 
+                items: [], 
+                meta: updatedMeta 
             };
-            lockForm();
 
-            // 5. CRUD: HANDLE DATABASE UPDATE
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const payload = { header: {}, items: [], meta: data.meta };
-
-                form.querySelectorAll('.card-body > .row input, .card-body > .row select').forEach(el => {
-                    if(el.name) {
-                        let dbKey = reverseHeaderMap[el.name] || el.name;
-                        payload.header[dbKey] = el.value;
-                    }
-                });
-
-                form.querySelectorAll('tbody tr').forEach(row => {
-                    const itemObj = {};
-                    row.querySelectorAll('input, select').forEach(el => {
-                        if(el.name) itemObj[el.name.replace('[]', '')] = el.value;
-                    });
-                    if(Object.keys(itemObj).length > 0) payload.items.push(itemObj);
-                });
-
-                try {
-                    const btn = form.querySelector('button[type="submit"]');
-                    const origText = btn.innerHTML;
-                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
-                    btn.disabled = true;
-
-                    await API.DB.ref(`${App.State.userId}/Transactions/${type}/${key}`).update(payload);
-                    App.UI.Notify('Success', 'Transaction successfully updated.', 'success');
-                    App.Router('reports/gl-statement'); 
-
-                } catch (error) {
-                    App.UI.Notify('Update Failed', error.message, 'danger');
+            // Map Header standard fields
+            form.querySelectorAll('.card-body > .row input, .card-body > .row select, .p-4 > .row input').forEach(el => {
+                if(el.name) {
+                    let dbKey = el.name;
+                    if (['Invoice', 'paymentRef', 'supplier_bill_no'].includes(dbKey)) dbKey = 'doc_no';
+                    if (['voucher_date', 'valueDate'].includes(dbKey)) dbKey = 'date';
+                    if (['customer_ledger', 'gl_account'].includes(dbKey)) dbKey = 'entity';
+                    payload.header[dbKey] = el.value;
                 }
             });
 
-        } catch (err) {
-            console.error("Edit Flow Exception:", err);
-            document.getElementById('editContainer').innerHTML = `<div class="alert alert-danger shadow-sm">${err.message}</div>`;
-        }
-    })();
+            // Map Items
+            form.querySelectorAll('tbody tr').forEach(row => {
+                const itemObj = {};
+                row.querySelectorAll('input, select').forEach(el => {
+                    if(el.name) itemObj[el.name.replace('[]', '')] = el.value;
+                });
+                if(Object.keys(itemObj).length > 0) payload.items.push(itemObj);
+            });
 
+            // Double Entry Math Recalculation
+            let subTotal = 0;
+            let taxTotal = 0;
+            payload.items.forEach(i => {
+                const qty = parseFloat(i.qty) || 1;
+                const rate = parseFloat(i.rate) || parseFloat(i.amount) || 0;
+                const taxPrc = parseFloat(i.auto_item_name_ItemTax) || parseFloat(i.taxRate) || 0;
+                const base = qty * rate;
+                subTotal += base;
+                taxTotal += base * (taxPrc / 100);
+            });
+            payload.header.subTotal = subTotal;
+            payload.header.taxTotal = taxTotal;
+            payload.header.grandTotal = subTotal + taxTotal;
 
+            try {
+                const btn = form.querySelector('button[type="submit"]');
+                const origText = btn.innerHTML;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+                btn.disabled = true;
 
-    
-    // UNLOCK FUNCTION (Restores the Form)
-    window.enableEditing = function(btn) {
-        const form = document.querySelector('form');
-        
-        form.querySelectorAll('input, textarea').forEach(el => el.readOnly = false);
-        form.querySelectorAll('select').forEach(el => el.style.pointerEvents = 'auto');
-        
-        // Restore action buttons (Add Line, Trash)
-        form.querySelectorAll('[data-original-display]').forEach(el => {
-            el.style.display = el.getAttribute('data-original-display');
+                await API.DB.ref(`${App.State.userId}/Transactions/${type}/${key}`).update(payload);
+                App.UI.Notify('Success', 'Transaction successfully updated.', 'success');
+                App.Router('reports/gl-statement'); 
+
+            } catch (error) {
+                App.UI.Notify('Update Failed', error.message, 'danger');
+            }
         });
-        
-        document.getElementById('editControlPanel').innerHTML = `
-            <div class="alert alert-success d-flex justify-content-between align-items-center m-0 shadow-sm border-success">
-                <span><i class="bi bi-unlock-fill me-2"></i><strong>Editing Unlocked.</strong> Modify fields and click Update below.</span>
-            </div>
-        `;
-        
-        const submitBtn = form.querySelector('button[type="submit"]');
-        if (submitBtn) {
-            submitBtn.style.display = 'inline-block';
-            submitBtn.classList.replace('btn-primary', 'btn-success');
-            submitBtn.innerHTML = '<i class="bi bi-cloud-arrow-up-fill me-1"></i> Update Document';
-        }
-    };
-    </script>
+
+    } catch (err) {
+        console.error("Edit Flow Exception:", err);
+        document.getElementById('editContainer').innerHTML = `<div class="alert alert-danger shadow-sm">${err.message}</div>`;
+    }
+})();
+
+// UNLOCK FUNCTION
+window.enableEditing = function(btn) {
+    const form = document.querySelector('form');
+    
+    form.querySelectorAll('input, textarea').forEach(el => el.readOnly = false);
+    form.querySelectorAll('select').forEach(el => el.style.pointerEvents = 'auto');
+    
+    form.querySelectorAll('[data-original-display]').forEach(el => {
+        el.style.display = el.getAttribute('data-original-display');
+    });
+    
+    document.getElementById('editControlPanel').innerHTML = `
+        <div class="alert alert-success d-flex justify-content-between align-items-center m-0 shadow-sm border-success">
+            <span><i class="bi bi-unlock-fill me-2"></i><strong>Editing Unlocked.</strong></span>
+            <button type="button" class="btn btn-outline-dark btn-sm fw-bold shadow-sm bg-white" onclick="App.Router('reports/gl-statement')">
+                <i class="bi bi-arrow-left me-1"></i> Cancel
+            </button>
+        </div>
+    `;
+    
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.style.display = 'inline-block';
+        submitBtn.classList.replace('btn-primary', 'btn-success');
+        submitBtn.title = "Update changes"
+        submitBtn.innerHTML = '<i class="bi bi-check2 p-0"></i>';
+    }
+};
+
+
+
+
+
+
+</script>

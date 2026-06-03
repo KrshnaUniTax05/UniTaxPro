@@ -11,15 +11,14 @@
                 </div>
 
                 <div class="p-4">
-                    <!-- Identity Section -->
                     <h6 class="fw-bold text-primary small text-uppercase mb-3">Ledger Definition</h6>
                     <div class="row g-3 mb-4">
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label class="form-label small fw-bold">Ledger Code</label>
                             <input type="text" name="ledgerCode" class="form-control form-control-sm font-monospace upper-case fw-bold" 
-                                   data-check-unique="true" data-sheet_name="LedgerCreation" data-column_name="ledgerCode" minlength="10" maxlength="10" required>
+                                   data-check-unique="true" data-sheet_name="LedgerCreation" data-column_name="ledgerCode" minlength="4" required>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label small fw-bold">Account Display Name</label>
                             <input type="text" name="name" class="form-control form-control-sm proper-case" required>
                         </div>
@@ -30,9 +29,16 @@
                                 <option value="Bank Accounts"><option value="Sundry Debtors"><option value="Sundry Creditors"><option value="Direct Incomes"><option value="Fixed Assets">
                             </datalist>
                         </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold text-danger">Ledger Nature</label>
+                            <select name="ledgerNature" class="form-select form-select-sm fw-bold" required>
+                                <option value="" disabled selected>Select Nature...</option>
+                                <option value="Debit">Debit (Dr) - Assets/Expenses</option>
+                                <option value="Credit">Credit (Cr) - Liab/Incomes</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <!-- Context Section -->
                     <div class="bg-light p-3 rounded-3 mb-4">
                         <h6 class="fw-bold text-dark small text-uppercase mb-3">Organizational Linking</h6>
                         <div class="row g-3">
@@ -51,7 +57,6 @@
                         </div>
                     </div>
 
-                    <!-- Address & Contact -->
                     <h6 class="fw-bold text-primary small text-uppercase mb-3">Communication (Optional)</h6>
                     <div class="row g-3">
                         <div class="col-md-6"><label class="form-label small fw-bold">Address 1</label><input type="text" name="address1" class="form-control form-control-sm"></div>
@@ -64,7 +69,6 @@
                         <div class="col-md-12"><label class="form-label small fw-bold">Website</label><input type="url" name="website" class="form-control form-control-sm"></div>
                     </div>
 
-                    <!-- Dynamic Fields Container -->
                     <div id="dynamicfeilds" class="mt-4"></div>
                 </div>
             </div>

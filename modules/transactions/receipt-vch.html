@@ -1,0 +1,122 @@
+<div class="animate-in">
+    <form id="ReceiptVoucherForm" data-category="Transactions">
+        <input type="hidden" name="documentType" value="RECEIPT">
+        
+        <div class="card border-0 shadow-sm overflow-hidden">
+            <div class="card-body p-0">
+                <!-- Command Header -->
+                <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-light sticky-top z-10">
+                    <div>
+                        <h5 class="fw-bold mb-0 text-success"><i class="bi bi-arrow-down-left-circle me-2"></i>Receipt Voucher</h5>
+                        <p class="text-muted small mb-0">Record incoming funds to Bank or Cash accounts</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <!-- <button type="button" class="btn btn-white btn-sm border fw-semibold" onclick="App.Router('transactions/receipt-vch')">Reset</button> -->
+                        <button type="submit" title="Post Document" class="btn btn-success btn-sm px-3 shadow-sm fw-bold">
+                            <i class="bi bi-check2 me-1"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-4">
+                    <!-- Header Section -->
+                    <div class="row g-3 mb-4 bg-white border p-3 rounded-3 shadow-sm">
+                        <div class="col-md-4 border-end">
+                            <label class="form-label small fw-bold text-primary">Debit Account (Cash/Bank)</label>
+                            <input type="text" name="gl_account" class="form-control form-control-sm font-monospace" 
+                                   list="receiptBankList" placeholder="Select Bank/Cash..." required
+                                   data-fetch_column data-sheet_name="LedgerCreation" data-column_name="name&ledgerCode">
+                            <datalist id="receiptBankList"></datalist>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-bold">Payment Ref.</label>
+                            <input type="text" name="paymentRef" class="form-control form-control-sm upper-case" placeholder="UTR/CHQ No.">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Value Date</label>
+                            <input type="date" name="valueDate" id="rvValueDate" class="form-control form-control-sm">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Instrument Date</label>
+                            <input type="date" name="instrumentDate" id="rvInstrDate" class="form-control form-control-sm">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Project / Cost Center</label>
+                            <input type="text" name="project" list="rvProjList" class="form-control form-control-sm"
+                                   data-fetch_column data-sheet_name="Projects" data-column_name="ProjectName&ProjectCode">
+                            <datalist id="rvProjList"></datalist>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Company Code</label>
+                            <input type="text" name="CompanyName" list="rvCompList" class="form-control form-control-sm"
+                                   data-fetch_column data-sheet_name="Companies" data-column_name="companyName&CompanyCode">
+                            <datalist id="rvCompList"></datalist>
+                        </div>
+                    </div>
+
+                    <!-- Items Table -->
+                    <div class="table-responsive border rounded-3">
+                        <table class="table table-sm table-hover mb-0 align-middle" id="receiptTable">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th class="ps-3" width="5%">#</th>
+                                    <th width="50%">Credit Account (Offsetting Party/Income)</th>
+                                    <th width="40%" class="text-end pe-3">Amount (INR)</th>
+                                    <th width="5%"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="receiptBody">
+                                <tr>
+                                    <td class="sr-no ps-3">1</td>
+                                    <td>
+                                        <input type="text" name="offset_account[]" class="form-control form-control-sm border-0 bg-transparent" 
+                                               data-fetch_column data-sheet_name="LedgerCreation" data-column_name="name&ledgerCode" 
+                                               list="rvOffsetList" required placeholder="Search Ledger...">
+                                        <datalist id="rvOffsetList"></datalist>
+                                        <input type="text" name="row_narration[]" class="form-control form-control-xs border-0 bg-transparent opacity-50 p-0" style="font-size: 10px;" placeholder="Add line narration...">
+                                    </td>
+                                    <td>
+                                        <input type="number" name="amount[]" class="form-control form-control-sm border-0 bg-transparent text-end fw-bold row-amt" placeholder="0.00" step="any" required>
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-link btn-sm text-danger p-0" onclick="this.closest('tr').remove(); window.recalculateVoucher();"><i class="bi bi-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="p-2"><button type="button" class="btn btn-white btn-sm border shadow-sm" onclick="window.rvAddRow()">+ Add Split</button></div>
+
+                    <div class="row mt-4 align-items-center">
+                        <div class="col-md-8">
+                            <textarea name="narration" class="form-control form-control-sm" rows="2" placeholder="General Remarks..."></textarea>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <span class="text-muted small fw-bold me-2 uppercase">Total Receipt:</span>
+                            <span class="h4 fw-bold text-success">₹ <span id="rv_grand">0.00</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    (function() {
+        const today = new Date();
+        document.getElementById('rvValueDate').valueAsDate = today;
+        document.getElementById('rvInstrDate').valueAsDate = today;
+
+        window.rvAddRow = function() {
+            Utils.AddGridRow('receiptTable');
+            App.InitERPLogic('transactions/receipt-vch');
+        };
+
+        window.recalculateVoucher = function() {
+            let total = 0;
+            document.querySelectorAll('.row-amt').forEach(el => total += (parseFloat(el.value) || 0));
+            document.getElementById('rv_grand').innerText = total.toLocaleString('en-IN', {minimumFractionDigits: 2});
+        };
+    })();
+</script>

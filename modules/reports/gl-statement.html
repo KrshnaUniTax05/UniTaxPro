@@ -8,11 +8,11 @@
                         <p class="text-muted small mb-0">View account history and running balance</p>
                     </div>
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">
-                            <i class="bi bi-printer"></i> Print Statement
+                        <button type="button" title="Print Account Statement" class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+                            <i class="bi bi-printer"></i>
                         </button>
-                        <button type="button" class="btn btn-primary btn-sm px-4 shadow-sm fw-bold" onclick="generateStatement()">
-                            <i class="bi bi-search me-1"></i> View Statement
+                        <button type="button" title="Execute" class="btn btn-success btn-sm shadow-sm fw-bold px-3" onclick="generateStatement()">
+                            <i class="bi bi-check2 me-1"></i>
                         </button>
                     </div>
                 </div>
@@ -62,6 +62,7 @@
                 </div>
             </div>
 
+            <!-- PRINT HEADER - WILL REPEAT ON EVERY PAGE -->
             <div class="bank-print-header d-none d-print-block">
                 <div class="bank-banner">
                     <div class="company-info-box text-start">
@@ -72,7 +73,6 @@
                     <div class="statement-title-box">
                         <div class="brand">
                             <span class="fs-4 fw-bold text-white">UniTax <span class="text-white">PRO</span></span>
-                            
                         </div>
                         <h2>STATEMENT OF ACCOUNT</h2>
                         <p>Generated: <span id="print-generated-date"></span></p>
@@ -107,43 +107,30 @@
                     </div>
                 </div>
             </div>
-            
-            <table class="master-print-table w-100" style="border: none;">
-                <thead class="d-none d-print-table-header-group">
-                    <tr><td><div class="print-header-spacer"></div></td></tr>
-                </thead>
-                
-                <tbody>
-                    <tr>
-                        <td class="p-0">
-                            <div class="table-responsive print-table-wrapper">
-                                <table class="table table-sm table-hover mb-0 statement-table table-striped" id="glTable">
-                                    <thead>
-                                        <tr>
-                                            <th class="ps-4" width="12%">Date</th>
-                                            <th width="10%">Type</th>
-                                            <th width="15%">Doc No</th>
-                                            <th width="28%">Narration / Particulars</th>
-                                            <th class="text-end" width="12%">Debit (₹)</th>
-                                            <th class="text-end" width="12%">Credit (₹)</th>
-                                            <th class="text-end pe-4" width="11%">Balance</th>
-                                            <th class="text-end pe-4 no-print screen-only" width="5%">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="glTableBody">
-                                        <tr><td colspan="8" class="text-center py-5 text-muted no-print">Please select an account and click "View Statement"</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
 
-                <tfoot class="d-none d-print-table-footer-group">
-                    <tr><td><div class="print-footer-spacer"></div></td></tr>
-                </tfoot>
-            </table>
+            <!-- WRAPPER DIV FOR TABLE WITH PROPER PAGE BREAK HANDLING -->
+            <div class="print-table-container">
+                <table class="table table-sm table-hover mb-0 statement-table table-striped" id="glTable">
+                    <thead>
+                        <tr>
+                            <th class="ps-4" width="5%">#</th>
+                            <th width="10%">Date</th>
+                            <th width="10%">Type</th>
+                            <th width="14%">Doc No</th>
+                            <th width="26%">Narration / Particulars</th>
+                            <th class="text-end" width="12%">Debit (₹)</th>
+                            <th class="text-end" width="12%">Credit (₹)</th>
+                            <th class="text-end pe-4" width="11%">Balance</th>
+                            <th class="text-end pe-4 no-print screen-only" width="5%">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="glTableBody">
+                        <tr><td colspan="9" class="text-center py-5 text-muted no-print">Please select an account and click "View Statement"</td></tr>
+                    </tbody>
+                </table>
+            </div>
 
+            <!-- PRINT FOOTER - APPEARS ONLY ON LAST PAGE -->
             <div class="bank-print-footer p-1 d-none d-print-block">
                 <p><strong>Disclaimer:</strong> This is a computer-generated statement and does not require a physical signature. If no discrepancy is reported within 7 days from the statement date, the balance will be considered correct and binding.</p>
                 <div class="signatures">
@@ -162,23 +149,21 @@
     document.getElementById('toDate').valueAsDate = now;
     document.getElementById('fromDate').valueAsDate = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // Populate ledger list
-    async function populateLedgerList() {
-        try {
-            const ledgers = await API.Fetch('Masters/LedgerCreation');
-            const datalist = document.getElementById('ledgerList');
-            if (ledgers && datalist) {
-                datalist.innerHTML = '';
-                Object.values(ledgers).forEach(ledger => {
-                    const option = document.createElement('option');
-                    const displayValue = ledger.ledgerCode ? `${ledger.name} (${ledger.ledgerCode})` : ledger.name;
-                    option.value = displayValue;
-                    datalist.appendChild(option);
-                });
-            }
-        } catch (e) {
-            console.error("Error loading ledgers:", e);
-        }
+    // --- FIX CHROME PRINT CLIPPING BUG GLOBALLY ---
+    if (!window.printFixAttached) {
+        window.addEventListener('beforeprint', () => {
+            document.querySelectorAll('.print-table-wrapper, .master-print-table, .main-card-wrapper, .card-body').forEach(el => {
+                el.style.setProperty('overflow', 'visible', 'important');
+                el.style.setProperty('height', 'auto', 'important');
+                el.style.setProperty('max-height', 'none', 'important');
+            });
+        });
+        window.addEventListener('afterprint', () => {
+            document.querySelectorAll('.print-table-wrapper, .master-print-table, .main-card-wrapper, .card-body').forEach(el => {
+                el.style.overflow = ''; el.style.height = ''; el.style.maxHeight = '';
+            });
+        });
+        window.printFixAttached = true;
     }
 
     window.generateStatement = async function() {
@@ -188,16 +173,8 @@
         const fromDate = document.getElementById('fromDate').value;
         const toDate = document.getElementById('toDate').value;
         
-        if (!account) {
-            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                App.UI.Notify('Validation', 'Please select a ledger account.', 'warning');
-            } else {
-                alert('Please select a ledger account.');
-            }
-            return;
-        }
+        if (!account) return App.UI.Notify('Validation', 'Please select a ledger account.', 'warning');
         
-        // Extract ledger code
         let ledgerCode = '';
         let ledgerName = account;
         const codeMatch = account.match(/\(([^)]+)\)/);
@@ -205,282 +182,267 @@
             ledgerCode = codeMatch[1];
             ledgerName = account.replace(`(${ledgerCode})`, '').trim();
         }
-        
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-5 no-print"><div class="spinner-border spinner-border-sm text-primary"></div> Analyzing ledger data...</td></tr>`;
 
-        // --- 1. RESOLVE LEDGER & LINKED COMPANY CODE ---
+        const isSalesAccountSearch = ledgerName.toLowerCase().includes('sale');
+        const isPurchAccountSearch = ledgerName.toLowerCase().includes('purchase');
+        const isTaxAccountSearch = ledgerName.toLowerCase().includes('tax') || ledgerName.toLowerCase().includes('duties');
+        
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 no-print"><div class="spinner-border spinner-border-sm text-primary"></div> Analyzing ledger data...</td></tr>`;
+
         let ledgerMap = {};
+        let resolvedLedgerCode = ledgerCode;
+        let resolvedLedgerName = ledgerName;
         let linkedCompanyCode = null;
 
+        // --- 1. RESOLVE LEDGER & COMPANY ---
         try {
             const masterData = await API.Fetch('Masters/LedgerCreation');
             if (masterData) {
-                const ledgerArray = Object.values(masterData);
-                
-                ledgerArray.forEach(ledger => {
-                    if (ledger.ledgerCode) ledgerMap[ledger.ledgerCode.toString().toLowerCase()] = ledger.name;
-                    if (ledger.name) ledgerMap[ledger.name.toString().toLowerCase()] = ledger.name;
+                Object.values(masterData).forEach(ledger => {
+                    const codeStr = ledger.ledgerCode ? ledger.ledgerCode.toString() : '';
+                    const nameStr = ledger.name ? ledger.name.toString() : '';
+                    if (codeStr) ledgerMap[codeStr.toLowerCase()] = nameStr;
+                    if (nameStr) ledgerMap[nameStr.toLowerCase()] = nameStr;
+                    
+                    const searchInput = account.toLowerCase();
+                    if ((codeStr && codeStr.toLowerCase() === searchInput) || (nameStr && nameStr.toLowerCase() === searchInput) || (codeStr && codeStr.toLowerCase() === ledgerCode.toLowerCase()) || (codeStr && codeStr.toLowerCase() === ledgerName.toLowerCase()) || (nameStr && nameStr.toLowerCase() === ledgerName.toLowerCase())) {
+                        resolvedLedgerCode = codeStr;
+                        resolvedLedgerName = nameStr;
+                        linkedCompanyCode = ledger.CompanyName || ledger.CompanyCode;
+                    }
                 });
-
-                const targetLedger = ledgerArray.find(l => 
-                    l.ledgerCode?.toString().toLowerCase() === ledgerCode.toLowerCase() || 
-                    l.name?.toString().toLowerCase() === ledgerName.toLowerCase()
-                );
-
-                if (targetLedger) {
-                    linkedCompanyCode = targetLedger.CompanyName || targetLedger.CompanyCode;
-                }
             }
-        } catch (e) {
-            console.error("Ledger resolution failed:", e);
-        }
+        } catch (e) {}
 
-        // --- 2. FETCH LINKED COMPANY DETAILS FOR PRINT ---
         try {
             if (linkedCompanyCode) {
                 const companiesData = await API.Fetch('Masters/Companies');
                 if (companiesData) {
-                    const companyInfo = Object.values(companiesData).find(c => 
-                        c.CompanyCode?.toString() === linkedCompanyCode.toString() || 
-                        c.companyName?.toString() === linkedCompanyCode.toString()
-                    );
-
+                    const companyInfo = Object.values(companiesData).find(c => c.CompanyCode?.toString() === linkedCompanyCode.toString() || c.companyName?.toString() === linkedCompanyCode.toString());
                     if (companyInfo) {
-                        const companyNameElem = document.getElementById('print-company-name');
-                        const companyAddrElem = document.getElementById('print-company-address');
-                        const companyContactElem = document.getElementById('print-company-contact');
-                        
-                        if (companyNameElem) companyNameElem.innerText = (companyInfo.companyName || "UniTax PRO").toUpperCase();
-                        if (companyAddrElem) companyAddrElem.innerText = `${companyInfo.companyAddress1 || ''} ${companyInfo.companyAddress2 || ''}, ${companyInfo.Company_State || ''} - ${companyInfo.Company_Pin || ''}`;
-                        if (companyContactElem) companyContactElem.innerText = `GSTIN: ${companyInfo.GSTIN || 'N/A'} | Email: ${companyInfo.Email || 'N/A'}`;
+                        document.getElementById('print-company-name').innerText = (companyInfo.companyName || "UniTax PRO").toUpperCase();
+                        document.getElementById('print-company-address').innerText = `${companyInfo.companyAddress1 || ''} ${companyInfo.companyAddress2 || ''}, ${companyInfo.Company_State || ''}`;
+                        document.getElementById('print-company-contact').innerText = `GSTIN: ${companyInfo.GSTIN || 'N/A'}`;
                     }
                 }
             }
-        } catch (e) {
-            console.warn("Company header resolution skipped:", e);
-        }
+        } catch (e) {}
 
-        // --- 3. FETCH TRANSACTIONS ---
-        let types = [];
-        try {
-            types = await API.GetAllTransactionTypes();
-        } catch(e) {
-            console.warn("Could not get transaction types:", e);
-            types = ['SalesInvoiceForm', 'PurchaseInvoiceForm', 'PaymentVoucherForm', 'ReceiptVoucherForm', 'JournalVoucherForm'];
-        }
-        
+        // --- 2. FETCH ALL TRANSACTIONS ---
+        let types = await API.GetAllTransactionTypes().catch(() => ['SalesInvoiceForm', 'PurchaseInvoiceForm', 'PaymentVoucherForm', 'ReceiptVoucherForm', 'JournalVoucherForm']);
         let allTransactions = [];
 
         for (const type of types) {
             try {
                 const data = await API.Fetch(`Transactions/${type}`);
-                if (data && typeof data === 'object') {
+                if (data) {
                     Object.entries(data).forEach(([key, vch]) => {
-                        if (vch && typeof vch === 'object') {
-                            const searchTerm = ledgerCode || ledgerName;
-                            const vchStr = JSON.stringify(vch).toLowerCase();
-                            if (searchTerm && vchStr.includes(searchTerm.toLowerCase())) {
-                                allTransactions.push({ ...vch, key, formId: type });
-                            }
-                        }
+                        let isMatch = false;
+                        const vchStr = JSON.stringify(vch).toLowerCase();
+                        if (vchStr.includes(resolvedLedgerName.toLowerCase())) isMatch = true;
+                        if (resolvedLedgerCode && vchStr.includes(resolvedLedgerCode.toLowerCase())) isMatch = true;
+                        if (isSalesAccountSearch && type.toLowerCase().includes('sale')) isMatch = true;
+                        if (isPurchAccountSearch && type.toLowerCase().includes('purchase')) isMatch = true;
+                        if (isMatch) allTransactions.push({ ...vch, key, formId: type });
                     });
                 }
-            } catch(e) {
-                console.warn(`Error fetching ${type}:`, e);
-            }
+            } catch(e) {}
         }
 
-        // Sort by Date
         allTransactions.sort((a, b) => {
-            const dateA = a.header?.date || a.date || '';
-            const dateB = b.header?.date || b.date || '';
-            return new Date(dateA) - new Date(dateB);
+            let timeA = a.header?.posted_at || a.posted_at || new Date(a.header?.date || a.date).getTime() || 0;
+            let timeB = b.header?.posted_at || b.posted_at || new Date(b.header?.date || b.date).getTime() || 0;
+            return timeA - timeB; 
         });
-        
+
+        const isTargetLedger = (val) => {
+            if (!val) return false;
+            const v = val.toString().toLowerCase();
+            return v.includes(resolvedLedgerName.toLowerCase()) || (resolvedLedgerCode && v.includes(resolvedLedgerCode.toLowerCase()));
+        };
+
+        // --- CORE MATH ENGINE ---
+        const processTransactionImpact = (vch) => {
+            const h = vch.header || vch;
+            const rawFormId = vch.formId || "JournalVoucher";
+            const formNameLower = rawFormId.toLowerCase();
+            
+            let itemSubtotal = 0; let taxTotal = 0;
+            const items = Array.isArray(vch.items) ? vch.items : (vch.items ? Object.values(vch.items) : []);
+            
+            if (items.length > 0) {
+                items.forEach(i => {
+                    const qty = parseFloat(i.qty) || 1;
+                    const rate = parseFloat(i.rate) || parseFloat(i.amount) || 0;
+                    const taxPrc = parseFloat(i.auto_item_name_ItemTax) || parseFloat(i.taxRate) || 0;
+                    const base = qty * rate;
+                    itemSubtotal += base; taxTotal += base * (taxPrc / 100);
+                });
+            }
+            
+            const grandTotal = parseFloat(h.grandTotal) || parseFloat(h.amount) || parseFloat(h.total) || (itemSubtotal + taxTotal);
+            if (itemSubtotal === 0 && grandTotal > 0) itemSubtotal = grandTotal; 
+
+            let dr = 0, cr = 0, displayEntityName = "";
+
+            if (formNameLower.includes('sale')) {
+                if (isSalesAccountSearch || isTargetLedger(h.creditLedger)) { cr += itemSubtotal; displayEntityName = h.entity || "Sundry Debtor"; }
+                if (isTargetLedger(h.entity) || isTargetLedger(h.debitLedger)) { dr += grandTotal; displayEntityName = "Sales Account"; }
+                if (isTaxAccountSearch || isTargetLedger(h.taxLedger)) { cr += taxTotal; displayEntityName = h.entity || "Tax on Sales"; }
+            } else if (formNameLower.includes('purchase')) {
+                if (isPurchAccountSearch || isTargetLedger(h.debitLedger)) { dr += itemSubtotal; displayEntityName = h.entity || "Sundry Creditor"; }
+                if (isTargetLedger(h.entity) || isTargetLedger(h.creditLedger)) { cr += grandTotal; displayEntityName = "Purchase Account"; }
+                if (isTaxAccountSearch || isTargetLedger(h.taxLedger)) { dr += taxTotal; displayEntityName = h.entity || "Tax on Purchase"; }
+            } else if (formNameLower.includes('receipt')) {
+                if (isTargetLedger(h.entity) || isTargetLedger(h.debitLedger)) { dr += grandTotal; displayEntityName = items[0]?.offset_account || "Multiple Accounts"; }
+                items.forEach(i => { if (isTargetLedger(i.offset_account)) { cr += parseFloat(i.amount) || 0; displayEntityName = h.entity || h.debitLedger || "Bank/Cash Account"; } });
+            } else if (formNameLower.includes('payment')) {
+                if (isTargetLedger(h.entity) || isTargetLedger(h.creditLedger)) { cr += grandTotal; displayEntityName = items[0]?.offset_account || "Multiple Accounts"; }
+                items.forEach(i => { if (isTargetLedger(i.offset_account)) { dr += parseFloat(i.amount) || 0; displayEntityName = h.entity || h.creditLedger || "Bank/Cash Account"; } });
+            } else {
+                if (isTargetLedger(h.debitLedger)) { dr += grandTotal; displayEntityName = h.creditLedger || h.entity || "Journal Entry"; }
+                if (isTargetLedger(h.creditLedger)) { cr += grandTotal; displayEntityName = h.debitLedger || h.entity || "Journal Entry"; }
+            }
+            return { dr, cr, displayEntityName, h, rawFormId };
+        };
+
+        // --- 3. SEPARATE OPENING BALANCE FROM PERIOD ---
+        let openingBalance = 0;
+        let periodTransactions = [];
+
+        allTransactions.forEach(vch => {
+            const vchDate = vch.header?.date || vch.date;
+            const impact = processTransactionImpact(vch);
+            
+            // Exclude irrelevant transactions entirely
+            if (impact.dr === 0 && impact.cr === 0) return;
+
+            if (fromDate && vchDate < fromDate) {
+                openingBalance += (impact.dr - impact.cr);
+            } else if (!fromDate || !toDate || (vchDate >= fromDate && vchDate <= toDate)) {
+                periodTransactions.push({ vch, impact });
+            }
+        });
+
         tbody.innerHTML = '';
-        
-        let runningBalance = 0, totalDr = 0, totalCr = 0;
-        const formatMoney = (val) => (val === 0 || isNaN(val) || val === undefined ? '-' : Utils.FormatINR(val));
-
-        // Filter by date range
-        let filteredTransactions = allTransactions;
-        if (fromDate && toDate) {
-            filteredTransactions = allTransactions.filter(vch => {
-                const vchDate = vch.header?.date || vch.date || '';
-                return vchDate >= fromDate && vchDate <= toDate;
-            });
-        }
-
-        if (filteredTransactions.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" class="text-center py-5 text-muted no-print text-danger fw-bold">No transactions found for: ${account}</td></td>`;
+        if (periodTransactions.length === 0 && openingBalance === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-muted text-danger fw-bold">No transactions found for: ${resolvedLedgerName}</td></tr>`;
             document.getElementById('statementSummary').style.display = 'none';
             return;
         }
 
-        // --- 4. PROCESS TRANSACTIONS & MATH ---
-        filteredTransactions.forEach(vch => {
-            const h = vch.header || vch;
-            const rawFormId = vch.formId || "JournalVoucher";
-            
-            let docPrefix = rawFormId.replace('InvoiceForm', '').replace('VoucherForm', '').replace(/([A-Z])/g, ' $1').trim().toUpperCase();
-            if (!docPrefix) docPrefix = "JV";
-            
-            let rawEntity = (h.entity || h.party || h.customer_ledger || ledgerName).toString().trim();
-            let entityDisplayName = ledgerMap[rawEntity.toLowerCase()] || rawEntity;
+        let runningBalance = openingBalance;
+        let totalDr = 0, totalCr = 0;
+        let serialNumber = 1; 
+        const formatMoney = (val) => (val === 0 || !val ? '-' : Utils.FormatINR(val));
 
-            // Compute Amount
-            let amount = 0;
-            const items = Array.isArray(vch.items) ? vch.items : (vch.items ? Object.values(vch.items) : []);
-            
-            if (items.length > 0) {
-                amount = items.reduce((sum, i) => {
-                    const qty = parseFloat(i.qty) || 0;
-                    const rate = parseFloat(i.rate) || 0;
-                    const taxRate = parseFloat(i.auto_item_name_ItemTax) || parseFloat(i.taxRate) || 0;
-                    const base = qty * rate;
-                    return sum + (base + (base * (taxRate / 100)));
-                }, 0);
-            } else {
-                amount = parseFloat(h.amount) || parseFloat(h.total) || parseFloat(h.grandTotal) || 0;
-            }
+        // --- 4. RENDER OPENING BALANCE ROW ---
+        if (fromDate) {
+            const obType = openingBalance >= 0 ? 'Dr' : 'Cr';
+            const trOb = document.createElement('tr');
+            trOb.className = "table-light fw-bold text-primary";
+            trOb.innerHTML = `
+                <td></td><td></td><td></td><td></td>
+                <td class="text-end">OPENING BALANCE</td>
+                <td class="text-end text-danger">${openingBalance >= 0 ? formatMoney(openingBalance) : '-'}</td>
+                <td class="text-end text-success">${openingBalance < 0 ? formatMoney(Math.abs(openingBalance)) : '-'}</td>
+                <td class="text-end fw-bold">${Utils.FormatINR(Math.abs(openingBalance))} <small class="text-muted ms-1">${obType}</small></td>
+                <td class="no-print screen-only"></td>
+            `;
+            tbody.appendChild(trOb);
+        }
 
-            // Debit/Credit Logic
-            let dr = 0, cr = 0;
-            const formNameLower = rawFormId.toLowerCase();
-            const isDebitForm = formNameLower.includes('sale') || formNameLower.includes('payment') || formNameLower.includes('debit');
-            const isCreditForm = formNameLower.includes('purchase') || formNameLower.includes('receipt') || formNameLower.includes('credit');
-            
-            if (isDebitForm) { 
-                dr = amount; 
-            } else if (isCreditForm) { 
-                cr = amount; 
-            } else {
-                if (h.debitLedger === ledgerName || h.debitLedger === ledgerCode) {
-                    dr = amount;
-                } else if (h.creditLedger === ledgerName || h.creditLedger === ledgerCode) {
-                    cr = amount;
-                } else {
-                    cr = amount;
-                }
-            }
-
-            runningBalance += (dr - cr);
-            totalDr += dr;
-            totalCr += cr;
+        // --- 5. RENDER PERIOD TRANSACTIONS ---
+        periodTransactions.forEach(({vch, impact}) => {
+            runningBalance += (impact.dr - impact.cr);
+            totalDr += impact.dr;
+            totalCr += impact.cr;
 
             const balType = runningBalance >= 0 ? 'Dr' : 'Cr';
             const balString = `${Utils.FormatINR(Math.abs(runningBalance))} <small class="text-muted ms-1">${balType}</small>`;
+            const finalEntityName = ledgerMap[impact.displayEntityName.toLowerCase()] || impact.displayEntityName;
+            let docPrefix = impact.rawFormId.replace('InvoiceForm', '').replace('VoucherForm', '').replace(/([A-Z])/g, ' $1').trim().toUpperCase();
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td class="ps-3 fw-medium">${Utils.FormatDate(h.date || h.voucher_date || '')}</td>
+                <td class="ps-4 fw-medium text-muted">${serialNumber++}</td> 
+                <td class="fw-medium">${Utils.FormatDate(impact.h.date || impact.h.voucher_date)}</td>
                 <td><span class="badge border text-dark bg-transparent no-print">${docPrefix}</span><span class="d-none d-print-inline">${docPrefix}</span></td>
-                <td class="fw-bold">${h.doc_no || h.supplier_bill_no || h.invoice_no || 'N/A'}</td>
-                <td><div class="fw-bold text-dark">${entityDisplayName}</div><div class="text-muted small">${h.narration || h.description || 'As per transaction'}</div></td>
-                <td class="text-end text-danger">${formatMoney(dr)}</td>
-                <td class="text-end text-success">${formatMoney(cr)}</td>
+                <td class="fw-bold">${impact.h.doc_no || impact.h.supplier_bill_no || impact.h.invoice_no || impact.h.paymentRef || 'N/A'}</td>
+                <td><div class="fw-bold text-dark">${finalEntityName.toUpperCase()}</div><div class="text-muted small">${impact.h.narration || ''}</div></td>
+                <td class="text-end text-danger">${formatMoney(impact.dr)}</td>
+                <td class="text-end text-success">${formatMoney(impact.cr)}</td>
                 <td class="text-end fw-bold">${balString}</td>
+                
                 <td class="text-end pe-3 no-print screen-only">
-                    <button class="btn btn-sm btn-outline-primary" onclick="editTransaction('${vch.formId}', '${vch.key}')"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="deleteTransaction('${vch.formId}', '${vch.key}')"><i class="bi bi-trash"></i></button>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="background: transparent;">
+                            <i class="bi bi-three-dots-vertical fs-5 text-muted"></i>
+                        </button>
+                        
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="font-size: 0.9rem;">
+                            <li>
+                                <a class="dropdown-item py-2 fw-medium" href="#" onclick="editTransaction('${vch.formId}', '${vch.key}'); return false;">
+                                    <i class="bi bi-pencil-square text-primary me-2"></i> Edit Document
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2 fw-medium" href="#" onclick="window.printTransaction('${vch.formId}', '${vch.key}'); return false;">
+                                    <i class="bi bi-printer text-dark me-2"></i> Print / Save PDF
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item py-2 fw-medium text-danger" href="#" onclick="deleteTransaction('${vch.formId}', '${vch.key}'); return false;">
+                                    <i class="bi bi-trash text-danger me-2"></i> Delete
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </td>
             `;
             tbody.appendChild(tr);
         });
 
-        // Add grand total row
+
+        // --- 6. RENDER GRAND TOTAL & UI ---
         const finalBalType = runningBalance >= 0 ? 'Dr' : 'Cr';
         const grandTotalRow = document.createElement('tr');
         grandTotalRow.className = "table-active border-top border-dark fw-bold no-print";
         grandTotalRow.innerHTML = `
-            <td colspan="4" class="text-end ps-4">GRAND TOTAL</td>
+            <td colspan="5" class="text-end ps-4 text-uppercase">Total Period Activity</td> 
             <td class="text-end text-danger">${Utils.FormatINR(totalDr)}</td>
             <td class="text-end text-success">${Utils.FormatINR(totalCr)}</td>
-            <td class="text-end" colspan="2">${Utils.FormatINR(Math.abs(runningBalance))} ${finalBalType}</td>
+            <td class="text-end text-primary" colspan="2">CLOSING: ${Utils.FormatINR(Math.abs(runningBalance))} ${finalBalType}</td>
         `;
         tbody.appendChild(grandTotalRow);
 
-        // --- 5. FINALIZE UI & PRINT HEADERS ---
-        const summaryDiv = document.getElementById('statementSummary');
-        if (summaryDiv) summaryDiv.style.display = 'flex';
-        
-        const statDebit = document.getElementById('statDebit');
-        const statCredit = document.getElementById('statCredit');
-        const statClosing = document.getElementById('statClosing');
-        
-        if (statDebit) statDebit.innerText = `₹ ${Utils.FormatINR(totalDr)} DR`;
-        if (statCredit) statCredit.innerText = `₹ ${Utils.FormatINR(totalCr)} CR`;
-        if (statClosing) statClosing.innerHTML = `₹ ${Utils.FormatINR(Math.abs(runningBalance))} <span class="fs-6 opacity-75">${finalBalType}</span>`;
+        document.getElementById('statementSummary').style.display = 'flex';
+        document.getElementById('statDebit').innerText = `₹ ${Utils.FormatINR(totalDr)} DR`;
+        document.getElementById('statCredit').innerText = `₹ ${Utils.FormatINR(totalCr)} CR`;
+        document.getElementById('statClosing').innerHTML = `₹ ${Utils.FormatINR(Math.abs(runningBalance))} <span class="fs-6 opacity-75">${finalBalType}</span>`;
 
-        // Account Print Info
-        const printAccName = document.getElementById('print-acc-name');
-        const printAccCode = document.getElementById('print-acc-code');
-        const printPeriodRange = document.getElementById('print-period-range');
-        const printGeneratedDate = document.getElementById('print-generated-date');
-        const printHeaderDr = document.getElementById('print-header-dr');
-        const printHeaderCr = document.getElementById('print-header-cr');
-        const printClosingBal = document.getElementById('print-closing-bal');
-        
-        if (printAccName) printAccName.innerText = (ledgerName || account).toUpperCase();
-        if (printAccCode) printAccCode.innerText = ledgerCode || "N/A";
-        if (printPeriodRange) printPeriodRange.innerText = `${Utils.FormatDate(fromDate) || 'Start'} to ${Utils.FormatDate(toDate) || 'End'}`;
-        if (printGeneratedDate) printGeneratedDate.innerText = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date()).toLocaleUpperCase();
-        if (printHeaderDr) printHeaderDr.innerText = `₹ ${Utils.FormatINR(totalDr)} DR`;
-        if (printHeaderCr) printHeaderCr.innerText = `₹ ${Utils.FormatINR(totalCr)} CR`;
-        if (printClosingBal) printClosingBal.innerText = `₹ ${Utils.FormatINR(Math.abs(runningBalance))} ${finalBalType}`;
+        document.getElementById('print-acc-name').innerText = (resolvedLedgerName || account).toUpperCase();
+        document.getElementById('print-acc-code').innerText = resolvedLedgerCode || "N/A";
+        document.getElementById('print-period-range').innerText = `${Utils.FormatDate(fromDate)} to ${Utils.FormatDate(toDate)}`;
+        document.getElementById('print-generated-date').innerText = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date()).toUpperCase();
+        document.getElementById('print-header-dr').innerText = `₹ ${Utils.FormatINR(totalDr)} DR`;
+        document.getElementById('print-header-cr').innerText = `₹ ${Utils.FormatINR(totalCr)} CR`;
+        document.getElementById('print-closing-bal').innerText = `₹ ${Utils.FormatINR(Math.abs(runningBalance))} ${finalBalType}`;
     };
 
     window.deleteTransaction = async function(formId, key) {
         if(confirm("Permanently delete this transaction?")) {
-            try {
-                const success = await API.DeleteTransaction(formId, key);
-                if(success) generateStatement();
-            } catch(e) {
-                console.error("Error deleting transaction:", e);
-                alert("Error deleting transaction");
-            }
+            const success = await API.DeleteTransaction(formId, key);
+            if(success) window.generateStatement(); 
         }
     };
 
     window.editTransaction = function(formId, key) {
-        try {
-            localStorage.setItem('editContext', JSON.stringify({ type: formId, key: key }));
-            if (typeof App !== 'undefined' && App.Router) {
-                App.Router('transactions/edit');
-            } else {
-                console.log("Edit transaction:", formId, key);
-            }
-        } catch(e) {
-            console.error("Error editing transaction:", e);
-        }
+        localStorage.setItem('editContext', JSON.stringify({ type: formId, key: key }));
+        if (typeof App !== 'undefined' && App.Router) App.Router('transactions/edit'); 
     };
-
-    // Initialize
-    populateLedgerList();
 })();
-
-// Ensure Utils is available
-if (typeof Utils === 'undefined') {
-    window.Utils = {
-        FormatINR: function(amount) {
-            if (amount === 0 || isNaN(amount) || amount === undefined) return '0.00';
-            return new Intl.NumberFormat('en-IN', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }).format(amount);
-        },
-        FormatDate: function(dateStr) {
-            if (!dateStr) return '';
-            try {
-                const date = new Date(dateStr);
-                if (isNaN(date.getTime())) return dateStr;
-                return date.toLocaleDateString('en-IN');
-            } catch(e) {
-                return dateStr;
-            }
-        }
-    };
-}
 </script>
 
 <style>
@@ -513,6 +475,36 @@ if (typeof Utils === 'undefined') {
     cursor: pointer;
 }
 
+/* Screen scrolling styles - ALLOWS SCROLLING FOR MANY ROWS */
+.master-print-table {
+    display: block;
+    height: auto;
+    max-height: calc(100vh - 320px);
+    overflow-y: auto;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.master-print-table thead th {
+    position: sticky;
+    top: 0;
+    background: #0b3d91 !important;
+    z-index: 10;
+}
+
+.animate-in,
+.card,
+.card-body {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.table-responsive.print-table-wrapper {
+    flex: 1;
+    overflow: visible;
+}
+
 @media print {
     @page { 
         margin: 0mm !important; 
@@ -526,6 +518,19 @@ if (typeof Utils === 'undefined') {
         width: 100% !important; 
         max-width: 100% !important; 
         box-sizing: border-box !important;
+    }
+
+    /* Remove all scroll and height restrictions in print */
+    .master-print-table,
+    .table-responsive.print-table-wrapper,
+    .animate-in,
+    .card,
+    .card-body {
+        display: block !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        flex: none !important;
     }
 
     .card, .card-body, .animate-in, .table-responsive, .print-table-wrapper {
@@ -542,6 +547,7 @@ if (typeof Utils === 'undefined') {
         display: none !important; 
     }
     
+    /* Hide Action column in print */
     .statement-table th:last-child, 
     .statement-table td:last-child { 
         display: none !important; 
@@ -563,17 +569,39 @@ if (typeof Utils === 'undefined') {
         display: table-footer-group !important; 
     }
 
-    .bank-print-header { 
-        position: fixed; 
-        top: 0; 
-        left: 0; 
-        right: 0;
-        width: 100%; 
-        z-index: 1000; 
-        background: white; 
+    /* REMOVE fixed positioning - let content flow naturally */
+     .bank-print-header {
+        position: static !important;
+        page-break-after: avoid;
+        page-break-inside: avoid;
     }
     
-    .bank-print-footer { 
+    /* Ensure table header repeats on every page */
+    .statement-table thead {
+        display: table-header-group;
+    }
+    
+    /* Prevent page breaks inside header elements */
+    .bank-banner,
+    .customer-info-box {
+        page-break-inside: avoid;
+        page-break-after: avoid;
+    }
+    
+    /* Ensure footer stays at bottom of last page */
+    .bank-print-footer {
+        position: static;
+        page-break-before: avoid;
+        margin-top: 40px;
+    }
+    
+    /* Signatures at bottom */
+    .signatures {
+        page-break-inside: avoid;
+        margin-top: 40px;
+    }
+    
+     .bank-print-footer { 
         position: fixed; 
         bottom: 0; 
         left: 0; 
@@ -592,14 +620,16 @@ if (typeof Utils === 'undefined') {
         margin: 0;
     }
 
+    /* Spacers - no longer needed, keep for structure */
     .print-header-spacer { 
-        height: 240px; 
+        height: 0 !important; 
     } 
     
     .print-footer-spacer { 
-        height: 120px; 
+        height: 0 !important; 
     } 
 
+    /* Banner Styles */
     .bank-banner { 
         background-color: #0b3d91 !important; 
         color: #ffffff !important; 
@@ -633,6 +663,7 @@ if (typeof Utils === 'undefined') {
         color: #ffffff !important;
     }
 
+    /* Customer Info Box */
     .customer-info-box { 
         background-color: #f4f7fa !important; 
         border-bottom: 2px solid #0b3d91 !important; 
@@ -648,6 +679,7 @@ if (typeof Utils === 'undefined') {
         box-sizing: border-box !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
+        page-break-inside: avoid;
     }
     
     .info-left .label-text { 
@@ -669,6 +701,7 @@ if (typeof Utils === 'undefined') {
         color: #444 !important; 
     }
 
+    /* Meta Table */
     .meta-table { 
         border-collapse: collapse; 
         font-size: 9pt; 
@@ -700,17 +733,20 @@ if (typeof Utils === 'undefined') {
         font-weight: bold;
     }
 
+    /* Master Table - FULL WIDTH, NO RESTRICTIONS */
     .master-print-table { 
         width: 100% !important; 
         border-collapse: collapse !important; 
         padding: 0 !important; 
-        margin: 10px 0 !important; 
+        margin: 0 !important; 
+        display: table !important;
     }
     
     .master-print-table > tbody > tr > td { 
         padding: 0 !important; 
     }
     
+    /* Statement Table - SHOW ALL ROWS */
     .statement-table { 
         width: 100% !important; 
         border-collapse: collapse !important; 
@@ -762,6 +798,7 @@ if (typeof Utils === 'undefined') {
         background-color: #ffffff !important;
     }
 
+    /* First and last cell padding */
     .statement-table th:first-child, 
     .statement-table td:first-child { 
         padding-left: 25px !important; 
@@ -772,11 +809,24 @@ if (typeof Utils === 'undefined') {
         padding-right: 25px !important; 
     }
 
+    /* Page breaks - rows will naturally flow to next page */
     .statement-table tbody tr { 
         page-break-inside: avoid; 
         page-break-after: auto;
     }
+    
+    /* Ensure table header repeats on every page */
+    .statement-table thead {
+        display: table-header-group;
+    }
+    
+    /* Ensure footer appears at end of table */
+    .statement-table tfoot {
+        display: table-footer-group;
+    }
 
+    /* Signatures - always at bottom of last page */
+    /* Signatures */
     .signatures { 
         display: flex; 
         justify-content: space-between; 
@@ -800,6 +850,7 @@ if (typeof Utils === 'undefined') {
         print-color-adjust: exact !important;
     }
     
+    /* Remove default page headers/footers */
     @page {
         @top-center {
             content: none;

@@ -186,38 +186,135 @@ const API = {
     /**
      * 🚀 FIXED VOUCHER POSTING
      */
+  // 1. AUTO-CREATE SYSTEM LEDGERS (Including Tax)
+    async EnsureSystemLedgers() {
+        const userId = App.State.userId;
+        if (window._systemLedgersVerified) return;
+
+        const systemLedgers = [
+            { code: "SYS-SALES", name: "Sales Account", ledgerType: "Direct Incomes", ledgerNature: "Credit" },
+            { code: "SYS-PURCH", name: "Purchase Account", ledgerType: "Direct Expenses", ledgerNature: "Debit" },
+            { code: "SYS-TAX", name: "Duties and Taxes", ledgerType: "Duties & Taxes", ledgerNature: "Credit" }
+        ];
+
+        try {
+            const existingData = await API.Fetch(`Masters/LedgerCreation`);
+            const existingNames = existingData ? Object.values(existingData).map(l => l.name.toLowerCase()) : [];
+
+            for (let led of systemLedgers) {
+                if (!existingNames.includes(led.name.toLowerCase())) {
+                    await this.DB.ref(`${userId}/Masters/LedgerCreation`).push({
+                        ledgerCode: led.code,
+                        name: led.name,
+                        ledgerType: led.ledgerType,
+                        ledgerNature: led.ledgerNature,
+                        isSystem: true
+                    });
+                }
+            }
+            window._systemLedgersVerified = true;
+        } catch (e) { }
+    },
+
+// 2. UPDATED POST VOUCHER (Calculates Subtotal, Taxes & Dynamic Meta)
     async PostVoucher(form) {
-        // Collect Header Data
         const formData = new FormData(form);
         const raw = Object.fromEntries(formData.entries());
+        const formId = form.id || form.getAttribute('id');
+        const rawDocNo = raw.Invoice || raw.paymentRef || raw.supplier_bill_no || `VCH-${Math.floor(Math.random() * 100000)}`;
+        
+        if (formId.includes('Sale') || formId.includes('Purchase')) {
+            await this.EnsureSystemLedgers();
+        }
 
-        // Standardize the Transaction Object
+        // --- EXTRACT ADDITIONAL DYNAMIC DATA FOR META ---
+        // List of known standard fields to exclude from the meta dump
+        const standardKeys = [
+            'Invoice', 'paymentRef', 'supplier_bill_no', 'customer_ledger', 'gl_account',
+            'voucher_date', 'valueDate', 'project', 'CompanyName', 'instrumentDate', 'narration'
+        ];
+        
+        const dynamicMetaData = {};
+        for (let key in raw) {
+            // Include only if it's NOT a standard header key, and NOT an item array field (which have '[]' in their names)
+            if (!standardKeys.includes(key) && !key.includes('[]')) {
+                dynamicMetaData[key] = raw[key];
+            }
+        }
+
+        // --- CALCULATE STOCK ACCUMULATED AMOUNT ---
+        const items = this._GetGridItems(form);
+        let subTotal = 0; // The pure stock/item amount
+        let taxTotal = 0; // The tax amount
+        
+        items.forEach(i => {
+            const qty = parseFloat(i.qty) || 1;
+            const rate = parseFloat(i.rate) || parseFloat(i.amount) || 0;
+            const tax = parseFloat(i.auto_item_name_ItemTax) || parseFloat(i.taxRate) || 0;
+            
+            const base = qty * rate;
+            subTotal += base;
+            taxTotal += base * (tax / 100);
+        });
+        
+        const grandTotal = subTotal + taxTotal;
+
+        // --- DOUBLE ENTRY ROUTING ---
+        let primaryDebit = "";
+        let primaryCredit = "";
+        let taxLedger = "Duties and Taxes";
+        let entity = raw.customer_ledger || raw.gl_account || "Unknown";
+
+        if (formId.toLowerCase().includes('sale')) {
+            primaryDebit = entity;             // Customer gets Grand Total
+            primaryCredit = "Sales Account";   // Sales gets SubTotal
+        } 
+        else if (formId.toLowerCase().includes('purchase')) {
+            primaryDebit = "Purchase Account"; // Purchase gets SubTotal
+            primaryCredit = entity;            // Supplier gets Grand Total
+        } 
+        else if (formId.toLowerCase().includes('receipt')) {
+            primaryDebit = entity;             
+            primaryCredit = "MULTIPLE";        
+        } 
+        else if (formId.toLowerCase().includes('payment')) {
+            primaryDebit = "MULTIPLE";         
+            primaryCredit = entity;            
+        }
+
         const transaction = {
             header: {
-                doc_no: raw.Invoice.toUpperCase() || 'VCH',
-                date: raw.voucher_date || new Date().toISOString().split('T')[0],
-                entity: raw.customer_ledger || raw.gl_account || "Unknown",
+                doc_no: rawDocNo.toUpperCase(),
+                date: raw.voucher_date || raw.valueDate || new Date().toISOString().split('T')[0],
+                entity: entity,
+                debitLedger: primaryDebit,   
+                creditLedger: primaryCredit, 
+                taxLedger: taxLedger,
+                subTotal: subTotal,     // Saved securely to database
+                taxTotal: taxTotal,     // Saved securely to database
+                grandTotal: grandTotal, // Saved securely to database
                 project: raw.project || 'General',
+                CompanyCode: raw.CompanyName || '',
+                instrumentDate: raw.instrumentDate || '',
                 narration: raw.narration || '',
                 posted_at: firebase.database.ServerValue.TIMESTAMP,
                 status: 'POSTED'
             },
-            // Get clean sanitized items
-            items: this._GetGridItems(form),
+            items: items,
             meta: { 
                 user: App.State.userId, 
-                form_id: form.id 
+                form_id: formId,
+                ...dynamicMetaData // Automatically spreads fields like lr_no, vehicle_no, transporter into the DB
             }
         };
 
         try {
-            const path = `${App.State.userId}/Transactions/${form.id}`;
+            const path = `${App.State.userId}/Transactions/${formId}`;
             await this.DB.ref(path).push(transaction);
             App.UI.Notify('Success', `Document ${transaction.header.doc_no} Posted`, 'success');
             return true;
         } catch (e) {
-            console.error("Firebase Push Error:", e);
-            App.UI.Notify('Firebase Error', "Invalid data format in rows.", 'danger');
+            App.UI.Notify('Firebase Error', "Invalid data format.", 'danger');
             return false;
         }
     },

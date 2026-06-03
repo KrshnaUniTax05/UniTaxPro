@@ -1,0 +1,218 @@
+<style>
+    /* --- GLOBAL & PRINT RESETS --- */
+    :root {
+        --brand-color: #0b3d91;
+        --brand-light: #f4f7fa;
+        --text-dark: #111111;
+        --text-muted: #555555;
+        --border-color: #dce4ec;
+    }
+
+    body, html {
+        margin: 0; padding: 0;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        /* color: var(--text-dark); background: #e9ecef;  */
+        font-size: 10pt; line-height: 1.5;
+    }
+
+    /* --- ACTION BAR (Screen Only) --- */
+    .action-bar {
+        background: #333;
+        padding: 15px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+    
+    .action-bar button {
+        background: #4caf50; color: white; border: none; padding: 10px 20px;
+        font-size: 11pt; font-weight: bold; border-radius: 4px; cursor: pointer;
+        display: flex; align-items: center; gap: 8px;
+    }
+    
+    .action-bar button:hover { background: #43a047; }
+
+    /* --- A4 SHEET PREVIEW (Screen) --- */
+    .print-document {
+        background: white; width: 210mm; min-height: 297mm;
+        margin: 30px auto; padding: 12mm 15mm;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1); box-sizing: border-box;
+    }
+
+    /* --- PRINT SPECIFIC RULES --- */
+    @media print {
+        @page { margin: 10mm; size: A4 portrait; }
+        body { background: white; }
+        .action-bar { display: none !important; } /* Hides the print button on paper */
+        .print-document { margin: 0; padding: 0; box-shadow: none; width: 100%; min-height: auto; }
+        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    }
+
+    /* --- HEADER SECTION --- */
+    .brand-header {
+        display: flex; justify-content: space-between; align-items: flex-start;
+        border-bottom: 4px solid var(--brand-color); padding-bottom: 20px; margin-bottom: 25px;
+    }
+    .company-details h1 {
+        margin: 0 0 5px 0; font-size: 18pt; font-weight: 800;
+        color: var(--brand-color); text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .company-details p { margin: 0; font-size: 9pt; color: var(--text-muted); }
+    .company-details .gstin { margin-top: 5px; font-weight: bold; color: var(--text-dark); }
+    .doc-title h2 { margin: 0; font-size: 20pt; font-weight: 800; color: var(--brand-color); text-transform: uppercase; }
+
+    /* --- THREE COLUMN GRID --- */
+    .meta-grid {
+        display: flex; border: 1px solid var(--border-color); border-radius: 4px;
+        margin-bottom: 25px; background: var(--brand-light); overflow: hidden;
+    }
+
+    .meta-box { flex: 1; padding: 12px 15px; }
+    .meta-box.border-right { border-right: 1px solid var(--border-color); }
+
+    .meta-box .section-title {
+        font-size: 8pt; color: var(--brand-color); text-transform: uppercase; 
+        font-weight: 800; margin-bottom: 8px; letter-spacing: 0.5px;
+    }
+
+    .party-name { font-size: 11pt; font-weight: 800; color: var(--text-dark); margin: 0 0 8px 0; text-transform: uppercase; line-height: 1.2;}
+    
+    .info-table { border-collapse: collapse; width: 100%; font-size: 8.5pt; }
+    .info-table td { padding: 3px 0; vertical-align: top; }
+    .info-table td.label { color: var(--text-muted); width: 65px; font-weight: 600; }
+    .info-table td.val { color: var(--text-dark); font-weight: 500; }
+
+    .highlight-total {
+        background: var(--brand-color); color: white; padding: 10px; border-radius: 4px;
+        margin-top: 10px; display: flex; flex-direction: column; align-items: flex-start;
+    }
+    .highlight-total span { font-size: 8pt; text-transform: uppercase; font-weight: 600; opacity: 0.9; }
+    .highlight-total strong { font-size: 14pt; font-weight: 800; margin-top: 2px;}
+
+    /* --- DETAILS TABLE --- */
+    .voucher-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+    .voucher-table th { background: var(--brand-color); color: white; font-weight: 600; font-size: 9pt; text-transform: uppercase; padding: 10px 12px; text-align: left; }
+    .voucher-table td { padding: 12px; font-size: 10pt; border-bottom: 1px solid var(--border-color); vertical-align: top; }
+    .voucher-table tbody tr { height: 120px; } 
+    .voucher-table tfoot td { font-weight: 800; font-size: 11pt; color: var(--brand-color); padding: 12px; border-top: 2px solid var(--brand-color); border-bottom: 2px solid var(--brand-color); }
+
+    .amount-words { font-size: 10pt; padding: 12px 15px; border-left: 4px solid var(--brand-color); background: #ffffff; border: 1px solid var(--border-color); margin-bottom: 50px; }
+    .amount-words strong { color: var(--brand-color); text-transform: uppercase; font-size: 8pt; display: block; margin-bottom: 4px;}
+
+    .signatures { display: flex; justify-content: space-between; padding: 0 30px; margin-top: auto; }
+    .sig-box { text-align: center; width: 180px; }
+    .sig-box .line { border-top: 1px solid var(--text-dark); margin-bottom: 8px; }
+    .sig-box p { margin: 0; font-size: 8pt; font-weight: bold; color: var(--text-muted); text-transform: uppercase; }
+
+    .footer-note { margin-top: 40px; text-align: center; font-size: 8pt; color: var(--text-muted); border-top: 1px dashed var(--border-color); padding-top: 15px; }
+</style>
+
+<div class="action-bar no-print">
+    <div style="font-size: 14pt; font-weight: bold;">Document Preview: {{doc_no}}</div>
+    <button onclick="window.print()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>
+        Print / Save PDF
+    </button>
+</div>
+
+<div class="print-document">
+    
+    <div class="brand-header">
+        <div class="company-details">
+            <h1>{{companyName}}</h1>
+            <p>{{companyAddress}}</p>
+            <p class="gstin">GSTIN: {{gstin}}</p>
+        </div>
+        <div class="doc-title">
+            <h2>RECEIPT VOUCHER</h2>
+        </div>
+    </div>
+
+    <div class="meta-grid">
+        
+        <div class="meta-box border-right">
+            <div class="section-title">Received From</div>
+            <h3 class="party-name">{{customer_name}}</h3>
+            <table class="info-table">
+                <tr><td class="label">Party Code:</td><td class="val">{{customer_code}}</td></tr>
+                <tr><td class="label">Address:</td><td class="val">{{customer_address}}</td></tr>
+                <tr><td class="label">GSTIN:</td><td class="val">{{customer_gst}}</td></tr>
+            </table>
+        </div>
+
+        <div class="meta-box border-right">
+            <div class="section-title">Deposited Into (Account)</div>
+            <h3 class="party-name">{{bank_name}}</h3>
+            <table class="info-table">
+                <tr><td class="label">GL Code:</td><td class="val">{{bank_code}}</td></tr>
+                <tr><td class="label">GSTIN:</td><td class="val">{{bank_gst}}</td></tr>
+                <tr><td class="label">State:</td><td class="val">{{bank_state}}</td></tr>
+            </table>
+        </div>
+
+        <div class="meta-box">
+            <div class="section-title">Voucher Details</div>
+            <table class="info-table">
+                <tr><td class="label">Doc No:</td><td class="val" style="font-weight: 800; color: var(--brand-color);">{{doc_no}}</td></tr>
+                <tr><td class="label">Date:</td><td class="val">{{date}}</td></tr>
+            </table>
+            
+            <div class="highlight-total">
+                <span>Total Received</span>
+                <strong>₹ {{grandTotal}}</strong>
+            </div>
+        </div>
+    </div>
+
+    <table class="voucher-table">
+            <thead>
+                <tr>
+                    <th width="8%" class="text-center">S.No</th>
+                    <th width="65%">Particulars / Narration</th>
+                    <th width="27%" style="text-align: right;">Amount (₹)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{items_html}}
+                
+                <tr>
+                    <td colspan="3" style="padding-top: 15px; padding-bottom: 15px;">
+                        <strong>Header Narration / Remarks:</strong><br>
+                        <span style="color: #555; white-space: pre-wrap;">{{narration}}</span>
+                    </td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2" style="text-align: right;">TOTAL AMOUNT</td>
+                    <td style="text-align: right;">₹ {{grandTotal}}</td>
+                </tr>
+            </tfoot>
+        </table>
+
+    <div class="amount-words">
+        <strong>Amount (in words)</strong> 
+        Indian Rupees {{amountInWords}} Only.
+    </div>
+
+    <div class="signatures">
+        <div class="sig-box">
+            <div class="line"></div>
+            <p>Prepared By</p>
+        </div>
+        <div class="sig-box">
+            <div class="line"></div>
+            <p>Authorized Signatory</p>
+        </div>
+    </div>
+
+    <div class="footer-note">
+        * This is a computer generated receipt voucher. Subject to realization of cheque/draft/online transfer.
+    </div>
+
+</div>

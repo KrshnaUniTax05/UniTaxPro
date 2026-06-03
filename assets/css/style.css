@@ -321,3 +321,108 @@ body.dark-mode .sticky-top { background-color: var(--bg-surface) !important; z-i
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+
+/* Simple Navbar Mobile Fix */
+@media (max-width: 991px) {
+    /* Fix navbar spacing and layout */
+    .navbar {
+        padding: 0.5rem 1rem;
+    }
+    .right-side-window{
+        display: none !important; 
+    }
+     .table-wrapper,
+    .table-responsive {
+        overflow-x: auto;
+        overflow-y: auto;
+        max-height: 400px; /* Limits height, enables vertical scroll */
+    }
+    
+    .table {
+        min-width: 550px; /* Forces horizontal scroll on mobile */
+    }
+    .navbar-brand {
+        font-size: 1.1rem;
+        margin-right: auto;
+    }
+    
+    /* Ensure toggler button is visible and clickable */
+    .navbar-toggler {
+        display: block !important;
+        border: 1px solid var(--border-color);
+        padding: 0.5rem;
+        margin-left: auto;
+    }
+    
+    /* Make navbar collapse properly */
+    .navbar-collapse {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--bg-surface);
+        padding: 1rem;
+        border-top: 1px solid var(--border-color);
+        max-height: 80vh;
+        overflow-y: auto;
+        z-index: 1050;
+    }
+    
+    /* Dark mode support */
+    body.dark-mode .navbar-collapse {
+        background: var(--bg-surface);
+        border-top-color: var(--border-color);
+    }
+    
+    /* Stack nav items vertically */
+    .navbar-nav {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .nav-item {
+        width: 100%;
+        margin: 0.25rem 0;
+    }
+    
+    .nav-link {
+        padding: 0.6rem 1rem;
+        border-radius: 6px;
+    }
+    
+    /* Fix dropdown menus on mobile */
+    .dropdown-menu {
+        position: static !important;
+        float: none;
+        width: 100%;
+        box-shadow: none;
+        border: none;
+        padding-left: 1rem;
+        background: transparent;
+    }
+    
+    body.dark-mode .dropdown-menu {
+        background: transparent;
+    }
+    
+    .dropdown-item {
+        padding: 0.5rem 1rem;
+    }
+}
+
+/* Extra small devices */
+@media (max-width: 575px) {
+    .navbar-brand {
+        font-size: 0.95rem;
+    }
+    
+    .navbar-toggler {
+        padding: 0.35rem 0.5rem;
+    }
+    
+    .nav-link {
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem;
+    }
+}

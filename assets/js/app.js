@@ -461,6 +461,73 @@ window.deleteTask = function(id) {
     renderTasks();
 };
 
+
+
+/**
+ * 9. Unified Print Engine
+ */
+App.PrintEngine = {
+    async Render(templateName, data) {
+        try {
+            // 1. Fetch the template
+            const response = await fetch(`modules/print/${templateName}.html`);
+            if (!response.ok) throw new Error("Print template not found");
+            let html = await response.text();
+
+            // 2. Map the data
+            Object.entries(data).forEach(([key, value]) => {
+                const regex = new RegExp(`{{${key}}}`, 'g');
+                html = html.replace(regex, value || '');
+            });
+
+            // 3. Open in a NEW FULL TAB (no size restrictions)
+            const printWindow = window.open('', '_blank');
+            
+            // 4. Write the document
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                    <head>
+                        <title>Print Document - ${data.doc_no || 'Document'}</title>
+                        <meta charset="utf-8">
+                    </head>
+                    <body>${html}</body>
+                </html>
+            `);
+            printWindow.document.close();
+            
+            // Note: We NO LONGER call printWindow.print() or close().
+            // The user will click the button inside the new tab.
+
+        } catch (err) {
+            console.error("Print Engine Error:", err);
+            if(App.UI) App.UI.Notify("Print Error", "Could not load print template.", "danger");
+        }
+    }
+};
+
+
+// Example usage from your Transaction screen:
+async function PrintReceipt(transactionKey) {
+    // 1. Fetch the raw data
+    const data = await API.Fetch(`Transactions/ReceiptVoucherForm/${transactionKey}`);
+    
+    // 2. Map data to your template placeholders
+    const printData = {
+        companyName: "NEXUS LEDGER SOLUTIONS",
+        companyAddress: "Cyber City, Gurgaon, Haryana",
+        date: data.header.date,
+        doc_no: data.header.doc_no,
+        customer_name: data.header.entity,
+        grandTotal: Utils.FormatINR(data.header.grandTotal || 0),
+        narration: data.header.narration
+    };
+
+    // 3. Render using your new PrintEngine
+    App.PrintEngine.Render('receipt-vch', printData);
+}
+
+
 // 4. F5 Keyboard Listener (Add to app.js - BindGlobalEvents)
 document.addEventListener('keydown', (e) => {
     if (e.key === 'F5') {
@@ -474,6 +541,207 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('DOMContentLoaded', renderTasks);
 // Start Engine
 document.addEventListener('DOMContentLoaded', () => App.Init());
+
+// --- UNIVERSAL DYNAMIC PRINT FUNCTION (Must be in global scope) ---
+window.printTransaction = async function(type, key) {
+    try {
+        const printMap = {
+            "SalesInvoiceForm": "tax-invoice",
+            "PurchaseInvoiceForm": "tax-invoice",
+            "ReceiptVoucherForm": "receipt-vch",
+            "PaymentVoucherForm": "payment-vch",
+            "ReceiptPaymentForm": "receipt-pay"
+        };
+        const templateName = printMap[type] || "receipt-vch";
+        const isInvoice = type.includes("Invoice");
+
+        const data = await API.Fetch(`Transactions/${type}/${key}`);
+        if (!data) throw new Error("Transaction data missing.");
+        console.log(data)
+        // 1. LOAD SYSTEM SETTINGS
+        let sysSettings = {};
+        try { sysSettings = JSON.parse(localStorage.getItem('ERP_Settings')) || {}; } catch(e){}
+
+        // 2. FETCH MASTERS
+        const ledgerData = await API.Fetch('Masters/LedgerCreation') || {};
+        const stockData = await API.Fetch('Masters/Stock') || {}; 
+        const companiesData = await API.Fetch('Masters/Companies') || {};
+
+        // 3. FIND COMPANY CODE
+        let companyCode = data.header.CompanyCode || data.header.companyCode || data.header.CompanyName;
+        let projectName = data.header.project || data.header.Project;
+        
+        if (projectName) {
+            try {
+                const projectData = await API.Fetch('Masters/Projects') || {};
+                const projectInfo = Object.values(projectData).find(p =>
+                    (p.ProjectName && p.ProjectName.toString().toLowerCase() === projectName.toString().toLowerCase()) ||
+                    (p.name && p.name.toString().toLowerCase() === projectName.toString().toLowerCase()) ||
+                    (p.ProjectCode && p.ProjectCode.toString().toLowerCase() === projectName.toString().toLowerCase())
+                );
+                if (projectInfo) companyCode = projectInfo.CompanyName || projectInfo.CompanyCode || projectInfo.companyCode || companyCode;
+            } catch (err) { console.warn("Could not fetch project data:", err); }
+        }
+
+        // 4. RESOLVE COMPANY INFO
+        let companyInfo = null;
+        if (companyCode) {
+            companyInfo = Object.values(companiesData).find(c =>
+                c.CompanyCode?.toString() === companyCode.toString() ||
+                c.companyCode?.toString() === companyCode.toString() ||
+                c.CompanyName?.toString().toLowerCase() === companyCode.toString().toLowerCase() ||
+                c.companyName?.toString().toLowerCase() === companyCode.toString().toLowerCase()
+            );
+        }
+
+        let compName = companyInfo?.companyName || companyInfo?.CompanyName || sysSettings.companyName || "YOUR COMPANY NAME".toUpperCase();
+        let compAddress = sysSettings.companyAddress || "Company Address not set.";
+        if (companyInfo) {
+            const addrParts = [companyInfo.companyAddress1 || companyInfo.Address1 || companyInfo.address1, companyInfo.companyAddress2 || companyInfo.Address2 || companyInfo.address2, companyInfo.Company_State || companyInfo.State || companyInfo.state, companyInfo.pin || companyInfo.PinCode || companyInfo.pincode].filter(Boolean);
+            if (addrParts.length) compAddress = addrParts.join(", ");
+        }
+        
+        let compGST = companyInfo?.GSTIN || companyInfo?.GstNo || companyInfo?.gstin || sysSettings.companyGST || "";
+        let compEmail = companyInfo?.email || companyInfo?.Email || sysSettings.companyEmail || "";
+        let compPhone = companyInfo?.companyPhone || companyInfo?.mobile || companyInfo?.Mobile || companyInfo?.Phone || sysSettings.companyPhone || "";
+        let compState = (companyInfo?.Company_State || companyInfo?.State || companyInfo?.state || "delhi").toLowerCase().trim();
+
+        // 5. RESOLVE PARTY INFO
+        let rawPartyName = data.header.customer_ledger || data.header.entity || data.header.PartyName || "";
+        let partyName = rawPartyName, partyCode = "N/A", partyAddress = "N/A", partyGST = "N/A", partyState = "N/A", cleanPartyState = "";
+        let partyemail = "", partyphone = "";
+
+        if (rawPartyName && Object.keys(ledgerData).length > 0) {
+            Object.values(ledgerData).forEach(l => {
+                const ledgerName = (l.name || l.ledgerName || "").toLowerCase();
+                const ledgerCode = (l.ledgerCode || l.code || "").toLowerCase();
+                const searchTerm = rawPartyName.toLowerCase();
+                
+                if (ledgerName === searchTerm || ledgerCode === searchTerm) {
+                    partyName = l.name || l.ledgerName.toUpperCase();
+                    partyCode = l.ledgerCode || l.code || "N/A";
+                    partyGST = l.GST || l.gstNo || "N/A".toUpperCase();
+                    partyemail = (l.email || "").toLowerCase();
+                    partyphone = l.Mobile || "";
+                    const addrParts = [l.address1, l.address2, l.state, l.pin].filter(Boolean);
+                    if (addrParts.length) partyAddress = addrParts.join(", ");
+                    if (l.state) {
+                        partyState = l.state;
+                        cleanPartyState = l.state.toLowerCase().trim();
+                    }
+                }
+            });
+        }
+
+        const isInterState = (compState !== cleanPartyState && cleanPartyState !== "");
+
+        // 6. GENERATE ITEMS & HSN SUMMARY
+        let itemsHtml = "";
+        let hsnSummary = {};
+        let rawSubTotal = parseFloat(data.header.subTotal || data.header.SubTotal || 0);
+        let rawTaxTotal = parseFloat(data.header.taxTotal || data.header.TaxTotal || 0);
+        let actionTerm = type.includes("Payment") ? "Account Debited" : "Account Credited";
+
+        if (data.items && data.items.length) {
+            data.items.forEach((item, idx) => {
+                let iCode = item.item_name || item.itemName || item.offset_account || "Unknown";
+                let iName = iCode, iSku = iCode, iDesc = (item.description || item.Description || "").trim(), iHSN = item.itemHSN || item.HSN || item.auto_item_name_ItemHSN || "N/A";
+
+                let searchKey = String(iCode).toLowerCase().trim();
+                if (Object.keys(stockData).length > 0) {
+                    Object.values(stockData).forEach(s => {
+                        let serverSku = String(s.Stock_Code || s.ItemCode || s.Sku || "").toLowerCase().trim();
+                        let serverName = String(s.itemName || s.ItemName || s.name || "").toLowerCase().trim();
+                        if (serverSku === searchKey || serverName === searchKey) {
+                            iName = s.itemName || s.ItemName || s.name || iName;
+                            iSku = s.Stock_Code || s.ItemCode || s.Sku || iSku;
+                            if (s.itemHSN || s.HSN) iHSN = s.itemHSN || s.HSN;
+                            if (!iDesc && (s.Description || s.desc)) iDesc = (s.Description || s.desc).trim();
+                        }
+                    });
+                }
+
+                let qty = parseFloat(item.qty || item.quantity || 1);
+                let rate = parseFloat(item.rate || item.price || item.amount || 0);
+                let taxPrc = parseFloat(item.taxRate || item.tax || item.auto_item_name_ItemTax || 0);
+                let lineAmount = qty * rate;
+
+                let hsnKey = `${iHSN}_${taxPrc}`;
+                if (!hsnSummary[hsnKey]) hsnSummary[hsnKey] = { hsn: iHSN, rate: taxPrc, taxable: 0, taxAmt: 0 };
+                hsnSummary[hsnKey].taxable += lineAmount;
+                hsnSummary[hsnKey].taxAmt += lineAmount * (taxPrc / 100);
+
+                if (!data.header.subTotal && !data.header.SubTotal) rawSubTotal += lineAmount;
+                if (!data.header.taxTotal && !data.header.TaxTotal) rawTaxTotal += lineAmount * (taxPrc / 100);
+
+                if (isInvoice) {
+                    let itemDisplay = `<strong>${iName} ${iSku !== iName ? `(${iSku})` : ''}</strong>`;
+                    if (iDesc !== "") itemDisplay += `<br><small style="color:#666; font-size:8.5pt;">${iDesc}</small>`;
+                    itemsHtml += `<tr><td class="text-center">${idx + 1}</td><td>${itemDisplay}</td><td class="text-center">${iHSN}</td><td class="text-center">${qty.toFixed(2)}</td><td class="text-right">${Utils.FormatINR(rate)}</td><td class="text-center">${taxPrc}%</td><td class="text-right"><strong>${Utils.FormatINR(lineAmount)}</strong></td></tr>`;
+                } else {
+                    let itemDisplay = `<strong>${actionTerm}:</strong> ${iName} ${iSku !== iName ? `(${iSku})` : ''}`;
+                    if (iDesc !== "") itemDisplay += `<br><small style="color:#666; font-size:8.5pt;">${iDesc}</small>`;
+                    itemsHtml += `<tr><td class="text-center">${idx + 1}</td><td>${itemDisplay}</td><td class="text-right"><strong>${Utils.FormatINR(lineAmount)}</strong></td></tr>`;
+                }
+            });
+        }
+
+        let hsnHtml = "";
+        if (Object.keys(hsnSummary).length > 0) {
+            Object.values(hsnSummary).forEach(row => {
+                let igstR = "-", igstA = "-", cgstR = "-", cgstA = "-", sgstR = "-", sgstA = "-";
+                if (isInterState) { igstR = row.rate + '%'; igstA = '₹ ' + Utils.FormatINR(row.taxAmt); } 
+                else { cgstR = (row.rate / 2) + '%'; cgstA = '₹ ' + Utils.FormatINR(row.taxAmt / 2); sgstR = (row.rate / 2) + '%'; sgstA = '₹ ' + Utils.FormatINR(row.taxAmt / 2); }
+                hsnHtml += `<tr><td style="text-align: left;">${row.hsn}</td><td style="text-align: right;">₹ ${Utils.FormatINR(row.taxable)}</td><td style="text-align: center;">${igstR}</td><td style="text-align: right;">${igstA}</td><td style="text-align: center;">${cgstR}</td><td style="text-align: right;">${cgstA}</td><td style="text-align: center;">${sgstR}</td><td style="text-align: right;">${sgstA}</td><td style="text-align: right; font-weight:bold;">₹ ${Utils.FormatINR(row.taxAmt)}</td></tr>`;
+            });
+        } else { hsnHtml = `<tr><td colspan="9" class="text-center">No Tax Details Found</td></tr>`; }
+
+        // 7. DISPLAY TOGGLES
+        const dBank = sysSettings.enableBankingInfo ? "flex" : "none";
+        const dTerms = (sysSettings.enableTerms && sysSettings.invoiceTerms) ? "block" : "none";
+        const dSign = sysSettings.showSignatory !== false ? "flex" : "none";
+        const dWords = sysSettings.showAmountInWords !== false ? "block" : "none";
+
+        let upiDisplay = "none", upiLink = "", qrUrl = "";
+        let rawTotal = parseFloat(data.header.grandTotal || data.header.GrandTotal || (rawSubTotal + rawTaxTotal));
+
+        if (sysSettings.enableBankingInfo && sysSettings.upiid && sysSettings.upiid.trim() !== "") {
+            upiDisplay = "block";
+            upiLink = `upi://pay?pa=${sysSettings.upiid.trim()}&pn=${encodeURIComponent(compName)}&am=${rawTotal}&cu=INR`;
+            qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiLink)}`;
+        }
+
+        const safeDeliveryAddr = [data.meta?.delivery_address, data.meta?.delivery_state, data.meta?.delivery_pin].filter(Boolean).join(", ");
+        
+        const printData = {
+            display_bank: dBank, display_terms: dTerms, display_sign: dSign, display_words: dWords, display_upi: upiDisplay,
+            companyName: compName.toUpperCase(), companyAddress: compAddress, gstin: compGST.toUpperCase(), companyEmail: compEmail.toLowerCase(), companyPhone: compPhone,
+            bank_name: sysSettings.enableBankingInfo ? (sysSettings.bankName || "Not Set") : "", bank_ac_name: sysSettings.enableBankingInfo ? (sysSettings.bankAccountName || "Not Set") : "", bank_ac: sysSettings.enableBankingInfo ? (sysSettings.bankAccountNumber || "Not Set") : "", bank_ifsc: sysSettings.enableBankingInfo ? (sysSettings.bankIFSC || "Not Set") : "", invoice_terms: sysSettings.enableTerms ? (sysSettings.invoiceTerms || "") : "", upi_id: (sysSettings.enableBankingInfo && sysSettings.upiid) ? sysSettings.upiid.trim() : "", qr_url: qrUrl,
+            date: Utils.FormatDate(data.header.date || data.header.voucher_date || data.header.valueDate || data.header.Date),
+            doc_no: data.header.doc_no || data.header.Invoice || data.header.DocNo || "N/A",
+            customer_name: partyName.toUpperCase(), customer_code: partyCode.toUpperCase(), customer_address: partyAddress.trim(), customer_gst: partyGST.toUpperCase(), customer_state: partyState, customer_email: partyemail, customer_phone: partyphone,
+            consignee_name: (data.meta?.consignee_name || "").toUpperCase(), delivery_address: safeDeliveryAddr, vehicle_no: (data.meta?.vehicle_no || "").toUpperCase(), LR_No: (data.meta?.lr_no || "").toUpperCase(), delivery_phone: data.meta?.delivery_phone || "", delivery_email: data.meta?.delivery_email || "",
+            subTotal: Utils.FormatINR(rawSubTotal), taxTotal: Utils.FormatINR(rawTaxTotal), grandTotal: Utils.FormatINR(rawTotal),
+            amountInWords: (typeof window.NumberToWords === 'function') ? window.NumberToWords(Math.round(rawTotal)) : "Amount in words...",
+            narration: data.header.narration || data.header.Narration || "",
+            items_html: itemsHtml || '<tr><td colspan="7" class="text-center">No Items Found</td></tr>', hsn_html: hsnHtml,
+            // --- CORRECTED BANK FIELDS ---
+            bank_code: data.items && data.items.length > 0 ? (data.items[0].offset_account || data.items[0].item_name || "N/A").toUpperCase() : "N/A",
+            bank_gst: compGST.toUpperCase(),
+            bank_state: compState.toUpperCase(),
+        };
+
+        if (App.PrintEngine && typeof App.PrintEngine.Render === 'function') {
+            App.PrintEngine.Render(templateName, printData);
+        } else {
+            alert("PrintEngine is missing. Make sure your printing script is loaded.");
+        }
+
+    } catch (err) {
+        console.error("Print Error:", err);
+        alert("Error printing document: " + err.message);
+    }
+};
 
 
 // search

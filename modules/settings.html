@@ -1,0 +1,360 @@
+<style>
+    /* --- SETTINGS MODULE STYLES --- */
+    :root {
+        --brand-color: #0b3d91;
+        --brand-hover: #082d6b;
+        --bg-color: #f4f7fa;
+        --border-color: #dce4ec;
+        --text-main: #333333;
+        --text-muted: #666666;
+    }
+
+    .settings-wrapper {
+        display: flex; height: calc(100vh - 80px); 
+        background: var(--bg-color); font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    /* --- SIDEBAR NAV --- */
+    .settings-sidebar {
+        width: 260px; background: #ffffff; border-right: 1px solid var(--border-color);
+        padding: 20px 0; display: flex; flex-direction: column;
+    }
+
+    .settings-header { padding: 0 20px 20px 20px; border-bottom: 1px solid var(--border-color); margin-bottom: 10px; }
+    .settings-header h3 { margin: 0; font-size: 16pt; color: var(--brand-color); font-weight: 700; }
+    .settings-header p { margin: 4px 0 0 0; font-size: 9pt; color: var(--text-muted); }
+
+    .settings-nav { list-style: none; padding: 0; margin: 0; }
+    .settings-nav li {
+        padding: 12px 20px; cursor: pointer; font-size: 10.5pt; font-weight: 500;
+        color: var(--text-main); display: flex; align-items: center; gap: 12px;
+        border-left: 3px solid transparent; transition: all 0.2s;
+    }
+    .settings-nav li:hover { background: var(--bg-color); }
+    .settings-nav li.active { background: #e8f0fe; color: var(--brand-color); border-left: 3px solid var(--brand-color); font-weight: 600; }
+
+    /* --- CONTENT AREA --- */
+    .settings-content { flex: 1; padding: 30px 40px; overflow-y: auto; }
+    .settings-section { display: none; animation: fadeIn 0.3s ease; }
+    .settings-section.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    .section-title { font-size: 18pt; font-weight: 700; color: var(--text-main); margin: 0 0 5px 0; }
+    .section-subtitle { font-size: 10pt; color: var(--text-muted); margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); }
+
+    /* --- FORM STYLES --- */
+    .settings-card {
+        background: #ffffff; border: 1px solid var(--border-color); border-radius: 8px;
+        padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); margin-bottom: 25px;
+    }
+    
+    .card-enabler-header {
+        display: flex; justify-content: space-between; align-items: center;
+        padding-bottom: 15px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px;
+    }
+    .card-enabler-header h4 { margin: 0; font-size: 13pt; color: var(--brand-color); font-weight: 700; }
+    .card-enabler-header p { margin: 4px 0 0 0; font-size: 9pt; color: var(--text-muted); }
+
+    /* Hidden fields until enabled */
+    .collapsible-fields { display: none; margin-top: 20px; animation: fadeIn 0.3s ease; }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 9.5pt; font-weight: 600; color: var(--text-main); margin-bottom: 6px; }
+    .form-control {
+        width: 100%; padding: 10px 12px; font-size: 10pt; border: 1px solid #ced4da; 
+        border-radius: 4px; box-sizing: border-box; transition: border-color 0.15s ease-in-out;
+    }
+    .form-control:focus { outline: none; border-color: var(--brand-color); box-shadow: 0 0 0 3px rgba(11,61,145,0.1); }
+    .form-row { display: flex; gap: 20px; }
+    .form-row .form-group { flex: 1; }
+
+    /* --- TOGGLE SWITCH --- */
+    .switch-wrapper { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; }
+    .switch-info strong { display: block; font-size: 10pt; color: var(--text-main); }
+    .switch-info small { color: var(--text-muted); font-size: 8.5pt; }
+    
+    /* --- ACTION FOOTER --- */
+    .settings-footer {
+        position: sticky; bottom: 0; background: rgba(255,255,255,0.9); backdrop-filter: blur(5px); 
+        padding: 15px 0; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 15px;
+    }
+    .btn { padding: 10px 24px; font-size: 10pt; font-weight: 600; border-radius: 4px; cursor: pointer; border: none; }
+    .btn-primary { background: var(--brand-color); color: white; }
+    .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); }
+</style>
+
+<div class="settings-wrapper">
+    
+    <aside class="settings-sidebar">
+        <div class="settings-header">
+            <h3>ERP Settings</h3>
+            <p>Manage system preferences</p>
+        </div>
+        <ul class="settings-nav" id="settingsTabs">
+            <li class="active" data-target="company-profile"><i class="bi bi-building"></i> Company Profile</li>
+            <li data-target="banking-settings"><i class="bi bi-bank"></i> Banking Details</li>
+            <li data-target="print-settings"><i class="bi bi-printer"></i> Print & Vouchers</li>
+            <li data-target="system-prefs"><i class="bi bi-gear"></i> System Preferences</li>
+        </ul>
+    </aside>
+
+    <main class="settings-content">
+        <form id="settingsForm">
+            
+            <div id="company-profile" class="settings-section active">
+                <h2 class="section-title">Company Profile</h2>
+                <p class="section-subtitle">Manage the primary business identity used in documents.</p>
+                
+                <div class="settings-card">
+                    <div class="card-enabler-header">
+                        <div>
+                            <h4>Company Information</h4>
+                            <p>Enable to override default company details on printed documents.</p>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input section-toggle" type="checkbox" name="enableCompanyInfo" data-target="companyFields" style="transform: scale(1.3); cursor: pointer;">
+                        </div>
+                    </div>
+                    
+                    <div id="companyFields" class="collapsible-fields">
+                        <div class="form-group">
+                            <label>Legal Company Name</label>
+                            <input type="text" class="form-control" name="companyName" placeholder="NEXUS LEDGER SOLUTIONS PVT LTD">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>GSTIN</label><input type="text" class="form-control" name="companyGST" placeholder="22AAAAA0000A1Z5"></div>
+                            <div class="form-group"><label>PAN Number</label><input type="text" class="form-control" name="companyPAN" placeholder="ABCDE1234F"></div>
+                        </div>
+                        <div class="form-group"><label>Registered Address</label><textarea class="form-control" name="companyAddress" rows="2" placeholder="Suite 402..."></textarea></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="banking-settings" class="settings-section">
+                <h2 class="section-title">Banking Details</h2>
+                <p class="section-subtitle">Configure the default receiving bank shown on Tax Invoices.</p>
+                
+                <div class="settings-card">
+                    <div class="card-enabler-header">
+                        <div>
+                            <h4>Default Bank Account</h4>
+                            <p>Enable to show these bank details to customers for payments.</p>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input section-toggle" type="checkbox" name="enableBankingInfo" data-target="bankingFields" style="transform: scale(1.3); cursor: pointer;">
+                        </div>
+                    </div>
+                    
+                    <div id="bankingFields" class="collapsible-fields">
+                        <div class="form-row">
+                            <div class="form-group"><label>Bank Name</label><input type="text" class="form-control" name="bankName" placeholder="HDFC Bank Ltd"></div>
+                            <div class="form-group"><label>Branch Name</label><input type="text" class="form-control" name="bankBranch" placeholder="Cyber City Branch"></div>
+                        </div>
+                        <div class="form-group"><label>Account Name (Beneficiary)</label><input type="text" class="form-control" name="bankAccountName" placeholder="NEXUS LEDGER SOLUTIONS"></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Account Number</label><input type="text" class="form-control" name="bankAccountNumber" placeholder="50200012345678"></div>
+                            <div class="form-group"><label>IFSC Code</label><input type="text" class="form-control" name="bankIFSC" placeholder="HDFC0001234"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="print-settings" class="settings-section">
+                <h2 class="section-title">Print Settings</h2>
+                <p class="section-subtitle">Customize automated features on your print templates.</p>
+                
+                <div class="settings-card">
+                    <div class="card-enabler-header">
+                        <div>
+                            <h4>Invoice Terms & Conditions</h4>
+                            <p>Enable to print standard Terms & Conditions on tax invoices.</p>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input section-toggle" type="checkbox" name="enableTerms" data-target="termsFields" style="transform: scale(1.3); cursor: pointer;">
+                        </div>
+                    </div>
+                    
+                    <div id="termsFields" class="collapsible-fields">
+                        <div class="form-group">
+                            <textarea class="form-control" name="invoiceTerms" rows="3" placeholder="1. Goods once sold will not be taken back."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="switch-wrapper" style="border-bottom: 1px solid #eee;">
+                        <div class="switch-info"><strong>Print Authorized Signatory</strong><small>Show a signature line on printed documents.</small></div>
+                        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" name="showSignatory" style="transform: scale(1.3);"></div>
+                    </div>
+                    <div class="switch-wrapper">
+                        <div class="switch-info"><strong>Show Amount in Words</strong><small>Auto-convert grand totals to English words.</small></div>
+                        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" name="showAmountInWords" style="transform: scale(1.3);"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="system-prefs" class="settings-section">
+                <h2 class="section-title">System Preferences</h2>
+                <p class="section-subtitle">Local UI and behavior settings.</p>
+                
+                <div class="settings-card">
+                    <div class="switch-wrapper">
+                        <div class="switch-info">
+                            <strong>Dark Mode</strong>
+                            <small>Enable dark theme for the ERP dashboard.</small>
+                        </div>
+                        <div class="form-check form-switch pt-1">
+                            <input class="form-check-input" type="checkbox" id="darkModeToggle" style="transform: scale(1.3); cursor: pointer;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-footer">
+                <button type="button" class="btn btn-outline" onclick="App.Router('dashboard')">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="saveBtn"><i class="bi bi-save me-1"></i> Save Changes</button>
+            </div>
+        </form>
+    </main>
+</div>
+
+<script>
+(function() {
+    // 1. Tab Switching
+    const tabs = document.querySelectorAll('.settings-nav li');
+    const sections = document.querySelectorAll('.settings-section');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            sections.forEach(s => s.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(tab.getAttribute('data-target')).classList.add('active');
+        });
+    });
+
+    // 2. Section Enabler Logic (Show/Hide fields + Live Dynamic localStorage & App.State Save)
+    const toggleSwitches = document.querySelectorAll('.section-toggle');
+    toggleSwitches.forEach(sw => {
+        sw.addEventListener('change', (e) => {
+            const isChecked = e.target.checked;
+            const targetDiv = document.getElementById(e.target.getAttribute('data-target'));
+            if (targetDiv) targetDiv.style.display = isChecked ? 'block' : 'none';
+
+            // DYNAMIC LIVE SAVE ON TOGGLE CHANGE
+            try {
+                // Read current local storage configuration object
+                let currentSettings = {};
+                const savedRaw = localStorage.getItem('ERP_Settings');
+                if (savedRaw) {
+                    currentSettings = JSON.parse(savedRaw);
+                }
+
+                // Update the changed toggle's property dynamically
+                const settingName = e.target.name;
+                currentSettings[settingName] = isChecked;
+
+                // Persist updated object back to localStorage
+                localStorage.setItem('ERP_Settings', JSON.stringify(currentSettings));
+
+                // Sync live to global system memory
+                if (typeof App !== 'undefined') {
+                    App.State = App.State || {};
+                    App.State.Settings = currentSettings;
+                }
+                
+                console.log(`Dynamic Setting Saved: ${settingName} -> ${isChecked}`);
+            } catch (err) {
+                console.error("Error during live dynamic setting save:", err);
+            }
+        });
+    });
+
+    // 3. User's EXACT Dark Mode Binding
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    if(darkModeToggle) {
+        darkModeToggle.addEventListener('change', (e) => {
+            if (App && App.UI && App.UI.ToggleDarkMode) {
+                App.UI.ToggleDarkMode(e.target.checked);
+            }
+        });
+    }
+
+    const form = document.getElementById('settingsForm');
+
+    // 4. Load Data & Initialize States
+    const loadSettings = () => {
+        try {
+            const savedRaw = localStorage.getItem('ERP_Settings');
+            if (savedRaw) {
+                const settings = JSON.parse(savedRaw);
+                Object.keys(settings).forEach(key => {
+                    const input = form.elements[key];
+                    if (input) {
+                        if (input.type === 'checkbox') {
+                            input.checked = settings[key];
+                            // If it's a section enabler, trigger the display change immediately
+                            if(input.classList.contains('section-toggle')) {
+                                const targetDiv = document.getElementById(input.getAttribute('data-target'));
+                                if(targetDiv) targetDiv.style.display = input.checked ? 'block' : 'none';
+                            }
+                        } else {
+                            input.value = settings[key];
+                        }
+                    }
+                });
+            }
+
+            // Sync Dark Mode Switch with actual App state if it exists
+            if (localStorage.getItem('darkMode') === 'enabled' && darkModeToggle) {
+                darkModeToggle.checked = true;
+            }
+
+        } catch(e) { console.error("Error loading settings", e); }
+    };
+    loadSettings();
+
+    // 5. Save Logic (Full Form Submission - LocalStorage + App.State)
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('saveBtn');
+        const origHtml = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+        btn.disabled = true;
+
+        const formData = new FormData(form);
+        const settingsObj = {};
+        
+        // Capture Checkboxes
+        form.querySelectorAll('input[type="checkbox"]').forEach(chk => {
+            if(chk.id !== 'darkModeToggle') { // Exclude dark mode from DB settings as it's local UI
+                settingsObj[chk.name] = chk.checked;
+            }
+        });
+
+        // Capture Inputs
+        for (let [key, value] of formData.entries()) {
+            settingsObj[key] = value;
+        }
+
+        try {
+            // Save to LocalStorage
+            localStorage.setItem('ERP_Settings', JSON.stringify(settingsObj));
+            
+            // Save to App.State
+            if (typeof App !== 'undefined') {
+                App.State = App.State || {};
+                App.State.Settings = settingsObj;
+            }
+            
+            await new Promise(r => setTimeout(r, 400)); 
+            if(App && App.UI) App.UI.Notify('Success', 'Settings successfully saved and applied.', 'success');
+            
+        } catch (error) {
+            if(App && App.UI) App.UI.Notify('Error', 'Failed to save settings.', 'danger');
+        } finally {
+            btn.innerHTML = origHtml;
+            btn.disabled = false;
+        }
+    });
+})();
+</script>
