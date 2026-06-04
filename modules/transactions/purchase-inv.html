@@ -142,35 +142,153 @@
         </div>
 
         <!-- SHIPPING OFFCANVAS -->
-        <div class="offcanvas offcanvas-end" tabindex="-1" id="additionalDetails" style="width: 450px;">
-            <div class="offcanvas-header bg-dark text-white">
-                <h5 class="offcanvas-title">Shipping & Order Meta</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+        <div class="offcanvas offcanvas-start" tabindex="-1" id="additionalDetails" style="width: 1000px !important; border-left: 1px solid var(--border-color);">
+            <div class="offcanvas-header bg-dark text-white" style="padding: 15px 20px;">
+                <h5 class="offcanvas-title fw-bold" style="font-size: 1.1rem;"><i class="bi bi-box-seam me-2"></i> Shipping & Order Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
             </div>
-            <div class="offcanvas-body">
+            
+            <div class="offcanvas-body" style="background-color: var(--bg-light); padding: 20px;">
+                
                 <section class="mb-4">
-                    <p class="fw-bold text-primary small text-uppercase mb-2">Consignee (Ship To)</p>
-                    <div class="bg-light p-3 rounded shadow-sm">
-                        <input type="text" name="consignee_name" class="form-control form-control-sm mb-2" placeholder="Consignee Name">
-                        <textarea name="delivery_address" class="form-control form-control-sm mb-2" placeholder="Shipping Address"></textarea>
-                        <div class="row g-2">
-                            <div class="col-6"><input type="text" name="delivery_state" class="form-control form-control-sm" placeholder="State"></div>
-                            <div class="col-6"><input type="text" name="delivery_pin" class="form-control form-control-sm" placeholder="PIN"></div>
-                        </div>
-                    </div>
-                </section>
-                <section class="mb-4">
-                    <p class="fw-bold text-primary small text-uppercase mb-2">Dispatch Details</p>
-                    <div class="bg-light p-3 rounded shadow-sm">
+                    <p class="fw-bold text-primary small text-uppercase mb-2"><i class="bi bi-person-lines-fill me-1"></i> Consignee (Ship To)</p>
+                    <div class="bg-white p-3 rounded border shadow-sm">
+                        <input type="text" name="consignee_name" class="form-control form-control-sm mb-2 fw-bold" placeholder="Consignee Name">
+                        <textarea name="delivery_address" class="form-control form-control-sm mb-2" rows="2" placeholder="Complete Shipping Address"></textarea>
                         <div class="row g-2 mb-2">
-                            <div class="col-6"><label class="small text-muted">LR/Doc No.</label><input type="text" name="lr_no" class="form-control form-control-sm"></div>
-                            <div class="col-6"><label class="small text-muted">Vehicle No.</label><input type="text" name="vehicle_no" class="form-control form-control-sm"></div>
+                            <div class="col-6"><input type="text" name="delivery_state" class="form-control form-control-sm" placeholder="State"></div>
+                            <div class="col-6"><input type="text" name="delivery_pin" class="form-control form-control-sm" placeholder="PIN Code"></div>
                         </div>
-                        <label class="small text-muted">Transporter</label>
-                        <input type="text" name="transporter" class="form-control form-control-sm">
+                        <div class="row g-2">
+                            <div class="col-6"><input type="text" name="delivery_phone" class="form-control form-control-sm" placeholder="Contact Phone"></div>
+                            <div class="col-6"><input type="email" name="delivery_email" class="form-control form-control-sm" placeholder="Email Address"></div>
+                        </div>
                     </div>
                 </section>
-                <button type="button" class="btn btn-primary w-100" data-bs-dismiss="offcanvas">Save Meta Info</button>
+
+                <section class="mb-4">
+                    <p class="fw-bold text-primary small text-uppercase mb-2"><i class="bi bi-cart-check me-1"></i> Order Details</p>
+                    <div class="bg-white p-3 rounded border shadow-sm">
+                        <div class="row g-3 mb-2">
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold">Order No(s)</label>
+                                <input type="text" name="order_no" class="form-control form-control-sm" placeholder="e.g. ORD-123">
+                            </div>
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold">Mode/Terms of Payment</label>
+                                <input type="text" name="terms_of_payment" class="form-control form-control-sm" placeholder="e.g. COD / Net 30">
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold">Other References</label>
+                                <input type="text" name="other_references" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold">Terms of Delivery</label>
+                                <input type="text" name="terms_of_delivery" class="form-control form-control-sm">
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="mb-4">
+                    <p class="fw-bold text-primary small text-uppercase mb-2"><i class="bi bi-truck me-1"></i> Dispatch Details</p>
+                    <div class="bg-white p-3 rounded border shadow-sm">
+                        <div class="row g-3 mb-2">
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold">Delivery Note No(s)</label>
+                                <input type="text" name="delivery_note_no" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold">Dispatch Doc No.</label>
+                                <input type="text" name="dispatch_doc_no" class="form-control form-control-sm">
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-2">
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold">Dispatched through</label>
+                                <input type="text" name="dispatched_through" class="form-control form-control-sm" placeholder="e.g. Amazon Shipping">
+                            </div>
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold">Destination</label>
+                                <input type="text" name="destination" class="form-control form-control-sm" placeholder="e.g. Gorakhpur">
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-2">
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold">Carrier Name/Agent</label>
+                                <input type="text" name="carrier_agent" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold">Vehicle No.</label>
+                                <input type="text" name="vehicle_no" class="form-control form-control-sm">
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold">Bill of Lading / LR-RR No.</label>
+                                <input type="text" name="lr_no" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold">LR Date</label>
+                                <input type="date" name="lr_date" class="form-control form-control-sm">
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="mb-4">
+                    <p class="fw-bold text-primary small text-uppercase mb-2"><i class="bi bi-globe me-1"></i> Export Details</p>
+                    <div class="bg-white p-3 rounded border shadow-sm">
+                        <div class="row g-3 mb-2">
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold">Place of Receipt by Shipper</label>
+                                <input type="text" name="place_of_receipt" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold">Vessel / Flight No.</label>
+                                <input type="text" name="vessel_flight_no" class="form-control form-control-sm">
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-2">
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold">Port of Loading</label>
+                                <input type="text" name="port_of_loading" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold">Port of Discharge</label>
+                                <input type="text" name="port_of_discharge" class="form-control form-control-sm">
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-2">
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold">Country to</label>
+                                <input type="text" name="country_to" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold">Port Code</label>
+                                <input type="text" name="port_code" class="form-control form-control-sm">
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold">Shipping Bill No.</label>
+                                <input type="text" name="shipping_bill_no" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-6">
+                                <label class="small text-muted fw-bold">Shipping Date</label>
+                                <input type="date" name="shipping_bill_date" class="form-control form-control-sm">
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="position-sticky bottom-0 bg-light py-2 border-top mt-4" style="z-index: 10;">
+                    <button type="button" class="btn btn-primary w-100 fw-bold shadow-sm" data-bs-dismiss="offcanvas" onclick="App.UI.Notify('Info', 'Additional Details captured. They will be saved when you submit the voucher.', 'info')">
+                        <i class="bi bi-check2-circle me-1"></i> Apply Additional Details
+                    </button>
+                </div>
             </div>
         </div>
     </form>

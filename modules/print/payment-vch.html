@@ -11,16 +11,22 @@
     body, html {
         margin: 0; padding: 0;
         font-family: 'Segoe UI', Arial, sans-serif;
-        color: var(--text-dark); background: #e9ecef; 
+        /* color: var(--text-dark); background: #e9ecef;  */
         font-size: 10pt; line-height: 1.5;
     }
 
     /* --- ACTION BAR (Screen Only) --- */
     .action-bar {
-        background: #333; padding: 15px 30px; display: flex;
-        justify-content: space-between; align-items: center;
-        color: white; position: sticky; top: 0;
-        z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        background: #333;
+        padding: 15px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
     }
     
     .action-bar button {
@@ -42,7 +48,7 @@
     @media print {
         @page { margin: 10mm; size: A4 portrait; }
         body { background: white; }
-        .action-bar { display: none !important; } 
+        .action-bar { display: none !important; } /* Hides the print button on paper */
         .print-document { margin: 0; padding: 0; box-shadow: none; width: 100%; min-height: auto; }
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     }
@@ -66,7 +72,7 @@
         margin-bottom: 25px; background: var(--brand-light); overflow: hidden;
     }
 
-    .meta-box { flex: 1; padding: 12px 15px; }
+    .meta-box { flex: 1; padding: 12px 15px;     display: grid;}
     .meta-box.border-right { border-right: 1px solid var(--border-color); }
 
     .meta-box .section-title {
@@ -78,7 +84,7 @@
     
     .info-table { border-collapse: collapse; width: 100%; font-size: 8.5pt; }
     .info-table td { padding: 3px 0; vertical-align: top; }
-    .info-table td.label { color: var(--text-muted); width: 65px; font-weight: 600; }
+    .info-table td.label { color: var(--text-muted);  font-weight: 600; }
     .info-table td.val { color: var(--text-dark); font-weight: 500; }
 
     .highlight-total {
@@ -91,7 +97,7 @@
     /* --- DETAILS TABLE --- */
     .voucher-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
     .voucher-table th { background: var(--brand-color); color: white; font-weight: 600; font-size: 9pt; text-transform: uppercase; padding: 10px 12px; text-align: left; }
-    .voucher-table td { padding: 12px; font-size: 10pt; border-bottom: 1px solid var(--border-color); vertical-align: top; }
+    .voucher-table td { padding: 12px; font-size: 10pt;  vertical-align: top; }
     .voucher-table tbody tr { height: 120px; } 
     .voucher-table tfoot td { font-weight: 800; font-size: 11pt; color: var(--brand-color); padding: 12px; border-top: 2px solid var(--brand-color); border-bottom: 2px solid var(--brand-color); }
 
@@ -123,37 +129,42 @@
             <p class="gstin">GSTIN: {{gstin}}</p>
         </div>
         <div class="doc-title">
-            <h2>PAYMENT VOUCHER</h2>
+            <h2>Payment VOUCHER</h2>
         </div>
     </div>
 
     <div class="meta-grid">
         
         <div class="meta-box border-right">
-            <div class="section-title">Paid To (Beneficiary)</div>
-            <h3 class="party-name">{{customer_name}}</h3>
+            <div class="section-title">Paid Through</div>
+            <h3 class="party-name">{{ledger_name}}</h3>
             <table class="info-table">
-                <tr><td class="label">Party Code:</td><td class="val">{{customer_code}}</td></tr>
-                <tr><td class="label">Address:</td><td class="val">{{customer_address}}</td></tr>
-                <tr><td class="label">GSTIN:</td><td class="val">{{customer_gst}}</td></tr>
+                <tr><td class="label">GL Code:</td><td class="val">{{ledger_code}}</td></tr>
+                <tr><td class="label">Account Number:</td><td class="val">{{ledger_AccountNumber}}</td></tr>
+                <tr><td class="label">IFSC Code:</td><td class="val">{{ledger_IFSC}}</td></tr>
+                <tr><td class="label">Branch:</td><td class="val">{{ledger_Branch}}</td></tr>
+                <tr><td class="label">Swift Code:</td><td class="val">{{ledger_swift}}</td></tr>
+                <!-- <tr><td class="label">Address:</td><td class="val">{{customer_address}}</td></tr> -->
+                <tr><td class="label">GSTIN:</td><td class="val">{{Ledger_gst}}</td></tr>
             </table>
         </div>
 
-        <div class="meta-box border-right">
-            <div class="section-title">Paid From (Account)</div>
+        <!-- <div class="meta-box border-right">
+            <div class="section-title">Deposited Into (Account)</div>
             <h3 class="party-name">{{bank_name}}</h3>
             <table class="info-table">
                 <tr><td class="label">GL Code:</td><td class="val">{{bank_code}}</td></tr>
                 <tr><td class="label">GSTIN:</td><td class="val">{{bank_gst}}</td></tr>
                 <tr><td class="label">State:</td><td class="val">{{bank_state}}</td></tr>
             </table>
-        </div>
+        </div> -->
 
         <div class="meta-box">
             <div class="section-title">Voucher Details</div>
             <table class="info-table">
                 <tr><td class="label">Doc No:</td><td class="val" style="font-weight: 800; color: var(--brand-color);">{{doc_no}}</td></tr>
-                <tr><td class="label">Date:</td><td class="val">{{date}}</td></tr>
+                <tr><td class="label">Instrument Date:</td><td class="val">{{Instdate}}</td></tr>
+                <tr><td class="label">Value Date:</td><td class="val">{{Valuedate}}</td></tr>
             </table>
             
             <div class="highlight-total">
@@ -164,30 +175,30 @@
     </div>
 
     <table class="voucher-table">
-        <thead>
-            <tr>
-                <th width="8%" class="text-center">S.No</th>
-                <th width="65%">Particulars / Narration</th>
-                <th width="27%" style="text-align: right;">Amount (₹)</th>
-            </tr>
-        </thead>
-        <tbody>
-            {{items_html}}
-            
-            <tr>
-                <td colspan="3" style="padding-top: 15px; padding-bottom: 15px;">
-                    <strong>Header Narration / Remarks:</strong><br>
-                    <span style="color: #555; white-space: pre-wrap;">{{narration}}</span>
-                </td>
-            </tr>
-        </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="2" style="text-align: right;">TOTAL AMOUNT</td>
-                <td style="text-align: right;">₹ {{grandTotal}}</td>
-            </tr>
-        </tfoot>
-    </table>
+            <thead>
+                <tr>
+                    <th width="8%" class="text-center">S.No</th>
+                    <th width="65%">Particulars / Narration</th>
+                    <th width="27%" style="text-align: right;">Amount (₹)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{items_html}}
+                
+                <tr>
+                    <td colspan="3" style="padding-top: 15px; padding-bottom: 15px;">
+                        <strong>Header Narration / Remarks:</strong><br>
+                        <span style="color: #555; white-space: pre-wrap;">{{narration}}</span>
+                    </td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2" style="text-align: right;">TOTAL AMOUNT</td>
+                    <td style="text-align: right;">₹ {{grandTotal}}</td>
+                </tr>
+            </tfoot>
+        </table>
 
     <div class="amount-words">
         <strong>Amount (in words)</strong> 
@@ -201,16 +212,12 @@
         </div>
         <div class="sig-box">
             <div class="line"></div>
-            <p>Receiver's Signature</p>
-        </div>
-        <div class="sig-box">
-            <div class="line"></div>
             <p>Authorized Signatory</p>
         </div>
     </div>
 
     <div class="footer-note">
-        * This is a computer generated payment voucher.
+        * This is a computer generated payment voucher. Subject to realization of cheque/draft/online transfer.
     </div>
 
 </div>

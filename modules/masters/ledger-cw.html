@@ -75,3 +75,252 @@
         </div>
     </form>
 </div>
+
+<script>
+    // Dynamic Field Configuration - Edit this object to add/remove fields for each Ledger Group
+const dynamicFieldsConfig = {
+    // Configuration for "Bank Accounts" group
+    "Bank Accounts": [
+        { name: "bankName", label: "Bank Name", type: "text", required: true, placeholder: "" },
+        { name: "accountNumber", label: "Account Number", type: "text", required: true, placeholder: "Enter account number" },
+        { name: "ifscCode", label: "IFSC Code", type: "text", required: true, placeholder: "" },
+        { name: "branchName", label: "Branch Name", type: "text", required: false, placeholder: "" },
+        { name: "SwiftCode", label: "Swift Code", type: "text", required: false, placeholder: "" },
+        { name: "openingBalance", label: "Opening Balance", type: "number", required: false, placeholder: "" }
+    ],
+    
+    // Configuration for "Sundry Debtors" group
+    "Sundry Debtors": [
+        { name: "creditLimit", label: "Credit Limit", type: "number", required: true, placeholder: "Enter credit limit" },
+        { name: "creditDays", label: "Credit Days", type: "number", required: true, placeholder: "Enter credit days" },
+        { name: "contactPerson", label: "Contact Person", type: "text", required: false, placeholder: "Enter contact person name" },
+        { name: "panNumber", label: "PAN Number", type: "text", required: false, placeholder: "Enter PAN number" }
+    ],
+    
+    // Configuration for "Sundry Creditors" group
+    "Sundry Creditors": [
+        { name: "vendorCode", label: "Vendor Code", type: "text", required: true, placeholder: "Enter vendor code" },
+        { name: "creditPeriod", label: "Credit Period (Days)", type: "number", required: true, placeholder: "Enter credit period" },
+        { name: "contactPerson", label: "Contact Person", type: "text", required: false, placeholder: "Enter contact person" },
+        { name: "panNumber", label: "PAN Number", type: "text", required: false, placeholder: "Enter PAN number" },
+        { name: "tdsApplicable", label: "TDS Applicable", type: "checkbox", required: false }
+    ],
+    
+    // Configuration for "Direct Incomes" group
+    "Direct Incomes": [
+        { name: "incomeCategory", label: "Income Category", type: "select", required: true, options: ["Commission", "Interest", "Rent", "Royalty", "Dividend"] },
+        { name: "taxRate", label: "Tax Rate (%)", type: "number", required: true, placeholder: "Enter tax rate" },
+        { name: "sacCode", label: "SAC Code", type: "text", required: false, placeholder: "Enter SAC code" }
+    ],
+    
+    // Configuration for "Fixed Assets" group
+    "Fixed Assets": [
+        { name: "assetType", label: "Asset Type", type: "select", required: true, options: ["Building", "Machinery", "Vehicles", "Furniture", "Computers", "Other"] },
+        { name: "depreciationRate", label: "Depreciation Rate (%)", type: "number", required: true, placeholder: "Enter depreciation rate" },
+        { name: "purchaseDate", label: "Purchase Date", type: "date", required: false },
+        { name: "purchaseValue", label: "Purchase Value", type: "number", required: false, placeholder: "Enter purchase value" }
+    ]
+};
+
+// Function to create dynamic fields HTML
+function createDynamicFieldsHTML(fieldsConfig) {
+    if (!fieldsConfig || fieldsConfig.length === 0) return '';
+    
+    let html = '<div id="dynamic-fields-container" class="mb-4">';
+    html += '<h6 class="fw-bold text-primary small text-uppercase mb-3">Additional Details</h6>';
+    html += '<div class="row g-3">';
+    
+    fieldsConfig.forEach(field => {
+        html += '<div class="col-md-6">';
+        html += `<label class="form-label small fw-bold ${field.required ? 'text-danger' : ''}">${field.label} ${field.required ? '*' : ''}</label>`;
+        
+        switch(field.type) {
+            case 'select':
+                html += `<select name="${field.name}" class="form-control form-control-sm" ${field.required ? 'required' : ''}>`;
+                html += `<option value="" disabled selected>Select ${field.label}...</option>`;
+                field.options.forEach(option => {
+                    html += `<option value="${option}">${option}</option>`;
+                });
+                html += `</select>`;
+                break;
+                
+            case 'checkbox':
+                html += `<div class="form-check">`;
+                html += `<input type="checkbox" name="${field.name}" class="form-check-input" value="yes" ${field.required ? 'required' : ''}>`;
+                html += `<label class="form-check-label small">Yes</label>`;
+                html += `</div>`;
+                break;
+                
+            default:
+                html += `<input type="${field.type}" name="${field.name}" class="form-control form-control-sm" ${field.required ? 'required' : ''} placeholder="${field.placeholder || ''}">`;
+                break;
+        }
+        
+        html += '</div>';
+    });
+    
+    html += '</div></div>';
+    return html;
+}
+
+// Function to insert dynamic fields ABOVE communication section
+function insertDynamicFieldsAboveCommunication(fieldsHTML) {
+    // Remove existing dynamic fields if any
+    const existingContainer = document.getElementById('dynamic-fields-container');
+    if (existingContainer) {
+        existingContainer.remove();
+    }
+    
+    if (!fieldsHTML) return;
+    
+    // Find the Communication section
+    const communicationSection = document.querySelector('.bg-light.p-3.rounded-3.mb-4');
+    
+    if (communicationSection) {
+        // Insert after Organizational Linking section (which is .bg-light)
+        communicationSection.insertAdjacentHTML('afterend', fieldsHTML);
+    } else {
+        // Fallback: find by h6 text
+        const headings = document.querySelectorAll('h6');
+        let commHeading = null;
+        for (let heading of headings) {
+            if (heading.textContent.includes('Communication') && heading.textContent.includes('Optional')) {
+                commHeading = heading;
+                break;
+            }
+        }
+        
+        if (commHeading && commHeading.parentElement) {
+            commHeading.parentElement.insertAdjacentHTML('beforebegin', fieldsHTML);
+        }
+    }
+}
+
+// Main function to handle Ledger Group change
+function handleLedgerGroupChange(event) {
+    const selectedGroup = event.target.value;
+    
+    // Get configuration for selected group
+    let fieldsConfig = dynamicFieldsConfig[selectedGroup];
+    
+    if (fieldsConfig && fieldsConfig.length > 0) {
+        const fieldsHTML = createDynamicFieldsHTML(fieldsConfig);
+        insertDynamicFieldsAboveCommunication(fieldsHTML);
+    } else {
+        // Remove dynamic fields if no configuration exists
+        const existingContainer = document.getElementById('dynamic-fields-container');
+        if (existingContainer) {
+            existingContainer.remove();
+        }
+    }
+}
+
+// Function to validate dynamic fields before form submission
+function validateDynamicFields() {
+    const dynamicContainer = document.getElementById('dynamic-fields-container');
+    if (!dynamicContainer) return true;
+    
+    const requiredFields = dynamicContainer.querySelectorAll('[required]');
+    let isValid = true;
+    
+    requiredFields.forEach(field => {
+        if (field.type === 'checkbox') {
+            if (!field.checked) {
+                field.classList.add('is-invalid');
+                isValid = false;
+                
+                // Add error message
+                let errorDiv = field.parentElement.querySelector('.invalid-feedback');
+                if (!errorDiv) {
+                    errorDiv = document.createElement('div');
+                    errorDiv.className = 'invalid-feedback';
+                    errorDiv.textContent = 'This field is required';
+                    field.parentElement.appendChild(errorDiv);
+                }
+            } else {
+                field.classList.remove('is-invalid');
+                const errorDiv = field.parentElement.querySelector('.invalid-feedback');
+                if (errorDiv) errorDiv.remove();
+            }
+        } else {
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                isValid = false;
+                
+                // Add error message
+                let errorDiv = field.parentElement.querySelector('.invalid-feedback');
+                if (!errorDiv) {
+                    errorDiv = document.createElement('div');
+                    errorDiv.className = 'invalid-feedback';
+                    errorDiv.textContent = 'This field is required';
+                    field.parentElement.appendChild(errorDiv);
+                }
+            } else {
+                field.classList.remove('is-invalid');
+                const errorDiv = field.parentElement.querySelector('.invalid-feedback');
+                if (errorDiv) errorDiv.remove();
+            }
+        }
+    });
+    
+    return isValid;
+}
+
+// Initialize event listeners
+function initializeDynamicFields() {
+    const ledgerTypeInput = document.querySelector('input[name="ledgerType"]');
+    
+    if (ledgerTypeInput) {
+        // Remove existing listener if any
+        ledgerTypeInput.removeEventListener('change', handleLedgerGroupChange);
+        // Add change event listener
+        ledgerTypeInput.addEventListener('change', handleLedgerGroupChange);
+        
+        // Also handle input events for datalist selection
+        ledgerTypeInput.addEventListener('input', function() {
+            const datalist = document.getElementById('led-groups');
+            if (datalist) {
+                const options = Array.from(datalist.options);
+                const isValid = options.some(opt => opt.value === this.value);
+                if (isValid) {
+                    handleLedgerGroupChange({ target: this });
+                } else if (this.value === '') {
+                    const existingContainer = document.getElementById('dynamic-fields-container');
+                    if (existingContainer) existingContainer.remove();
+                }
+            }
+        });
+    }
+}
+
+// Add form submit validation
+function addFormValidation() {
+    const form = document.getElementById('LedgerCreation');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!validateDynamicFields()) {
+                e.preventDefault();
+                alert('Please fill all required fields in Additional Details section');
+            }
+        });
+    }
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    initializeDynamicFields();
+    addFormValidation();
+});
+
+// For dynamically loaded forms (if form is added via AJAX)
+const formObserver = new MutationObserver(function(mutations) {
+    const form = document.getElementById('LedgerCreation');
+    if (form && !form.hasAttribute('data-dynamic-initialized')) {
+        initializeDynamicFields();
+        addFormValidation();
+        form.setAttribute('data-dynamic-initialized', 'true');
+    }
+});
+
+formObserver.observe(document.body, { childList: true, subtree: true });
+</script>

@@ -271,6 +271,26 @@ const App = {
             }
         });
 
+        // Add this logic to your App initialization or where you fetch user data
+        const userEmail = App.State.userId || "user@example.com";
+        const userName = App.State.userName || "User";
+
+        // Update the Initial
+        document.getElementById('userInitial').innerText = userName.charAt(0).toUpperCase();
+
+        // Update the Profile display info
+        document.getElementById('userNameDisplay').innerText = userName;
+        document.getElementById('userEmailDisplay').innerText = userEmail;
+
+        // Handle Logout - Hook into your existing logic
+        document.getElementById('logoutButton').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm("Are you sure you want to logout?")) {
+                // Call your existing logout function here
+                App.Auth.Logout(); 
+            }
+        });
+
         // Global Shortcut: Enter
         searchInput?.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
@@ -623,6 +643,10 @@ window.printTransaction = async function(type, key) {
                     partyGST = l.GST || l.gstNo || "N/A".toUpperCase();
                     partyemail = (l.email || "").toLowerCase();
                     partyphone = l.Mobile || "";
+                    partyAccountNumber = l.accountNumber || "";
+                    partyIFSC = l.ifscCode || "";
+                    partyAccountBranch = l.branchName || "";
+                    partySWIFT = l.SwiftCode || "";
                     const addrParts = [l.address1, l.address2, l.state, l.pin].filter(Boolean);
                     if (addrParts.length) partyAddress = addrParts.join(", ");
                     if (l.state) {
@@ -645,7 +669,7 @@ window.printTransaction = async function(type, key) {
         if (data.items && data.items.length) {
             data.items.forEach((item, idx) => {
                 let iCode = item.item_name || item.itemName || item.offset_account || "Unknown";
-                let iName = iCode, iSku = iCode, iDesc = (item.description || item.Description || "").trim(), iHSN = item.itemHSN || item.HSN || item.auto_item_name_ItemHSN || "N/A";
+                let iName = iCode, iSku = iCode, iDesc = (item.description || item.Description || item.row_narration || "").trim(), iHSN = item.itemHSN || item.HSN || item.auto_item_name_ItemHSN || "N/A";
 
                 let searchKey = String(iCode).toLowerCase().trim();
                 if (Object.keys(stockData).length > 0) {
@@ -656,7 +680,7 @@ window.printTransaction = async function(type, key) {
                             iName = s.itemName || s.ItemName || s.name || iName;
                             iSku = s.Stock_Code || s.ItemCode || s.Sku || iSku;
                             if (s.itemHSN || s.HSN) iHSN = s.itemHSN || s.HSN;
-                            if (!iDesc && (s.Description || s.desc)) iDesc = (s.Description || s.desc).trim();
+                            if (!iDesc && (s.Description || s.description)) iDesc = (s.Description || s.description).trim();
                         }
                     });
                 }
@@ -681,7 +705,7 @@ window.printTransaction = async function(type, key) {
                 } else {
                     let itemDisplay = `<strong>${actionTerm}:</strong> ${iName} ${iSku !== iName ? `(${iSku})` : ''}`;
                     if (iDesc !== "") itemDisplay += `<br><small style="color:#666; font-size:8.5pt;">${iDesc}</small>`;
-                    itemsHtml += `<tr><td class="text-center">${idx + 1}</td><td>${itemDisplay}</td><td class="text-right"><strong>${Utils.FormatINR(lineAmount)}</strong></td></tr>`;
+                    itemsHtml += `<tr><td class="text-center">${idx + 1}</td><td>${itemDisplay}</td><td style="float:right;" class="text-end"><strong>${Utils.FormatINR(lineAmount)}</strong></td></tr>`;
                 }
             });
         }
@@ -719,8 +743,8 @@ window.printTransaction = async function(type, key) {
             bank_name: sysSettings.enableBankingInfo ? (sysSettings.bankName || "Not Set") : "", bank_ac_name: sysSettings.enableBankingInfo ? (sysSettings.bankAccountName || "Not Set") : "", bank_ac: sysSettings.enableBankingInfo ? (sysSettings.bankAccountNumber || "Not Set") : "", bank_ifsc: sysSettings.enableBankingInfo ? (sysSettings.bankIFSC || "Not Set") : "", invoice_terms: sysSettings.enableTerms ? (sysSettings.invoiceTerms || "") : "", upi_id: (sysSettings.enableBankingInfo && sysSettings.upiid) ? sysSettings.upiid.trim() : "", qr_url: qrUrl,
             date: Utils.FormatDate(data.header.date || data.header.voucher_date || data.header.valueDate || data.header.Date),
             doc_no: data.header.doc_no || data.header.Invoice || data.header.DocNo || "N/A",
-            customer_name: partyName.toUpperCase(), customer_code: partyCode.toUpperCase(), customer_address: partyAddress.trim(), customer_gst: partyGST.toUpperCase(), customer_state: partyState, customer_email: partyemail, customer_phone: partyphone,
-            consignee_name: (data.meta?.consignee_name || "").toUpperCase(), delivery_address: safeDeliveryAddr, vehicle_no: (data.meta?.vehicle_no || "").toUpperCase(), LR_No: (data.meta?.lr_no || "").toUpperCase(), delivery_phone: data.meta?.delivery_phone || "", delivery_email: data.meta?.delivery_email || "",
+            customer_name: partyName.toUpperCase(), customer_code: partyCode.toUpperCase(), customer_address: partyAddress.trim(), customer_gst: partyGST.toUpperCase(), customer_state: partyState, customer_email: partyemail, customer_phone: partyphone, ledger_IFSC:partyIFSC.toUpperCase(),ledger_code:partyCode, ledger_AccountNumber:partyAccountNumber,ledger_Branch:partyAccountBranch,ledger_swift:partySWIFT.toUpperCase(), ledger_name:partyName.toUpperCase(),
+            consignee_name: (data.meta?.consignee_name || "").toUpperCase(), Ledger_gst:partyGST, delivery_address: safeDeliveryAddr, vehicle_no: (data.meta?.vehicle_no || "").toUpperCase(), LR_No: (data.meta?.lr_no || "").toUpperCase(), delivery_phone: data.meta?.delivery_phone || "", delivery_email: data.meta?.delivery_email || "", Valuedate: Utils.FormatDate(data.header.date) , Instdate:Utils.FormatDate(data.header.instrumentDate) ,
             subTotal: Utils.FormatINR(rawSubTotal), taxTotal: Utils.FormatINR(rawTaxTotal), grandTotal: Utils.FormatINR(rawTotal),
             amountInWords: (typeof window.NumberToWords === 'function') ? window.NumberToWords(Math.round(rawTotal)) : "Amount in words...",
             narration: data.header.narration || data.header.Narration || "",

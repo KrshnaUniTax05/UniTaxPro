@@ -19,7 +19,7 @@ const API = {
         this.DB = firebase.database();
         console.log("%c📡 [API] Database Engine Synchronized", "color: #0d6efd; font-weight: bold;");
     },
-
+    
     async CheckUniqueness(sheetName, column, value) {
         try {
             const snapshot = await this.DB.ref(`${App.State.userId}/Masters/${sheetName}`).once('value');
@@ -321,6 +321,37 @@ const API = {
 
     async SaveMaster(formId, data) {
         try {
+            // --- 1. STRICT AUTO-LIST VALIDATION ---
+            // Grab the form element from the DOM (assuming formId matches the HTML id)
+            const formElement = document.getElementById(formId) || document.querySelector('form');
+
+            if (formElement) {
+                // Find all inputs that have a 'list' attribute (HTML5 datalists)
+                const listInputs = formElement.querySelectorAll('input[list]');
+
+                for (let input of listInputs) {
+                    const dataListId = input.getAttribute('list');
+                    const dataList = document.getElementById(dataListId);
+
+                    if (dataList) {
+                        // Create an array of all valid values from the datalist options (lowercased for safe matching)
+                        const validOptions = Array.from(dataList.options).map(opt => opt.value.trim().toLowerCase());
+                        
+                        // Get what the user actually submitted
+                        const submittedValue = (data[input.name] || "").trim().toLowerCase();
+
+                        // If they submitted a value, check if it exists in the valid array
+                        if (submittedValue && !validOptions.includes(submittedValue)) {
+                            const fieldName = input.getAttribute('placeholder') || input.name || "the field";
+                            App.UI.Notify('Validation Error', `Invalid entry for "${fieldName}". Please select an option from the list.`, 'warning');
+                            
+                            return false; // Abort the save entirely
+                        }
+                    }
+                }
+            }
+            // --- END VALIDATION ---
+
             // Sanitize all keys in the Master object
             const sanitizedData = {};
             Object.entries(data).forEach(([k, v]) => {
@@ -333,9 +364,11 @@ const API = {
                 ...sanitizedData,
                 created_at: firebase.database.ServerValue.TIMESTAMP
             });
+            
             delete this._MasterCache[formId]; 
             App.UI.Notify('Success', 'Master Record Created', 'success');
             return true;
+            
         } catch (e) {
             App.UI.Notify('Error', e.message, 'danger');
             return false;
