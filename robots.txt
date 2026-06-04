@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://krshnaunitax05.github.io/UniTaxPro/sitemap.xml
