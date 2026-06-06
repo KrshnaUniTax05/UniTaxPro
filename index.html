@@ -8,18 +8,16 @@
     <!-- UI Frameworks -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="icon" type="image/x-icon" href="/assets/img/_A_highly_minimalistic_and_smooth_202606042307.jpeg">
+    <link rel="icon" type="image/x-icon" href="./assets/img/_A_highly_minimalistic_and_smooth_202606042307.jpeg">
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <meta name="google-site-verification" content="W9ad3mJ542iMfpBl2nyZyP8s3I5PR52Gj3M3sdeIWd0" />
-    <meta name="description"
-content="UniTax Pro is a modern accounting and ERP software for businesses, featuring ledger management, inventory, sales, purchases, GST, and financial reporting.">
-
-<meta name="keywords"
-content="Accounting Software, ERP Software, GST Software, Ledger Management, UniTax Pro">
-
-<meta name="robots" content="index,follow">
+    <meta property="og:title" content="UniTax Pro">
+    <meta property="og:description" content="Modern Accounting and ERP Software">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://krshnaunitax05.github.io/UniTaxPro/">
+    <link rel="canonical" href="https://krshnaunitax05.github.io/UniTaxPro/">
     <!-- Project Styles -->
     <link rel="stylesheet" href="assets/css/style.css">
     <style>
@@ -60,12 +58,12 @@ content="Accounting Software, ERP Software, GST Software, Ledger Management, Uni
                 <!-- Professional Command Search -->
                 <div class="search-box position-relative">
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-white border-end-0 rounded-pill-start ps-3">
+                        <!-- <span class="input-group-text bg-white border-end-0 rounded-pill-start ps-3">
                             <i class="bi bi-terminal text-muted"></i>
-                        </span>
+                        </span> -->
                         <input type="text" id="globalSearch" 
-                            class="form-control border-start-0 rounded-pill-end" 
-                            placeholder="Search Module or Type Code..." 
+                            class="form-control  rounded-pill-end" 
+                            placeholder="Search Module..." 
                             list="moduleRegistry"
                             autocomplete="off">
                     </div>
@@ -77,6 +75,7 @@ content="Accounting Software, ERP Software, GST Software, Ledger Management, Uni
                         <option value="masters/stock-cw">Stock / Inventory (Masters)</option>
                         <option value="masters/project-cw">Profit Center (Masters)</option>
                         <option value="transactions/sales-inv">Sales Invoice (Transaction)</option>
+                        <option value="transactions/mgrtaskassignment">Task Assignment</option>
                         <option value="settings">Settings</option>
                         <option value="transactions/purchase-inv">Purchase Voucher (Transaction)</option>
                         <option value="transactions/receipt-vch">Receipt Voucher (Transaction)</option>
@@ -89,10 +88,37 @@ content="Accounting Software, ERP Software, GST Software, Ledger Management, Uni
                     <input class="form-check-input" type="checkbox" id="darkModeToggle">
                 </div>
 
-                <a href="#" class="position-relative text-dark fs-5" data-bs-toggle="modal" data-bs-target="#notificationModal">
-                    <i class="bi bi-bell"></i>
-                    <span id="notificationBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 10px; display:none;">0</span>
-                </a>
+                <div class="dropdown d-inline-block">
+                    <a href="#" class="position-relative text-dark fs-5 text-decoration-none" data-bs-toggle="dropdown" aria-expanded="false" id="notificationDropdown">
+                        <i class="bi bi-bell"></i>
+                        <span id="notificationDot" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="display: none;">
+                            <span class="visually-hidden">New alerts</span>
+                        </span>
+                    </a>
+
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0" style="width: 400px; max-height: 400px; overflow-y: auto;" aria-labelledby="notificationDropdown">
+                    <li>
+                        <div class="dropdown-header d-flex justify-content-between align-items-center bg-light , border-bottom py-2">
+                            <span class="fw-bold text-dark">Notifications</span>
+                            <span class="badge bg-primary rounded-pill" id="notificationCount">0</span>
+                        </div>
+                    </li>
+                    
+                    <div id="notificationList">
+                        <li class="text-center p-4 text-muted small" id="emptyNotificationMessage">
+                            <i class="bi bi-bell-slash fs-4 d-block mb-2 text-light-muted"></i>
+                            No new notifications
+                        </li>
+                    </div>
+                    
+                    <li><hr class="dropdown-divider m-0"></li>
+                    <li>
+                        <a class="dropdown-item text-center small text-primary fw-bold py-2 bg-light" href="#">
+                            View All Notifications
+                        </a>
+                    </li>
+                </ul>
+        </div>
 
                 <div class="dropdown ms-2">
                     <div class="user-profile d-flex align-items-center" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;">
@@ -104,6 +130,7 @@ content="Accounting Software, ERP Software, GST Software, Ledger Management, Uni
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2 p-2" style="width: 220px;">
                         <li class="px-3 py-2 text-center border-bottom mb-2">
                             <h6 class="mb-0" id="userNameDisplay">User Name</h6>
+                            <!-- <small class="text-muted" id="userRoleDisplay">user@example.com</small> <br> -->
                             <small class="text-muted" id="userEmailDisplay">user@example.com</small>
                         </li>
                         <li>
@@ -137,6 +164,7 @@ content="Accounting Software, ERP Software, GST Software, Ledger Management, Uni
                 <div class="card bg-primary text-white p-3">
                     <h6 class="mb-0 opacity-75">Good Day,</h6>
                     <h4 id="usernameDisplay" class="fw-bold">User</h4>
+                    <div id="main_role_show" class="text-xs" style="font-size: 10px;">ID: Loading...</div>
                     <div id="main_userid_show" class="text-xs" style="font-size: 10px;">ID: Loading...</div>
                     <div class="mt-3">
                         <h2 id="liveTime" class="mb-0">00:00</h2>

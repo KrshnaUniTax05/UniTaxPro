@@ -85,10 +85,18 @@ body {
     flex-grow: 1;
     overflow-y: auto;
     height: auto;
-    padding: 1.5rem;
+    padding: 0px 1rem !important;
     background-color: var(--bg-light);
 }
 
+.content-viewport .card{
+    margin: 20px 0;
+}
+.content-viewport .card .card-body{
+    padding: 5px  !important;
+    border-radius: 20px !important;
+
+}
 /* 4. Sidebar (Offcanvas) */
 .offcanvas {
     width: 280px !important;
@@ -216,28 +224,159 @@ body.dark-mode .card-subtitle {
     color: var(--text-muted) !important;
 }
 
-/* Fixing the Table (Stops rows from being pure white) */
-body.dark-mode .table {
+/* ============================================
+   UNIVERSAL DARK MODE TABLE FIX
+   Works with: .table, .table-striped, .table-hover, and any custom tables
+   ============================================ */
+
+/* Base Dark Mode Table Styles */
+body.dark-mode .table,
+body.dark-mode .table-striped,
+body.dark-mode .table-bordered,
+body.dark-mode .table-hover,
+body.dark-mode table:not([class*="bg-"]) {
     color: var(--text-main);
     background-color: transparent !important;
 }
-body.dark-mode .table * {
-    background-color: transparent !important; /* Strips out any inline white backgrounds */
+
+/* Remove ALL background colors from table elements */
+body.dark-mode .table *,
+body.dark-mode .table-striped *,
+body.dark-mode .table-bordered *,
+body.dark-mode .table-hover *,
+body.dark-mode table:not([class*="bg-"]) * {
+    background-color: transparent !important;
 }
-body.dark-mode .table thead th {
+
+/* Table Header (thead) */
+body.dark-mode .table thead th,
+body.dark-mode .table-striped thead th,
+body.dark-mode .table-bordered thead th,
+body.dark-mode .table-hover thead th,
+body.dark-mode table:not([class*="bg-"]) thead th {
     background-color: #151e2e !important;
     color: #cbd5e1 !important;
-    border-bottom: 1px solid var(--border-strong) !important;
+    border-bottom: 2px solid var(--border-strong) !important;
 }
-body.dark-mode .table tbody td,
-body.dark-mode .table tbody tr {
+
+/* Table Body Rows & Cells */
+body.dark-mode .table tbody tr,
+body.dark-mode .table-striped tbody tr,
+body.dark-mode .table-bordered tbody tr,
+body.dark-mode .table-hover tbody tr,
+body.dark-mode table:not([class*="bg-"]) tbody tr {
     border-bottom: 1px solid var(--border-color) !important;
-    color: var(--text-main) !important;
 }
-body.dark-mode .table-hover tbody tr:hover * {
+
+body.dark-mode .table tbody td,
+body.dark-mode .table-striped tbody td,
+body.dark-mode .table-bordered tbody td,
+body.dark-mode .table-hover tbody td,
+body.dark-mode table:not([class*="bg-"]) tbody td {
+    color: var(--text-main) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+/* ===== STRIPED TABLE FIX (Most Important) ===== */
+/* Override Bootstrap's .table-striped > tbody > tr:nth-of-type(odd) */
+body.dark-mode .table-striped > tbody > tr:nth-of-type(odd),
+body.dark-mode .table-striped > tbody > tr:nth-of-type(odd) > *,
+body.dark-mode .table-striped tbody tr:nth-child(odd),
+body.dark-mode .table-striped tbody tr:nth-child(odd) td {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Even rows in striped tables - keep transparent */
+body.dark-mode .table-striped > tbody > tr:nth-of-type(even),
+body.dark-mode .table-striped > tbody > tr:nth-of-type(even) > *,
+body.dark-mode .table-striped tbody tr:nth-child(even),
+body.dark-mode .table-striped tbody tr:nth-child(even) td {
+    background-color: transparent !important;
+}
+
+/* ===== HOVER EFFECT ===== */
+/* Hover on regular tables */
+body.dark-mode .table-hover tbody tr:hover,
+body.dark-mode .table-hover tbody tr:hover td,
+body.dark-mode .table-hover tbody tr:hover th {
     background-color: var(--primary-bg-subtle) !important;
 }
 
+/* Hover on striped tables (override Bootstrap's default) */
+body.dark-mode .table-striped.table-hover tbody tr:hover,
+body.dark-mode .table-striped.table-hover tbody tr:hover td,
+body.dark-mode .table-striped.table-hover tbody tr:hover th {
+    background-color: var(--primary-bg-subtle) !important;
+}
+
+/* ===== BORDERED TABLES ===== */
+body.dark-mode .table-bordered,
+body.dark-mode .table-bordered td,
+body.dark-mode .table-bordered th {
+    border: 1px solid var(--border-color) !important;
+}
+
+/* ===== ACTIVE/PRIMARY ROWS ===== */
+body.dark-mode .table .table-active,
+body.dark-mode .table .table-primary,
+body.dark-mode .table-striped .table-active,
+body.dark-mode .table-striped .table-primary {
+    background-color: var(--primary-bg-subtle) !important;
+}
+
+/* ===== DROPDOWNS INSIDE TABLES ===== */
+body.dark-mode .table .dropdown-menu,
+body.dark-mode .table-striped .dropdown-menu {
+    background-color: var(--bg-surface) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* ===== BADGES & BUTTONS INSIDE TABLES ===== */
+body.dark-mode .table .badge,
+body.dark-mode .table-striped .badge {
+    background-color: var(--bg-elevated) !important;
+    color: var(--text-main) !important;
+}
+
+body.dark-mode .table .btn,
+body.dark-mode .table-striped .btn {
+    background-color: var(--bg-elevated) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-main) !important;
+}
+
+/* body.dark-mode .table .btn:hover,
+body.dark-mode .table-striped .btn:hover {
+    background-color: var(--primary-bg-subtle) !important;
+} */
+
+body.dark-mode .btn{
+    background-color: var(--sidebar-bg) !important;
+    /* border: 1px solid var(--border-color) !important; */
+    color: #fff !important;
+}
+body.dark-mode .btn:hover{
+    background-color: var(--sidebar-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--primary-color) !important;
+}
+body.dark-mode .btn-success{
+    background-color: green !important;
+    border: 1px solid var(--border-color) !important;
+    color: #fff !important;
+}
+body.dark-mode #greeting .card{
+    background-color: var(--primary-dark) !important;
+}
+
+body.dark-mode .dropdown-item,
+body.dark-mode .dropdown-menu{
+    color: #fff !important;
+    background-color: var(--sidebar-hover);
+}
+body.dark-mode .dropdown-item:hover{
+    background-color: var(--sidebar-bg) !important;
+}
 
 /* Inputs & Form Fields */
 body.dark-mode .form-control,
@@ -280,7 +419,7 @@ body.dark-mode .sticky-top { background-color: var(--bg-surface) !important; z-i
 /* Mobile Responsive Tweaks */
 @media (max-width: 991px) {
     .left-info-bar { display: none; }
-    .content-viewport { width: 100%; padding: 1rem; }
+    .content-viewport { width: 100%; padding: 0px 1rem; }
 }
 
 /* --- Professional Bottom Notification Bar --- */

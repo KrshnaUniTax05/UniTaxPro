@@ -1,0 +1,153 @@
+<div class="card shadow-sm border-0 mb-4 main-task-manager" >
+    <div class="card-header bg-white border-bottom py-3">
+        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-list-task text-primary me-2"></i> Assign Task to User</h6>
+    </div>
+    <div class="card-body">
+        
+        <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">Assign To</label>
+            <input class="form-control" list="userDatalist" id="targetUserInput" placeholder="Type to search and select user...">
+            <datalist id="userDatalist">
+                </datalist>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label small fw-bold text-muted">Task Description</label>
+            <textarea id="managerTaskInput" class="form-control" rows="3" placeholder="Describe the task here..."></textarea>
+        </div>
+
+        <div class="text-end">
+            <button class="btn btn-primary btn-sm fw-bold px-4" onclick="ManagerTaskSystem.AssignTask()" id="assignTaskBtn">
+                <i class="bi bi-send me-1"></i> Send Task
+            </button>
+        </div>
+
+    </div>
+</div>
+<script>
+// STOP EVERYTHING FOR NON-MANAGERS
+if ((App?.State?.userRole || '').toLowerCase() !== 'manager') {
+
+    const viewport = document.querySelector(".main-task-manager");
+
+    if (viewport) {
+        viewport.innerHTML = `
+            <div class="alert alert-danger m-4 text-center shadow-sm border-0" role="alert">
+                <i class="bi bi-shield-lock-fill fs-2 d-block mb-2 text-danger opacity-75"></i>
+                <h5 class="fw-bold">Access Denied</h5>
+                <p class="mb-0 small text-muted">
+                    You do not have authorization to view the Manager Task Panel.
+                </p>
+            </div>
+        `;
+    }
+
+} else {
+
+    // ===========================
+    // MANAGER CODE STARTS HERE
+    // ===========================
+
+    const ManagerTaskSystem = { 
+        allUsers: [],
+
+        async FetchUsers() {
+            try {
+                const db = firebase.database();
+                const snap = await db.ref('Users').once('value');
+
+                if (!snap.exists()) return;
+
+                const usersData = snap.val();
+
+                const datalist = document.getElementById('userDatalist');
+                if (!datalist) return;
+
+                datalist.innerHTML = '';
+
+                this.allUsers = Object.entries(usersData).map(([id, data]) => ({
+                    id,
+                    name: data.name || data.legalName || 'Unknown User',
+                    email: data.email || 'No Email'
+                }));
+
+                this.allUsers.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = `${user.name} (${user.email})`;
+                    datalist.appendChild(option);
+                });
+
+            } catch (err) {
+                console.error(err);
+            }
+        },
+
+        async AssignTask() {
+
+            const userInput = document.getElementById('targetUserInput');
+            const taskInput = document.getElementById('managerTaskInput');
+            const btn = document.getElementById('assignTaskBtn');
+
+            const selectedValue = userInput.value.trim();
+            const taskText = taskInput.value.trim();
+
+            if (!selectedValue) {
+                alert("Please select a user.");
+                return;
+            }
+
+            if (!taskText) {
+                alert("Please enter task description.");
+                return;
+            }
+
+            const targetUser = this.allUsers.find(
+                u => `${u.name} (${u.email})` === selectedValue
+            );
+
+            if (!targetUser) {
+                alert("Invalid user selected.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML =
+                '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+
+            try {
+
+                await firebase.database().ref('Tasks').push({
+                    text: taskText,
+                    assignedTo: targetUser.id,
+                    assignedBy: localStorage.getItem('userloginid') || 'Manager',
+                    assignerName: localStorage.getItem('userName') || 'Manager',
+                    timestamp: firebase.database.ServerValue.TIMESTAMP,
+                    done: false
+                });
+
+                userInput.value = '';
+                taskInput.value = '';
+
+                alert(`Task assigned to ${targetUser.name}`);
+
+            } catch (err) {
+
+                console.error(err);
+                alert("Failed to assign task.");
+
+            } finally {
+
+                btn.disabled = false;
+                btn.innerHTML =
+                    '<i class="bi bi-send me-1"></i> Send Task';
+            }
+        }
+    };
+
+    // LOAD USERS ONLY FOR MANAGER
+    ManagerTaskSystem.FetchUsers();
+
+    // Make globally available for onclick
+    window.ManagerTaskSystem = ManagerTaskSystem;
+}
+</script>

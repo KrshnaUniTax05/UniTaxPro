@@ -2,10 +2,12 @@
  * UNITAX PRO - Core Application Brain (Final Stable)
  * Handles: Routing, Logic Injection, Auto-Fill, Uniqueness, and UI Themes
  */
+// console.log('App.js initialized')
 const App = {
     State: {
         userId: localStorage.getItem('userloginid'),
         userName: localStorage.getItem('userName'),
+        userRole: localStorage.getItem('userrole'),
         activeModule: null,
         isDarkMode: localStorage.getItem('darkMode') === 'enabled'
     },
@@ -59,8 +61,9 @@ const App = {
 
         // 3. Set Header Displays
         document.getElementById('usernameDisplay').innerText = this.State.userName || "User";
+        document.getElementById('main_role_show').innerText = this.State.userRole.toUpperCase() || "User";
         const userIdEl = document.getElementById('main_userid_show');
-        if(userIdEl) userIdEl.innerText = `ID: ${this.State.userId}`;
+        if(userIdEl) userIdEl.innerText = `ID: ${this.State.userId} `;
 
         // 🚀 FIXED STARTUP LOGIC
         const pinnedModule = localStorage.getItem('pinnedModule');
@@ -324,7 +327,85 @@ const App = {
                 }
             }
         })
-    
+        
+        const NotificationSystem = {
+            unreadCount: 0,
+            
+            init: function() {
+                // Listen for the dropdown opening to mark notifications as read
+                const dropdownEl = document.getElementById('notificationDropdown');
+                if (dropdownEl) {
+                    dropdownEl.addEventListener('show.bs.dropdown', () => {
+                        this.markAllAsRead();
+                    });
+                }
+            },
+
+            // Call this function whenever a new event happens in your ERP
+            addNotification: function(title, message, timeStamp) {
+                const list = document.getElementById('notificationList');
+                const emptyMsg = document.getElementById('emptyNotificationMessage');
+                
+                // Hide the empty state message
+                if (emptyMsg) {
+                    emptyMsg.style.display = 'none';
+                }
+
+                // Create the new notification list item
+                const item = document.createElement('li');
+                item.innerHTML = `
+                    <a class="dropdown-item py-2 border-bottom text-wrap" href="#">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <span class="fw-bold small text-dark">${title}</span>
+                            <span class="text-muted" style="font-size: 0.65rem;">${timeStamp}</span>
+                        </div>
+                        <div class="text-muted" style="font-size: 0.8rem; line-height: 1.3;">
+                            ${message}
+                        </div>
+                    </a>
+                `;
+                
+                // Inject at the top of the list
+                list.prepend(item);
+                
+                // Increment count and show the red dot
+                this.unreadCount++;
+                this.updateUI();
+            },
+
+            markAllAsRead: function() {
+                this.unreadCount = 0;
+                this.updateUI();
+            },
+
+            updateUI: function() {
+                const dot = document.getElementById('notificationDot');
+                const countBadge = document.getElementById('notificationCount');
+                
+                if (this.unreadCount > 0) {
+                    dot.style.display = 'inline-block';
+                    countBadge.innerText = this.unreadCount;
+                } else {
+                    dot.style.display = 'none';
+                    countBadge.innerText = '0';
+                }
+            }
+        };
+
+        // Initialize the system when the DOM loads
+        document.addEventListener('DOMContentLoaded', () => {
+            NotificationSystem.init();
+            
+            // --- TEST EXAMPLES ---
+            // Remove these timeouts in production. They are here to show you how it works.
+            setTimeout(() => {
+                NotificationSystem.addNotification("Invoice Generated", "Tax Invoice INV-2026/001 has been successfully created.", "Just now");
+            }, 2000);
+
+            setTimeout(() => {
+                NotificationSystem.addNotification("Payment Received", "₹ 50,000 credited to HDFC Bank from Client A.", "2 mins ago");
+            }, 4000);
+        });
 
         // Dark Mode Toggle
         const toggle = document.getElementById('darkModeToggle');
@@ -434,53 +515,131 @@ const App = {
 };
 
 
-
-// 1. Open Modal
+// 1. Open Modal (Unchanged)
 window.opentaskmodal = function() {
     new bootstrap.Modal(document.getElementById('taskModal')).show();
 };
 
-// 2. Save Task to LocalStorage
-window.saveTask = function() {
+// 2. Save Task (Now syncs to Firebase)
+window.saveTask = async function() {
     const input = document.getElementById('taskInput');
-    if (!input.value.trim()) return;
+    const taskText = input.value.trim();
+    if (!taskText) return;
 
-    let tasks = JSON.parse(localStorage.getItem('userTasks') || '[]');
-    tasks.push({ id: Date.now(), text: input.value, done: false });
-    localStorage.setItem('userTasks', JSON.stringify(tasks));
-    
-    input.value = '';
-    bootstrap.Modal.getInstance(document.getElementById('taskModal')).hide();
-    renderTasks();
+    // Get current user details from local storage
+    const currentUserId = localStorage.getItem('userloginid');
+    const currentUserName = localStorage.getItem('userName') || "User";
+
+    // Task Payload
+    // Note: Since you are building the Manager UI later, this function 
+    // currently defaults to creating a "Self-Assigned" task for the active user.
+    const taskData = {
+        text: taskText,
+        assignedTo: currentUserId, // Who has to do the task
+        assignedBy: "Self",        // System flag (Self vs Manager)
+        assignerName: currentUserName, // Name to display
+        timestamp: firebase.database.ServerValue.TIMESTAMP,
+        done: false
+    };
+
+    try {
+        const db = firebase.database();
+        await db.ref('Tasks').push(taskData);
+        
+        input.value = '';
+        bootstrap.Modal.getInstance(document.getElementById('taskModal')).hide();
+        // Note: We don't need to manually call renderTasks() here because 
+        // the real-time listener below will detect the new task and auto-update.
+    } catch (error) {
+        console.error("Task Save Error:", error);
+        alert("Failed to save task.");
+    }
 };
 
-// 3. Render Tasks from LocalStorage
+// 3. Render Tasks (Real-time listener from Firebase)
 window.renderTasks = function() {
     const tbody = document.getElementById('taskTableBody');
-    const tasks = JSON.parse(localStorage.getItem('userTasks') || '[]');
+    const currentUserId = localStorage.getItem('userloginid');
+
+    if (!currentUserId || !tbody) return;
+
+    // Show loading skeleton initially
+    tbody.innerHTML = '<tr><td class="text-center text-muted py-3"><span class="spinner-border spinner-border-sm"></span> Syncing tasks...</td></tr>';
+
+    const db = firebase.database();
     
-    if (tasks.length === 0) {
-        tbody.innerHTML = '<tr><td class="text-center text-muted py-3">No active tasks</td></tr>';
-        return;
+    // Listen ONLY for tasks assigned to the currently logged-in user
+    db.ref('Tasks').orderByChild('assignedTo').equalTo(currentUserId).on('value', (snapshot) => {
+        const tasks = snapshot.val() || {};
+        
+        if (Object.keys(tasks).length === 0) {
+            tbody.innerHTML = '<tr><td class="text-center text-muted py-3"><i class="bi bi-check-circle text-success fs-4 d-block mb-2"></i>All caught up!</td></tr>';
+            return;
+        }
+
+        // Sort tasks: Newest first
+        const sortedTasks = Object.entries(tasks).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+
+        tbody.innerHTML = sortedTasks.map(([taskId, t]) => {
+            // Format Timestamp (e.g., "Oct 12, 10:30 AM")
+            const dateStr = t.timestamp ? new Date(t.timestamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Just now';
+            
+            // UI Logic: Check if it's assigned by a Manager or Self
+            let metaHtml = '';
+            if (t.assignedBy !== "Self") {
+                // Task from Manager: Show Blue Badge with Manager's Name
+                metaHtml = `<div class="text-primary mt-1" style="font-size: 0.7rem; font-weight: 600;">
+                                <i class="bi bi-person-workspace me-1"></i>Assigned by ${t.assignerName} • ${dateStr}
+                            </div>`;
+            } else {
+                // Personal Task: Show simple grey timestamp
+                metaHtml = `<div class="text-muted mt-1" style="font-size: 0.7rem;">
+                                <i class="bi bi-clock me-1"></i>Personal Task • ${dateStr}
+                            </div>`;
+            }
+
+            return `
+                <tr class="align-middle border-bottom">
+                    <td class="ps-3 py-3">
+                        <div class="fw-bold text-dark" style="font-size: 0.9rem;">${t.text}</div>
+                        ${metaHtml}
+                    </td>
+                    <td class="text-end pe-3" style="width: 60px;">
+                        <button class="btn btn-sm btn-outline-success py-1 px-2 shadow-sm" onclick="deleteTask('${taskId}')" title="Mark as Done">
+                            <i class="bi bi-check2-all"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    });
+};
+
+// 4. Delete / Mark as Done Task
+window.deleteTask = async function(taskId) {
+    try {
+        const db = firebase.database();
+        // Remove the task from Firebase
+        await db.ref(`Tasks/${taskId}`).remove();
+        
+        // Optional: Trigger your UI Notification if you have it loaded
+        if (typeof App !== 'undefined' && App.UI) {
+            App.UI.Notify('Task Completed', 'Great job!', 'success');
+        }
+    } catch (error) {
+        console.error("Task Delete Error:", error);
     }
-
-    tbody.innerHTML = tasks.map(t => `
-        <tr class="align-middle">
-            <td class="ps-2">${t.text}</td>
-            <td class="text-end pe-2">
-                <button class="btn btn-xs btn-outline-danger py-0 px-1" onclick="deleteTask(${t.id})"><i class="bi bi-trash"></i></button>
-            </td>
-        </tr>
-    `).join('');
 };
 
-window.deleteTask = function(id) {
-    let tasks = JSON.parse(localStorage.getItem('userTasks') || '[]');
-    tasks = tasks.filter(t => t.id !== id);
-    localStorage.setItem('userTasks', JSON.stringify(tasks));
-    renderTasks();
-};
-
+// 5. Auto-start the task fetcher when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    // Adding a slight delay ensures Firebase initializes first
+    setTimeout(() => {
+        if (typeof firebase !== 'undefined') {
+            renderTasks();
+        }
+    }, 300);
+});
 
 
 /**
@@ -769,3 +928,190 @@ window.printTransaction = async function(type, key) {
 
 
 // search
+/**
+ * ==============================================================================
+ * CLIENT NOTIFICATION ENGINE
+ * Fetches, filters, and renders real-time notifications for the current user.
+ * ==============================================================================
+ */
+
+const NotificationEngine = {
+    userId: localStorage.getItem('userloginid'), // Get logged-in user ID
+    
+    Init() {
+        if (!this.userId) {
+            console.warn("User ID not found in localStorage. Notifications paused.");
+            return;
+        }
+
+        this.BindDropdownEvent();
+        this.ShowSkeletonLoader();
+        this.ListenToDatabase();
+    },
+
+    // 1. Show Skeleton Animation while loading
+    ShowSkeletonLoader() {
+        const list = document.getElementById('notificationList');
+        if (!list) return;
+
+        // Using Bootstrap 5 native placeholder-glow classes
+        list.innerHTML = `
+            <li class="p-3 border-bottom placeholder-glow">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="placeholder col-6 rounded"></span>
+                    <span class="placeholder col-3 rounded"></span>
+                </div>
+                <span class="placeholder col-12 rounded mb-1"></span>
+                <span class="placeholder col-8 rounded"></span>
+            </li>
+            <li class="p-3 border-bottom placeholder-glow">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="placeholder col-5 rounded"></span>
+                    <span class="placeholder col-2 rounded"></span>
+                </div>
+                <span class="placeholder col-10 rounded"></span>
+            </li>
+        `;
+    },
+
+    // 2. Fetch from Firebase Realtime Database
+    ListenToDatabase() {
+        try {
+            const db = firebase.database();
+            // Listen to the last 50 notifications in real-time
+            db.ref('Notifications').orderByChild('timestamp').limitToLast(50).on('value', (snapshot) => {
+                const data = snapshot.val();
+                this.ProcessAndRender(data);
+            });
+        } catch (error) {
+            console.error("Firebase Notification Error:", error);
+            this.ShowEmptyMessage();
+        }
+    },
+
+    // 3. Filter and Render UI
+    ProcessAndRender(data) {
+        const list = document.getElementById('notificationList');
+        const dot = document.getElementById('notificationDot');
+        const countBadge = document.getElementById('notificationCount');
+        
+        list.innerHTML = ''; // Clear skeletons
+
+        if (!data) {
+            this.ShowEmptyMessage();
+            return;
+        }
+
+        let validNotifs = [];
+
+        // STRICT FILTERING: Only "all" or specific "userId"
+        Object.entries(data).forEach(([id, notif]) => {
+            if (notif.target === 'all' || notif.target === this.userId) {
+                validNotifs.push(notif);
+            }
+        });
+
+        // Sort newest first
+        validNotifs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+        if (validNotifs.length === 0) {
+            this.ShowEmptyMessage();
+            return;
+        }
+
+        // Check Unread Status (Compare against last time dropdown was opened)
+        let unreadCount = 0;
+        const lastReadTime = parseInt(localStorage.getItem('lastReadNotifTime') || '0');
+
+        validNotifs.forEach(notif => {
+            if (notif.timestamp > lastReadTime) {
+                unreadCount++;
+            }
+
+            // Generate HTML for each notification
+            const timeString = this.FormatTime(notif.timestamp);
+            const linkAction = notif.link ? `href="${notif.link}"` : `href="javascript:void(0)"`;
+            const bgClass = notif.timestamp > lastReadTime ? 'bg-primary bg-opacity-10' : ''; // Highlight unread
+            const clickAction = notif.link ? `onclick="App.Router('${notif.link.replace(/'/g, "\\'")}')"` : '';
+            const pointerStyle = notif.link ? 'style="cursor: pointer;"' : 'style="cursor: default;"';
+            list.innerHTML += `
+                <li>
+                    <div class="dropdown-item py-3 border-bottom text-wrap ${bgClass}" ${pointerStyle} ${clickAction}>
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <span class="fw-bold small text-dark">${notif.title}</span>
+                            <span class="text-muted" style="font-size: 0.65rem;">${timeString}</span>
+                        </div>
+                        <div class="text-muted" style="font-size: 0.8rem; line-height: 1.3;">
+                            ${notif.message}
+                        </div>
+                    </div>
+                </li>
+            `;
+        });
+
+        // Update UI Badges
+        if (unreadCount > 0) {
+            dot.style.display = 'inline-block';
+            countBadge.innerText = unreadCount;
+        } else {
+            dot.style.display = 'none';
+            countBadge.innerText = '0';
+        }
+    },
+
+    // 4. Mark as read when Dropdown is clicked
+    BindDropdownEvent() {
+        const dropdownEl = document.getElementById('notificationDropdown');
+        if (dropdownEl) {
+            dropdownEl.addEventListener('show.bs.dropdown', () => {
+                // Save the current exact time as the "last read" marker
+                localStorage.setItem('lastReadNotifTime', Date.now().toString());
+                
+                // Instantly clear the red dot and counter visually
+                document.getElementById('notificationDot').style.display = 'none';
+                document.getElementById('notificationCount').innerText = '0';
+                
+                // Remove the highlighted backgrounds from existing items
+                document.querySelectorAll('#notificationList .dropdown-item').forEach(el => {
+                    el.classList.remove('bg-primary', 'bg-opacity-10');
+                });
+            });
+        }
+    },
+
+    // Utilities: Empty State
+    ShowEmptyMessage() {
+        const list = document.getElementById('notificationList');
+        list.innerHTML = `
+            <li class="text-center p-4 text-muted small" id="emptyNotificationMessage">
+                <i class="bi bi-bell-slash fs-4 d-block mb-2 text-secondary opacity-50"></i>
+                No new notifications
+            </li>
+        `;
+        document.getElementById('notificationDot').style.display = 'none';
+        document.getElementById('notificationCount').innerText = '0';
+    },
+
+    // Utilities: Time Formatter
+    FormatTime(timestamp) {
+        if (!timestamp) return "Just now";
+        const diffMins = Math.floor((Date.now() - timestamp) / 60000);
+        
+        if (diffMins < 1) return "Just now";
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
+        if (diffMins < 2880) return "Yesterday";
+        
+        return new Date(timestamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    }
+};
+
+// Initialize the engine when the Document is ready
+document.addEventListener('DOMContentLoaded', () => {
+    // Ensure Firebase is loaded before running
+    if (typeof firebase !== 'undefined') {
+        NotificationEngine.Init();
+    } else {
+        console.error("Firebase is not loaded! Notifications cannot start.");
+    }
+});

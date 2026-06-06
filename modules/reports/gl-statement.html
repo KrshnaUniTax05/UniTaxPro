@@ -340,7 +340,7 @@
         if (fromDate) {
             const obType = openingBalance >= 0 ? 'Dr' : 'Cr';
             const trOb = document.createElement('tr');
-            trOb.className = "table-light fw-bold text-primary";
+            trOb.className = " fw-bold text-primary";
             trOb.innerHTML = `
                 <td></td><td></td><td></td><td></td>
                 <td class="text-end">OPENING BALANCE</td>
@@ -364,14 +364,21 @@
             let docPrefix = impact.rawFormId.replace('InvoiceForm', '').replace('VoucherForm', '').replace(/([A-Z])/g, ' $1').trim().toUpperCase();
 
             const tr = document.createElement('tr');
+            
+            // ✅ CORRECTED: Use the actual JavaScript variables from the loop
+            tr.ondblclick = function() {
+                editTransaction(vch.formId, vch.key);  // No quotes needed - these are JS variables
+                return false;
+            };
+            
             tr.innerHTML = `
                 <td class="ps-4 fw-medium text-muted">${serialNumber++}</td> 
                 <td class="fw-medium">${Utils.FormatDate(impact.h.date || impact.h.voucher_date)}</td>
                 <td><span class="badge border text-dark bg-transparent no-print">${docPrefix}</span><span class="d-none d-print-inline">${docPrefix}</span></td>
                 <td class="fw-bold">${impact.h.doc_no || impact.h.supplier_bill_no || impact.h.invoice_no || impact.h.paymentRef || 'N/A'}</td>
                 <td><div class="fw-bold text-dark">${finalEntityName.toUpperCase()}</div><div class="text-muted small">${impact.h.narration || ''}</div></td>
-                <td class="text-end text-danger">${formatMoney(impact.dr)}</td>
-                <td class="text-end text-success">${formatMoney(impact.cr)}</td>
+                <td class="text-end ">${formatMoney(impact.dr)}</td>
+                <td class="text-end ">${formatMoney(impact.cr)}</td>
                 <td class="text-end fw-bold">${balString}</td>
                 
                 <td class="text-end pe-3 no-print screen-only">
@@ -404,16 +411,15 @@
             tbody.appendChild(tr);
         });
 
-
         // --- 6. RENDER GRAND TOTAL & UI ---
         const finalBalType = runningBalance >= 0 ? 'Dr' : 'Cr';
         const grandTotalRow = document.createElement('tr');
         grandTotalRow.className = "table-active border-top border-dark fw-bold no-print";
         grandTotalRow.innerHTML = `
             <td colspan="5" class="text-end ps-4 text-uppercase">Total Period Activity</td> 
-            <td class="text-end text-danger">${Utils.FormatINR(totalDr)}</td>
-            <td class="text-end text-success">${Utils.FormatINR(totalCr)}</td>
-            <td class="text-end text-primary" colspan="2">CLOSING: ${Utils.FormatINR(Math.abs(runningBalance))} ${finalBalType}</td>
+            <td class="text-end ">${Utils.FormatINR(totalDr)}</td>
+            <td class="text-end ">${Utils.FormatINR(totalCr)}</td>
+            <td class="text-end " colspan="2">CLOSING: ${Utils.FormatINR(Math.abs(runningBalance))} ${finalBalType}</td>
         `;
         tbody.appendChild(grandTotalRow);
 

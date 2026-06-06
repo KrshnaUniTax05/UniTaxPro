@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniTax Pro - Admin Panel</title>
+    <link rel="shortcut icon" href="../assets/img/_A_highly_minimalistic_and_smooth_202606042307.jpeg" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+        body { background-color: #f8fafc; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        
+        /* Master Layout Grid */
+        .admin-layout { display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Fixed Sidebar Architecture */
+        .admin-sidebar { width: 260px; background-color: #111827; color: #fff; display: flex; flex-direction: column; transition: all 0.3s ease; flex-shrink: 0; }
+        .admin-sidebar .nav-link { color: #9ca3af; padding: 0.8rem 1.2rem; border-radius: 0.375rem; margin-bottom: 0.25rem; font-weight: 500; display: flex; align-items: center; text-decoration: none; transition: all 0.2s; }
+        .admin-sidebar .nav-link:hover { color: #fff; background-color: rgba(255,255,255,0.05); }
+        .admin-sidebar .nav-link.active { color: #fff; background-color: #0d6efd; }
+        .admin-sidebar .nav-link i { font-size: 1.1rem; width: 30px; }
+        
+        /* Main Viewport Workspace */
+        .admin-main { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+        .admin-content { overflow-y: auto; padding: 1.5rem; flex-grow: 1; background-color: #f1f5f9; }
+        
+        /* High-Density Components */
+        .card { border: none; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02); }
+        .table > :not(caption) > * > * { padding: 0.85rem 1rem; vertical-align: middle; }
+        .badge-xs { font-size: 0.65rem; font-weight: 600; padding: 0.25em 0.6em; border-radius: 4px; text-transform: uppercase; }
+        
+        /* View Switching Transitions */
+        .tab-view { display: none; }
+        .tab-view.active-view { display: block; animation: viewFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes viewFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Custom Table Header Pinning */
+        .table-sticky-wrapper { max-height: calc(100vh - 210px); overflow-y: auto; }
+        .table-sticky-wrapper thead th { position: sticky; top: 0; background-color: #f8fafc; z-index: 10; box-shadow: inset 0 -1px 0 var(--bs-border-color); }
+    </style>
+</head>
+<body>
+
+<div aria-live="polite" aria-atomic="true" class="position-relative">
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer" style="z-index: 1090;"></div>
+</div>
+
+<div class="admin-layout">
+    
+    <aside class="admin-sidebar shadow-lg">
+        <div class="p-4 border-bottom border-secondary border-opacity-25">
+            <h4 class="mb-0 fw-bold text-white d-flex align-items-center">
+                <i class="bi bi-shield-lock-fill text-primary me-2"></i> AdminPro
+            </h4>
+            <small class="text-muted">Master Control Panel</small>
+        </div>
+        
+        <div class="p-3 flex-grow-1">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active" onclick="switchAdminView('view-notifications', this)">
+                        <i class="bi bi-broadcast"></i> Broadcast Alerts
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="switchAdminView('view-users', this)">
+                        <i class="bi bi-people"></i> User Management
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    <main class="admin-main">
+        
+        <header class="navbar navbar-expand bg-white border-bottom shadow-sm px-4 py-3">
+            <div class="d-flex align-items-center">
+                <h5 class="mb-0 fw-bold text-dark" id="topNavTitle">Broadcast Alerts</h5>
+            </div>
+            
+            <div class="ms-auto d-flex align-items-center gap-3">
+                <div class="dropdown">
+                    <div class="d-flex align-items-center" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 38px; height: 38px;">
+                            <span class="fw-bold">A</span>
+                        </div>
+                    </div>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                        <li class="px-3 py-2 border-bottom mb-2">
+                            <h6 class="mb-0">Super Admin</h6>
+                            <small class="text-muted">admin@system.com</small>
+                        </li>
+                        <li><a class="dropdown-item py-2 text-danger fw-bold" href="#"><i class="bi bi-box-arrow-left me-2"></i>Exit Panel</a></li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <div class="admin-content">
+            
+            <div id="view-notifications" class="tab-view active-view">
+                <div class="row g-4">
+                    <div class="col-xl-4">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-header bg-white border-bottom py-3">
+                                <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-send-fill text-primary me-2"></i> Compose Notification</h6>
+                            </div>
+                            <div class="card-body p-4">
+                                <form id="adminNotificationForm">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold small text-muted">Target Audience</label>
+                                        <select name="target_user" id="notifTargetSelect" class="form-select form-select-sm" required>
+                                            <option value="all" selected>📢 Broadcast to ALL Users</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold small text-muted">Notification Title</label>
+                                        <input type="text" name="title" class="form-control form-control-sm" placeholder="e.g., System Update" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold small text-muted">Message Body</label>
+                                        <textarea name="message" class="form-control form-control-sm" rows="5" placeholder="Enter notification text here..." required></textarea>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold small text-muted">Redirect Link (Optional)</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light"><i class="bi bi-link-45deg"></i></span>
+                                            <input type="text" name="link" class="form-control" placeholder="e.g., reports/view">
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold py-2 shadow-sm">
+                                        Dispatch Broadcast <i class="bi bi-arrow-right-circle ms-2"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-8">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-clock-history text-muted me-2"></i> Live Broadcast History</h6>
+                                <button class="btn btn-xs btn-outline-secondary px-2" onclick="AdminSystem.LoadNotifications()"><i class="bi bi-arrow-clockwise"></i> Sync</button>
+                            </div>
+                            <div class="table-responsive table-sticky-wrapper">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="text-muted small text-uppercase">
+                                        <tr>
+                                            <th class="ps-4">Title & Details</th>
+                                            <th>Audience</th>
+                                            <th>Timestamp</th>
+                                            <th class="text-end pe-4" style="width: 120px;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="notificationTableBody">
+                                        <tr><td colspan="4" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Connecting to stream...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-users" class="tab-view">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-people-fill text-muted me-2"></i> Active System Directories</h6>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-primary fw-bold px-3 shadow-sm" onclick="AdminSystem.OpenCreateUserModal()">
+                                <i class="bi bi-plus-circle me-1"></i> Add New User
+                            </button>
+                            <div class="input-group input-group-sm" style="width: 240px;">
+                                <input type="text" id="userSearchInput" class="form-control" placeholder="Search users...">
+                                <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive table-sticky-wrapper">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="text-muted small text-uppercase">
+                                <tr>
+                                    <th class="ps-4">User Identity</th>
+                                    <th>System Role</th>
+                                    <th>Status Flag</th>
+                                    <th>Data Anchor</th>
+                                    <th class="text-end pe-4" style="width: 140px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="view-users-tbody">
+                                <tr><td colspan="5" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Reading data arrays...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<div class="modal fade" id="editUserModal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-light py-3">
+                <h6 class="modal-title fw-bold text-dark" id="userModalHeaderTitle">Profile Configurator</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="editUserForm">
+                    <div class="mb-3">
+                        <label for="legalName" class="form-label small fw-bold text-secondary">Legal Name</label>
+                        <input type="text" id="legalName" name="legalName" class="form-control form-control-sm" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label small fw-bold text-secondary">Email</label>
+                        <input type="email" id="email" name="email" class="form-control form-control-sm" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label small fw-bold text-secondary">Password</label>
+                        <input type="password" id="password" name="password" class="form-control form-control-sm" autocomplete="new-password">
+                        <div class="form-text text-muted" id="passwordHelp" style="font-size: 7.5pt; display: none;">Leave blank to keep the existing password.</div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label for="role" class="form-label small fw-bold text-secondary">Operational Role</label>
+                            <select id="role" name="role" class="form-select form-select-sm" required>
+                                <option value="" disabled selected>Select Role...</option>
+                                <option value="administrator">Administrator</option>
+                                <option value="accountant">Accountant</option>
+                                <option value="manager">Manager</option>
+                                <option value="user">Standard User</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label for="status" class="form-label small fw-bold text-secondary">Authorization State</label>
+                            <select id="status" name="status" class="form-select form-select-sm" required>
+                                <option value="active" selected>Active / Authorized</option>
+                                <option value="inactive">Inactive / Suspended</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer bg-light border-top-0 py-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-sm btn-primary fw-bold px-4" id="userModalSubmitBtn">Save Parameters</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editNotificationModal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-light py-3">
+                <h6 class="modal-title fw-bold text-dark">Modify Dispatched Payload</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="editNotificationForm">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">Broadcast Title</label>
+                        <input type="text" id="editNotifTitle" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">Message Content Matrix</label>
+                        <textarea id="editNotifMessage" class="form-control form-control-sm" rows="4" required></textarea>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label small fw-bold text-secondary">Redirection Path</label>
+                        <input type="text" id="editNotifLink" class="form-control form-control-sm">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer bg-light border-top-0 py-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-sm btn-primary fw-bold px-4" onclick="AdminSystem.SaveNotification()">Update Payload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<script src="admin-standalone.js"></script>
+
+<script>
+    function switchAdminView(targetId, navElement) {
+        document.querySelectorAll('.tab-view').forEach(el => el.classList.remove('active-view'));
+        document.querySelectorAll('.admin-sidebar .nav-link').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(targetId).classList.add('active-view');
+        navElement.classList.add('active');
+        
+        document.getElementById('topNavTitle').innerText = navElement.innerText.trim();
+    }
+</script>
+
+
+<script>
+    /**
+ * ==============================================================================
+ * STANDALONE ADMIN PANEL SCRIPT (Complete & Independent)
+ * Includes Firebase Init, Custom UI Notifications, and Full CRUD Logic
+ * ==============================================================================
+ */
+
+// ==========================================
+// 1. FIREBASE INITIALIZATION
+// ==========================================
+const firebaseConfig =  {
+            apiKey: "AIzaSyB2iNWYkj_lIWwOtLNmZjBtfKgTYKrjAQU",
+            authDomain: "unitax-8d2e2.firebaseapp.com",
+            databaseURL: "https://unitax-8d2e2-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "unitax-8d2e2"
+        };
+
+// Initialize Firebase only if it hasn't been initialized yet
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.database();
+
+// ==========================================
+// 2. STANDALONE UI UTILITIES
+// ==========================================
+const UIUtils = {
+    // Custom Toast Notification System
+    Notify(title, message, type = 'info') {
+        let container = document.getElementById('toastContainer');
+        
+        // Auto-create toast container if it doesn't exist in HTML
+        if (!container) {
+            const wrapper = document.createElement('div');
+            wrapper.setAttribute('aria-live', 'polite');
+            wrapper.setAttribute('aria-atomic', 'true');
+            wrapper.className = 'position-relative';
+            wrapper.innerHTML = `<div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer" style="z-index: 1090;"></div>`;
+            document.body.appendChild(wrapper);
+            container = document.getElementById('toastContainer');
+        }
+
+        const themeClass = type === 'success' ? 'bg-success text-white' : 
+                           type === 'danger' ? 'bg-danger text-white' : 
+                           type === 'warning' ? 'bg-warning text-dark' : 'bg-primary text-white';
+
+        const icon = type === 'success' ? 'bi-check-circle' : 
+                     type === 'danger' ? 'bi-exclamation-octagon' : 'bi-info-circle';
+
+        const toastEl = document.createElement('div');
+        toastEl.className = `toast align-items-center border-0 mb-2 shadow-lg ${themeClass}`;
+        toastEl.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body d-flex align-items-start">
+                    <i class="bi ${icon} fs-5 me-2 mt-1"></i>
+                    <div>
+                        <strong>${title}</strong><br>
+                        <span class="small" style="opacity: 0.9;">${message}</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+
+        container.appendChild(toastEl);
+        const bsToast = new bootstrap.Toast(toastEl, { delay: 4000 });
+        bsToast.show();
+        toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+    }
+};
+
+// ==========================================
+// 3. CORE ADMIN LOGIC (CRUD + UI INTEGRATION)
+// ==========================================
+const AdminSystem = {
+    currentEditUserId: null,
+    currentEditNotifId: null,
+    adminId: "super_admin_001", // Hardcoded identifier for the admin sending notifications
+
+    Init() {
+        this.LoadUsers();
+        this.LoadNotifications();
+        this.BindNotificationForm();
+        this.BindUserSearch();
+        this.BindModalSaveButtons();
+    },
+
+    // ------------------------------------------
+    // MODULE A: USER MANAGEMENT
+    // ------------------------------------------
+    async LoadUsers() {
+        const tableBody = document.querySelector('#view-users tbody');
+        const targetSelect = document.getElementById('notifTargetSelect');
+        
+        if (tableBody) tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading users...</td></tr>';
+        
+        try {
+            const snap = await db.ref('Users').once('value');
+            const usersData = snap.val() || {};
+            
+            if (tableBody) tableBody.innerHTML = ''; 
+            if (targetSelect) targetSelect.innerHTML = '<option value="all" selected>📢 Broadcast to ALL Users</option>'; 
+
+            if (Object.keys(usersData).length === 0) {
+                if (tableBody) tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No users found in database.</td></tr>';
+                return;
+            }
+
+            Object.entries(usersData).forEach(([id, user]) => {
+                const name = user.name || 'Unknown User';
+                const email = user.email || 'No Email';
+                const role = user.role || 'user';
+                const status = user.status || 'active';
+                const initials = name.substring(0, 2).toUpperCase();
+                
+                const safeName = name.replace(/'/g, "\\'");
+                const safeEmail = email.replace(/'/g, "\\'");
+
+                const badgeClass = status === 'active' ? 'bg-success text-success border-success' : 'bg-danger text-danger border-danger';
+
+                if (tableBody) {
+                    tableBody.innerHTML += `
+                        <tr class="user-row" data-name="${name.toLowerCase()}" data-email="${email.toLowerCase()}">
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; font-weight: bold;">${initials}</div>
+                                    <div>
+                                        <div class="fw-bold text-dark">${name}</div>
+                                        <div class="small text-muted">${email}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-secondary bg-opacity-10 text-secondary border text-uppercase" style="font-size:7.5pt;">${role}</span></td>
+                            <td><span class="badge ${badgeClass} bg-opacity-10 border text-uppercase" style="font-size:7.5pt;">${status}</span></td>
+                            <td class="small text-muted font-monospace">ID: ${id.substring(0,6)}...</td>
+                            <td class="text-end pe-4">
+                                <button class="btn btn-sm btn-outline-primary py-0 px-2 me-1" onclick="AdminSystem.OpenEditUserModal('${id}', '${safeName}', '${safeEmail}', '${role}', '${status}')">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="AdminSystem.DeleteUser('${id}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }
+
+                if (targetSelect) targetSelect.innerHTML += `<option value="${id}">${name} (${email})</option>`;
+            });
+        } catch (err) {
+            UIUtils.Notify('Database Error', 'Failed to read Users node.', 'danger');
+        }
+    },
+
+    // Add this helper function anywhere inside your AdminSystem object
+    GenerateUserId(length = 10) {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+    },
+
+    OpenCreateUserModal() {
+        this.currentEditUserId = null; 
+        document.getElementById('userModalHeaderTitle').innerHTML = '<i class="bi bi-person-plus-fill text-success me-2"></i> Add New User';
+        
+        const form = document.getElementById('editUserForm');
+        form.reset();
+        
+        // Ensure email and password are required for new users
+        document.getElementById('email').removeAttribute('readonly');
+        document.getElementById('password').setAttribute('required', 'true');
+        document.getElementById('passwordHelp').style.display = 'none';
+        
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('editUserModal')).show();
+    },
+
+    OpenEditUserModal(id, name, email, role, status) {
+        this.currentEditUserId = id; 
+        document.getElementById('userModalHeaderTitle').innerHTML = '<i class="bi bi-person-gear me-2"></i> Edit User Details';
+        
+        document.getElementById('legalName').value = name;
+        document.getElementById('email').value = email;
+        document.getElementById('email').setAttribute('readonly', 'true'); 
+        document.getElementById('role').value = role.toLowerCase();
+        document.getElementById('status').value = status.toLowerCase();
+
+        // --- ADD/ENSURE THESE 3 LINES ARE HERE ---
+        document.getElementById('password').value = ''; // Forces the box to be empty
+        document.getElementById('password').removeAttribute('required'); // Makes it optional
+        document.getElementById('passwordHelp').style.display = 'block'; // Shows the "leave blank" helper text
+
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('editUserModal')).show();
+    },
+
+    async SaveUser() {
+        const form = document.getElementById('editUserForm');
+        
+        // Trigger native HTML5 validation
+        if (!form.checkValidity()) { 
+            form.reportValidity(); 
+            return; 
+        }
+
+        // Build the core payload mapping your custom IDs
+        const userData = {
+            name: document.getElementById('legalName').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            role: document.getElementById('role').value,
+            status: document.getElementById('status').value
+        };
+
+        // Only update password if they typed something new
+        const pwdInput = document.getElementById('password').value;
+        if (pwdInput !== "") {
+            userData.password = pwdInput; 
+        }
+
+        try {
+            if (this.currentEditUserId) {
+                // UPDATE EXISTING
+                userData.updated_at = firebase.database.ServerValue.TIMESTAMP;
+                await db.ref(`Users/${this.currentEditUserId}`).update(userData);
+                UIUtils.Notify('Success', 'User profile updated.', 'success');
+            } else {
+                // CREATE NEW WITH GENERATED 10-DIGIT ID
+                const customUserId = this.GenerateUserId(10);
+                userData.created_at = firebase.database.ServerValue.TIMESTAMP;
+                
+                // Instead of using .push(), we use .set() on the specific generated ID
+                await db.ref(`Users/${customUserId}`).set(userData);
+                UIUtils.Notify('Success', `New user added with ID: ${customUserId}`, 'success');
+            }
+            
+            bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+            this.LoadUsers(); 
+        } catch (err) {
+            UIUtils.Notify('Error', 'Failed to save user data.', 'danger');
+            console.error(err);
+        }
+    },
+
+    async DeleteUser(id) {
+        if (confirm('Are you sure you want to permanently delete this user?')) {
+            try {
+                await db.ref(`Users/${id}`).remove();
+                UIUtils.Notify('Deleted', 'User removed from the system.', 'warning');
+                this.LoadUsers();
+            } catch (err) {
+                UIUtils.Notify('Error', 'Failed to delete user.', 'danger');
+            }
+        }
+    },
+
+    BindUserSearch() {
+        const searchInput = document.getElementById('userSearchInput');
+        if (!searchInput) return;
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase().trim();
+            document.querySelectorAll('.user-row').forEach(row => {
+                const name = row.getAttribute('data-name') || '';
+                const email = row.getAttribute('data-email') || '';
+                row.style.display = (name.includes(term) || email.includes(term)) ? '' : 'none';
+            });
+        });
+    },
+
+    // ------------------------------------------
+    // MODULE B: NOTIFICATIONS
+    // ------------------------------------------
+    BindNotificationForm() {
+        const form = document.getElementById('adminNotificationForm');
+        if (!form) return;
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = form.querySelector('button[type="submit"]');
+            const origHtml = btn.innerHTML;
+            
+            btn.innerHTML = 'Sending...'; btn.disabled = true;
+
+            const formData = new FormData(form);
+            const payload = {
+                target: formData.get('target_user'),
+                title: formData.get('title').trim(),
+                message: formData.get('message').trim(),
+                link: formData.get('link').trim(),
+                sender: this.adminId,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            try {
+                await db.ref('Notifications').push(payload);
+                UIUtils.Notify('Success', 'Broadcast dispatched successfully.', 'success');
+                form.reset();
+                this.LoadNotifications(); 
+            } catch (err) {
+                UIUtils.Notify('Error', 'Failed to send broadcast.', 'danger');
+            }
+
+            btn.innerHTML = origHtml; btn.disabled = false;
+        });
+    },
+
+    async LoadNotifications() {
+        const tableBody = document.getElementById('notificationTableBody');
+        if (!tableBody) return;
+        tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading history...</td></tr>';
+
+        try {
+            const snap = await db.ref('Notifications').orderByChild('timestamp').limitToLast(100).once('value');
+            const notifs = snap.val() || {};
+            
+            tableBody.innerHTML = '';
+
+            if (Object.keys(notifs).length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">No broadcast history found.</td></tr>';
+                return;
+            }
+
+            // Sort newest first
+            const sortedNotifs = Object.entries(notifs).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+
+            sortedNotifs.forEach(([id, notif]) => {
+                const dateStr = notif.timestamp ? new Date(notif.timestamp).toLocaleString('en-IN') : 'Unknown';
+                const targetLabel = notif.target === 'all' ? '<span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle badge-xs">All Profiles</span>' : '<span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle badge-xs">Specific User</span>';
+                
+                const safeTitle = (notif.title || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                const safeMsg = (notif.message || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                const safeLink = (notif.link || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+                tableBody.innerHTML += `
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark text-truncate" style="max-width: 220px;">${notif.title}</div>
+                            <div class="small text-muted text-truncate" style="max-width: 280px;" title="${safeMsg}">${notif.message}</div>
+                        </td>
+                        <td>${targetLabel}</td>
+                        <td class="small text-muted font-monospace" style="font-size:8pt;">${dateStr}</td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-sm btn-outline-primary py-0 px-2 me-1" onclick="AdminSystem.OpenEditNotifModal('${id}', '${safeTitle}', '${safeMsg}', '${safeLink}')">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="AdminSystem.DeleteNotification('${id}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        } catch (err) {
+            tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">Error loading data.</td></tr>';
+        }
+    },
+
+    OpenEditNotifModal(id, title, msg, link) {
+        this.currentEditNotifId = id;
+        document.getElementById('editNotifTitle').value = title;
+        document.getElementById('editNotifMessage').value = msg;
+        document.getElementById('editNotifLink').value = link;
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('editNotificationModal')).show();
+    },
+
+    async SaveNotification() {
+        if (!this.currentEditNotifId) return;
+        
+        const updateData = {
+            title: document.getElementById('editNotifTitle').value.trim(),
+            message: document.getElementById('editNotifMessage').value.trim(),
+            link: document.getElementById('editNotifLink').value.trim()
+        };
+
+        try {
+            await db.ref(`Notifications/${this.currentEditNotifId}`).update(updateData);
+            UIUtils.Notify('Success', 'Broadcast metrics modified.', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('editNotificationModal')).hide();
+            this.LoadNotifications();
+        } catch (err) {
+            UIUtils.Notify('Error', 'Failed to update notification.', 'danger');
+        }
+    },
+
+    async DeleteNotification(id) {
+        if (confirm('Recall this notification? It will be removed from users screens.')) {
+            try {
+                await db.ref(`Notifications/${id}`).remove();
+                UIUtils.Notify('Recalled', 'Broadcast payload recalled successfully.', 'warning');
+                this.LoadNotifications();
+            } catch (err) {
+                UIUtils.Notify('Error', 'Failed to recall notification.', 'danger');
+            }
+        }
+    },
+
+    // ------------------------------------------
+    // MODAL BINDINGS
+    // ------------------------------------------
+    BindModalSaveButtons() {
+        const userBtn = document.getElementById('userModalSubmitBtn');
+        if (userBtn) userBtn.onclick = () => this.SaveUser();
+    }
+};
+
+// ==========================================
+// 4. INITIALIZE APP ON DOM LOAD
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    // Wait slightly to ensure Firebase and Bootstrap are fully parsed
+    setTimeout(() => {
+        AdminSystem.Init();
+    }, 100);
+});
+</script>
+</body>
+</html>
