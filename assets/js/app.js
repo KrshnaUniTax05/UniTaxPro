@@ -1104,6 +1104,7 @@ const UserProfileController = {
             
             if (!snap.exists()) {
                 this.Notify("Error", "User profile not found in database.", "danger");
+                window.location.replace("./login.html");
                 return;
             }
 
