@@ -288,10 +288,10 @@ const App = {
         // Handle Logout - Hook into your existing logic
         document.getElementById('logoutButton').addEventListener('click', (e) => {
             e.preventDefault();
-            if (confirm("Are you sure you want to logout?")) {
-                // Call your existing logout function here
-                App.Auth.Logout(); 
-            }
+            App.Auth.Logout(); 
+            // if (confirm("Are you sure you want to logout?")) {
+            //     // Call your existing logout function here
+            // }
         });
 
         // Global Shortcut: Enter
@@ -328,87 +328,12 @@ const App = {
             }
         })
         
-        const NotificationSystem = {
-            unreadCount: 0,
-            
-            init: function() {
-                // Listen for the dropdown opening to mark notifications as read
-                const dropdownEl = document.getElementById('notificationDropdown');
-                if (dropdownEl) {
-                    dropdownEl.addEventListener('show.bs.dropdown', () => {
-                        this.markAllAsRead();
-                    });
-                }
-            },
+     
 
-            // Call this function whenever a new event happens in your ERP
-            addNotification: function(title, message, timeStamp) {
-                const list = document.getElementById('notificationList');
-                const emptyMsg = document.getElementById('emptyNotificationMessage');
-                
-                // Hide the empty state message
-                if (emptyMsg) {
-                    emptyMsg.style.display = 'none';
-                }
-
-                // Create the new notification list item
-                const item = document.createElement('li');
-                item.innerHTML = `
-                    <a class="dropdown-item py-2 border-bottom text-wrap" href="#">
-                        <div class="d-flex justify-content-between align-items-start mb-1">
-                            <span class="fw-bold small text-dark">${title}</span>
-                            <span class="text-muted" style="font-size: 0.65rem;">${timeStamp}</span>
-                        </div>
-                        <div class="text-muted" style="font-size: 0.8rem; line-height: 1.3;">
-                            ${message}
-                        </div>
-                    </a>
-                `;
-                
-                // Inject at the top of the list
-                list.prepend(item);
-                
-                // Increment count and show the red dot
-                this.unreadCount++;
-                this.updateUI();
-            },
-
-            markAllAsRead: function() {
-                this.unreadCount = 0;
-                this.updateUI();
-            },
-
-            updateUI: function() {
-                const dot = document.getElementById('notificationDot');
-                const countBadge = document.getElementById('notificationCount');
-                
-                if (this.unreadCount > 0) {
-                    dot.style.display = 'inline-block';
-                    countBadge.innerText = this.unreadCount;
-                } else {
-                    dot.style.display = 'none';
-                    countBadge.innerText = '0';
-                }
-            }
-        };
-
-        // Initialize the system when the DOM loads
-        document.addEventListener('DOMContentLoaded', () => {
-            NotificationSystem.init();
-            
-            // --- TEST EXAMPLES ---
-            // Remove these timeouts in production. They are here to show you how it works.
-            setTimeout(() => {
-                NotificationSystem.addNotification("Invoice Generated", "Tax Invoice INV-2026/001 has been successfully created.", "Just now");
-            }, 2000);
-
-            setTimeout(() => {
-                NotificationSystem.addNotification("Payment Received", "₹ 50,000 credited to HDFC Bank from Client A.", "2 mins ago");
-            }, 4000);
-        });
+        
 
         // Dark Mode Toggle
-        const toggle = document.getElementById('darkModeToggle');
+        const toggle = document.getElementById('darkModeToggleset');
         if(toggle) {
             toggle.addEventListener('change', (e) => {
                 this.UI.ToggleDarkMode(e.target.checked);
@@ -492,6 +417,7 @@ const App = {
                 if(toggle) toggle.checked = true;
             }
         },
+        
         ToggleDarkMode(enable) {
             if (enable) {
                 document.body.classList.add('dark-mode');
@@ -949,12 +875,11 @@ const NotificationEngine = {
         this.ListenToDatabase();
     },
 
-    // 1. Show Skeleton Animation while loading
+    // 1. Show Skeleton Animation while loading safely
     ShowSkeletonLoader() {
         const list = document.getElementById('notificationList');
         if (!list) return;
 
-        // Using Bootstrap 5 native placeholder-glow classes
         list.innerHTML = `
             <li class="p-3 border-bottom placeholder-glow">
                 <div class="d-flex justify-content-between mb-2">
@@ -964,13 +889,6 @@ const NotificationEngine = {
                 <span class="placeholder col-12 rounded mb-1"></span>
                 <span class="placeholder col-8 rounded"></span>
             </li>
-            <li class="p-3 border-bottom placeholder-glow">
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="placeholder col-5 rounded"></span>
-                    <span class="placeholder col-2 rounded"></span>
-                </div>
-                <span class="placeholder col-10 rounded"></span>
-            </li>
         `;
     },
 
@@ -978,7 +896,6 @@ const NotificationEngine = {
     ListenToDatabase() {
         try {
             const db = firebase.database();
-            // Listen to the last 50 notifications in real-time
             db.ref('Notifications').orderByChild('timestamp').limitToLast(50).on('value', (snapshot) => {
                 const data = snapshot.val();
                 this.ProcessAndRender(data);
@@ -989,13 +906,14 @@ const NotificationEngine = {
         }
     },
 
-    // 3. Filter and Render UI
+    // 3. Filter and Render UI with Auto-Icons
     ProcessAndRender(data) {
         const list = document.getElementById('notificationList');
         const dot = document.getElementById('notificationDot');
         const countBadge = document.getElementById('notificationCount');
         
-        list.innerHTML = ''; // Clear skeletons
+        if (!list) return; // Prevent crashes if the element isn't on the page
+        list.innerHTML = '';
 
         if (!data) {
             this.ShowEmptyMessage();
@@ -1019,7 +937,6 @@ const NotificationEngine = {
             return;
         }
 
-        // Check Unread Status (Compare against last time dropdown was opened)
         let unreadCount = 0;
         const lastReadTime = parseInt(localStorage.getItem('lastReadNotifTime') || '0');
 
@@ -1028,34 +945,42 @@ const NotificationEngine = {
                 unreadCount++;
             }
 
-            // Generate HTML for each notification
             const timeString = this.FormatTime(notif.timestamp);
-            const linkAction = notif.link ? `href="${notif.link}"` : `href="javascript:void(0)"`;
-            const bgClass = notif.timestamp > lastReadTime ? 'bg-primary bg-opacity-10' : ''; // Highlight unread
+            const bgClass = notif.timestamp > lastReadTime ? 'bg-primary bg-opacity-10' : ''; 
+            
+            // SMART ICON GUESSER INVOCATION
+            const iconConfig = this.GetIcon(notif.type, notif.title);
+
+            // Clean routing logic: Also dismiss the dropdown if a route exists
             const clickAction = notif.link ? `onclick="App.Router('${notif.link.replace(/'/g, "\\'")}')"` : '';
-            const pointerStyle = notif.link ? 'style="cursor: pointer;"' : 'style="cursor: default;"';
+            const pointerStyle = notif.link ? 'cursor: pointer;' : 'cursor: default;';
+            const dismissAttr = notif.link ? 'data-bs-dismiss="dropdown"' : '';
+
             list.innerHTML += `
                 <li>
-                    <div class="dropdown-item py-3 border-bottom text-wrap ${bgClass}" ${pointerStyle} ${clickAction}>
-                        <div class="d-flex justify-content-between align-items-start mb-1">
-                            <span class="fw-bold small text-dark">${notif.title}</span>
-                            <span class="text-muted" style="font-size: 0.65rem;">${timeString}</span>
+                    <div class="dropdown-item py-2 border-bottom text-wrap ${bgClass}" style="${pointerStyle}" ${clickAction} ${dismissAttr}>
+                        <div class="d-flex align-items-center mb-1">
+                            <div class="${iconConfig.bg} rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">
+                                <i class="bi ${iconConfig.icon}" style="font-size: 0.75rem;"></i>
+                            </div>
+                            <span class="fw-bold small text-dark text-truncate" style="max-width: 170px;">${notif.title || 'Notification'}</span>
+                            <span class="text-muted ms-auto" style="font-size: 0.65rem;">${timeString}</span>
                         </div>
-                        <div class="text-muted" style="font-size: 0.8rem; line-height: 1.3;">
-                            ${notif.message}
+                        <div class="text-muted ms-4 ps-2" style="font-size: 0.8rem; line-height: 1.3;">
+                            ${notif.message || ''}
                         </div>
                     </div>
                 </li>
             `;
         });
 
-        // Update UI Badges
+        // Safely update badges
         if (unreadCount > 0) {
-            dot.style.display = 'inline-block';
-            countBadge.innerText = unreadCount;
+            if (dot) dot.style.display = 'inline-block';
+            if (countBadge) countBadge.innerText = unreadCount;
         } else {
-            dot.style.display = 'none';
-            countBadge.innerText = '0';
+            if (dot) dot.style.display = 'none';
+            if (countBadge) countBadge.innerText = '0';
         }
     },
 
@@ -1064,14 +989,13 @@ const NotificationEngine = {
         const dropdownEl = document.getElementById('notificationDropdown');
         if (dropdownEl) {
             dropdownEl.addEventListener('show.bs.dropdown', () => {
-                // Save the current exact time as the "last read" marker
                 localStorage.setItem('lastReadNotifTime', Date.now().toString());
                 
-                // Instantly clear the red dot and counter visually
-                document.getElementById('notificationDot').style.display = 'none';
-                document.getElementById('notificationCount').innerText = '0';
+                const dot = document.getElementById('notificationDot');
+                const countBadge = document.getElementById('notificationCount');
+                if (dot) dot.style.display = 'none';
+                if (countBadge) countBadge.innerText = '0';
                 
-                // Remove the highlighted backgrounds from existing items
                 document.querySelectorAll('#notificationList .dropdown-item').forEach(el => {
                     el.classList.remove('bg-primary', 'bg-opacity-10');
                 });
@@ -1079,17 +1003,59 @@ const NotificationEngine = {
         }
     },
 
+    // 5. Smart Icon Guesser (UPDATED WITH ALL ADMIN TYPES)
+    GetIcon(type, title) {
+        let safeType = (type || '').toLowerCase();
+        const safeTitle = (title || '').toLowerCase();
+
+        // Guess type from title if undefined
+        if (!safeType) {
+            if (safeTitle.includes('task') || safeTitle.includes('assign')) safeType = 'task';
+            else if (safeTitle.includes('pay') || safeTitle.includes('invoice')) safeType = 'payment';
+            else if (safeTitle.includes('alert') || safeTitle.includes('warn')) safeType = 'warning';
+            else if (safeTitle.includes('success') || safeTitle.includes('approv')) safeType = 'success';
+            else if (safeTitle.includes('error') || safeTitle.includes('fail')) safeType = 'error';
+            else if (safeTitle.includes('doc') || safeTitle.includes('report')) safeType = 'document';
+            else if (safeTitle.includes('update') || safeTitle.includes('system')) safeType = 'system';
+            else if (safeTitle.includes('meet') || safeTitle.includes('event')) safeType = 'meeting';
+            else if (safeTitle.includes('secur')) safeType = 'security';
+            else if (safeTitle.includes('announc') || safeTitle.includes('info')) safeType = 'announcement';
+        }
+
+        const map = {
+            info:         { bg: 'bg-info bg-opacity-10 text-info', icon: 'bi-info-circle' },
+            task:         { bg: 'bg-primary bg-opacity-10 text-primary', icon: 'bi-briefcase' },
+            success:      { bg: 'bg-success bg-opacity-10 text-success', icon: 'bi-check-circle' },
+            warning:      { bg: 'bg-warning bg-opacity-10 text-warning', icon: 'bi-exclamation-triangle' },
+            error:        { bg: 'bg-danger bg-opacity-10 text-danger',   icon: 'bi-x-circle' },
+            payment:      { bg: 'bg-success bg-opacity-10 text-success', icon: 'bi-wallet2' },
+            system:       { bg: 'bg-secondary bg-opacity-10 text-secondary', icon: 'bi-gear' },
+            document:     { bg: 'bg-primary bg-opacity-10 text-primary', icon: 'bi-file-earmark-text' },
+            meeting:      { bg: 'bg-info bg-opacity-10 text-info',       icon: 'bi-calendar-event' },
+            security:     { bg: 'bg-danger bg-opacity-10 text-danger',   icon: 'bi-shield-lock' },
+            announcement: { bg: 'bg-primary bg-opacity-10 text-primary', icon: 'bi-megaphone' }
+        };
+
+        const fallback = { bg: 'bg-secondary bg-opacity-10 text-secondary', icon: 'bi-bell' };
+        return map[safeType] || fallback;
+    },
+
     // Utilities: Empty State
     ShowEmptyMessage() {
         const list = document.getElementById('notificationList');
+        if (!list) return;
+
         list.innerHTML = `
             <li class="text-center p-4 text-muted small" id="emptyNotificationMessage">
                 <i class="bi bi-bell-slash fs-4 d-block mb-2 text-secondary opacity-50"></i>
                 No new notifications
             </li>
         `;
-        document.getElementById('notificationDot').style.display = 'none';
-        document.getElementById('notificationCount').innerText = '0';
+        
+        const dot = document.getElementById('notificationDot');
+        const countBadge = document.getElementById('notificationCount');
+        if (dot) dot.style.display = 'none';
+        if (countBadge) countBadge.innerText = '0';
     },
 
     // Utilities: Time Formatter
@@ -1106,12 +1072,217 @@ const NotificationEngine = {
     }
 };
 
-// Initialize the engine when the Document is ready
-document.addEventListener('DOMContentLoaded', () => {
-    // Ensure Firebase is loaded before running
-    if (typeof firebase !== 'undefined') {
-        NotificationEngine.Init();
-    } else {
-        console.error("Firebase is not loaded! Notifications cannot start.");
+const UserProfileController = {
+    userId: localStorage.getItem('userloginid'),
+    userData: null,
+
+    Init() {
+        if (!this.userId) {
+            console.error("[Profile] User ID not found.");
+            this.Notify("Error", "You must be logged in to view this page.", "danger");
+            return;
+        }
+        this.LoadUserData();
+    },
+
+    Notify(title, message, type) {
+        // Safe fallback notification system
+        if (window.App && window.App.UI && window.App.UI.Notify) {
+            window.App.UI.Notify(title, message, type);
+        } else if (window.UIUtils && window.UIUtils.Notify) {
+            window.UIUtils.Notify(title, message, type);
+        } else {
+            alert(`${title}: ${message}`);
+        }
+    },
+
+    // 1. Fetch data from Firebase
+    async LoadUserData() {
+        try {
+            const db = firebase.database();
+            const snap = await db.ref(`Users/${this.userId}`).once('value');
+            
+            if (!snap.exists()) {
+                this.Notify("Error", "User profile not found in database.", "danger");
+                return;
+            }
+
+            this.userData = snap.val();
+            this.RenderProfile();
+
+        } catch (err) {
+            console.error("Failed to load profile:", err);
+            this.Notify("Error", "Could not connect to the database.", "danger");
+        }
+    },
+
+    // 2. Populate all UI and Form Fields
+    RenderProfile() {
+        const name = this.userData.name || this.userData.legalName || 'Unknown User';
+        const email = this.userData.email || 'No Email Provided';
+        const role = this.userData.role || 'User';
+        const status = this.userData.status || 'Active';
+        
+        // Generate Initials (e.g., "Krishna Mishra" -> "KM")
+        const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'U';
+
+        // Format Account Creation Date
+        let joinedDate = 'Unknown';
+        if (this.userData.created_at) {
+            const dateObj = new Date(this.userData.created_at);
+            joinedDate = dateObj.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+        }
+
+        // Fill Summary Card Elements (Safely checking if they exist)
+        const elInitials = document.getElementById('profileInitials');
+        const elName = document.getElementById('profileDisplayName');
+        const elEmail = document.getElementById('profileDisplayEmail');
+        const elRole = document.getElementById('profileRoleBadge');
+        const elJoined = document.getElementById('profileAccountCreated');
+        const elStatus = document.getElementById('profileStatusText');
+
+        if(elInitials) elInitials.innerText = initials;
+        if(elName) elName.innerText = name;
+        if(elEmail) elEmail.innerText = email;
+        if(elRole) elRole.innerText = role;
+        if(elJoined) elJoined.innerText = joinedDate;
+        
+        if(elStatus) {
+            elStatus.innerText = status.charAt(0).toUpperCase() + status.slice(1);
+            elStatus.className = status === 'active' ? 'fw-bold text-success mb-0' : 'fw-bold text-danger mb-0';
+        }
+
+        // Fill Form Inputs
+        const inputName = document.getElementById('inputProfileName');
+        const inputEmail = document.getElementById('inputProfileEmail');
+        
+        if(inputName) inputName.value = name;
+        if(inputEmail) inputEmail.value = email;
+    },
+
+    // 3. Save Personal Info (Name)
+    async UpdateProfile() {
+        const nameInput = document.getElementById('inputProfileName');
+        if (!nameInput) return;
+
+        const newName = nameInput.value.trim();
+        const btn = document.getElementById('btnSaveProfile');
+
+        if (!newName) {
+            this.Notify("Validation", "Name cannot be empty.", "warning");
+            return;
+        }
+
+        if (newName === this.userData.name || newName === this.userData.legalName) {
+            this.Notify("Info", "No changes were made.", "info");
+            return;
+        }
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+        }
+
+        try {
+            await firebase.database().ref(`Users/${this.userId}`).update({
+                name: newName,
+                updated_at: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            // Update local memory and re-render UI live
+            this.userData.name = newName;
+            this.RenderProfile();
+            
+            // Sync with local storage for app-wide consistency
+            localStorage.setItem('userName', newName);
+
+            this.Notify("Success", "Profile updated successfully.", "success");
+        } catch (err) {
+            console.error("Update Error:", err);
+            this.Notify("Error", "Failed to update profile.", "danger");
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-save me-1"></i> Save Changes';
+            }
+        }
+    },
+
+    // 4. Validate and Update Password
+    async UpdatePassword() {
+        const currentPassInput = document.getElementById('inputCurrentPassword');
+        const newPassInput = document.getElementById('inputNewPassword');
+        const confirmPassInput = document.getElementById('inputConfirmPassword');
+        const btn = document.getElementById('btnSavePassword');
+
+        if (!currentPassInput || !newPassInput || !confirmPassInput) return;
+
+        const currentPass = currentPassInput.value;
+        const newPass = newPassInput.value;
+        const confirmPass = confirmPassInput.value;
+
+        // Security Validations
+        if (!currentPass || !newPass || !confirmPass) {
+            this.Notify("Validation", "Please fill out all password fields.", "warning");
+            return;
+        }
+        if (newPass !== confirmPass) {
+            this.Notify("Validation", "New passwords do not match.", "warning");
+            return;
+        }
+        if (newPass.length < 6) {
+            this.Notify("Validation", "Password must be at least 6 characters long.", "warning");
+            return;
+        }
+        // Validate against the exact password stored in Firebase
+        if (currentPass !== this.userData.password) {
+            this.Notify("Security", "Current password is incorrect.", "danger");
+            return;
+        }
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+        }
+
+        try {
+            await firebase.database().ref(`Users/${this.userId}`).update({
+                password: newPass,
+                updated_at: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            // Keep local memory synced so user can change it again if needed without refreshing
+            this.userData.password = newPass;
+
+            // Clear the password form fields securely
+            const form = document.getElementById('passwordUpdateForm');
+            if (form) form.reset();
+
+            this.Notify("Success", "Password updated successfully.", "success");
+
+        } catch (err) {
+            console.error("Password Update Error:", err);
+            this.Notify("Error", "Failed to update password.", "danger");
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-shield-check me-1"></i> Update Password';
+            }
+        }
     }
+};
+
+
+// Delay initialization slightly to ensure Firebase is fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        if (typeof firebase !== 'undefined') {
+            UserProfileController.Init();
+            NotificationEngine.Init();
+            // NotificationPageController.Init();
+
+        } else {
+            console.error("Firebase is not loaded! Notifications cannot start.");
+        }
+    }, 500);
 });

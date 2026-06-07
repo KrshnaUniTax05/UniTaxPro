@@ -1,27 +1,31 @@
 <style>
-    /* --- SETTINGS MODULE STYLES --- */
-    :root {
-        --brand-color: #0b3d91;
-        --brand-hover: #082d6b;
-        --bg-color: #f4f7fa;
-        --border-color: #dce4ec;
-        --text-main: #333333;
-        --text-muted: #666666;
-    }
-
+    /* =========================================================
+       1. SMART VIEWPORT ADJUSTMENTS (Settings vs Dashboard)
+       ========================================================= */
+    
+    /* =========================================================
+       2. SETTINGS MODULE STYLES (Dark Mode Native)
+       ========================================================= */
     .settings-wrapper {
-        display: flex; height: calc(100vh - 80px); 
-        background: var(--bg-color); font-family: 'Segoe UI', system-ui, sans-serif;
+        display: flex; 
+        height: 100vh ; 
+        background: var(--bg-light); /* Uses your Deepest Slate */
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        color: var(--text-main);
     }
 
     /* --- SIDEBAR NAV --- */
     .settings-sidebar {
-        width: 260px; background: #ffffff; border-right: 1px solid var(--border-color);
-        padding: 20px 0; display: flex; flex-direction: column;
+        width: 260px;  
+        border-right: 1px solid var(--border-color);
+        background: var(--bg-surface); /* Uses your Lighter Slate for depth */
+        padding: 20px 0; 
+        display: flex; 
+        flex-direction: column;
     }
 
     .settings-header { padding: 0 20px 20px 20px; border-bottom: 1px solid var(--border-color); margin-bottom: 10px; }
-    .settings-header h3 { margin: 0; font-size: 16pt; color: var(--brand-color); font-weight: 700; }
+    .settings-header h3 { margin: 0; font-size: 16pt; color: var(--text-main); font-weight: 700; }
     .settings-header p { margin: 4px 0 0 0; font-size: 9pt; color: var(--text-muted); }
 
     .settings-nav { list-style: none; padding: 0; margin: 0; }
@@ -30,11 +34,16 @@
         color: var(--text-main); display: flex; align-items: center; gap: 12px;
         border-left: 3px solid transparent; transition: all 0.2s;
     }
-    .settings-nav li:hover { background: var(--bg-color); }
-    .settings-nav li.active { background: #e8f0fe; color: var(--brand-color); border-left: 3px solid var(--brand-color); font-weight: 600; }
+    .settings-nav li:hover { background: var(--bg-light); }
+    .settings-nav li.active { 
+        background: var(--primary-bg-subtle); 
+        color: var(--text-main); 
+        border-left: 3px solid #0d6efd; /* Standard bootstrap primary accent */
+        font-weight: 600; 
+    }
 
     /* --- CONTENT AREA --- */
-    .settings-content { flex: 1; padding: 30px 40px; overflow-y: auto; }
+    .settings-content { flex: 1; padding: 30px 40px; overflow-y: auto; background: var(--bg-light); }
     .settings-section { display: none; animation: fadeIn 0.3s ease; }
     .settings-section.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -44,15 +53,19 @@
 
     /* --- FORM STYLES --- */
     .settings-card {
-        background: #ffffff; border: 1px solid var(--border-color); border-radius: 8px;
-        padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); margin-bottom: 25px;
+        background: var(--bg-surface);
+        border: 2px solid var(--border-color); 
+        border-radius: 8px;
+        padding: 25px; 
+        /* box-shadow: 0 4px 6px rgba(0,0,0,0.2);  */
+        margin-bottom: 25px;
     }
     
     .card-enabler-header {
         display: flex; justify-content: space-between; align-items: center;
         padding-bottom: 15px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px;
     }
-    .card-enabler-header h4 { margin: 0; font-size: 13pt; color: var(--brand-color); font-weight: 700; }
+    .card-enabler-header h4 { margin: 0; font-size: 13pt; color: var(--text-main); font-weight: 700; }
     .card-enabler-header p { margin: 4px 0 0 0; font-size: 9pt; color: var(--text-muted); }
 
     /* Hidden fields until enabled */
@@ -60,11 +73,16 @@
 
     .form-group { margin-bottom: 18px; }
     .form-group label { display: block; font-size: 9.5pt; font-weight: 600; color: var(--text-main); margin-bottom: 6px; }
+    
     .form-control {
-        width: 100%; padding: 10px 12px; font-size: 10pt; border: 1px solid #ced4da; 
-        border-radius: 4px; box-sizing: border-box; transition: border-color 0.15s ease-in-out;
+        width: 100%; padding: 10px 12px; font-size: 10pt; 
+        background: var(--bg-light); /* Dark input background */
+        color: var(--text-main);     /* White input text */
+        border: 1px solid var(--border-strong); 
+        border-radius: 4px; box-sizing: border-box; 
+        transition: border-color 0.15s ease-in-out;
     }
-    .form-control:focus { outline: none; border-color: var(--brand-color); box-shadow: 0 0 0 3px rgba(11,61,145,0.1); }
+    .form-control:focus { outline: none; border-color: #0d6efd; box-shadow: 0 0 0 3px var(--primary-bg-subtle); }
     .form-row { display: flex; gap: 20px; }
     .form-row .form-group { flex: 1; }
 
@@ -75,12 +93,18 @@
     
     /* --- ACTION FOOTER --- */
     .settings-footer {
-        position: sticky; bottom: 0; background: rgba(255,255,255,0.9); backdrop-filter: blur(5px); 
-        padding: 15px 0; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 15px;
+        position: sticky; bottom: 0; 
+        background: var(--bg-surface); 
+        padding: 15px ; 
+        border-top: 1px solid var(--border-color); 
+        display: flex; justify-content: flex-end; gap: 15px;
+        z-index: 10;
     }
-    .btn { padding: 10px 24px; font-size: 10pt; font-weight: 600; border-radius: 4px; cursor: pointer; border: none; }
-    .btn-primary { background: var(--brand-color); color: white; }
-    .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); }
+    .btn { padding: 10px 24px; font-size: 10pt; font-weight: 600; border-radius: 4px; cursor: pointer; border: none; transition: background 0.2s, color 0.2s; }
+    .btn-primary { background: #0d6efd; color: #ffffff; }
+    .btn-primary:hover { background: #0b5ed7; }
+    .btn-outline { background: transparent; border: 1px solid var(--border-strong); color: var(--text-main); }
+    /* .btn-outline:hover { background: var(--border-color); } */
 </style>
 
 <div class="settings-wrapper">
@@ -212,7 +236,7 @@
 
             <div class="settings-footer">
                 <button type="button" class="btn btn-outline" onclick="App.Router('dashboard')">Cancel</button>
-                <button type="submit" class="btn btn-primary" id="saveBtn"><i class="bi bi-save me-1"></i> Save Changes</button>
+                <button type="submit" class="btn btn-primary" id="saveBtn"><i class="bi bi-save "></i> Save Changes</button>
             </div>
         </form>
     </main>
@@ -228,7 +252,12 @@
             tabs.forEach(t => t.classList.remove('active'));
             sections.forEach(s => s.classList.remove('active'));
             tab.classList.add('active');
-            document.getElementById(tab.getAttribute('data-target')).classList.add('active');
+            
+            const targetId = tab.getAttribute('data-target');
+            if (targetId) {
+                const targetEl = document.getElementById(targetId);
+                if (targetEl) targetEl.classList.add('active');
+            }
         });
     });
 
@@ -237,8 +266,11 @@
     toggleSwitches.forEach(sw => {
         sw.addEventListener('change', (e) => {
             const isChecked = e.target.checked;
-            const targetDiv = document.getElementById(e.target.getAttribute('data-target'));
-            if (targetDiv) targetDiv.style.display = isChecked ? 'block' : 'none';
+            const targetId = e.target.getAttribute('data-target');
+            if (targetId) {
+                const targetDiv = document.getElementById(targetId);
+                if (targetDiv) targetDiv.style.display = isChecked ? 'block' : 'none';
+            }
 
             // DYNAMIC LIVE SAVE ON TOGGLE CHANGE
             try {
@@ -251,18 +283,20 @@
 
                 // Update the changed toggle's property dynamically
                 const settingName = e.target.name;
-                currentSettings[settingName] = isChecked;
+                if (settingName) {
+                    currentSettings[settingName] = isChecked;
 
-                // Persist updated object back to localStorage
-                localStorage.setItem('ERP_Settings', JSON.stringify(currentSettings));
+                    // Persist updated object back to localStorage
+                    localStorage.setItem('ERP_Settings', JSON.stringify(currentSettings));
 
-                // Sync live to global system memory
-                if (typeof App !== 'undefined') {
-                    App.State = App.State || {};
-                    App.State.Settings = currentSettings;
+                    // Sync live to global system memory
+                    if (typeof window.App !== 'undefined') {
+                        window.App.State = window.App.State || {};
+                        window.App.State.Settings = currentSettings;
+                    }
+                    
+                    console.log(`Dynamic Setting Saved: ${settingName} -> ${isChecked}`);
                 }
-                
-                console.log(`Dynamic Setting Saved: ${settingName} -> ${isChecked}`);
             } catch (err) {
                 console.error("Error during live dynamic setting save:", err);
             }
@@ -270,11 +304,24 @@
     });
 
     // 3. User's EXACT Dark Mode Binding
-    const darkModeToggle = document.getElementById('darkModeToggle');
-    if(darkModeToggle) {
+    // 3. User's EXACT Dark Mode Binding
+    const darkModeToggle = document.getElementById('darkModeToggleset');
+    if (darkModeToggle) {
         darkModeToggle.addEventListener('change', (e) => {
-            if (App && App.UI && App.UI.ToggleDarkMode) {
-                App.UI.ToggleDarkMode(e.target.checked);
+            const isEnabled = e.target.checked;
+            
+            try {
+                // Try to use your existing App.UI function first
+                App.UI.ToggleDarkMode(isEnabled);
+            } catch (err) {
+                // Fallback: If App.UI isn't found, manually do exactly what your function does
+                if (isEnabled) {
+                    document.body.classList.add('dark-mode');
+                    localStorage.setItem('darkMode', 'enabled');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    localStorage.setItem('darkMode', 'disabled');
+                }
             }
         });
     }
@@ -284,77 +331,100 @@
     // 4. Load Data & Initialize States
     const loadSettings = () => {
         try {
-            const savedRaw = localStorage.getItem('ERP_Settings');
-            if (savedRaw) {
-                const settings = JSON.parse(savedRaw);
-                Object.keys(settings).forEach(key => {
-                    const input = form.elements[key];
-                    if (input) {
-                        if (input.type === 'checkbox') {
-                            input.checked = settings[key];
-                            // If it's a section enabler, trigger the display change immediately
-                            if(input.classList.contains('section-toggle')) {
-                                const targetDiv = document.getElementById(input.getAttribute('data-target'));
-                                if(targetDiv) targetDiv.style.display = input.checked ? 'block' : 'none';
+            if (form) {
+                const savedRaw = localStorage.getItem('ERP_Settings');
+                if (savedRaw) {
+                    const settings = JSON.parse(savedRaw);
+                    Object.keys(settings).forEach(key => {
+                        const input = form.elements[key];
+                        if (input) {
+                            if (input.type === 'checkbox') {
+                                input.checked = settings[key];
+                                // If it's a section enabler, trigger the display change immediately
+                                if (input.classList.contains('section-toggle')) {
+                                    const targetId = input.getAttribute('data-target');
+                                    if (targetId) {
+                                        const targetDiv = document.getElementById(targetId);
+                                        if (targetDiv) targetDiv.style.display = input.checked ? 'block' : 'none';
+                                    }
+                                }
+                            } else {
+                                input.value = settings[key];
                             }
-                        } else {
-                            input.value = settings[key];
                         }
-                    }
-                });
+                    });
+                }
             }
 
-            // Sync Dark Mode Switch with actual App state if it exists
-            if (localStorage.getItem('darkMode') === 'enabled' && darkModeToggle) {
-                darkModeToggle.checked = true;
+            // Sync Dark Mode Switch with actual App state
+            if (darkModeToggle) {
+                darkModeToggle.checked = (localStorage.getItem('darkMode') === 'enabled');
             }
 
-        } catch(e) { console.error("Error loading settings", e); }
+        } catch(e) { 
+            console.error("Error loading settings", e); 
+        }
     };
+    
+    // Execute Load
     loadSettings();
 
     // 5. Save Logic (Full Form Submission - LocalStorage + App.State)
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('saveBtn');
-        const origHtml = btn.innerHTML;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
-        btn.disabled = true;
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('saveBtn');
+            let origHtml = 'Save'; // Fallback
+            
+            if (btn) {
+                origHtml = btn.innerHTML;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+                btn.disabled = true;
+            }
 
-        const formData = new FormData(form);
-        const settingsObj = {};
-        
-        // Capture Checkboxes
-        form.querySelectorAll('input[type="checkbox"]').forEach(chk => {
-            if(chk.id !== 'darkModeToggle') { // Exclude dark mode from DB settings as it's local UI
-                settingsObj[chk.name] = chk.checked;
+            const formData = new FormData(form);
+            const settingsObj = {};
+            
+            // Capture Checkboxes
+            form.querySelectorAll('input[type="checkbox"]').forEach(chk => {
+                // CORRECTED ID EXCLUSION: Must match the HTML id of your dark mode switch
+                if (chk.id !== 'darkModeToggleset') { 
+                    settingsObj[chk.name] = chk.checked;
+                }
+            });
+
+            // Capture Inputs
+            for (let [key, value] of formData.entries()) {
+                settingsObj[key] = value;
+            }
+
+            try {
+                // Save to LocalStorage
+                localStorage.setItem('ERP_Settings', JSON.stringify(settingsObj));
+                
+                // Save to App.State
+                if (typeof window.App !== 'undefined') {
+                    window.App.State = window.App.State || {};
+                    window.App.State.Settings = settingsObj;
+                }
+                
+                await new Promise(r => setTimeout(r, 400)); 
+                if (window.App && window.App.UI && typeof window.App.UI.Notify === 'function') {
+                    window.App.UI.Notify('Success', 'Settings successfully saved and applied.', 'success');
+                }
+                
+            } catch (error) {
+                console.error("Settings Save Error:", error);
+                if (window.App && window.App.UI && typeof window.App.UI.Notify === 'function') {
+                    window.App.UI.Notify('Error', 'Failed to save settings.', 'danger');
+                }
+            } finally {
+                if (btn) {
+                    btn.innerHTML = origHtml;
+                    btn.disabled = false;
+                }
             }
         });
-
-        // Capture Inputs
-        for (let [key, value] of formData.entries()) {
-            settingsObj[key] = value;
-        }
-
-        try {
-            // Save to LocalStorage
-            localStorage.setItem('ERP_Settings', JSON.stringify(settingsObj));
-            
-            // Save to App.State
-            if (typeof App !== 'undefined') {
-                App.State = App.State || {};
-                App.State.Settings = settingsObj;
-            }
-            
-            await new Promise(r => setTimeout(r, 400)); 
-            if(App && App.UI) App.UI.Notify('Success', 'Settings successfully saved and applied.', 'success');
-            
-        } catch (error) {
-            if(App && App.UI) App.UI.Notify('Error', 'Failed to save settings.', 'danger');
-        } finally {
-            btn.innerHTML = origHtml;
-            btn.disabled = false;
-        }
-    });
+    }
 })();
 </script>

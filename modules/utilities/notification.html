@@ -1,0 +1,414 @@
+<div class="main-content-area" style=" margin: 10px 0; ">
+    <div class="container-fluid">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="fw-bold text-dark mb-1">Notifications</h4>
+                <p class="text-muted small mb-0">Stay updated with your latest alerts and tasks.</p>
+            </div>
+            <button class="btn btn-outline-secondary btn-sm" onclick="App.Router('dashboard')">
+                <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+            </button>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-3">
+            <div class="card-body p-2 d-flex justify-content-between align-items-center">
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-primary active">All</button>
+                    <button class="btn btn-sm btn-outline-secondary">Unread</button>
+                    <button class="btn btn-sm btn-outline-secondary">Tasks</button>
+                </div>
+                <button class="btn btn-link btn-sm text-decoration-none">Mark all as read</button>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div id="fullNotificationList" class="list-group list-group-flush">
+                
+                <div class="list-group-item list-group-item-action p-3 border-bottom">
+                    <div class="d-flex w-100 justify-content-between align-items-start">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 me-3">
+                                <i class="bi bi-briefcase"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1 fw-bold">New Task Assigned</h6>
+                                <p class="mb-1 text-muted small">Krishna Mishra assigned you: "Prepare GST Audit Report"</p>
+                                <small class="text-primary fw-bold">2 hours ago</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">New</span>
+                    </div>
+                </div>
+
+                <div class="list-group-item list-group-item-action p-3 border-bottom">
+                    <div class="d-flex w-100 justify-content-between align-items-start">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-success bg-opacity-10 text-success rounded-circle p-2 me-3">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1 fw-bold">Task Completed</h6>
+                                <p class="mb-1 text-muted small">Your submission for "Q3 Tax Filing" was approved.</p>
+                                <small class="text-muted">Yesterday</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="list-group-item list-group-item-action p-3 border-bottom">
+                    <div class="d-flex w-100 justify-content-between align-items-start">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-warning bg-opacity-10 text-warning rounded-circle p-2 me-3">
+                                <i class="bi bi-exclamation-triangle"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-1 fw-bold">Deadline Approaching</h6>
+                                <p class="mb-1 text-muted small">The deadline for TDS Filing is in 2 days.</p>
+                                <small class="text-muted">June 5, 2026</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- <div class="text-center mt-4">
+            <button class="btn btn-outline-primary btn-sm px-4">Load Older Notifications</button>
+        </div> -->
+
+    </div>
+</div>
+
+
+<script>
+window.NotificationPageController = {
+    notifications: [],
+    currentFilter: 'all',
+    currentLimit: 20,
+    hasMore: true,
+    isLoading: false,
+    userId: null,
+    scrollObserver: null,
+
+    Init: function() {
+        this.userId = localStorage.getItem('userloginid');
+        if (!this.userId) return;
+
+        this.notifications = [];
+        this.currentLimit = 20;
+        this.hasMore = true;
+        this.currentFilter = 'all';
+        this.isLoading = false;
+
+        const listContainer = document.getElementById('fullNotificationList');
+        if (!listContainer) return;
+
+        this.BindEvents();
+        this.FetchNotifications();
+    },
+
+    BindEvents: function() {
+        const filterBtns = document.querySelectorAll('.btn-group .btn');
+        filterBtns.forEach(btn => {
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+            newBtn.addEventListener('click', (e) => {
+                document.querySelectorAll('.btn-group .btn').forEach(b => {
+                    b.classList.remove('active', 'btn-primary');
+                    b.classList.add('btn-outline-secondary');
+                });
+                e.target.classList.remove('btn-outline-secondary');
+                e.target.classList.add('active', 'btn-primary');
+                this.currentFilter = e.target.getAttribute('data-filter') || e.target.innerText.toLowerCase();
+                this.Render();
+            });
+        });
+
+        const markReadBtn = document.getElementById('markAllReadBtn');
+        if (markReadBtn) {
+            const newMarkBtn = markReadBtn.cloneNode(true);
+            markReadBtn.parentNode.replaceChild(newMarkBtn, markReadBtn);
+            newMarkBtn.addEventListener('click', () => {
+                localStorage.setItem('lastReadNotifTime', Date.now().toString());
+                this.Render(); 
+                if (window.UIUtils) window.UIUtils.Notify('Success', 'All notifications marked as read', 'success');
+            });
+        }
+
+        this.SetupInfiniteScroll();
+    },
+
+    SetupInfiniteScroll: function() {
+        if (this.scrollObserver) this.scrollObserver.disconnect();
+        this.scrollObserver = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && this.hasMore && !this.isLoading) {
+                this.LoadOlder();
+            }
+        }, { root: null, rootMargin: "150px" });
+    },
+
+    LoadOlder: function() {
+        if (this.isLoading) return;
+        this.isLoading = true;
+        const sentinel = document.getElementById('scrollSentinel');
+        if (sentinel) sentinel.innerHTML = '<span class="spinner-border spinner-border-sm text-primary me-2"></span>Loading older...';
+        this.currentLimit += 20;
+        this.FetchNotifications();
+    },
+
+    // BULLETPROOF FETCHING LOGIC
+    FetchNotifications: async function() {
+        this.isLoading = true;
+        const db = firebase.database();
+        const listContainer = document.getElementById('fullNotificationList');
+        if (!listContainer) return;
+
+        if (this.notifications.length === 0) {
+            listContainer.innerHTML = '<div class="text-center py-5"><span class="spinner-border text-primary"></span><p class="text-muted small mt-2">Loading data...</p></div>';
+        }
+
+        try {
+            // 1. Fetch Explicit Data for this User to avoid missing old items due to limitToLast
+            const [notifAllSnap, notifMeSnap, taskToMeSnap, taskByMeSnap] = await Promise.all([
+                db.ref('Notifications').orderByChild('target').equalTo('all').once('value'),
+                db.ref('Notifications').orderByChild('target').equalTo(this.userId).once('value'),
+                db.ref('Tasks').orderByChild('assignedTo').equalTo(this.userId).once('value'),
+                db.ref('Tasks').orderByChild('assignedBy').equalTo(this.userId).once('value')
+            ]);
+
+            // Deduplicate lists using a Map
+            const rawMap = new Map();
+
+            // Process Notifications
+            if (notifAllSnap.exists()) {
+                Object.entries(notifAllSnap.val()).forEach(([id, n]) => rawMap.set(id, { ...n, id, _dbNode: 'Notifications' }));
+            }
+            if (notifMeSnap.exists()) {
+                Object.entries(notifMeSnap.val()).forEach(([id, n]) => rawMap.set(id, { ...n, id, _dbNode: 'Notifications' }));
+            }
+
+            // Process Tasks (Assigned TO User or BY User)
+            const processTasks = (snap) => {
+                if (snap.exists()) {
+                    Object.entries(snap.val()).forEach(([id, t]) => {
+                        let isAssigner = (t.assignedBy === this.userId);
+                        let isAssignee = (t.assignedTo === this.userId);
+                        
+                        let displayTitle = "Task Assignment";
+                        if (isAssigner && !isAssignee) {
+                            displayTitle = `Task You Assigned`; // Manager View
+                        } else if (isAssignee) {
+                            displayTitle = `Task from ${t.assignerName || 'Manager'}`; // Employee View
+                        }
+
+                        rawMap.set(id, {
+                            id: id,
+                            title: displayTitle,
+                            message: t.text,
+                            timestamp: t.timestamp,
+                            type: 'task',
+                            status: t.done ? 'completed' : 'pending',
+                            _dbNode: 'Tasks',
+                            _isAssignee: isAssignee
+                        });
+                    });
+                }
+            };
+
+            processTasks(taskToMeSnap);
+            processTasks(taskByMeSnap);
+
+            // Convert Map to Array and Sort Newest First
+            let combinedList = Array.from(rawMap.values());
+            combinedList.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+            // Apply Local Pagination
+            this.hasMore = combinedList.length > this.currentLimit;
+            this.notifications = combinedList.slice(0, this.currentLimit);
+            
+            this.isLoading = false;
+            this.Render();
+
+        } catch (err) {
+            console.error("Firebase Merge Error:", err);
+            this.isLoading = false;
+        }
+    },
+
+    MarkTaskComplete: async function(id, dbNode) {
+        try {
+            if (dbNode === 'Tasks') {
+                await firebase.database().ref(`Tasks/${id}`).update({ done: true });
+            } else {
+                await firebase.database().ref(`Notifications/${id}`).update({ status: 'completed' });
+            }
+            
+            if (window.UIUtils) window.UIUtils.Notify('Success', 'Task marked as completed!', 'success');
+            
+            // Re-fetch to immediately show the updated green badge
+            this.FetchNotifications(); 
+        } catch (err) {
+            console.error("Failed to complete task:", err);
+            if (window.UIUtils) window.UIUtils.Notify('Error', 'Failed to update task status.', 'danger');
+        }
+    },
+
+    Render: function() {
+        const container = document.getElementById('fullNotificationList');
+        const loadMoreBtnContainer = document.getElementById('loadMoreContainer');
+        const lastReadTime = parseInt(localStorage.getItem('lastReadNotifTime') || '0');
+
+        if (!container) return;
+
+        let filtered = this.notifications;
+
+        // Apply Tab Filters
+        if (this.currentFilter === 'unread') {
+            filtered = filtered.filter(n => (n.timestamp || 0) > lastReadTime);
+        } else if (this.currentFilter === 'tasks') {
+            filtered = filtered.filter(n => n.type === 'task' || (n.title && n.title.toLowerCase().includes('task')));
+        }
+
+        // Empty States
+        if (filtered.length === 0) {
+            let emptyTitle = "You're all caught up!";
+            let emptyMsg = `No ${this.currentFilter !== 'all' ? this.currentFilter : ''} data to show right now.`;
+            
+            if (this.currentFilter === 'tasks') {
+                emptyTitle = "No Task History";
+                emptyMsg = "There are no tasks assigned to you or by you.";
+            }
+
+            container.innerHTML = `
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-check2-all fs-1 d-block mb-3 text-success opacity-50"></i>
+                    <h5 class="fw-bold text-dark">${emptyTitle}</h5>
+                    <p class="small">${emptyMsg}</p>
+                </div>`;
+            if (loadMoreBtnContainer) loadMoreBtnContainer.innerHTML = '';
+        } else {
+            
+            // Render the list
+            container.innerHTML = filtered.map(n => {
+                let isTask = (n.type === 'task' || (n.title && n.title.toLowerCase().includes('task')));
+                let isCompleted = isTask && (n.status === 'completed');
+                
+                const isUnread = (!isCompleted) && ((n.timestamp || 0) > lastReadTime);
+                const timeAgo = this.FormatDate(n.timestamp);
+                const iconConfig = this.GetIcon(n.type, n.title);
+                
+                // VISUAL STYLING FOR HISTORY LOG
+                const bgClass = isUnread ? 'bg-primary bg-opacity-10' : (isCompleted ? 'bg-light border-opacity-50' : '');
+                const titleStyle = isCompleted ? 'text-muted text-decoration-line-through opacity-75' : (!isUnread ? 'text-secondary' : 'text-dark');
+                const textStyle = isCompleted ? 'text-muted opacity-75' : 'text-muted';
+                const opacityWrapper = isCompleted ? 'opacity: 0.85;' : '';
+                
+                const clickAction = n.link ? `onclick="App.Router('${n.link.replace(/'/g, "\\'")}')"` : '';
+                const cursorStyle = n.link ? 'cursor: pointer;' : 'cursor: default;';
+
+                // Status Badge Logic
+                let statusHtml = '';
+                if (isTask) {
+                    if (isCompleted) {
+                        statusHtml = `
+                            <div class="mt-2">
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill shadow-sm" style="font-size: 0.7rem;">
+                                    <i class="bi bi-check2-all me-1"></i>Task Completed
+                                </span>
+                            </div>`;
+                    } else {
+                        // Show pending status, allow clicking to complete
+                        statusHtml = `
+                            <div class="mt-2 d-flex align-items-center gap-2">
+                                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1 rounded-pill" style="font-size: 0.7rem;">
+                                    <i class="bi bi-hourglass-split me-1"></i>Pending
+                                </span>
+                                <button class="btn btn-sm btn-light text-success border border-success border-opacity-25 py-0 px-2 rounded-pill shadow-sm" style="font-size: 0.7rem;" onclick="event.stopPropagation(); NotificationPageController.MarkTaskComplete('${n.id}', '${n._dbNode}')">
+                                    <i class="bi bi-check-circle me-1"></i> Mark Complete
+                                </button>
+                            </div>`;
+                    }
+                }
+
+                let finalIcon = isCompleted ? 'bi-check-circle-fill' : iconConfig.icon;
+                let finalIconBg = isCompleted ? 'bg-success bg-opacity-10 text-success' : iconConfig.bg;
+
+                return `
+                    <div class="list-group-item list-group-item-action p-3 border-bottom ${bgClass}" style="transition: background-color 0.2s; ${cursorStyle} ${opacityWrapper}" ${clickAction}>
+                        <div class="d-flex w-100 justify-content-between align-items-start">
+                            <div class="d-flex align-items-center w-100">
+                                <div class="${finalIconBg} rounded-circle p-2 me-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 45px; height: 45px;">
+                                    <i class="bi ${finalIcon} fs-5"></i>
+                                </div>
+                                <div class="w-100">
+                                    <h6 class="mb-1 fw-bold ${titleStyle}">${n.title || 'Notification'}</h6>
+                                    <p class="mb-1 small ${textStyle}">${n.message || ''}</p>
+                                    ${statusHtml}
+                                    <div class="mt-1"><small class="${isUnread ? 'text-primary fw-bold' : 'text-muted'}" style="font-size: 0.75rem;">${timeAgo}</small></div>
+                                </div>
+                            </div>
+                            ${isUnread ? '<span class="badge bg-primary rounded-pill shadow-sm mt-1" style="font-size: 0.7rem;">New</span>' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            if (loadMoreBtnContainer) {
+                if (!this.hasMore) {
+                    loadMoreBtnContainer.innerHTML = '<p class="text-muted small py-3"><i class="bi bi-journal-check me-1"></i> End of history.</p>';
+                } else {
+                    loadMoreBtnContainer.innerHTML = '<div id="scrollSentinel" class="text-muted small py-3" style="min-height: 40px;"></div>';
+                    const sentinel = document.getElementById('scrollSentinel');
+                    if (sentinel && this.scrollObserver) this.scrollObserver.observe(sentinel);
+                }
+            }
+        }
+    },
+
+    GetIcon: function(type, title) {
+        let safeType = (type || '').toLowerCase();
+        const safeTitle = (title || '').toLowerCase();
+        if (!safeType) {
+            if (safeTitle.includes('task')) safeType = 'task';
+            else if (safeTitle.includes('pay')) safeType = 'payment';
+            else if (safeTitle.includes('alert')) safeType = 'warning';
+            else if (safeTitle.includes('success')) safeType = 'success';
+            else if (safeTitle.includes('error')) safeType = 'error';
+            else if (safeTitle.includes('doc')) safeType = 'document';
+            else if (safeTitle.includes('system')) safeType = 'system';
+            else if (safeTitle.includes('meet')) safeType = 'meeting';
+        }
+
+        const map = {
+            info: { bg: 'bg-info bg-opacity-10 text-info', icon: 'bi-info-circle' },
+            task: { bg: 'bg-primary bg-opacity-10 text-primary', icon: 'bi-briefcase' },
+            success: { bg: 'bg-success bg-opacity-10 text-success', icon: 'bi-check-circle' },
+            warning: { bg: 'bg-warning bg-opacity-10 text-warning', icon: 'bi-exclamation-triangle' },
+            error: { bg: 'bg-danger bg-opacity-10 text-danger', icon: 'bi-x-circle' },
+            payment: { bg: 'bg-success bg-opacity-10 text-success', icon: 'bi-wallet2' },
+            system: { bg: 'bg-secondary bg-opacity-10 text-secondary', icon: 'bi-gear' },
+            document: { bg: 'bg-primary bg-opacity-10 text-primary', icon: 'bi-file-earmark-text' },
+            meeting: { bg: 'bg-info bg-opacity-10 text-info', icon: 'bi-calendar-event' }
+        };
+        return map[safeType] || { bg: 'bg-secondary bg-opacity-10 text-secondary', icon: 'bi-bell' };
+    },
+
+    FormatDate: function(timestamp) {
+        if (!timestamp) return "Just now";
+        const diffMins = Math.floor((Date.now() - timestamp) / 60000);
+        if (diffMins < 1) return "Just now";
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
+        if (diffMins < 2880) return "Yesterday";
+        return new Date(timestamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+};
+
+
+
+
+NotificationPageController.Init();
+</script>
+

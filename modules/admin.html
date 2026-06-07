@@ -91,7 +91,11 @@
                             <h6 class="mb-0">Super Admin</h6>
                             <small class="text-muted">admin@system.com</small>
                         </li>
-                        <li><a class="dropdown-item py-2 text-danger fw-bold" href="#"><i class="bi bi-box-arrow-left me-2"></i>Exit Panel</a></li>
+                        <li>
+                            <a class="dropdown-item py-2 text-danger fw-bold" href="javascript:void(0)" onclick="window.location.replace('/login.html')">
+                                <i class="bi bi-box-arrow-left me-2"></i>Exit Panel
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -99,104 +103,125 @@
 
         <div class="admin-content">
             
-            <div id="view-notifications" class="tab-view active-view">
-                <div class="row g-4">
-                    <div class="col-xl-4">
-                        <div class="card shadow-sm border-0 h-100">
-                            <div class="card-header bg-white border-bottom py-3">
-                                <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-send-fill text-primary me-2"></i> Compose Notification</h6>
-                            </div>
-                            <div class="card-body p-4">
-                                <form id="adminNotificationForm">
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold small text-muted">Target Audience</label>
-                                        <select name="target_user" id="notifTargetSelect" class="form-select form-select-sm" required>
-                                            <option value="all" selected>📢 Broadcast to ALL Users</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold small text-muted">Notification Title</label>
-                                        <input type="text" name="title" class="form-control form-control-sm" placeholder="e.g., System Update" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold small text-muted">Message Body</label>
-                                        <textarea name="message" class="form-control form-control-sm" rows="5" placeholder="Enter notification text here..." required></textarea>
-                                    </div>
-                                    <div class="mb-4">
-                                        <label class="form-label fw-bold small text-muted">Redirect Link (Optional)</label>
-                                        <div class="input-group input-group-sm">
-                                            <span class="input-group-text bg-light"><i class="bi bi-link-45deg"></i></span>
-                                            <input type="text" name="link" class="form-control" placeholder="e.g., reports/view">
-                                        </div>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold py-2 shadow-sm">
-                                        Dispatch Broadcast <i class="bi bi-arrow-right-circle ms-2"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
+    <div id="view-notifications" class="tab-view active-view">
+        <div class="row g-4">
+            <div class="col-xl-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-send-fill text-primary me-2"></i> Compose Notification</h6>
                     </div>
-                    
-                    <div class="col-xl-8">
-                        <div class="card shadow-sm border-0 h-100">
-                            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-clock-history text-muted me-2"></i> Live Broadcast History</h6>
-                                <button class="btn btn-xs btn-outline-secondary px-2" onclick="AdminSystem.LoadNotifications()"><i class="bi bi-arrow-clockwise"></i> Sync</button>
+                    <div class="card-body p-4">
+                        <form id="adminNotificationForm">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-muted">Target Audience</label>
+                                <select name="target_user" id="notifTargetSelect" class="form-select form-select-sm" required>
+                                    <option value="all" selected>📢 Broadcast to ALL Users</option>
+                                </select>
                             </div>
-                            <div class="table-responsive table-sticky-wrapper">
-                                <table class="table table-hover align-middle mb-0">
-                                    <thead class="text-muted small text-uppercase">
-                                        <tr>
-                                            <th class="ps-4">Title & Details</th>
-                                            <th>Audience</th>
-                                            <th>Timestamp</th>
-                                            <th class="text-end pe-4" style="width: 120px;">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="notificationTableBody">
-                                        <tr><td colspan="4" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Connecting to stream...</td></tr>
-                                    </tbody>
-                                </table>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-muted">Notification Title</label>
+                                <input type="text" name="title" class="form-control form-control-sm" placeholder="e.g., System Update" required>
                             </div>
-                        </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-muted">Notification Type</label>
+                                <select name="type" class="form-select form-select-sm" required>
+                                    <option value="info" selected>ℹ️ General Info</option>
+                                    <option value="task">💼 Task / Assignment</option>
+                                    <option value="success">✅ Success / Approval</option>
+                                    <option value="warning">⚠️ Warning / Alert</option>
+                                    <option value="error">❌ Error / Failure</option>
+                                    <option value="payment">💰 Payment / Finance</option>
+                                    <option value="system">⚙️ System Update</option>
+                                    <option value="document">📄 Document / Report</option>
+                                    <option value="meeting">📅 Meeting / Event</option>
+                                    <option value="security">🔒 Security Alert</option>
+                                    <option value="announcement">📢 Announcement</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-muted">Message Body</label>
+                                <textarea name="message" class="form-control form-control-sm" rows="5" placeholder="Enter notification text here..." required></textarea>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label fw-bold small text-muted">Redirect Link (Optional)</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light"><i class="bi bi-link-45deg"></i></span>
+                                    <input type="text" name="link" class="form-control" placeholder="e.g., reports/view">
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold py-2 shadow-sm">
+                                Dispatch Broadcast <i class="bi bi-arrow-right-circle ms-2"></i>
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
-
-            <div id="view-users" class="tab-view">
-                <div class="card shadow-sm border-0">
+            
+            <div class="col-xl-8">
+                <div class="card shadow-sm border-0 h-100">
                     <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-people-fill text-muted me-2"></i> Active System Directories</h6>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-primary fw-bold px-3 shadow-sm" onclick="AdminSystem.OpenCreateUserModal()">
-                                <i class="bi bi-plus-circle me-1"></i> Add New User
-                            </button>
-                            <div class="input-group input-group-sm" style="width: 240px;">
-                                <input type="text" id="userSearchInput" class="form-control" placeholder="Search users...">
-                                <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
-                            </div>
-                        </div>
+                        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-clock-history text-muted me-2"></i> Live Broadcast History</h6>
+                        <button class="btn btn-xs btn-outline-secondary px-2" onclick="AdminSystem.LoadNotifications()"><i class="bi bi-arrow-clockwise"></i> Sync</button>
                     </div>
                     <div class="table-responsive table-sticky-wrapper">
                         <table class="table table-hover align-middle mb-0">
                             <thead class="text-muted small text-uppercase">
                                 <tr>
-                                    <th class="ps-4">User Identity</th>
-                                    <th>System Role</th>
-                                    <th>Status Flag</th>
-                                    <th>Data Anchor</th>
-                                    <th class="text-end pe-4" style="width: 140px;">Actions</th>
+                                    <th class="ps-4">Title & Details</th>
+                                    <th>Audience</th>
+                                    <th>Timestamp</th>
+                                    <th class="text-end pe-4" style="width: 120px;">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="view-users-tbody">
-                                <tr><td colspan="5" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Reading data arrays...</td></tr>
+                            <tbody id="notificationTableBody">
+                                <tr><td colspan="4" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Connecting to stream...</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-
         </div>
+    </div>
+
+    <div id="view-users" class="tab-view">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-people-fill text-muted me-2"></i> Active System Directories</h6>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-primary fw-bold px-3 shadow-sm" onclick="AdminSystem.OpenCreateUserModal()">
+                        <i class="bi bi-plus-circle me-1"></i> Add New User
+                    </button>
+                    <div class="input-group input-group-sm" style="width: 240px;">
+                        <input type="text" id="userSearchInput" class="form-control" placeholder="Search users...">
+                        <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                    </div>
+                </div>
+            </div>
+            <div class="table-responsive table-sticky-wrapper">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="text-muted small text-uppercase">
+                        <tr>
+                            <th class="ps-4">User Identity</th>
+                            <th>System Role</th>
+                            <th>Status Flag</th>
+                            <th>Data Anchor</th>
+                            <th class="text-end pe-4" style="width: 140px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="view-users-tbody">
+                        <tr><td colspan="5" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Reading data arrays...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
     </main>
 </div>
 
@@ -578,7 +603,7 @@ const AdminSystem = {
     // ------------------------------------------
     // MODULE B: NOTIFICATIONS
     // ------------------------------------------
-    BindNotificationForm() {
+BindNotificationForm() {
         const form = document.getElementById('adminNotificationForm');
         if (!form) return;
 
@@ -587,31 +612,36 @@ const AdminSystem = {
             const btn = form.querySelector('button[type="submit"]');
             const origHtml = btn.innerHTML;
             
-            btn.innerHTML = 'Sending...'; btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...'; 
+            btn.disabled = true;
 
             const formData = new FormData(form);
+            
+            // Construct the payload, ensuring the new 'type' field is captured
             const payload = {
                 target: formData.get('target_user'),
-                title: formData.get('title').trim(),
-                message: formData.get('message').trim(),
-                link: formData.get('link').trim(),
-                sender: this.adminId,
+                type: formData.get('type') || 'info', // <-- CAPTURES THE NOTIFICATION TYPE
+                title: (formData.get('title') || '').trim(),
+                message: (formData.get('message') || '').trim(),
+                link: (formData.get('link') || '').trim(),
+                sender: this.adminId || localStorage.getItem('userloginid'), 
                 timestamp: firebase.database.ServerValue.TIMESTAMP
             };
 
             try {
                 await db.ref('Notifications').push(payload);
-                UIUtils.Notify('Success', 'Broadcast dispatched successfully.', 'success');
+                if (window.UIUtils) UIUtils.Notify('Success', 'Broadcast dispatched successfully.', 'success');
                 form.reset();
                 this.LoadNotifications(); 
             } catch (err) {
-                UIUtils.Notify('Error', 'Failed to send broadcast.', 'danger');
+                console.error("Broadcast Error:", err);
+                if (window.UIUtils) UIUtils.Notify('Error', 'Failed to send broadcast.', 'danger');
             }
 
-            btn.innerHTML = origHtml; btn.disabled = false;
+            btn.innerHTML = origHtml; 
+            btn.disabled = false;
         });
     },
-
     async LoadNotifications() {
         const tableBody = document.getElementById('notificationTableBody');
         if (!tableBody) return;
@@ -672,23 +702,42 @@ const AdminSystem = {
     },
 
     async SaveNotification() {
-        if (!this.currentEditNotifId) return;
-        
-        const updateData = {
-            title: document.getElementById('editNotifTitle').value.trim(),
-            message: document.getElementById('editNotifMessage').value.trim(),
-            link: document.getElementById('editNotifLink').value.trim()
-        };
+    if (!this.currentEditNotifId) return;
+    
+    // 1. Get the form element
+    const form = document.getElementById('editNotificationForm'); // Ensure your form has this ID
+    if (!form) {
+        console.error("Edit form not found!");
+        return;
+    }
 
-        try {
-            await db.ref(`Notifications/${this.currentEditNotifId}`).update(updateData);
-            UIUtils.Notify('Success', 'Broadcast metrics modified.', 'success');
-            bootstrap.Modal.getInstance(document.getElementById('editNotificationModal')).hide();
-            this.LoadNotifications();
-        } catch (err) {
-            UIUtils.Notify('Error', 'Failed to update notification.', 'danger');
-        }
-    },
+    // 2. Automatically grab ALL inputs in the form
+    // Any input with a 'name' attribute will be included in updateData
+    const formData = new FormData(form);
+    const updateData = Object.fromEntries(formData.entries());
+
+    // 3. (Optional) Sanitize/Validate: Ensure the message isn't empty
+    if (!updateData.title || !updateData.message) {
+        if(window.UIUtils) UIUtils.Notify('Error', 'Title and Message are required.', 'warning');
+        return;
+    }
+
+    try {
+        // 4. Update Firebase
+        // This will send every key-value pair found in the form
+        await firebase.database().ref(`Notifications/${this.currentEditNotifId}`).update(updateData);
+        
+        if(window.UIUtils) UIUtils.Notify('Success', 'Broadcast metrics modified.', 'success');
+        
+        const modal = bootstrap.Modal.getInstance(document.getElementById('editNotificationModal'));
+        if (modal) modal.hide();
+        
+        this.LoadNotifications();
+    } catch (err) {
+        console.error("Firebase Update Error:", err);
+        if(window.UIUtils) UIUtils.Notify('Error', 'Failed to update notification.', 'danger');
+    }
+},
 
     async DeleteNotification(id) {
         if (confirm('Recall this notification? It will be removed from users screens.')) {

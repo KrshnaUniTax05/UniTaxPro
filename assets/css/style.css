@@ -3,6 +3,7 @@
  * Design System: Modern ERP (High Density, Minimalist)
  */
 
+ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 :root {
     /* Color Palette - Refined for better contrast and modern feel */
     --primary-color: #0d6efd;
@@ -32,6 +33,9 @@
 
 body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    /* font-family: 'Noto Sans'; */
+    /* font-family: 'IBM Plex Sans', sans-serif; */
+    /* font-family: 'Public Sans', sans-serif; */
     color: var(--text-main);
     background-color: var(--bg-light);
     -webkit-font-smoothing: antialiased;
@@ -81,6 +85,7 @@ body {
     transition: var(--transition);
 }
 
+/* 1. Default Viewport Styling (For normal dashboard pages) */
 .content-viewport {
     flex-grow: 1;
     overflow-y: auto;
@@ -89,14 +94,23 @@ body {
     background-color: var(--bg-light);
 }
 
-.content-viewport .card{
+/* 2. ZERO OUT VIEWPORT PADDING if it contains the Settings Module */
+.content-viewport:has(.settings-wrapper) {
+    padding: 0px !important; 
+}
+
+/* 3. Apply Card Margins ONLY on normal pages (Not Settings) */
+.content-viewport:not(:has(.settings-wrapper)) .card {
     margin: 20px 0;
 }
-.content-viewport .card .card-body{
-    padding: 5px  !important;
-    border-radius: 20px !important;
 
+/* 4. Apply Card Body adjustments ONLY on normal pages (Not Settings) */
+.content-viewport:not(:has(.settings-wrapper)) .card .card-body {
+    padding: 5px !important;
+    border-radius: 20px !important;
 }
+
+
 /* 4. Sidebar (Offcanvas) */
 .offcanvas {
     width: 280px !important;
@@ -170,6 +184,7 @@ body.dark-mode .form-select.is-invalid:focus {
     box-shadow: none !important;
     outline: none !important;
 }
+
 label.form-label {
     font-weight: 600; font-size: 0.8125rem; color: var(--text-main); margin-bottom: 0.25rem;
 }
@@ -183,6 +198,14 @@ label.form-label {
     font-size: 0.65rem; font-weight: 600; padding: 0.25em 0.6em; border-radius: 4px; text-transform: uppercase;
 }
 
+.bi {
+    display: inline-block !important;
+    vertical-align: middle;
+}
+body.dark-mode .border-bottom,
+body.dark-mode .border { 
+    border-color: var(--border-color) !important;
+}
 /* --- 8. DARK MODE SYSTEM (Heavily updated for Contrast Fixes) --- */
 body.dark-mode {
     --bg-light: #0b1121;       /* Deepest Slate for main background */
