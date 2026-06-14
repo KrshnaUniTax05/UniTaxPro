@@ -68,6 +68,11 @@
                         <i class="bi bi-people"></i> User Management
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="switchAdminView('view-broadcasts', this)">
+                        <i class="bi bi-mic"></i> Broadcast
+                    </a>
+                </li>
             </ul>
         </div>
     </aside>
@@ -190,6 +195,73 @@
         </div>
     </div>
 
+    <div id="view-broadcasts" class="tab-view active-view">
+    <div class="row g-4">
+        <div class="col-xl-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-broadcast-pin text-primary me-2"></i> Broadcast Services</h6>
+                </div>
+                <div class="card-body p-4">
+                    <form id="broadcastForm">
+                        <input type="hidden" name="hiddenId">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted">Target Audience (@all or ID;ID)</label>
+                            <input type="text" name="target" class="form-control form-control-sm" placeholder="@all or user1;user2" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted">Broadcast Title</label>
+                            <input type="text" name="title" class="form-control form-control-sm" placeholder="e.g., Urgent Update" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted">Notification Type</label>
+                            <select name="type" class="form-select form-select-sm" required>
+                                <option value="info">ℹ️ General Info</option>
+                                <option value="success">✅ Success</option>
+                                <option value="warning">⚠️ Warning</option>
+                                <option value="error">❌ Error</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted">Message Body</label>
+                            <textarea name="message" class="form-control form-control-sm" rows="4" placeholder="Enter message..." required></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small text-muted">Redirect Link</label>
+                            <input type="text" name="link" class="form-control form-control-sm" placeholder="e.g., reports/gl-statement">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold py-2 shadow-sm">
+                            Broadcast Now <i class="bi bi-send-fill ms-2"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-8">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-broadcast text-muted me-2"></i> Broadcast Registry</h6>
+                    <button class="btn btn-xs btn-outline-secondary px-2" onclick="BroadcastManager.LoadHistory()"><i class="bi bi-arrow-clockwise"></i></button>
+                </div>
+                <div class="table-responsive table-sticky-wrapper">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="text-muted small text-uppercase">
+                            <tr>
+                                <th class="ps-4">Title & Message</th>
+                                <th>Audience</th>
+                                <th>Stats</th>
+                                <th class="text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="broadcastHistoryBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
     <div id="view-users" class="tab-view">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
@@ -762,15 +834,146 @@ BindNotificationForm() {
     }
 };
 
+const BroadcastManager = {
+    // 1. LOAD HISTORY & POPULATE TABLE
+    async LoadHistory() {
+        const body = document.getElementById('broadcastHistoryBody');
+        const snap = await firebase.database().ref('Broadcast-Services').once('value');
+        body.innerHTML = '';
+
+        if (!snap.exists()) {
+            body.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No broadcasts found.</td></tr>';
+            return;
+        }
+
+        snap.forEach(child => {
+            const n = child.val();
+            const id = child.key;
+            const readCount = Object.keys(n.ReadStatus || {}).length;
+
+            body.innerHTML += `
+                <tr>
+                    <td class="ps-4">
+                        <div class="fw-bold small text-dark">${n.title}</div>
+                        <div class="text-muted small text-truncate" style="max-width: 200px;">${n.message}</div>
+                    </td>
+                    <td><small class="text-muted">${Array.isArray(n.target) ? n.target.join('; ') : n.target}</small></td>
+                    <td>
+                        <button class="btn btn-xs btn-outline-success" onclick="BroadcastManager.ShowAnalytics('${id}')">
+                            ${readCount} Seen
+                        </button>
+                    </td>
+                    <td class="text-end pe-4">
+                        <button class="btn btn-xs btn-outline-warning" onclick="BroadcastManager.Edit('${id}')"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-xs btn-outline-danger" onclick="BroadcastManager.Delete('${id}')"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+        });
+    },
+
+    // 2. ANALYTICS MODAL
+    async ShowAnalytics(id) {
+        const snap = await firebase.database().ref(`Broadcast-Services/${id}`).once('value');
+        const n = snap.val();
+        const body = document.getElementById('analyticsModalBody');
+        
+        let usersHtml = '<ul class="list-group list-group-flush">';
+        if (n.ReadStatus) {
+            Object.keys(n.ReadStatus).forEach(uid => {
+                usersHtml += `<li class="list-group-item d-flex justify-content-between">
+                    <span class="small">${uid}</span>
+                    <span class="badge bg-success">Read</span>
+                </li>`;
+            });
+        } else {
+            usersHtml = '<li class="list-group-item text-muted small">No users have read this yet.</li>';
+        }
+        usersHtml += '</ul>';
+
+        body.innerHTML = `
+            <div class="mb-3"><strong>Message:</strong><p class="small text-muted">${n.message}</p></div>
+            <p class="small"><strong>Created:</strong> ${new Date(n.timestamp).toLocaleString()}</p>
+            <hr><h6>Who has seen this:</h6> ${usersHtml}
+        `;
+        const modal = new bootstrap.Modal(document.getElementById('analyticsModal'));
+        modal.show();
+    },
+
+    // 3. EDIT ACTION: Populate form
+    async Edit(id) {
+        const snap = await firebase.database().ref(`Broadcast-Services/${id}`).once('value');
+        const n = snap.val();
+        const form = document.getElementById('broadcastForm');
+
+        form.querySelector('[name="title"]').value = n.title;
+        form.querySelector('[name="message"]').value = n.message;
+        form.querySelector('[name="target"]').value = Array.isArray(n.target) ? n.target.join(';') : n.target;
+        form.querySelector('[name="link"]').value = n.link || '';
+        form.querySelector('[name="type"]').value = n.type || 'info';
+        form.querySelector('[name="hiddenId"]').value = id;
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    // 4. DELETE ACTION
+    async Delete(id) {
+        if(confirm('Delete this broadcast? This action is permanent.')) {
+            await firebase.database().ref(`Broadcast-Services/${id}`).remove();
+            this.LoadHistory();
+        }
+    },
+
+    // 5. SAVE OR UPDATE
+    async Save(payload, id) {
+        if(id) await firebase.database().ref(`Broadcast-Services/${id}`).update(payload);
+        else await firebase.database().ref('Broadcast-Services').push(payload);
+        this.LoadHistory();
+    }
+};
+
+// 6. FORM SUBMIT HOOK
+document.getElementById('broadcastForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = new FormData(e.target);
+    const id = data.get('hiddenId');
+    
+    const targetInput = data.get('target');
+    const targets = targetInput === '@all' ? 'all' : targetInput.split(';').map(s => s.trim());
+    
+    const payload = {
+        title: data.get('title'),
+        message: data.get('message'),
+        target: targets,
+        link: data.get('link'),
+        type: data.get('type'),
+        timestamp: Date.now()
+    };
+
+    await BroadcastManager.Save(payload, id);
+    
+    // Cleanup form
+    e.target.reset();
+    e.target.querySelector('[name="hiddenId"]').value = '';
+});
+
+
+
+
 // ==========================================
 // 4. INITIALIZE APP ON DOM LOAD
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     // Wait slightly to ensure Firebase and Bootstrap are fully parsed
     setTimeout(() => {
+        BroadcastManager.LoadHistory();
+        BroadcastManager.LoadHistory();
         AdminSystem.Init();
+        BroadcastManager.Init();
     }, 100);
 });
+
+
 </script>
 </body>
 </html>

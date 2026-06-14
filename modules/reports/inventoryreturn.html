@@ -1,0 +1,428 @@
+<div class="animate-in">
+    <div class="card border-0 shadow-sm overflow-hidden main-card-wrapper">
+        <div class="card-body p-0 border-bottom bg-light">
+            <div class="d-flex justify-content-between align-items-center p-3">
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark" id="reportTitle">Stock Summary</h5>
+                    <p class="text-muted small mb-0" id="reportSubtitle">Real-time Inventory Valuation & Movement</p>
+                </div>
+                <div class="d-flex gap-2 align-items-end">
+                    <div>
+                        <label class="small fw-bold text-muted mb-1">Group By</label>
+                        <select id="stockGroupBy" class="form-select form-select-sm shadow-sm" onchange="generateStockSummary()">
+                            <option value="item">Item-wise</option>
+                            <option value="hsn">HSN-wise</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="small fw-bold text-muted mb-1">From Date</label>
+                        <input type="date" id="stockFromDate" class="form-control form-control-sm shadow-sm" onchange="generateStockSummary()">
+                    </div>
+                    <div>
+                        <label class="small fw-bold text-muted mb-1">To Date</label>
+                        <input type="date" id="stockToDate" class="form-control form-control-sm shadow-sm" onchange="generateStockSummary()">
+                    </div>
+                    <button type="button" title="Refresh Data" class="btn btn-primary btn-sm shadow-sm fw-bold px-2 mb-0" onclick="generateStockSummary()">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                    <button type="button" title="Back to Summary" id="btnBackToSummary" class="btn btn-dark btn-sm shadow-sm fw-bold px-2 mb-0" style="display: none;" onclick="showSummaryView()">
+                        <i class="bi bi-arrow-left"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="viewStockSummary" class="p-0 table-responsive print-table-wrapper" style="max-height: calc(100vh - 200px); overflow-y: auto;">
+            <table class="table table-sm table-hover table-bordered mb-0 align-middle master-print-table" style="font-size: 0.85rem;">
+                <thead class="table-dark sticky-top">
+                    <tr class="text-center align-middle">
+                        <th rowspan="2" class="text-start ps-3" width="25%">Item / HSN Description</th>
+                        <th rowspan="2" width="5%">Unit</th>
+                        <th colspan="2" class="bg-secondary bg-opacity-25">Opening Balance</th>
+                        <th colspan="2" class="bg-primary bg-opacity-25">Inwards</th>
+                        <th colspan="2" class="bg-danger bg-opacity-25">Outwards</th>
+                        <th colspan="3" class="bg-success bg-opacity-25">Closing Balance</th>
+                    </tr>
+                    <tr class="text-center">
+                        <th class="bg-secondary bg-opacity-25">Qty</th>
+                        <th class="bg-secondary bg-opacity-25">Value</th>
+                        <th class="bg-primary bg-opacity-25">Qty</th>
+                        <th class="bg-primary bg-opacity-25">Value</th>
+                        <th class="bg-danger bg-opacity-25">Qty</th>
+                        <th class="bg-danger bg-opacity-25">Value</th>
+                        <th class="bg-success bg-opacity-25">Qty</th>
+                        <th class="bg-success bg-opacity-25">Avg Rate</th>
+                        <th class="bg-success bg-opacity-25 pe-3">Value</th>
+                    </tr>
+                </thead>
+                <tbody id="stockSummaryBody">
+                    <tr><td colspan="11" class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Loading inventory data...</td></tr>
+                </tbody>
+                <tfoot class="table-light fw-bold sticky-bottom shadow-sm">
+                    <tr class="text-end px-3">
+                        <td colspan="2" class="text-start ps-3 text-uppercase">Grand Total</td>
+                        <td id="totOpQty">-</td><td id="totOpVal">-</td>
+                        <td id="totInQty">-</td><td id="totInVal">-</td>
+                        <td id="totOutQty">-</td><td id="totOutVal">-</td>
+                        <td id="totClQty">-</td><td></td><td id="totClVal" class="pe-3">-</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div id="viewItemLedger" class="p-0 table-responsive print-table-wrapper" style="display: none; max-height: calc(100vh - 200px); overflow-y: auto;">
+            <table class="table table-sm table-hover mb-0 align-middle master-print-table" style="font-size: 0.85rem;">
+                <thead class="table-dark sticky-top">
+                    <tr>
+                        <th class="ps-3" width="10%">Date</th>
+                        <th width="15%">Vch Type</th>
+                        <th width="15%">Vch No.</th>
+                        <th width="25%">Particulars (Party)</th>
+                        <th class="text-end text-primary" width="10%">Inward Qty</th>
+                        <th class="text-end text-danger" width="10%">Outward Qty</th>
+                        <th class="text-end pe-3" width="15%">Balance Qty</th>
+                    </tr>
+                </thead>
+                <tbody id="itemLedgerBody">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    // 1. Initialize Dates
+    const now = new Date();
+    document.getElementById('stockToDate').valueAsDate = now;
+    document.getElementById('stockFromDate').valueAsDate = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    let globalStockData = {};
+
+    // --- MATH ENGINE FOR INVENTORY ---
+    const getInventoryImpact = (vch) => {
+        const rawFormId = vch.formId || vch.meta?.form_id || vch.meta?.documentType || "";
+        const formLower = rawFormId.toLowerCase().replace(/[^a-z0-9]/g, '');
+        
+        let type = "NONE";
+        if (formLower.includes('sale') && !formLower.includes('return') && !formLower.includes('creditnote')) type = "OUT";
+        else if (formLower.includes('purchase') && !formLower.includes('return') && !formLower.includes('debitnote')) type = "IN";
+        else if (formLower.includes('salesreturn') || formLower.includes('creditnote')) type = "IN"; 
+        else if (formLower.includes('purchasereturn') || formLower.includes('debitnote')) type = "OUT"; 
+
+        const h = vch.header || {};
+        const m = vch.meta || {};
+        const getValidName = (...names) => {
+            for(let n of names) if(n && n.trim() !== '' && n.trim().toLowerCase() !== 'unknown') return n.trim();
+            return "Cash / Default Party";
+        };
+        
+        // Strictly pull the Party Name instead of Ledger Codes
+        const partyName = getValidName(m.customer_ledger, m.supplier_ledger, h.customer_ledger, h.supplier_ledger, h.entity);
+
+        return { type, partyName, formRaw: rawFormId };
+    };
+
+    window.generateStockSummary = async function() {
+        const fromDate = document.getElementById('stockFromDate').value;
+        const toDate = document.getElementById('stockToDate').value;
+        const groupBy = document.getElementById('stockGroupBy').value;
+        const tbody = document.getElementById('stockSummaryBody');
+
+        tbody.innerHTML = `<tr><td colspan="11" class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm text-primary"></div> Processing Inventory Engine...</td></tr>`;
+
+        try {
+            let stockMap = {};
+
+            // 2. Fetch All Transactions
+            let types = await API.GetAllTransactionTypes().catch(() => ['SalesInvoiceForm', 'SalesReturnForm', 'CreditNoteForm', 'PurchaseInvoiceForm', 'PurchaseReturnForm', 'DebitNoteForm']);
+            let allTransactions = [];
+
+            for (const type of types) {
+                const data = await API.Fetch(`Transactions/${type}`);
+                if (data) {
+                    Object.entries(data).forEach(([key, vch]) => {
+                        allTransactions.push({ ...vch, key, formId: type });
+                    });
+                }
+            }
+
+            // Sort Chronologically for true moving average & running balance
+            allTransactions.sort((a, b) => {
+                let timeA = new Date(a.header?.date || a.header?.voucher_date || 0).getTime();
+                let timeB = new Date(b.header?.date || b.header?.voucher_date || 0).getTime();
+                return timeA - timeB; 
+            });
+
+            // 3. Process Engine
+            allTransactions.forEach(vch => {
+                const vchDate = vch.header?.date || vch.header?.voucher_date;
+                if (!vchDate) return;
+
+                const impact = getInventoryImpact(vch);
+                if (impact.type === "NONE") return; 
+
+                const items = Array.isArray(vch.items) ? vch.items : (vch.items ? Object.values(vch.items) : []);
+                
+                items.forEach(i => {
+                    const rawName = (i.item_name || i.itemName || i.product || "").trim();
+                    if (!rawName) return;
+
+                    const hsn = (i.auto_item_name_itemHSN || i.hsn || "N/A").trim();
+                    const unitKey = (i.unit || "Nos").trim();
+                    
+                    // Assign Grouping Key based on user selection
+                    let mapKey = "";
+                    if (groupBy === 'hsn') {
+                        mapKey = `HSN: ${hsn}`;
+                    } else {
+                        mapKey = `${rawName} (HSN: ${hsn})`;
+                    }
+
+                    const qty = parseFloat(i.qty) || 0;
+                    const rate = parseFloat(i.rate) || parseFloat(i.amount) || 0;
+                    const val = qty * rate;
+
+                    if (!stockMap[mapKey]) {
+                        stockMap[mapKey] = { name: mapKey, unit: unitKey, opQty: 0, opVal: 0, inQty: 0, inVal: 0, outQty: 0, outVal: 0, history: [] };
+                    }
+
+                    const entry = {
+                        date: vchDate,
+                        vchNo: vch.header?.doc_no || vch.header?.Invoice || vch.header?.supplier_bill_no || "N/A",
+                        vchType: impact.formRaw.replace('Form', '').replace(/([A-Z])/g, ' $1').trim(),
+                        party: impact.partyName,
+                        type: impact.type,
+                        qty: qty,
+                        rate: rate,
+                        val: val,
+                        key: vch.key,
+                        formId: vch.formId
+                    };
+
+                    if (fromDate && vchDate < fromDate) {
+                        if (impact.type === "IN") {
+                            stockMap[mapKey].opQty += qty;
+                            stockMap[mapKey].opVal += val;
+                        } else {
+                            stockMap[mapKey].opQty -= qty;
+                            stockMap[mapKey].opVal -= val; 
+                        }
+                    } else if (!fromDate || !toDate || (vchDate >= fromDate && vchDate <= toDate)) {
+                        if (impact.type === "IN") {
+                            stockMap[mapKey].inQty += qty;
+                            stockMap[mapKey].inVal += val;
+                        } else {
+                            stockMap[mapKey].outQty += qty;
+                            stockMap[mapKey].outVal += val;
+                        }
+                        stockMap[mapKey].history.push(entry);
+                    }
+                });
+            });
+
+            globalStockData = stockMap;
+            renderSummaryTable();
+
+        } catch (error) {
+            console.error("Inventory Engine Error:", error);
+            tbody.innerHTML = `<tr><td colspan="11" class="text-center py-5 text-danger fw-bold">Failed to load inventory: ${error.message}</td></tr>`;
+        }
+    };
+
+    function renderSummaryTable() {
+        const tbody = document.getElementById('stockSummaryBody');
+        tbody.innerHTML = '';
+
+        const sortedItems = Object.values(globalStockData).sort((a, b) => a.name.localeCompare(b.name));
+
+        let tOpQ = 0, tOpV = 0, tInQ = 0, tInV = 0, tOutQ = 0, tOutV = 0, tClQ = 0, tClV = 0;
+        const fmt = (val, isQty = false) => {
+            if (!val || val === 0) return '-';
+            return isQty ? val.toLocaleString('en-IN') : Utils.FormatINR(val);
+        };
+
+        sortedItems.forEach(item => {
+            const clQty = item.opQty + item.inQty - item.outQty;
+            const clVal = item.opVal + item.inVal - item.outVal;
+            const avgRate = clQty !== 0 ? Math.abs(clVal / clQty) : 0;
+
+            if (clQty === 0 && item.inQty === 0 && item.outQty === 0 && item.opQty === 0) return;
+
+            tOpQ += item.opQty; tOpV += item.opVal;
+            tInQ += item.inQty; tInV += item.inVal;
+            tOutQ += item.outQty; tOutV += item.outVal;
+            tClQ += clQty; tClV += clVal;
+
+            // Highlight Negative Balances (Oversold Stock)
+            const qtyClass = clQty < 0 ? 'text-danger fw-bold' : 'text-success fw-bold';
+            const valClass = clVal < 0 ? 'text-danger fw-bold' : 'text-success fw-bold';
+
+            const tr = document.createElement('tr');
+            tr.style.cursor = 'pointer';
+            tr.title = "Double-click to view Item Ledger";
+            
+            tr.ondblclick = () => showItemLedger(item.name);
+
+            tr.innerHTML = `
+                <td class="ps-3 fw-bold text-dark">${item.name}</td>
+                <td class="text-muted small">${item.unit}</td>
+                <td class="text-end bg-secondary bg-opacity-10">${fmt(item.opQty, true)}</td>
+                <td class="text-end bg-secondary bg-opacity-10">${fmt(item.opVal)}</td>
+                <td class="text-end bg-primary bg-opacity-10 fw-medium">${fmt(item.inQty, true)}</td>
+                <td class="text-end bg-primary bg-opacity-10">${fmt(item.inVal)}</td>
+                <td class="text-end bg-danger bg-opacity-10 fw-medium">${fmt(item.outQty, true)}</td>
+                <td class="text-end bg-danger bg-opacity-10">${fmt(item.outVal)}</td>
+                <td class="text-end bg-success bg-opacity-10 fs-6 ${qtyClass}">${fmt(clQty, true)}</td>
+                <td class="text-end bg-success bg-opacity-10 text-muted small">${fmt(avgRate)}</td>
+                <td class="text-end bg-success bg-opacity-10 pe-3 ${valClass}">${fmt(clVal)}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        if (tbody.innerHTML === '') {
+            tbody.innerHTML = `<tr><td colspan="11" class="text-center py-5 text-muted fw-bold">No inventory movement found for selected period.</td></tr>`;
+        }
+
+        document.getElementById('totOpQty').innerText = fmt(tOpQ, true);
+        document.getElementById('totOpVal').innerText = fmt(tOpV);
+        document.getElementById('totInQty').innerText = fmt(tInQ, true);
+        document.getElementById('totInVal').innerText = fmt(tInV);
+        document.getElementById('totOutQty').innerText = fmt(tOutQ, true);
+        document.getElementById('totOutVal').innerText = fmt(tOutV);
+        
+        // Footer Negative Alert
+        const footQtyClass = tClQ < 0 ? 'text-danger' : 'text-dark';
+        const footValClass = tClV < 0 ? 'text-danger' : 'text-dark';
+        document.getElementById('totClQty').innerHTML = `<span class="${footQtyClass}">${fmt(tClQ, true)}</span>`;
+        document.getElementById('totClVal').innerHTML = `<span class="${footValClass}">${fmt(tClV)}</span>`;
+    }
+
+    // --- VIEW CONTROLLERS ---
+    window.showItemLedger = function(itemName) {
+        document.getElementById('viewStockSummary').style.display = 'none';
+        document.getElementById('viewItemLedger').style.display = 'block';
+        document.getElementById('btnBackToSummary').style.display = 'inline-block';
+        
+        document.getElementById('reportTitle').innerHTML = `<i class="bi bi-box-seam me-2"></i> Ledger: <span class="text-primary">${itemName}</span>`;
+        document.getElementById('reportSubtitle').innerText = `Double-click any entry to open the specific voucher.`;
+
+        const tbody = document.getElementById('itemLedgerBody');
+        tbody.innerHTML = '';
+
+        const itemData = globalStockData[itemName];
+        if (!itemData) return;
+
+        let runningQty = itemData.opQty;
+        const fmt = (val, isQty = false) => (val === 0 || !val ? '-' : (isQty ? val.toLocaleString('en-IN') : Utils.FormatINR(val)));
+
+        if (itemData.opQty !== 0) {
+            const opClass = runningQty < 0 ? 'text-danger' : 'text-dark';
+            tbody.innerHTML += `
+                <tr class="fw-bold text-muted bg-light">
+                    <td class="ps-3">${Utils.FormatDate(document.getElementById('stockFromDate').value)}</td>
+                    <td></td><td></td>
+                    <td>OPENING BALANCE</td>
+                    <td class="text-end"></td><td class="text-end"></td>
+                    <td class="text-end pe-3 ${opClass}">${fmt(runningQty, true)} ${itemData.unit}</td>
+                </tr>
+            `;
+        }
+
+        itemData.history.forEach(entry => {
+            if (entry.type === "IN") runningQty += entry.qty;
+            else if (entry.type === "OUT") runningQty -= entry.qty;
+
+            const inStr = entry.type === "IN" ? fmt(entry.qty, true) : "-";
+            const outStr = entry.type === "OUT" ? fmt(entry.qty, true) : "-";
+            const runClass = runningQty < 0 ? 'text-danger fw-bold' : 'text-success fw-bold';
+
+            const tr = document.createElement('tr');
+            tr.style.cursor = 'pointer';
+            tr.title = "Double-click to open Voucher";
+            
+            // Replace it with this dynamic version:
+            tr.ondblclick = function() {
+                // Dynamically capture the current route
+                let currentRoute = 'reports/inventoryreturn'; // Default fallback for inventory
+                if (typeof App !== 'undefined' && App.State && App.State.currentRoute) {
+                    currentRoute = App.State.currentRoute;
+                } else if (window.location.hash) {
+                    currentRoute = window.location.hash.replace('#', '');
+                }
+
+                // Save the context WITH the returnRoute
+                localStorage.setItem('editContext', JSON.stringify({ 
+                    type: entry.formId, 
+                    key: entry.key,
+                    returnRoute: currentRoute // 🎯 This tells the edit panel to come back here!
+                }));
+                
+                if (typeof App !== 'undefined' && App.Router) App.Router('transactions/edit'); 
+            };
+
+            tr.innerHTML = `
+                <td class="ps-3">${Utils.FormatDate(entry.date)}</td>
+                <td><span class="badge border text-dark bg-transparent no-print">${entry.vchType}</span></td>
+                <td class="fw-bold text-dark">${entry.vchNo}</td>
+                <td class="fw-medium text-dark">${entry.party}</td>
+                <td class="text-end fw-bold text-primary">${inStr}</td>
+                <td class="text-end fw-bold text-danger">${outStr}</td>
+                <td class="text-end pe-3 ${runClass}">${fmt(runningQty, true)} ${itemData.unit}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        if (itemData.history.length === 0 && itemData.opQty === 0) {
+            tbody.innerHTML += `<tr><td colspan="7" class="text-center py-5 text-muted fw-bold">No transactions for this item in selected period.</td></tr>`;
+        }
+    };
+
+    window.showSummaryView = function() {
+        document.getElementById('viewStockSummary').style.display = 'block';
+        document.getElementById('viewItemLedger').style.display = 'none';
+        document.getElementById('btnBackToSummary').style.display = 'none';
+        
+        document.getElementById('reportTitle').innerText = 'Stock Summary';
+        document.getElementById('reportSubtitle').innerText = 'Real-time Inventory Valuation & Movement';
+    };
+
+    // Auto-run on load
+    setTimeout(generateStockSummary, 100);
+
+})();
+</script>
+
+<style>
+    /* Table Container Styling */
+    #viewStockSummary .table-responsive {
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+    }
+
+    /* Target all standard data cells */
+    #viewStockSummary .table td, 
+    #viewStockSummary .table th { 
+        font-size: 13px !important;
+        padding: 6px 10px !important; /* Balanced padding for readability */
+        vertical-align: middle;
+        border: solid 1px var(--apple-system);
+    }
+
+    /* Specific override for tbody cells */
+    #viewStockSummary tbody td { 
+        min-height: 12px !important;
+        /* Using padding instead of margin for table cells, as margin does not work on td elements */
+        padding: 4px 10px !important; 
+    }
+
+    /* Optional: Zebra striping for better readability */
+    #viewStockSummary tbody tr:nth-of-type(odd) {
+        background-color: rgba(0,0,0,0.02);
+    }
+
+    /* Optional: Hover effect */
+    #viewStockSummary tbody tr:hover {
+        background-color: rgba(0,0,0,0.05);
+    }
+</style>

@@ -450,30 +450,43 @@ const API = {
         }
     },
     // Add to API object in api.js
-    async UpdateVoucher(form, formId, key) {
-        const items = this._GetGridItems(form);
-        
-        // Standardize the Transaction Object
-        const transaction = {
-            header: {
-                doc_no: form.querySelector('[name="doc_no"]')?.value || 'N/A',
-                date: form.querySelector('[name="voucher_date"]')?.value || new Date().toISOString().split('T')[0],
-                entity: form.querySelector('[name="customer_ledger"]')?.value || form.querySelector('[name="gl_account"]')?.value || "Unknown",
-                narration: form.querySelector('[name="narration"]')?.value || '',
-                posted_at: firebase.database.ServerValue.TIMESTAMP,
-                status: 'UPDATED'
-            },
-            items: items,
-            meta: { updated_by: App.State.userId }
-        };
+    async UpdateVoucher(form, formId, passedKey) {
+    // 1. Hunt for the key: Check the parameter first, then check the hidden input
+    const key = passedKey || form.querySelector('[name="voucher_key"]')?.value || document.getElementById('active_voucher_key')?.value;
 
-        try {
-            await this.DB.ref(`${App.State.userId}/Transactions/${formId}/${key}`).update(transaction);
-            App.UI.Notify('Success', 'Document Updated Successfully', 'success');
-            return true;
-        } catch (e) {
-            App.UI.Notify('Error', 'Update failed: ' + e.message, 'danger');
-            return false;
-        }
-    },
+    // 2. SAFETY CATCH: Prevent creating a new voucher if the key is lost
+    if (!key || key === 'undefined' || key === 'null') {
+        console.error("CRITICAL ERROR: The Voucher Key was lost by the offcanvas!");
+        App.UI.Notify('Error', 'System lost the document ID. Update cancelled to prevent duplicates.', 'danger');
+        return false; 
+    }
+
+    const items = this._GetGridItems(form);
+    
+    const headerData = {
+        doc_no: form.querySelector('[name="doc_no"]')?.value || 'N/A',
+        date: form.querySelector('[name="voucher_date"]')?.value || new Date().toISOString().split('T')[0],
+        entity: form.querySelector('[name="customer_ledger"]')?.value || form.querySelector('[name="gl_account"]')?.value || "Unknown",
+        narration: form.querySelector('[name="narration"]')?.value || '',
+        posted_at: firebase.database.ServerValue.TIMESTAMP,
+        status: 'UPDATED'
+    };
+
+    const metaData = { updated_by: App.State.userId };
+
+    try {
+        // 3. Update using the strictly verified key
+        await this.DB.ref(`${App.State.userId}/Transactions/${formId}/${key}`).update({
+            header: headerData,
+            items: items,
+            meta: metaData
+        });
+
+        App.UI.Notify('Success', 'Document Updated Successfully', 'success');
+        return true;
+    } catch (e) {
+        App.UI.Notify('Error', 'Update failed: ' + e.message, 'danger');
+        return false;
+    }
+},
 };

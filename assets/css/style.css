@@ -106,7 +106,7 @@ body {
 
 /* 4. Apply Card Body adjustments ONLY on normal pages (Not Settings) */
 .content-viewport:not(:has(.settings-wrapper)) .card .card-body {
-    padding: 5px !important;
+    /* padding: 5px !important; */
     border-radius: 20px !important;
 }
 
@@ -157,6 +157,22 @@ body {
 .table tbody td {
     padding: 10px 12px; vertical-align: middle; border-bottom: 1px solid var(--border-color); color: var(--text-main);
 }
+
+.card .print-table-container {
+    overflow-x: auto;  /* Shows scrollbar only when needed */
+    overflow-y: auto;  /* Shows scrollbar only when needed */
+    max-height: 50vh;
+}
+
+
+
+/* logger section */
+
+/* Custom class to control visibility */
+.dropdown-menu.show-custom {
+    display: block !important;
+}
+
 
 .table-hover tbody tr { transition: background-color 0.15s ease; }
 .table-hover tbody tr:hover { background-color: var(--primary-bg-subtle) !important; cursor: pointer; }

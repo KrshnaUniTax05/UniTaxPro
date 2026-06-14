@@ -10,23 +10,45 @@
     </div>
 
 <script>
+// =====================================================================
+// DYNAMIC ROUTING & AUTO-REFRESH ENGINE
+// =====================================================================
+const rawContext = localStorage.getItem('editContext');
+const parsedContext = rawContext ? JSON.parse(rawContext) : {};
+window.activeReturnRoute = parsedContext.returnRoute || 'reports/gl-statement';
+
+window.goBackAndRefresh = function() {
+    if (typeof App !== 'undefined' && App.Router) {
+        // Navigate back to the exact window the user came from
+        App.Router(window.activeReturnRoute);
+        
+        // Wait 150ms for the DOM to render, then trigger the specific refresh function
+        setTimeout(() => {
+            if (window.activeReturnRoute.includes('gl-statement') && typeof window.generateStatement === 'function') {
+                window.generateStatement(); 
+            } else if (window.activeReturnRoute.includes('stock') && typeof window.generateStockSummary === 'function') {
+                window.generateStockSummary(); 
+            }
+        }, 150);
+    }
+};
+
 (async function() {
-    const rawContext = localStorage.getItem('editContext');
     if (!rawContext) {
         document.getElementById('editContainer').innerHTML = `<div class="alert alert-danger">No edit context found.</div>`;
         return;
     }
     
-    const { type, key } = JSON.parse(rawContext);
+    const { type, key } = parsedContext; // Using the parsed context from above
     
     // Form Mappings
-    const formRegistry = { "SalesInvoiceForm": "sales-inv", "ReceiptPaymentForm" : "receipt-pay", "PurchaseInvoiceForm": "purchase-inv", "ReceiptVoucherForm":"receipt-vch", "PaymentVoucherForm": "payment-vch" };
+    const formRegistry = { "SalesInvoiceForm": "sales-inv", "ReceiptPaymentForm" : "receipt-pay", "PurchaseInvoiceForm": "purchase-inv", "ReceiptVoucherForm":"receipt-vch", "PaymentVoucherForm": "payment-vch", "SalesReturnForm": "salesret-inv", "PurchaseReturnForm": "purchaseret-inv" };
     
-    // Multi-map to handle both Invoices and Receipts
+    // Multi-map to handle population across all form types
     const possibleNames = {
-        date: ['voucher_date', 'valueDate'],
-        doc_no: ['Invoice', 'paymentRef', 'supplier_bill_no'],
-        entity: ['customer_ledger', 'gl_account'],
+        date: ['voucher_date', 'valueDate', 'original_bill_date', 'original_invoice_date'],
+        doc_no: ['Invoice', 'paymentRef', 'supplier_bill_no', 'original_bill_no', 'original_invoice_no'],
+        entity: ['customer_ledger', 'supplier_ledger', 'gl_account', 'party_account'],
         CompanyCode: ['CompanyName']
     };
 
@@ -63,10 +85,9 @@
             });
         }
 
-        // 3. POPULATE DYNAMIC META FIELDS (e.g., lr_no, transporter)
+        // 3. POPULATE DYNAMIC META FIELDS
         if (data.meta) {
             Object.entries(data.meta).forEach(([k, v]) => {
-                // Ignore internal tracking meta fields
                 if (k === 'user' || k === 'form_id') return;
                 let input = form.querySelector(`[name="${k}"]`);
                 if(input) input.value = v;
@@ -97,6 +118,8 @@
         }
 
         if (typeof window.recalculateVoucher === 'function') window.recalculateVoucher();
+        if (typeof window.recalculateCrnVoucher === 'function') window.recalculateCrnVoucher();
+        if (typeof window.recalculateDbnVoucher === 'function') window.recalculateDbnVoucher();
 
         // 5. VIEW-ONLY UI WITH BACK & PRINT BUTTONS
         const lockForm = () => {
@@ -106,12 +129,12 @@
             const submitBtn = form.querySelector('button[type="submit"]');
             if(submitBtn) submitBtn.style.display = 'none';
 
-            form.querySelectorAll('.btn-danger, .btn-link, [onclick*="addNewRow"], [onclick*="removeRow"], [onclick*="rvAddRow"]').forEach(btn => {
+            form.querySelectorAll('.btn-danger, .btn-link, [onclick*="addNewRow"], [onclick*="removeRow"], [onclick*="rvAddRow"], [onclick*="addNewCrnRow"], [onclick*="removeCrnRow"], [onclick*="addNewDbnRow"], [onclick*="removeDbnRow"]').forEach(btn => {
                 btn.setAttribute('data-original-display', btn.style.display || 'inline-block');
                 btn.style.display = 'none';
             });
 
-            // Inject Unlock, Back & Print Buttons
+            // Inject Unlock, Back & Print Buttons (Using dynamic route)
             document.getElementById('editControlPanel').innerHTML = `
                 <div class="alert alert-warning d-flex justify-content-between align-items-center m-0 shadow-sm border-warning">
                     <span><i class="bi bi-eye me-2 "></i><strong>Viewing Record:</strong> ${data.header?.doc_no || 'Document'}</span>
@@ -119,7 +142,7 @@
                         <button type="button" class="btn btn-outline-primary btn-sm fw-bold shadow-sm  bg-white" onclick="window.printTransaction('${type}', '${key}')">
                             <i class="bi bi-printer me-1"></i>
                         </button>
-                        <button type="button" class="btn btn-outline-dark btn-sm fw-bold shadow-sm  bg-white" onclick="App.Router('reports/gl-statement')">
+                        <button type="button" class="btn btn-outline-dark btn-sm fw-bold shadow-sm  bg-white" onclick="window.goBackAndRefresh()">
                             <i class="bi bi-arrow-left me-1"></i>
                         </button>
                         <button type="button" class="btn btn-warning btn-sm fw-bold shadow-sm" onclick="enableEditing(this)">
@@ -131,26 +154,30 @@
         };
         lockForm();
 
-        // 6. CRUD: HANDLE DATABASE UPDATE
+        // 6. CRUD: HANDLE DATABASE UPDATE (UNIVERSAL NORMALIZATION)
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Re-extract the form to capture new dynamic meta fields
             const formDataObj = new FormData(form);
             const rawFormInputs = Object.fromEntries(formDataObj.entries());
             
             const standardKeys = [
-                'Invoice', 'paymentRef', 'supplier_bill_no', 'customer_ledger', 'gl_account',
-                'voucher_date', 'valueDate', 'project', 'CompanyName', 'instrumentDate', 'narration'
+                'Invoice', 'paymentRef', 'supplier_bill_no', 'original_bill_no', 'original_invoice_no',
+                'customer_ledger', 'supplier_ledger', 'gl_account', 'party_account', 'entity',
+                'voucher_date', 'valueDate', 'original_bill_date', 'original_invoice_date', 'date',
+                'project', 'CompanyName', 'instrumentDate', 'narration', 'pos', 'return_reason', 'documentType'
             ];
 
             const updatedMeta = { ...data.meta };
-            for (let key in rawFormInputs) {
-                // If it's not a standard header key, and not an array item key, it's dynamic meta
-                if (!standardKeys.includes(key) && !key.includes('[]')) {
-                    updatedMeta[key] = rawFormInputs[key];
+            
+            // Strictly exclude item rows and known standard keys from Meta
+            form.querySelectorAll('input, select, textarea').forEach(el => {
+                if (!el.name || el.closest('tbody')) return;
+                let k = el.name.replace('[]', '');
+                if (!standardKeys.includes(k)) {
+                    updatedMeta[k] = el.value;
                 }
-            }
+            });
 
             const payload = { 
                 header: { ...data.header }, 
@@ -158,22 +185,35 @@
                 meta: updatedMeta 
             };
 
-            // Map Header standard fields
-            form.querySelectorAll('.card-body > .row input, .card-body > .row select, .p-4 > .row input').forEach(el => {
+            // Map Header exactly the same for EVERY form
+            form.querySelectorAll('.card-body > .row input, .card-body > .row select, .p-4 > .row input, .p-4 > .row select').forEach(el => {
                 if(el.name) {
                     let dbKey = el.name;
-                    if (['Invoice', 'paymentRef', 'supplier_bill_no'].includes(dbKey)) dbKey = 'doc_no';
-                    if (['voucher_date', 'valueDate'].includes(dbKey)) dbKey = 'date';
-                    if (['customer_ledger', 'gl_account'].includes(dbKey)) dbKey = 'entity';
+                    
+                    if (['Invoice', 'paymentRef', 'supplier_bill_no', 'original_bill_no', 'original_invoice_no'].includes(dbKey)) dbKey = 'doc_no';
+                    if (['voucher_date', 'valueDate', 'original_bill_date', 'original_invoice_date'].includes(dbKey)) dbKey = 'date';
+                    if (['customer_ledger', 'supplier_ledger', 'gl_account', 'party_account'].includes(dbKey)) dbKey = 'entity';
+                    
                     payload.header[dbKey] = el.value;
                 }
             });
 
-            // Map Items
+            if (rawFormInputs.documentType) {
+                payload.meta.documentType = rawFormInputs.documentType;
+            }
+
+            // Map Items and handle empty numeric values
             form.querySelectorAll('tbody tr').forEach(row => {
                 const itemObj = {};
                 row.querySelectorAll('input, select').forEach(el => {
-                    if(el.name) itemObj[el.name.replace('[]', '')] = el.value;
+                    if(el.name) {
+                        let key = el.name.replace('[]', '');
+                        let val = el.value;
+                        if (['debit', 'credit', 'amount', 'dr_amount', 'cr_amount', 'rate', 'tax'].includes(key) && val === '') {
+                            val = 0;
+                        }
+                        itemObj[key] = val;
+                    }
                 });
                 if(Object.keys(itemObj).length > 0) payload.items.push(itemObj);
             });
@@ -201,10 +241,17 @@
 
                 await API.DB.ref(`${App.State.userId}/Transactions/${type}/${key}`).update(payload);
                 App.UI.Notify('Success', 'Transaction successfully updated.', 'success');
-                App.Router('reports/gl-statement'); 
+                
+                // 🎯 Route back to exact previous location instead of hardcoded GL statement
+                window.goBackAndRefresh(); 
 
             } catch (error) {
                 App.UI.Notify('Update Failed', error.message, 'danger');
+                const btn = form.querySelector('button[type="submit"]');
+                if(btn) {
+                    btn.innerHTML = '<i class="bi bi-check2 p-0"></i>';
+                    btn.disabled = false;
+                }
             }
         });
 
@@ -225,10 +272,11 @@ window.enableEditing = function(btn) {
         el.style.display = el.getAttribute('data-original-display');
     });
     
+    // 🎯 Dynamically route back on Cancel
     document.getElementById('editControlPanel').innerHTML = `
         <div class="alert alert-success d-flex justify-content-between align-items-center m-0 shadow-sm border-success">
             <span><i class="bi bi-unlock-fill me-2"></i><strong>Editing Unlocked.</strong></span>
-            <button type="button" class="btn btn-outline-dark btn-sm fw-bold shadow-sm bg-white" onclick="App.Router('reports/gl-statement')">
+            <button type="button" class="btn btn-outline-dark btn-sm fw-bold shadow-sm bg-white" onclick="window.goBackAndRefresh()">
                 <i class="bi bi-arrow-left me-1"></i> Cancel
             </button>
         </div>
@@ -238,14 +286,8 @@ window.enableEditing = function(btn) {
     if (submitBtn) {
         submitBtn.style.display = 'inline-block';
         submitBtn.classList.replace('btn-primary', 'btn-success');
-        submitBtn.title = "Update changes"
+        submitBtn.title = "Update changes";
         submitBtn.innerHTML = '<i class="bi bi-check2 p-0"></i>';
     }
 };
-
-
-
-
-
-
 </script>

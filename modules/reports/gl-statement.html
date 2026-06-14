@@ -166,6 +166,22 @@
         window.printFixAttached = true;
     }
 
+    // 🏷️ EXPLICIT TYPE MAPPING FOR CLEAN UI
+    const getDocPrefix = (formId) => {
+        const typeMap = {
+            'SalesInvoiceForm': 'Sales',
+            'PurchaseInvoiceForm': 'Purchase',
+            'SalesReturnForm': 'Credit Note',
+            'CreditNoteForm': 'Credit Note',
+            'PurchaseReturnForm': 'Debit Note',
+            'DebitNoteForm': 'Debit Note',
+            'ReceiptVoucherForm': 'Receipt',
+            'PaymentVoucherForm': 'Payment',
+            'JournalVoucherForm': 'Journal'
+        };
+        return typeMap[formId] || formId.replace('Form', '').replace(/([A-Z])/g, ' $1').trim();
+    };
+
     window.generateStatement = async function() {
         const accountInput = document.getElementById('targetAccount');
         const account = accountInput.value.trim();
@@ -182,10 +198,6 @@
             ledgerCode = codeMatch[1];
             ledgerName = account.replace(`(${ledgerCode})`, '').trim();
         }
-
-        const isSalesAccountSearch = ledgerName.toLowerCase().includes('sale');
-        const isPurchAccountSearch = ledgerName.toLowerCase().includes('purchase');
-        const isTaxAccountSearch = ledgerName.toLowerCase().includes('tax') || ledgerName.toLowerCase().includes('duties');
         
         tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 no-print"><div class="spinner-border spinner-border-sm text-primary"></div> Analyzing ledger data...</td></tr>`;
 
@@ -194,7 +206,7 @@
         let resolvedLedgerName = ledgerName;
         let linkedCompanyCode = null;
 
-        // --- 1. RESOLVE LEDGER & COMPANY ---
+        // --- 1. RESOLVE LEDGER & COMPANY FIRST ---
         try {
             const masterData = await API.Fetch('Masters/LedgerCreation');
             if (masterData) {
@@ -228,8 +240,11 @@
             }
         } catch (e) {}
 
+        const isSalesAccountSearch = resolvedLedgerName.toLowerCase().includes('sale');
+        const isPurchAccountSearch = resolvedLedgerName.toLowerCase().includes('purchase');
+        
         // --- 2. FETCH ALL TRANSACTIONS ---
-        let types = await API.GetAllTransactionTypes().catch(() => ['SalesInvoiceForm', 'PurchaseInvoiceForm', 'PaymentVoucherForm', 'ReceiptVoucherForm', 'JournalVoucherForm']);
+        let types = await API.GetAllTransactionTypes().catch(() => ['SalesInvoiceForm', 'SalesReturnForm', 'CreditNoteForm', 'PurchaseInvoiceForm', 'PurchaseReturnForm', 'DebitNoteForm', 'PaymentVoucherForm', 'ReceiptVoucherForm', 'JournalVoucherForm']);
         let allTransactions = [];
 
         for (const type of types) {
@@ -239,10 +254,16 @@
                     Object.entries(data).forEach(([key, vch]) => {
                         let isMatch = false;
                         const vchStr = JSON.stringify(vch).toLowerCase();
+                        const typeLower = type.toLowerCase();
+                        
+                        // 1. Exact Name/Code Search
                         if (vchStr.includes(resolvedLedgerName.toLowerCase())) isMatch = true;
                         if (resolvedLedgerCode && vchStr.includes(resolvedLedgerCode.toLowerCase())) isMatch = true;
-                        if (isSalesAccountSearch && type.toLowerCase().includes('sale')) isMatch = true;
-                        if (isPurchAccountSearch && type.toLowerCase().includes('purchase')) isMatch = true;
+                        
+                        // 2. Master Account Fallbacks
+                        if (isSalesAccountSearch && (typeLower.includes('sale') || typeLower.includes('creditnote') || vchStr.includes('sale'))) isMatch = true;
+                        if (isPurchAccountSearch && (typeLower.includes('purchase') || typeLower.includes('debitnote') || vchStr.includes('purchase'))) isMatch = true;
+                        
                         if (isMatch) allTransactions.push({ ...vch, key, formId: type });
                     });
                 }
@@ -255,54 +276,154 @@
             return timeA - timeB; 
         });
 
-        const isTargetLedger = (val) => {
-            if (!val) return false;
-            const v = val.toString().toLowerCase();
-            return v.includes(resolvedLedgerName.toLowerCase()) || (resolvedLedgerCode && v.includes(resolvedLedgerCode.toLowerCase()));
-        };
-
-        // --- CORE MATH ENGINE ---
+        // --- ⚙️ STRICT DOUBLE-ENTRY MATH ENGINE ---
         const processTransactionImpact = (vch) => {
             const h = vch.header || vch;
             const rawFormId = vch.formId || "JournalVoucher";
-            const formNameLower = rawFormId.toLowerCase();
+            const formLower = rawFormId.toLowerCase();
+            const vchStrLocal = JSON.stringify(vch).toLowerCase();
             
+            // Calculate Item Math
             let itemSubtotal = 0; let taxTotal = 0;
             const items = Array.isArray(vch.items) ? vch.items : (vch.items ? Object.values(vch.items) : []);
-            
             if (items.length > 0) {
                 items.forEach(i => {
                     const qty = parseFloat(i.qty) || 1;
                     const rate = parseFloat(i.rate) || parseFloat(i.amount) || 0;
+                    itemSubtotal += (qty * rate);
                     const taxPrc = parseFloat(i.auto_item_name_ItemTax) || parseFloat(i.taxRate) || 0;
-                    const base = qty * rate;
-                    itemSubtotal += base; taxTotal += base * (taxPrc / 100);
+                    taxTotal += (qty * rate) * (taxPrc / 100);
                 });
             }
             
-            const grandTotal = parseFloat(h.grandTotal) || parseFloat(h.amount) || parseFloat(h.total) || (itemSubtotal + taxTotal);
-            if (itemSubtotal === 0 && grandTotal > 0) itemSubtotal = grandTotal; 
+            // RULE 1: ALWAYS enforce the Grand Total value
+            const grandTotal = parseFloat(h.grandTotal) || parseFloat(h.amount) || parseFloat(h.total) || parseFloat(h.dr_amount) || parseFloat(h.cr_amount) || (itemSubtotal + taxTotal) || 0;
+
+            const getValidName = (...names) => {
+                for(let n of names) {
+                    if(n && typeof n === 'string' && n.trim() !== '' && n.trim().toLowerCase() !== 'undefined') return n.trim();
+                }
+                return "";
+            };
+
+            // Safely extract raw database fields (Added gl_account to catch legacy data)
+            const partyField = getValidName(h.customer_ledger, h.supplier_ledger, h.entity, h.party_account, h.gl_account);
+            const bankField = getValidName(h.bank_account, h.debitLedger, h.creditLedger);
+            
+            let debits = [];
+            let credits = [];
+
+            // RULE 2: Build the invisible strict Journal Entry
+            if (formLower.includes('sale') && !formLower.includes('return') && !formLower.includes('creditnote')) {
+                debits.push({ account: getValidName(partyField, h.debitLedger) || "Sundry Debtor", amount: grandTotal });
+                credits.push({ account: "Sales Account", amount: grandTotal });
+            } 
+            else if (formLower.includes('purchase') && !formLower.includes('return') && !formLower.includes('debitnote')) {
+                debits.push({ account: "Purchase Account", amount: grandTotal });
+                credits.push({ account: getValidName(partyField, h.creditLedger) || "Sundry Creditor", amount: grandTotal });
+            }
+            else if (formLower.includes('salesreturn') || formLower.includes('creditnote')) {
+                debits.push({ account: "Sales Return Account", amount: grandTotal });
+                credits.push({ account: getValidName(partyField, h.creditLedger) || "Sundry Debtor", amount: grandTotal });
+            }
+            else if (formLower.includes('purchasereturn') || formLower.includes('debitnote')) {
+                // For Purchase Return: Supplier is Debited, Return Account is Credited
+                debits.push({ account: getValidName(partyField, h.debitLedger) || "Sundry Creditor", amount: grandTotal });
+                credits.push({ account: "Purchase Return Account", amount: grandTotal });
+            }
+            else if (formLower.includes('receipt')) {
+                const actualBank = bankField || "Bank/Cash Account";
+                debits.push({ account: actualBank, amount: grandTotal });
+                
+                let itemSum = 0;
+                items.forEach(i => {
+                    const acc = getValidName(i.offset_account, i.customer_ledger, i.entity) || "Party Account";
+                    const amt = parseFloat(i.amount) || parseFloat(i.rate) || 0;
+                    credits.push({ account: acc, amount: amt });
+                    itemSum += amt;
+                });
+                if (credits.length === 0 || itemSum === 0) {
+                    credits.push({ account: getValidName(h.party_account, h.customer_ledger, h.entity) || "Party Account", amount: grandTotal });
+                }
+            }
+            else if (formLower.includes('payment')) {
+                const actualBank = bankField || "Bank/Cash Account";
+                credits.push({ account: actualBank, amount: grandTotal });
+                
+                let itemSum = 0;
+                items.forEach(i => {
+                    const acc = getValidName(i.offset_account, i.supplier_ledger, i.entity) || "Party Account";
+                    const amt = parseFloat(i.amount) || parseFloat(i.rate) || 0;
+                    debits.push({ account: acc, amount: amt });
+                    itemSum += amt;
+                });
+                if (debits.length === 0 || itemSum === 0) {
+                    debits.push({ account: getValidName(h.party_account, h.supplier_ledger, h.entity) || "Party Account", amount: grandTotal });
+                }
+            }
+            else {
+                debits.push({ account: h.debitLedger || "Journal Entry", amount: grandTotal });
+                credits.push({ account: h.creditLedger || "Journal Entry", amount: grandTotal });
+            }
+
+            // Prevent Self-Matching (Where particulars text shows its own name)
+            if (debits.length === 1 && credits.length === 1 && debits[0].account === credits[0].account) {
+                if (formLower.includes('receipt')) credits[0].account = "Receipt Income";
+                if (formLower.includes('payment')) debits[0].account = "Payment Expense";
+            }
 
             let dr = 0, cr = 0, displayEntityName = "";
+            const target = resolvedLedgerName.toLowerCase();
+            const targetCode = resolvedLedgerCode ? resolvedLedgerCode.toLowerCase() : null;
 
-            if (formNameLower.includes('sale')) {
-                if (isSalesAccountSearch || isTargetLedger(h.creditLedger)) { cr += itemSubtotal; displayEntityName = h.entity || "Sundry Debtor"; }
-                if (isTargetLedger(h.entity) || isTargetLedger(h.debitLedger)) { dr += grandTotal; displayEntityName = "Sales Account"; }
-                if (isTaxAccountSearch || isTargetLedger(h.taxLedger)) { cr += taxTotal; displayEntityName = h.entity || "Tax on Sales"; }
-            } else if (formNameLower.includes('purchase')) {
-                if (isPurchAccountSearch || isTargetLedger(h.debitLedger)) { dr += itemSubtotal; displayEntityName = h.entity || "Sundry Creditor"; }
-                if (isTargetLedger(h.entity) || isTargetLedger(h.creditLedger)) { cr += grandTotal; displayEntityName = "Purchase Account"; }
-                if (isTaxAccountSearch || isTargetLedger(h.taxLedger)) { dr += taxTotal; displayEntityName = h.entity || "Tax on Purchase"; }
-            } else if (formNameLower.includes('receipt')) {
-                if (isTargetLedger(h.entity) || isTargetLedger(h.debitLedger)) { dr += grandTotal; displayEntityName = items[0]?.offset_account || "Multiple Accounts"; }
-                items.forEach(i => { if (isTargetLedger(i.offset_account)) { cr += parseFloat(i.amount) || 0; displayEntityName = h.entity || h.debitLedger || "Bank/Cash Account"; } });
-            } else if (formNameLower.includes('payment')) {
-                if (isTargetLedger(h.entity) || isTargetLedger(h.creditLedger)) { cr += grandTotal; displayEntityName = items[0]?.offset_account || "Multiple Accounts"; }
-                items.forEach(i => { if (isTargetLedger(i.offset_account)) { dr += parseFloat(i.amount) || 0; displayEntityName = h.entity || h.creditLedger || "Bank/Cash Account"; } });
-            } else {
-                if (isTargetLedger(h.debitLedger)) { dr += grandTotal; displayEntityName = h.creditLedger || h.entity || "Journal Entry"; }
-                if (isTargetLedger(h.creditLedger)) { cr += grandTotal; displayEntityName = h.debitLedger || h.entity || "Journal Entry"; }
+            // RULE 3: Strict Evaluation against the Journal Entry
+            const isMatch = (accName) => {
+                if (!accName) return false;
+                const v = accName.toLowerCase();
+                if (v.includes(target) || (targetCode && v.includes(targetCode))) return true;
+                if (isSalesAccountSearch && v.includes('sale')) return true;
+                if (isPurchAccountSearch && v.includes('purchase')) return true;
+                return false;
+            };
+
+            let matched = false;
+
+            // Check if the user is viewing the Debit Side
+            for (let d of debits) {
+                if (isMatch(d.account)) {
+                    dr += d.amount;
+                    displayEntityName = credits[0]?.account || "Multiple Accounts"; 
+                    matched = true;
+                }
             }
+
+            // Check if the user is viewing the Credit Side
+            if (!matched) {
+                for (let c of credits) {
+                    if (isMatch(c.account)) {
+                        cr += c.amount;
+                        displayEntityName = debits[0]?.account || "Multiple Accounts"; 
+                        matched = true;
+                    }
+                }
+            }
+            
+            // 🚨 GREEDY FAILSAFE 🚨
+            // If the transaction was fetched because the ledger name existed in the JSON string, 
+            // but the strict logic dropped it due to missing legacy keys, force it to display.
+            if (!matched && (vchStrLocal.includes(target) || (targetCode && vchStrLocal.includes(targetCode)))) {
+                matched = true;
+                if (formLower.includes('sale') && !formLower.includes('return') && !formLower.includes('creditnote')) { dr = grandTotal; displayEntityName = "Sales Account"; }
+                else if (formLower.includes('purchase') && !formLower.includes('return') && !formLower.includes('debitnote')) { cr = grandTotal; displayEntityName = "Purchase Account"; }
+                else if (formLower.includes('salesreturn') || formLower.includes('creditnote')) { cr = grandTotal; displayEntityName = "Sales Return Account"; }
+                else if (formLower.includes('purchasereturn') || formLower.includes('debitnote')) { dr = grandTotal; displayEntityName = "Purchase Return Account"; }
+                else if (formLower.includes('receipt')) { cr = grandTotal; displayEntityName = "Bank/Cash Account"; }
+                else if (formLower.includes('payment')) { dr = grandTotal; displayEntityName = "Bank/Cash Account"; }
+                else { dr = grandTotal; displayEntityName = "Journal Entry"; }
+            }
+
+            if (!matched) return { dr: 0, cr: 0, displayEntityName: "", h, rawFormId };
+
             return { dr, cr, displayEntityName, h, rawFormId };
         };
 
@@ -314,7 +435,6 @@
             const vchDate = vch.header?.date || vch.date;
             const impact = processTransactionImpact(vch);
             
-            // Exclude irrelevant transactions entirely
             if (impact.dr === 0 && impact.cr === 0) return;
 
             if (fromDate && vchDate < fromDate) {
@@ -361,13 +481,13 @@
             const balType = runningBalance >= 0 ? 'Dr' : 'Cr';
             const balString = `${Utils.FormatINR(Math.abs(runningBalance))} <small class="text-muted ms-1">${balType}</small>`;
             const finalEntityName = ledgerMap[impact.displayEntityName.toLowerCase()] || impact.displayEntityName;
-            let docPrefix = impact.rawFormId.replace('InvoiceForm', '').replace('VoucherForm', '').replace(/([A-Z])/g, ' $1').trim().toUpperCase();
+            
+            let docPrefix = getDocPrefix(impact.rawFormId);
 
             const tr = document.createElement('tr');
             
-            // ✅ CORRECTED: Use the actual JavaScript variables from the loop
             tr.ondblclick = function() {
-                editTransaction(vch.formId, vch.key);  // No quotes needed - these are JS variables
+                editTransaction(vch.formId, vch.key);  
                 return false;
             };
             
@@ -450,7 +570,6 @@
     };
 })();
 </script>
-
 <style>
 /* -------------------------------------------------------------
    BANK STATEMENT PRINT STYLESHEET (TRUE EDGE-TO-EDGE)
@@ -514,7 +633,19 @@
 @media print {
     @page { 
         margin: 0mm !important; 
-        size: A4 portrait; 
+        size: A4 portrait !important; 
+    }
+    #errorNotificationBox{
+        display: none !important;
+    }
+
+    .content-viewport{
+        padding: 0px !important;
+    }
+
+    .print-table-container{
+        scrollbar-width: none !important;
+        font-size: 1rem;
     }
 
     body, html, #root, #app, #main-wrapper, .container-fluid, .container, main, .content-wrapper, .page-content {

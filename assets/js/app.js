@@ -42,30 +42,40 @@ const App = {
 
 
     async Init() {
+    try {
         // 1. Auth Guard
         if (!this.State.userId) { 
             window.location.href = 'login.html'; 
             return; 
         }
         
-        // 2. Initialize Sub-Systems
+        // 2. Initialize Sub-Systems (Sequential dependencies)
         API.Init();
         this.UI.InitTheme();
         this.UI.StartClock();
         this.BindGlobalEvents();
-        
 
-        // 3. PRE-FETCH COMPANY DATA ON STARTUP
-        // This makes sure it's ready for any statement or report immediately
-        // this.GetPersistentData(`${this.State.userId}/Masters/Companies`, 'Company');
+        // 🎯 FIX: Wrap notification engines in a safe block 
+        // We don't necessarily need to 'await' these unless they perform critical DB syncs,
+        // but we ensure they are called safely.
+        try {
+            NotificationEngine.Init();
+            BrowserNotificationEngine.Init();
+        } catch (notifErr) {
+            console.error("⚠️ [App] Notification Engine failed to start:", notifErr);
+        }
 
         // 3. Set Header Displays
-        document.getElementById('usernameDisplay').innerText = this.State.userName || "User";
-        document.getElementById('main_role_show').innerText = this.State.userRole.toUpperCase() || "User";
+        // Safely check if elements exist before setting innerText
+        const nameEl = document.getElementById('usernameDisplay');
+        const roleEl = document.getElementById('main_role_show');
         const userIdEl = document.getElementById('main_userid_show');
-        if(userIdEl) userIdEl.innerText = `ID: ${this.State.userId} `;
 
-        // 🚀 FIXED STARTUP LOGIC
+        if(nameEl) nameEl.innerText = this.State.userName || "User";
+        if(roleEl) roleEl.innerText = (this.State.userRole || "User").toUpperCase();
+        if(userIdEl) userIdEl.innerText = `ID: ${this.State.userId}`;
+
+        // 4. Handle Routing
         const pinnedModule = localStorage.getItem('pinnedModule');
         if (pinnedModule) {
             console.log(`📡 [App] Loading pinned module: ${pinnedModule}`);
@@ -74,10 +84,14 @@ const App = {
             await this.Router('dashboard');
         }
 
-        // 5. Remove Loader
+    } catch (err) {
+        console.error("🔴 [App] Critical Startup Failure:", err);
+    } finally {
+        // 5. Always remove loader, even if something fails
         const loader = document.getElementById('app-loader');
         if(loader) loader.style.display = 'none';
-    },
+    }
+},
     Search: {
         Registry: {
             "dash": "dashboard",
@@ -550,7 +564,7 @@ window.deleteTask = async function(taskId) {
         
         // Optional: Trigger your UI Notification if you have it loaded
         if (typeof App !== 'undefined' && App.UI) {
-            App.UI.Notify('Task Completed', 'Great job!', 'success');
+            App.UI.Notify('Task Completed', 'Marked Done!', 'success');
         }
     } catch (error) {
         console.error("Task Delete Error:", error);
@@ -860,217 +874,137 @@ window.printTransaction = async function(type, key) {
  * Fetches, filters, and renders real-time notifications for the current user.
  * ==============================================================================
  */
+const UIUtils = {
+    GetIcon(type) {
+        const map = {
+            info: { bg: 'bg-info bg-opacity-10 text-info', icon: 'bi-info-circle', emoji: 'ℹ️' },
+            task: { bg: 'bg-primary bg-opacity-10 text-primary', icon: 'bi-briefcase', emoji: '📋' },
+            success: { bg: 'bg-success bg-opacity-10 text-success', icon: 'bi-check-circle', emoji: '✅' },
+            warning: { bg: 'bg-warning bg-opacity-10 text-warning', icon: 'bi-exclamation-triangle', emoji: '⚠️' },
+            error: { bg: 'bg-danger bg-opacity-10 text-danger', icon: 'bi-x-circle', emoji: '❌' },
+            payment: { bg: 'bg-success bg-opacity-10 text-success', icon: 'bi-wallet2', emoji: '💰' }
+        };
+        return map[type?.toLowerCase()] || { bg: 'bg-secondary bg-opacity-10 text-secondary', icon: 'bi-bell', emoji: '🔔' };
+    }
+};
 
 const NotificationEngine = {
-    userId: localStorage.getItem('userloginid'), // Get logged-in user ID
-    
-    Init() {
-        if (!this.userId) {
-            console.warn("User ID not found in localStorage. Notifications paused.");
-            return;
-        }
+    userId: localStorage.getItem('userloginid'),
 
-        this.BindDropdownEvent();
-        this.ShowSkeletonLoader();
+    Init() {
+        if (!this.userId) return;
         this.ListenToDatabase();
     },
 
-    // 1. Show Skeleton Animation while loading safely
-    ShowSkeletonLoader() {
-        const list = document.getElementById('notificationList');
-        if (!list) return;
-
-        list.innerHTML = `
-            <li class="p-3 border-bottom placeholder-glow">
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="placeholder col-6 rounded"></span>
-                    <span class="placeholder col-3 rounded"></span>
-                </div>
-                <span class="placeholder col-12 rounded mb-1"></span>
-                <span class="placeholder col-8 rounded"></span>
-            </li>
-        `;
-    },
-
-    // 2. Fetch from Firebase Realtime Database
     ListenToDatabase() {
-        try {
-            const db = firebase.database();
-            db.ref('Notifications').orderByChild('timestamp').limitToLast(50).on('value', (snapshot) => {
-                const data = snapshot.val();
-                this.ProcessAndRender(data);
-            });
-        } catch (error) {
-            console.error("Firebase Notification Error:", error);
-            this.ShowEmptyMessage();
-        }
+        firebase.database().ref('Notifications').orderByChild('timestamp').limitToLast(50).on('value', (snapshot) => {
+            this.ProcessAndRender(snapshot.val());
+        });
     },
 
-    // 3. Filter and Render UI with Auto-Icons
     ProcessAndRender(data) {
         const list = document.getElementById('notificationList');
         const dot = document.getElementById('notificationDot');
         const countBadge = document.getElementById('notificationCount');
-        
-        if (!list) return; // Prevent crashes if the element isn't on the page
+        if (!list) return;
         list.innerHTML = '';
 
-        if (!data) {
-            this.ShowEmptyMessage();
-            return;
-        }
-
-        let validNotifs = [];
-
-        // STRICT FILTERING: Only "all" or specific "userId"
-        Object.entries(data).forEach(([id, notif]) => {
-            if (notif.target === 'all' || notif.target === this.userId) {
-                validNotifs.push(notif);
-            }
-        });
-
-        // Sort newest first
-        validNotifs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-
-        if (validNotifs.length === 0) {
-            this.ShowEmptyMessage();
-            return;
-        }
+        if (!data) { list.innerHTML = `<li class="p-3 text-muted small text-center">No notifications</li>`; return; }
 
         let unreadCount = 0;
-        const lastReadTime = parseInt(localStorage.getItem('lastReadNotifTime') || '0');
+        Object.entries(data)
+            .sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0))
+            .forEach(([id, notif]) => {
+                if (notif.target !== 'all' && notif.target !== this.userId) return;
 
-        validNotifs.forEach(notif => {
-            if (notif.timestamp > lastReadTime) {
-                unreadCount++;
-            }
+                const hasSeen = notif.ReadStatus?.[this.userId] === true;
+                if (!hasSeen) unreadCount++;
 
-            const timeString = this.FormatTime(notif.timestamp);
-            const bgClass = notif.timestamp > lastReadTime ? 'bg-primary bg-opacity-10' : ''; 
-            
-            // SMART ICON GUESSER INVOCATION
-            const iconConfig = this.GetIcon(notif.type, notif.title);
+                const icon = UIUtils.GetIcon(notif.type);
 
-            // Clean routing logic: Also dismiss the dropdown if a route exists
-            const clickAction = notif.link ? `onclick="App.Router('${notif.link.replace(/'/g, "\\'")}')"` : '';
-            const pointerStyle = notif.link ? 'cursor: pointer;' : 'cursor: default;';
-            const dismissAttr = notif.link ? 'data-bs-dismiss="dropdown"' : '';
-
-            list.innerHTML += `
-                <li>
-                    <div class="dropdown-item py-2 border-bottom text-wrap ${bgClass}" style="${pointerStyle}" ${clickAction} ${dismissAttr}>
-                        <div class="d-flex align-items-center mb-1">
-                            <div class="${iconConfig.bg} rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">
-                                <i class="bi ${iconConfig.icon}" style="font-size: 0.75rem;"></i>
+                list.innerHTML += `
+                    <li>
+                        <div class="dropdown-item py-2 border-bottom ${!hasSeen ? 'bg-primary bg-opacity-10' : ''}" 
+                             style="cursor: pointer;" 
+                             onclick="NotificationEngine.MarkAsSeen('${id}', '${notif.link || ''}')">
+                            <div class="d-flex align-items-center">
+                                <i class="bi ${icon.icon} ${icon.bg.split(' ')[2]} me-2"></i>
+                                <span class="fw-bold small text-truncate">${notif.title}</span>
                             </div>
-                            <span class="fw-bold small text-dark text-truncate" style="max-width: 170px;">${notif.title || 'Notification'}</span>
-                            <span class="text-muted ms-auto" style="font-size: 0.65rem;">${timeString}</span>
+                            <div class="text-muted small ms-4 ps-1">${notif.message}</div>
                         </div>
-                        <div class="text-muted ms-4 ps-2" style="font-size: 0.8rem; line-height: 1.3;">
-                            ${notif.message || ''}
-                        </div>
-                    </div>
-                </li>
-            `;
-        });
-
-        // Safely update badges
-        if (unreadCount > 0) {
-            if (dot) dot.style.display = 'inline-block';
-            if (countBadge) countBadge.innerText = unreadCount;
-        } else {
-            if (dot) dot.style.display = 'none';
-            if (countBadge) countBadge.innerText = '0';
-        }
-    },
-
-    // 4. Mark as read when Dropdown is clicked
-    BindDropdownEvent() {
-        const dropdownEl = document.getElementById('notificationDropdown');
-        if (dropdownEl) {
-            dropdownEl.addEventListener('show.bs.dropdown', () => {
-                localStorage.setItem('lastReadNotifTime', Date.now().toString());
-                
-                const dot = document.getElementById('notificationDot');
-                const countBadge = document.getElementById('notificationCount');
-                if (dot) dot.style.display = 'none';
-                if (countBadge) countBadge.innerText = '0';
-                
-                document.querySelectorAll('#notificationList .dropdown-item').forEach(el => {
-                    el.classList.remove('bg-primary', 'bg-opacity-10');
-                });
+                    </li>
+                `;
             });
-        }
+
+        if (countBadge) countBadge.innerText = unreadCount;
+        if (dot) dot.style.display = unreadCount > 0 ? 'inline-block' : 'none';
     },
 
-    // 5. Smart Icon Guesser (UPDATED WITH ALL ADMIN TYPES)
-    GetIcon(type, title) {
-        let safeType = (type || '').toLowerCase();
-        const safeTitle = (title || '').toLowerCase();
-
-        // Guess type from title if undefined
-        if (!safeType) {
-            if (safeTitle.includes('task') || safeTitle.includes('assign')) safeType = 'task';
-            else if (safeTitle.includes('pay') || safeTitle.includes('invoice')) safeType = 'payment';
-            else if (safeTitle.includes('alert') || safeTitle.includes('warn')) safeType = 'warning';
-            else if (safeTitle.includes('success') || safeTitle.includes('approv')) safeType = 'success';
-            else if (safeTitle.includes('error') || safeTitle.includes('fail')) safeType = 'error';
-            else if (safeTitle.includes('doc') || safeTitle.includes('report')) safeType = 'document';
-            else if (safeTitle.includes('update') || safeTitle.includes('system')) safeType = 'system';
-            else if (safeTitle.includes('meet') || safeTitle.includes('event')) safeType = 'meeting';
-            else if (safeTitle.includes('secur')) safeType = 'security';
-            else if (safeTitle.includes('announc') || safeTitle.includes('info')) safeType = 'announcement';
-        }
-
-        const map = {
-            info:         { bg: 'bg-info bg-opacity-10 text-info', icon: 'bi-info-circle' },
-            task:         { bg: 'bg-primary bg-opacity-10 text-primary', icon: 'bi-briefcase' },
-            success:      { bg: 'bg-success bg-opacity-10 text-success', icon: 'bi-check-circle' },
-            warning:      { bg: 'bg-warning bg-opacity-10 text-warning', icon: 'bi-exclamation-triangle' },
-            error:        { bg: 'bg-danger bg-opacity-10 text-danger',   icon: 'bi-x-circle' },
-            payment:      { bg: 'bg-success bg-opacity-10 text-success', icon: 'bi-wallet2' },
-            system:       { bg: 'bg-secondary bg-opacity-10 text-secondary', icon: 'bi-gear' },
-            document:     { bg: 'bg-primary bg-opacity-10 text-primary', icon: 'bi-file-earmark-text' },
-            meeting:      { bg: 'bg-info bg-opacity-10 text-info',       icon: 'bi-calendar-event' },
-            security:     { bg: 'bg-danger bg-opacity-10 text-danger',   icon: 'bi-shield-lock' },
-            announcement: { bg: 'bg-primary bg-opacity-10 text-primary', icon: 'bi-megaphone' }
-        };
-
-        const fallback = { bg: 'bg-secondary bg-opacity-10 text-secondary', icon: 'bi-bell' };
-        return map[safeType] || fallback;
-    },
-
-    // Utilities: Empty State
-    ShowEmptyMessage() {
-        const list = document.getElementById('notificationList');
-        if (!list) return;
-
-        list.innerHTML = `
-            <li class="text-center p-4 text-muted small" id="emptyNotificationMessage">
-                <i class="bi bi-bell-slash fs-4 d-block mb-2 text-secondary opacity-50"></i>
-                No new notifications
-            </li>
-        `;
-        
-        const dot = document.getElementById('notificationDot');
-        const countBadge = document.getElementById('notificationCount');
-        if (dot) dot.style.display = 'none';
-        if (countBadge) countBadge.innerText = '0';
-    },
-
-    // Utilities: Time Formatter
-    FormatTime(timestamp) {
-        if (!timestamp) return "Just now";
-        const diffMins = Math.floor((Date.now() - timestamp) / 60000);
-        
-        if (diffMins < 1) return "Just now";
-        if (diffMins < 60) return `${diffMins}m ago`;
-        if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
-        if (diffMins < 2880) return "Yesterday";
-        
-        return new Date(timestamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    async MarkAsSeen(id, link) {
+        await firebase.database().ref(`Notifications/${id}/ReadStatus/${this.userId}`).set(true);
+        if (link && typeof App !== 'undefined') App.Router(link);
     }
 };
+
+const BrowserNotificationEngine = {
+    userId: localStorage.getItem('userloginid'),
+    shownTimeouts: new Set(),
+
+    Init() {
+        if (!("Notification" in window)) return;
+        if (Notification.permission === "default") Notification.requestPermission();
+        
+        // 🎯 POINT TO Broadcast-Services, not Notifications
+        firebase.database().ref('Broadcast-Services').on('child_added', (snapshot) => {
+            const notif = snapshot.val();
+            const id = snapshot.key;
+
+            // 🎯 Check if targeted to ALL or if this userId is in the target array
+            const isForMe = notif.target === 'all' || (Array.isArray(notif.target) && notif.target.includes(this.userId));
+            if (!isForMe) return;
+            
+            // Check status: ReadStatus is stored under this specific broadcast ID
+            const hasSeen = notif.ReadStatus?.[this.userId] === true;
+            
+            if (!hasSeen && !this.shownTimeouts.has(id)) {
+                this.shownTimeouts.add(id);
+                // Trigger 30s timer
+                setTimeout(() => this.Show(id, notif), 30000);
+            }
+        });
+    },
+
+    async Show(id, notif) {
+    // 1. Double-check status in DB before showing
+    const snap = await firebase.database().ref(`Broadcast-Services/${id}/ReadStatus/${this.userId}`).once('value');
+    if (snap.val() === true) return;
+
+    if (Notification.permission === "granted") {
+        const icon = UIUtils.GetIcon(notif.type);
+        const n = new Notification(`${icon.emoji} ${notif.title}`, { 
+            body: notif.message, 
+            icon: '/favicon.ico' 
+        });
+
+        // 🎯 INSTANT MARK AS SEEN:
+        // As soon as the notification appears on the screen, 
+        // we mark it as 'true' so no other browser tab shows it.
+        firebase.database().ref(`Broadcast-Services/${id}/ReadStatus/${this.userId}`).set(true);
+
+        n.onclick = () => {
+            window.focus();
+            // Redirect logic
+            if (notif.link && typeof App !== 'undefined') {
+                App.Router(notif.link);
+            }
+            n.close();
+        };
+    }
+}
+};
+
+
 
 const UserProfileController = {
     userId: localStorage.getItem('userloginid'),
