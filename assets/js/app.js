@@ -1212,7 +1212,7 @@ const UserProfileController = {
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         if (typeof firebase !== 'undefined') {
-            UserProfileController.Init();
+            // UserProfileController.Init();
             NotificationEngine.Init();
             // NotificationPageController.Init();
 
