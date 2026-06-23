@@ -13,8 +13,10 @@
 // =====================================================================
 // DYNAMIC ROUTING & AUTO-REFRESH ENGINE
 // =====================================================================
-const rawContext = localStorage.getItem('editContext');
-const parsedContext = rawContext ? JSON.parse(rawContext) : {};
+
+// 🎯 FIX: Changed 'const' to 'var' to prevent SPA router crash on multiple opens
+var rawContext = localStorage.getItem('editContext');
+var parsedContext = rawContext ? JSON.parse(rawContext) : {};
 window.activeReturnRoute = parsedContext.returnRoute || 'reports/gl-statement';
 
 window.goBackAndRefresh = function() {
@@ -33,13 +35,49 @@ window.goBackAndRefresh = function() {
     }
 };
 
+// UNLOCK FUNCTION
+window.enableEditing = function(btn) {
+    const form = document.querySelector('form');
+    if(!form) return;
+    
+    form.querySelectorAll('input, textarea').forEach(el => el.readOnly = false);
+    form.querySelectorAll('select').forEach(el => el.style.pointerEvents = 'auto');
+    
+    form.querySelectorAll('[data-original-display]').forEach(el => {
+        el.style.display = el.getAttribute('data-original-display');
+    });
+    
+    // 🎯 Dynamically route back on Cancel
+    const controlPanel = document.getElementById('editControlPanel');
+    if (controlPanel) {
+        controlPanel.innerHTML = `
+            <div class="alert alert-success d-flex justify-content-between align-items-center m-0 shadow-sm border-success">
+                <span><i class="bi bi-unlock-fill me-2"></i><strong>Editing Unlocked.</strong></span>
+                <button type="button" class="btn btn-outline-dark btn-sm fw-bold shadow-sm bg-white" onclick="window.goBackAndRefresh()">
+                    <i class="bi bi-arrow-left me-1"></i> Cancel
+                </button>
+            </div>
+        `;
+    }
+    
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.style.display = 'inline-block';
+        submitBtn.classList.replace('btn-primary', 'btn-success');
+        submitBtn.title = "Update changes";
+        submitBtn.innerHTML = '<i class="bi bi-check2 p-0"></i>';
+    }
+};
+
+// --- MAIN EDIT LOGIC ---
 (async function() {
     if (!rawContext) {
         document.getElementById('editContainer').innerHTML = `<div class="alert alert-danger">No edit context found.</div>`;
         return;
     }
     
-    const { type, key } = parsedContext; // Using the parsed context from above
+    // Because this is inside a function, 'const' is perfectly safe here!
+    const { type, key } = parsedContext; 
     
     // Form Mappings
     const formRegistry = { "SalesInvoiceForm": "sales-inv", "ReceiptPaymentForm" : "receipt-pay", "PurchaseInvoiceForm": "purchase-inv", "ReceiptVoucherForm":"receipt-vch", "PaymentVoucherForm": "payment-vch", "SalesReturnForm": "salesret-inv", "PurchaseReturnForm": "purchaseret-inv" };
@@ -65,7 +103,7 @@ window.goBackAndRefresh = function() {
         container.innerHTML = await res.text();
         const form = container.querySelector('form');
 
-        // Re-hydrate native scripts
+        // Re-hydrate native scripts safely
         container.querySelectorAll("script").forEach(oldScript => {
             const newScript = document.createElement("script");
             newScript.text = oldScript.innerHTML;
@@ -117,9 +155,14 @@ window.goBackAndRefresh = function() {
             }
         }
 
-        if (typeof window.recalculateVoucher === 'function') window.recalculateVoucher();
-        if (typeof window.recalculateCrnVoucher === 'function') window.recalculateCrnVoucher();
-        if (typeof window.recalculateDbnVoucher === 'function') window.recalculateDbnVoucher();
+        // 🛡️ SAFETY SHIELD: Wrap math functions in try/catch to prevent UI crash
+        try {
+            if (typeof window.recalculateVoucher === 'function') window.recalculateVoucher();
+            if (typeof window.recalculateCrnVoucher === 'function') window.recalculateCrnVoucher();
+            if (typeof window.recalculateDbnVoucher === 'function') window.recalculateDbnVoucher();
+        } catch (mathErr) {
+            console.warn("Math recalculation skipped (Missing DOM Element):", mathErr.message);
+        }
 
         // 5. VIEW-ONLY UI WITH BACK & PRINT BUTTONS
         const lockForm = () => {
@@ -134,27 +177,30 @@ window.goBackAndRefresh = function() {
                 btn.style.display = 'none';
             });
 
-            // Inject Unlock, Back & Print Buttons (Using dynamic route)
-            document.getElementById('editControlPanel').innerHTML = `
-                <div class="alert alert-warning d-flex justify-content-between align-items-center m-0 shadow-sm border-warning">
-                    <span><i class="bi bi-eye me-2 "></i><strong>Viewing Record:</strong> ${data.header?.doc_no || 'Document'}</span>
-                    <div>
-                        <button type="button" class="btn btn-outline-primary btn-sm fw-bold shadow-sm  bg-white" onclick="window.printTransaction('${type}', '${key}')">
-                            <i class="bi bi-printer me-1"></i>
-                        </button>
-                        <button type="button" class="btn btn-outline-dark btn-sm fw-bold shadow-sm  bg-white" onclick="window.goBackAndRefresh()">
-                            <i class="bi bi-arrow-left me-1"></i>
-                        </button>
-                        <button type="button" class="btn btn-warning btn-sm fw-bold shadow-sm" onclick="enableEditing(this)">
-                            <i class="bi bi-pencil-square me-1"></i>
-                        </button>
+            // Inject Unlock, Back & Print Buttons
+            const controlPanel = document.getElementById('editControlPanel');
+            if (controlPanel) {
+                controlPanel.innerHTML = `
+                    <div class="alert alert-warning d-flex justify-content-between align-items-center m-0 shadow-sm border-warning">
+                        <span><i class="bi bi-eye me-2 "></i><strong>Viewing Record:</strong> ${data.header?.doc_no || 'Document'}</span>
+                        <div>
+                            <button type="button" class="btn btn-outline-primary btn-sm fw-bold shadow-sm  bg-white" onclick="window.printTransaction('${type}', '${key}')">
+                                <i class="bi bi-printer me-1"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-dark btn-sm fw-bold shadow-sm  bg-white" onclick="window.goBackAndRefresh()">
+                                <i class="bi bi-arrow-left me-1"></i>
+                            </button>
+                            <button type="button" class="btn btn-warning btn-sm fw-bold shadow-sm" onclick="enableEditing(this)">
+                                <i class="bi bi-pencil-square me-1"></i>
+                            </button>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
+            }
         };
         lockForm();
 
-        // 6. CRUD: HANDLE DATABASE UPDATE (UNIVERSAL NORMALIZATION)
+        // 6. CRUD: HANDLE DATABASE UPDATE
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -235,21 +281,38 @@ window.goBackAndRefresh = function() {
 
             try {
                 const btn = form.querySelector('button[type="submit"]');
-                const origText = btn.innerHTML;
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
-                btn.disabled = true;
+                const origText = btn ? btn.innerHTML : '';
+                if(btn) {
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+                    btn.disabled = true;
+                }
 
-                await API.DB.ref(`${App.State.userId}/Transactions/${type}/${key}`).update(payload);
-                App.UI.Notify('Success', 'Transaction successfully updated.', 'success');
+                // Call Database
+                if (typeof API !== 'undefined' && API.DB) {
+                    await API.DB.ref(`${App.State.userId}/Transactions/${type}/${key}`).update(payload);
+                } else {
+                    throw new Error("Database API not accessible.");
+                }
+
+                if (typeof App !== 'undefined' && App.UI) {
+                    App.UI.Notify('Success', 'Transaction successfully updated.', 'success');
+                } else {
+                    alert('Transaction successfully updated.');
+                }
                 
-                // 🎯 Route back to exact previous location instead of hardcoded GL statement
+                // 🎯 Route back to exact previous location
                 window.goBackAndRefresh(); 
 
             } catch (error) {
-                App.UI.Notify('Update Failed', error.message, 'danger');
+                if (typeof App !== 'undefined' && App.UI) {
+                    App.UI.Notify('Update Failed', error.message, 'danger');
+                } else {
+                    alert('Update Failed: ' + error.message);
+                }
+                
                 const btn = form.querySelector('button[type="submit"]');
                 if(btn) {
-                    btn.innerHTML = '<i class="bi bi-check2 p-0"></i>';
+                    btn.innerHTML = '<i class="bi bi-check2 p-0"></i> Update';
                     btn.disabled = false;
                 }
             }
@@ -257,37 +320,10 @@ window.goBackAndRefresh = function() {
 
     } catch (err) {
         console.error("Edit Flow Exception:", err);
-        document.getElementById('editContainer').innerHTML = `<div class="alert alert-danger shadow-sm">${err.message}</div>`;
+        const container = document.getElementById('editContainer');
+        if (container) {
+            container.innerHTML = `<div class="alert alert-danger shadow-sm">${err.message}</div>`;
+        }
     }
 })();
-
-// UNLOCK FUNCTION
-window.enableEditing = function(btn) {
-    const form = document.querySelector('form');
-    
-    form.querySelectorAll('input, textarea').forEach(el => el.readOnly = false);
-    form.querySelectorAll('select').forEach(el => el.style.pointerEvents = 'auto');
-    
-    form.querySelectorAll('[data-original-display]').forEach(el => {
-        el.style.display = el.getAttribute('data-original-display');
-    });
-    
-    // 🎯 Dynamically route back on Cancel
-    document.getElementById('editControlPanel').innerHTML = `
-        <div class="alert alert-success d-flex justify-content-between align-items-center m-0 shadow-sm border-success">
-            <span><i class="bi bi-unlock-fill me-2"></i><strong>Editing Unlocked.</strong></span>
-            <button type="button" class="btn btn-outline-dark btn-sm fw-bold shadow-sm bg-white" onclick="window.goBackAndRefresh()">
-                <i class="bi bi-arrow-left me-1"></i> Cancel
-            </button>
-        </div>
-    `;
-    
-    const submitBtn = form.querySelector('button[type="submit"]');
-    if (submitBtn) {
-        submitBtn.style.display = 'inline-block';
-        submitBtn.classList.replace('btn-primary', 'btn-success');
-        submitBtn.title = "Update changes";
-        submitBtn.innerHTML = '<i class="bi bi-check2 p-0"></i>';
-    }
-};
 </script>

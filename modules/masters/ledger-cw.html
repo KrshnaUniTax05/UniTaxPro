@@ -7,7 +7,7 @@
                         <h5 class="fw-bold mb-0">General Ledger Creation</h5>
                         <p class="text-muted small mb-0">Add accounts to Chart of Accounts (COA)</p>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm fw-bold">Save Ledger</button>
+                    <button type="submit" class="btn btn-success btn-sm px-3 shadow-sm fw-bold"><i class="bi bi-check2 me-1"></i></button>
                 </div>
 
                 <div class="p-4">
@@ -67,6 +67,16 @@
                         <div class="col-md-6"><label class="form-label small fw-bold">GST</label><input type="text" name="GST" class="form-control form-control-sm"></div>
                         <div class="col-md-6"><label class="form-label small fw-bold">Mobile</label><input type="tel" name="Mobile" class="form-control form-control-sm"></div>
                         <div class="col-md-12"><label class="form-label small fw-bold">Website</label><input type="url" name="website" class="form-control form-control-sm"></div>
+                    </div>
+                    <div class="bg-light p-3 rounded-3 my-4">
+                        <h6 class="fw-bold text-dark small text-uppercase mb-3">Opening Balances</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <input type="number" name="openingBalance" class="form-control">
+                            </div>
+                            <!-- <div class="col-md-6"></div> -->
+                            
+                        </div>
                     </div>
 
                     <div id="dynamicfeilds" class="mt-4"></div>
@@ -324,3 +334,4 @@ const formObserver = new MutationObserver(function(mutations) {
 
 formObserver.observe(document.body, { childList: true, subtree: true });
 </script>
+

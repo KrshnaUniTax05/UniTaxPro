@@ -1,0 +1,398 @@
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center p-3">
+        <h5 class="fw-bold mb-0">
+            <i class="bi bi-folder me-2 text-primary"></i>Project Registry
+        </h5>
+        <button class="btn btn-primary btn-sm shadow-sm" onclick="ProjectManager.CreateNew()">
+            <i class="bi bi-plus-lg me-1"></i> New Project
+        </button>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light text-muted small">
+                <tr>
+                    <th class="ps-4">Code</th>
+                    <th>Project Name</th>
+                    <th>Company</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="projectListBody">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+const ProjectManager = {
+    DbSheet: 'Projects',
+    
+    // 1. Fetch and build the list
+    async LoadList() {
+        const tbody = document.getElementById('projectListBody');
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary me-2"></div><span class="text-muted">Loading projects...</span></td></tr>';
+        
+        try {
+            let rawResponse = await API.Fetch(`Masters/${this.DbSheet}`);
+            let data = rawResponse?.data || rawResponse?.result || rawResponse;
+            
+            tbody.innerHTML = '';
+            
+            if (!data || Object.keys(data).length === 0) {
+                return tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-muted">
+                    <i class="bi bi-folder-plus fs-3 d-block mb-2"></i>
+                    No projects found. Create your first project!
+                </td></tr>`;
+            }
+
+            const entries = Array.isArray(data) ? data.map((v, i) => [v.id || i, v]) : Object.entries(data);
+
+            entries.forEach(([id, record]) => {
+                if (!record || typeof record !== 'object') return;
+                
+                const encodedData = encodeURIComponent(JSON.stringify(record));
+                tbody.innerHTML += `
+                    <tr class="project-row" data-id="${id}">
+                        <td class="ps-4 fw-bold text-dark">${record.ProjectCode || record.projectCode || '-'}</td>
+                        <td>${record.ProjectName || record.projectName || 'Unknown'}</td>
+                        <td class="text-muted small">${record.CompanyName || record.companyName || '-'}</td>
+                        <td class="text-end pe-4" style="white-space: nowrap;">
+                            <button class="btn btn-sm btn-light text-primary border me-1" 
+                                    onclick="ProjectManager.TriggerEdit('${id}', '${encodedData}')"
+                                    title="Edit Project">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-light text-danger border" 
+                                    onclick="ProjectManager.Delete('${id}', this)"
+                                    title="Delete Project">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            // Update count
+            const countEl = document.getElementById('projectCount');
+            if (countEl) {
+                countEl.innerText = `(${entries.length} records)`;
+            }
+            
+        } catch (error) {
+            console.error('Load Error:', error);
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-danger">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Error loading projects: ${error.message}
+            </td></tr>`;
+        }
+    },
+
+    // 2. ROUTE TO CREATE MODE
+    CreateNew() {
+        sessionStorage.removeItem('EditContext_Projects');
+        if (typeof App !== 'undefined' && App.Router) {
+            App.Router('masters/project-cw');
+        } else {
+            window.location.href = '#masters/project-cw';
+        }
+    },
+
+    // 3. ROUTE TO EDIT MODE
+    TriggerEdit(recordId, encodedData) {
+        const data = JSON.parse(decodeURIComponent(encodedData));
+        
+        sessionStorage.setItem('EditContext_Projects', JSON.stringify({
+            id: recordId,
+            payload: data
+        }));
+
+        if (typeof App !== 'undefined' && App.Router) {
+            App.Router('masters/project-cw');
+        } else {
+            window.location.href = '#masters/project-cw';
+        }
+    },
+
+    // 4. DELETE with confirmation
+    async Delete(recordId, btn) {
+        // Check if it's a system project (if you have any)
+        try {
+            const record = await API.Fetch(`Masters/${this.DbSheet}/${recordId}`);
+            const data = record?.data || record?.result || record;
+            
+            const projectCode = data?.ProjectCode || data?.projectCode || '';
+            const protectedCodes = ['SYS-PROJ', 'SYS-TEST'];
+            
+            if (protectedCodes.includes(projectCode)) {
+                App.UI.Notify('Error', 'Cannot delete system project. This is a protected record.', 'danger');
+                return;
+            }
+        } catch (e) {
+            // Continue if can't fetch
+        }
+        
+        if (!confirm('⚠️ Are you sure you want to delete this project?\n\nThis action cannot be undone!')) {
+            return;
+        }
+        
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        btn.disabled = true;
+        
+        try {
+            let success = false;
+            
+            if (typeof API.DeleteTransaction === 'function') {
+                success = await API.DeleteTransaction(`Masters/${ProjectManager.DbSheet}`, recordId);
+            } else {
+                const result = await API.Delete(`Masters/${ProjectManager.DbSheet}/${recordId}`);
+                success = result !== null && result !== undefined;
+            }
+            
+            if (!success) throw new Error("Delete operation failed.");
+            
+            // Animate row removal
+            const row = btn.closest('tr');
+            if (row) {
+                row.style.transition = 'all 0.3s ease';
+                row.style.opacity = '0';
+                setTimeout(() => row.remove(), 300);
+            }
+            
+            App.UI.Notify('Success', 'Project deleted successfully', 'success');
+            
+            // Refresh list after deletion
+            setTimeout(() => ProjectManager.LoadList(), 500);
+            
+        } catch (error) {
+            console.error('Delete Error:', error);
+            App.UI.Notify('Error', error.message || 'Delete failed', 'danger');
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+    },
+
+    // 5. SEARCH/FILTER
+    FilterList() {
+        const query = document.getElementById('projectSearchFilter')?.value?.toLowerCase() || '';
+        const rows = document.querySelectorAll('#projectListBody tr.project-row');
+        
+        rows.forEach(row => {
+            const code = row.querySelector('td:first-child')?.innerText?.toLowerCase() || '';
+            const name = row.querySelector('td:nth-child(2)')?.innerText?.toLowerCase() || '';
+            const company = row.querySelector('td:nth-child(3)')?.innerText?.toLowerCase() || '';
+            
+            const match = code.includes(query) || name.includes(query) || company.includes(query);
+            row.style.display = match ? '' : 'none';
+        });
+    }
+};
+
+// Initialize when view loads
+document.addEventListener('DOMContentLoaded', function() {
+    if (document.getElementById('projectListBody')) {
+        setTimeout(() => ProjectManager.LoadList(), 100);
+    }
+});
+
+// Also run if already loaded
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    if (document.getElementById('projectListBody')) {
+        setTimeout(() => ProjectManager.LoadList(), 100);
+    }
+}
+</script>
+
+<!-- Project Form Handler -->
+<!-- Project Form Handler (Updated with Back Button) -->
+<script>
+// 1. Create a Global Observer to watch the DOM for injected SPA modules
+const SPAMasterObserver = new MutationObserver((mutations) => {
+    // Look for the Projects form hitting the screen
+    const form = document.getElementById('Projects');
+    
+    // If it exists AND we haven't already hydrated it, run the setup!
+    if (form && !form.dataset.hydrated) {
+        form.dataset.hydrated = "true";
+
+        // --- ADD BACK BUTTON ---
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            // Check if back button already exists
+            let backBtn = form.querySelector('#backToListBtn');
+            if (!backBtn) {
+                const btnGroup = document.createElement('div');
+                btnGroup.className = 'd-flex gap-2 align-items-center';
+                
+                backBtn = document.createElement('button');
+                backBtn.type = 'button';
+                backBtn.id = 'backToListBtn';
+                backBtn.className = 'btn btn-primary btn-sm shadow-sm fw-bold px-2 mb-0';
+                backBtn.title = 'Back to List';
+                backBtn.innerHTML = '<i class="bi bi-arrow-left"></i>';
+                backBtn.onclick = function() {
+                    if (typeof App !== 'undefined' && App.Router) {
+                        App.Router('masters/project-list');
+                    } else {
+                        window.location.href = '#masters/project-list';
+                    }
+                };
+
+                // Replace submit button with group containing back + submit
+                submitBtn.parentNode.insertBefore(btnGroup, submitBtn);
+                btnGroup.appendChild(backBtn);
+                btnGroup.appendChild(submitBtn);
+            }
+        }
+
+        // 2. Check Memory for Edit Data
+        const editContextStr = sessionStorage.getItem('EditContext_Projects');
+
+        if (editContextStr) {
+            const context = JSON.parse(editContextStr);
+            const data = context.payload;
+
+            // 3. Inject Hidden ID
+            let hiddenId = form.querySelector('#projectHiddenId');
+            if (!hiddenId) {
+                hiddenId = document.createElement('input');
+                hiddenId.type = 'hidden';
+                hiddenId.id = 'projectHiddenId';
+                hiddenId.name = 'hiddenRecordId';
+                form.appendChild(hiddenId);
+            }
+            hiddenId.value = context.id;
+
+            // 4. Auto-Fill the Inputs
+            Object.keys(data).forEach(key => {
+                const input = form.querySelector(`[name="${key}"]`);
+                if (input) {
+                    input.value = data[key] || '';
+                }
+            });
+
+            // 5. Change Button to "Update"
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>';
+                // submitBtn.classList.remove('btn-success');
+                submitBtn.classList.add('btn-success');
+            }
+
+            // 6. Update Form Header
+            const header = form.querySelector('h5');
+            if (header) {
+                header.innerHTML = '<i class="bi bi-pencil-square me-2"></i>Edit Project';
+            }
+
+            // 7. Clear Memory
+            sessionStorage.removeItem('EditContext_Projects');
+        } else {
+            // Create mode - ensure no hidden ID
+            const hiddenId = form.querySelector('#projectHiddenId');
+            if (hiddenId) hiddenId.remove();
+            
+            // Reset form
+            form.reset();
+            
+            // Update header
+            const header = form.querySelector('h5');
+            if (header) {
+                header.innerHTML = '<i class="bi bi-plus-circle me-2"></i>Create New Project';
+            }
+            
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="bi bi-check2 me-1"></i> Create Project';
+                submitBtn.classList.remove('btn-primary');
+                submitBtn.classList.add('btn-success');
+            }
+        }
+
+        // 8. Intercept the Form Submission (Handles BOTH Create and Update)
+        form.onsubmit = async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalHtml = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processing...';
+            submitBtn.disabled = true;
+
+            const formData = new FormData(form);
+            const payload = Object.fromEntries(formData.entries());
+            
+            // Handle unchecked checkboxes
+            form.querySelectorAll('input[type="checkbox"]:not(:checked)').forEach(cb => {
+                if (cb.name) payload[cb.name] = false;
+            });
+            
+            // Identify if this is an Update or Create
+            const recordId = form.querySelector('#projectHiddenId')?.value;
+            delete payload.hiddenRecordId;
+
+            try {
+                if (recordId) {
+                    // --- UPDATE LOGIC ---
+                    let success = false;
+                    
+                    if (typeof API.UpdateTransaction === 'function') {
+                        success = await API.UpdateTransaction(`Masters/${ProjectManager.DbSheet}`, recordId, payload);
+                    } else {
+                        const result = await API.Update(`Masters/${ProjectManager.DbSheet}/${recordId}`, payload);
+                        success = result !== null && result !== undefined;
+                    }
+                    
+                    if (!success) throw new Error("Update operation failed.");
+                    
+                    App.UI.Notify('Success', 'Project Updated Successfully', 'success');
+                    
+                } else {
+                    // --- CREATE LOGIC ---
+                    payload.created_at = new Date().toISOString();
+                    payload.updated_at = payload.created_at;
+                    
+                    const result = await API.Create(`Masters/${ProjectManager.DbSheet}`, payload);
+                    
+                    if (!result) throw new Error("Create operation failed.");
+                    
+                    App.UI.Notify('Success', 'Project Created Successfully', 'success');
+                }
+                
+                // Route back to list view
+                if (typeof App !== 'undefined' && App.Router) {
+                    App.Router('masters/project-list');
+                } else {
+                    window.location.href = '#masters/project-list';
+                }
+
+            } catch (error) {
+                console.error('Save Error:', error);
+                App.UI.Notify('Error', error.message || 'Save failed', 'danger');
+                submitBtn.innerHTML = originalHtml;
+                submitBtn.disabled = false;
+            }
+        };
+    }
+});
+
+// Start watching the entire body for SPA route changes
+SPAMasterObserver.observe(document.body, { childList: true, subtree: true });
+
+// Also check immediately if form already exists
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('Projects');
+    if (form && !form.dataset.hydrated) {
+        // Trigger mutation observer manually
+        setTimeout(() => {
+            const observer = new MutationObserver(() => {});
+            observer.observe(document.body, { childList: true, subtree: true });
+            observer.disconnect();
+            // Force check
+            const formCheck = document.getElementById('Projects');
+            if (formCheck && !formCheck.dataset.hydrated) {
+                // Manually trigger the observer
+                const event = new MutationEvent('DOMNodeInserted', { bubbles: true });
+                document.body.dispatchEvent(event);
+            }
+        }, 100);
+    }
+});
+</script>

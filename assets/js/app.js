@@ -513,9 +513,19 @@ window.renderTasks = function() {
         const tasks = snapshot.val() || {};
         
         if (Object.keys(tasks).length === 0) {
-            tbody.innerHTML = '<tr><td class="text-center text-muted py-3"><i class="bi bi-check-circle text-success fs-4 d-block mb-2"></i>All caught up!</td></tr>';
-            return;
-        }
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="4" class="text-center py-4">
+                <div class="d-flex flex-column align-items-center justify-content-center text-muted">
+                    <i class="bi bi-check-circle-fill fs-2 text-success mb-2 opacity-75"></i>
+                    <p class="mb-0 fw-bold">All caught up!</p>
+                    <small class="small">No pending tasks found.</small>
+                </div>
+            </td>
+        </tr>
+    `;
+    return;
+}
 
         // Sort tasks: Newest first
         const sortedTasks = Object.entries(tasks).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
@@ -1208,11 +1218,110 @@ const UserProfileController = {
 };
 
 
+/**
+ * ========================================================================
+ * UNIVERSAL MASTER DATA ENGINE & OBSERVER
+ * ========================================================================
+ */
+
+// Global Form Hydrator
+const FormObserver = new MutationObserver(() => {
+    const masterForms = document.querySelectorAll('form[data-category="Masters"]:not([data-bound="true"])');
+    
+    masterForms.forEach(form => {
+        form.dataset.bound = "true"; 
+        
+        const formId = form.id; 
+        const sheetName = form.dataset.sheet_name || formId; 
+        
+        const context = MasterEngine.State.Load(formId);
+        
+        if (context) {
+            // A. Inject Hidden ID
+            let hiddenId = document.createElement('input');
+            hiddenId.type = 'hidden';
+            hiddenId.name = 'hiddenRecordId'; 
+            hiddenId.value = context.id;
+            form.appendChild(hiddenId);
+
+            // B. Deep fill every input type correctly
+            Object.entries(context.payload).forEach(([key, value]) => {
+                const inputs = form.querySelectorAll(`[name="${key}"]`);
+                inputs.forEach(input => {
+                    if (input.type === 'radio') {
+                        input.checked = (input.value === String(value));
+                    } 
+                    else if (input.type === 'checkbox') {
+                        input.checked = (value === true || value === 'true' || value === '1' || value === input.value);
+                    } 
+                    else {
+                        input.value = value;
+                    }
+                });
+            });
+
+            // C. Update UI Button
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Update Record';
+                submitBtn.classList.replace('btn-success', 'btn-primary');
+            }
+
+            const title = form.closest('.card-body')?.querySelector('h5');
+            if (title) title.innerHTML = `Edit ${title.innerText}`;
+
+            MasterEngine.State.Clear(formId);
+        }
+
+        // Universal Submit Listener
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalHtml = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
+            submitBtn.disabled = true;
+
+            const formData = new FormData(form);
+            const payload = Object.fromEntries(formData.entries());
+            
+            form.querySelectorAll('input[type="checkbox"]:not(:checked)').forEach(cb => {
+                if (cb.name) payload[cb.name] = false; 
+            });
+
+            const recordId = payload.hiddenRecordId;
+            delete payload.hiddenRecordId; 
+
+            try {
+                if (recordId) {
+                    await API.Update(`Masters/${sheetName}/${recordId}`, payload);
+                    alert(`${formId} Updated Successfully!`);
+                } else {
+                    payload.createdAt = new Date().toISOString();
+                    await API.Create(`Masters/${sheetName}`, payload);
+                    alert(`${formId} Created Successfully!`);
+                }
+                
+                const listRoute = `masters/${formId.toLowerCase()}-list`;
+                if (typeof App !== 'undefined' && App.Router) App.Router(listRoute); 
+                
+            } catch (error) {
+                alert('Error saving data: ' + error.message);
+                submitBtn.innerHTML = originalHtml;
+                submitBtn.disabled = false;
+            }
+        });
+    });
+});
+
+FormObserver.observe(document.body, { childList: true, subtree: true });
+
+
 // Delay initialization slightly to ensure Firebase is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         if (typeof firebase !== 'undefined') {
-            // UserProfileController.Init();
+            // UserProfileController.LoadUserData();
             NotificationEngine.Init();
             // NotificationPageController.Init();
 

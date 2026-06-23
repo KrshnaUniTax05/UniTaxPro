@@ -92,9 +92,9 @@
                         </div>
                     </div>
                     <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
-                        <li class="px-3 py-2 border-bottom mb-2">
-                            <h6 class="mb-0">Super Admin</h6>
-                            <small class="text-muted">admin@system.com</small>
+                        <li class="px-3 py-2 border-bottom mb-2 text-center">
+                            <h6 class="mb-0">Admin</h6>
+                            <small class="text-muted">admin@unitax.pro</small>
                         </li>
                         <li>
                             <a class="dropdown-item py-2 text-danger fw-bold" 
@@ -967,9 +967,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Wait slightly to ensure Firebase and Bootstrap are fully parsed
     setTimeout(() => {
         BroadcastManager.LoadHistory();
-        BroadcastManager.LoadHistory();
         AdminSystem.Init();
-        BroadcastManager.Init();
+        // BroadcastManager.Init();
     }, 100);
 });
 
