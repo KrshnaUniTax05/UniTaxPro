@@ -1,31 +1,37 @@
-<div class="animate-in container-fluid pb-5">
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<style>
+    
+</style>
+<div class="animate-in container-fluid ">
     
     <!-- TOP ACTION BAR -->
-    <div class="row mb-3 align-items-center no-print">
+    <div class="row mt-3  align-items-center no-print">
         <div class="col-md-6">
             <h4 class="fw-bold text-dark mb-0">
                 <i class="bi bi-file-earmark-ruled text-success me-2"></i>GSTR-1 Filing Summary
             </h4>
-            <p class="text-muted small mb-0">Statutory Return for Outward Supplies (Tally ERP/Prime Architecture)</p>
+            <p class="text-muted small mb-0">Statutory Return for Outward Supplies</p>
         </div>
-        <div class="col-md-6 text-end">
-            <div class="d-inline-flex gap-2 align-items-center bg-white p-2 rounded shadow-sm border">
+        <div class="col-md-6 text-end ">
+            <div class="d-inline-flex gap-2 align-items-center bg-white p-1 rounded shadow-sm border">
                 <input type="date" id="gstrFromDate" class="form-control form-control-sm border-0 bg-light" onchange="GSTR1App.Generate()">
                 <span class="text-muted small fw-bold">TO</span>
                 <input type="date" id="gstrToDate" class="form-control form-control-sm border-0 bg-light" onchange="GSTR1App.Generate()">
                 <button class="btn btn-success btn-sm px-3 fw-bold shadow-sm" onclick="GSTR1App.Generate()">
-                    <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+                    <i class="bi bi-arrow-clockwise me-1"></i> 
                 </button>
             </div>
         </div>
     </div>
 
     <!-- MAIN DASHBOARD CARD -->
-    <div class="card border-0 shadow-sm overflow-hidden mb-4">
+    <div class="card border-0 shadow-sm overflow-hidden mb-0">
         <div class="card-header bg-dark text-white p-3">
             <div class="d-flex justify-content-between align-items-center">
                 <h6 class="mb-0 fw-bold"><i class="bi bi-table me-2"></i>GSTR-1 Return Sections</h6>
-                <span class="small bg-secondary px-2 py-1 rounded fw-mono">Form Version 2.0</span>
+                <!-- <span class="small bg-secondary px-2 py-1 rounded fw-mono">Form Version 2.0</span> -->
             </div>
         </div>
         <div class="table-responsive">
@@ -34,14 +40,14 @@
                     <tr>
                         <th rowspan="2" class="align-middle text-start ps-3" style="width: 35%;">Returns Section / Sub-head</th>
                         <th rowspan="2" class="align-middle" style="width: 10%;">Vch Count</th>
-                        <th rowspan="2" class="align-middle text-end" style="width: 13%;">Taxable Amt</th>
+                        <th rowspan="2" class="align-middle " style="width: 13%;">Taxable Amt</th>
                         <th colspan="3" class="border-bottom text-center py-1">Tax Amount Component</th>
-                        <th rowspan="2" class="align-middle text-end pe-3" style="width: 14%;">Invoice Value</th>
+                        <th rowspan="2" class="align-middle  pe-3" style="width: 14%;">Invoice Value</th>
                     </tr>
                     <tr>
-                        <th class="text-end text-danger py-1" style="width: 9%;">Integrated (I)</th>
-                        <th class="text-end text-primary py-1" style="width: 9%;">Central (C)</th>
-                        <th class="text-end text-info py-1" style="width: 9%;">State (S)</th>
+                        <th class="text-end  text-center py-1" style="width: 9%;">Integrated </th>
+                        <th class="text-end   text-center py-1" style="width: 9%;">Central</th>
+                        <th class="text-end  text-center py-1" style="width: 9%;">State</th>
                     </tr>
                 </thead>
                 <tbody id="gstrSummaryBody" class="small">
@@ -54,57 +60,59 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- DRILL-DOWN DETAILED BREAKDOWN PANEL        -->
-    <!-- ========================================== -->
-    <div id="gstrDetailedSection" class="card border-0 shadow-sm mt-4 animate-in" style="display: none;">
-        <div class="card-header bg-light border-bottom p-3 d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center">
-                <button type="button" class="btn btn-sm btn-outline-secondary me-3 px-2 py-1 shadow-sm" onclick="GSTR1App.CloseDetails()">
-                    <i class="bi bi-x-lg"></i> Close Details
-                </button>
-                <h6 class="mb-0 fw-bold text-primary" id="detailSectionTitle">Voucher Register Breakdown</h6>
-            </div>
-            <span class="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1 small fw-bold">
-                Double-click any row to edit voucher
-            </span>
+    <div id="gstrDetailedSection" class="card border border-light shadow-sm animate-in" style="display: none; margin: 0;">
+    
+    <div class="card-header bg-white border-0 pt-4 px-4 pb-0" id="detailSectionTitle">
         </div>
-        <div class="table-responsive" style="max-height: 450px; overflow-y: auto;">
-            <table class="table table-sm table-striped table-hover align-middle mb-0 text-nowrap">
-                <thead class="table-secondary text-dark small text-uppercase fw-bold sticky-top">
-                    <tr>
-                        <th class="ps-3 text-center" style="width: 5%;">Sr.</th>
-                        <th style="width: 10%;">Vch Date</th>
-                        <th style="width: 12%;">Invoice No</th>
-                        <th style="width: 25%;">Party Name</th>
-                        <th style="width: 13%;">GSTIN / UIN</th>
-                        <th class="text-end" style="width: 10%;">Taxable Value</th>
-                        <th class="text-end text-danger" style="width: 8%;">IGST</th>
-                        <th class="text-end text-primary" style="width: 8%;">CGST</th>
-                        <th class="text-end text-info" style="width: 8%;">SGST</th>
-                        <th class="text-end pe-3" style="width: 11%;">Invoice Value</th>
+
+    <div class="card-body p-0" style="height:350px   !important ;overflow-y: scroll !important;" >
+        <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+            <table class="table table-hover align-middle mb-0 text-nowrap">
+                <thead class="sticky-top" style="background-color: #f8f9fa; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                    <tr class="text-secondary small text-uppercase" style="letter-spacing: 0.5px; font-weight: 600;">
+                        <th class="ps-4 text-center border-bottom-0" style="width: 5%;">Sr.</th>
+                        <th class="border-bottom-0" style="width: 10%;">Vch Date</th>
+                        <th class="border-bottom-0" style="width: 12%;">Invoice No</th>
+                        <th class="border-bottom-0" style="width: 25%;">Party Name & Rate</th>
+                        <th class="border-bottom-0" style="width: 13%;">GSTIN / UIN</th>
+                        <th class="text-end border-bottom-0" style="width: 10%;">Taxable Value</th>
+                        <th class="text-end border-bottom-0" style="width: 8%;">IGST</th>
+                        <th class="text-end border-bottom-0" style="width: 8%;">CGST</th>
+                        <th class="text-end border-bottom-0" style="width: 8%;">SGST</th>
+                        <th class="text-end pe-4 border-bottom-0" style="width: 11%;">Invoice Value</th>
                     </tr>
                 </thead>
-                <tbody id="gstrDetailedBody" class="small">
-                    <!-- Detailed row items injected here -->
-                </tbody>
+                <tbody id="gstrDetailedBody" class="small border-top-0">
+                    </tbody>
             </table>
         </div>
     </div>
+    
+    <div class="card-footer bg-light border-top p-2 text-center text-muted small">
+        <i class="bi bi-info-circle me-1"></i> Double-click any row to view or edit the original transaction.
+    </div>
+</div>
 
 </div>
 
 <!-- CSS Architecture for Accounting Look & Feel -->
 <style>
-    .gstr-master-table th, .gstr-master-table td { padding: 0.55rem 0.65rem !important; vertical-align: middle; }
+    /* .gstr-master-table th, .gstr-master-table td { padding: 0.55rem 0.65rem !important; vertical-align: middle; }
     .gstr-row-clickable { cursor: pointer; transition: background 0.15s ease; }
     .gstr-row-clickable:hover { background-color: rgba(25, 135, 84, 0.06) !important; }
     .gstr-subhead-row { background-color: #fafbfc; font-weight: 500; }
-    .fw-mono { font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .fw-mono { font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; } */
+
+    .gstr-master-table td{
+        padding: 05px 10px !important;
+    }
+    .gstr-master-table{
+        font-size: 16px;
+    }
 </style>
 
 <script>
-(function() {
+    (function() {
     // Highly precise localization currency configuration
     const fmt = (val) => {
         if (val === 0 || !val || isNaN(val)) return '<span class="text-muted">-</span>';
@@ -114,41 +122,55 @@
     const fmtDate = (dateStr) => {
         if (!dateStr) return '-';
         const parts = dateStr.split('-');
-        if(parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`; // DD-MM-YYYY format layout
+        if(parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`; // DD-MM-YYYY format
         return dateStr;
     };
 
-    // State Mapping Schema following standard corporate GSTR tax structure
+    // State Mapping Schema aligned with GST Portal Offline Utility Sheets
     let schemaStructure = {
-        '4A_B2B':   { key: 'B2B',   name: '4A, 4B, 4C, 6B, 6C - B2B Regular Invoices', subHead: 'Supplies made to Registered Taxpayers', count: 0, taxable: 0, igst: 0, cgst: 0, sgst: 0, total: 0, vouchers: [] },
-        '5A_B2CL':  { key: 'B2CL',  name: '5A, 5B - B2C Large Invoices', subHead: 'Inter-State Supplies (Invoice Value > 2.5 Lakhs)', count: 0, taxable: 0, igst: 0, cgst: 0, sgst: 0, total: 0, vouchers: [] },
-        '7_B2CS':   { key: 'B2CS',  name: '7 - B2C Small Supplies', subHead: 'Intra-State Supplies / Inter-State (< 2.5 Lakhs)', count: 0, taxable: 0, igst: 0, cgst: 0, sgst: 0, total: 0, vouchers: [] },
-        '6A_EXP':   { key: 'EXP',   name: '6A - Export Invoices', subHead: 'Supplies exported outside India (With/Without Payment)', count: 0, taxable: 0, igst: 0, cgst: 0, sgst: 0, total: 0, vouchers: [] },
-        '9B_CDNR':  { key: 'CDNR',  name: '9B - Credit / Debit Notes (Registered)', subHead: 'Amendments / Returns from Registered Dealers', count: 0, taxable: 0, igst: 0, cgst: 0, sgst: 0, total: 0, vouchers: [] },
-        '9B_CDNUR': { key: 'CDNUR', name: '9B - Credit / Debit Notes (Unregistered)', subHead: 'Amendments / Returns from Unregistered Customers', count: 0, taxable: 0, igst: 0, cgst: 0, sgst: 0, total: 0, vouchers: [] },
-        '8_NIL':    { key: 'NIL',   name: '8 - Nil Rated / Exempt / Non-GST Supplies', subHead: 'Supplies attracting 0% tax or absolute exemption', count: 0, taxable: 0, igst: 0, cgst: 0, sgst: 0, total: 0, vouchers: [] }
+        '4A_B2B':   { key: 'b2b',   name: '4A, 4B, 4C, 6B, 6C - B2B Invoices', subHead: 'Registered Taxpayers (Sheet: b2b)', uniqueInvoices: new Set(), count: 0, taxable: 0, igst: 0, cgst: 0, sgst: 0, total: 0, vouchers: [] },
+        '5A_B2CL':  { key: 'b2cl',  name: '5A, 5B - B2C Large Invoices', subHead: 'Inter-State > 2.5L (Sheet: b2cl)', uniqueInvoices: new Set(), count: 0, taxable: 0, igst: 0, cgst: 0, sgst: 0, total: 0, vouchers: [] },
+        '7_B2CS':   { key: 'b2cs',  name: '7 - B2C Small Supplies', subHead: 'Intra/Inter-State < 2.5L (Sheet: b2cs)', uniqueInvoices: new Set(), count: 0, taxable: 0, igst: 0, cgst: 0, sgst: 0, total: 0, vouchers: [] },
+        '6A_EXP':   { key: 'exp',   name: '6A - Export Invoices', subHead: 'Exports (Sheet: exp)', uniqueInvoices: new Set(), count: 0, taxable: 0, igst: 0, cgst: 0, sgst: 0, total: 0, vouchers: [] },
+        '9B_CDNR':  { key: 'cdnr',  name: '9B - Credit/Debit Notes (Reg)', subHead: 'Registered Notes (Sheet: cdnr)', uniqueInvoices: new Set(), count: 0, taxable: 0, igst: 0, cgst: 0, sgst: 0, total: 0, vouchers: [] },
+        '9B_CDNUR': { key: 'cdnur', name: '9B - Credit/Debit Notes (Unreg)', subHead: 'Unregistered Notes (Sheet: cdnur)', uniqueInvoices: new Set(), count: 0, taxable: 0, igst: 0, cgst: 0, sgst: 0, total: 0, vouchers: [] },
+        '8_NIL':    { key: 'exemp', name: '8 - Nil Rated / Exempt', subHead: 'Non-GST / Exempt (Sheet: exemp)', uniqueInvoices: new Set(), count: 0, taxable: 0, igst: 0, cgst: 0, sgst: 0, total: 0, vouchers: [] }
     };
 
     window.GSTR1App = {
+        hsnSummary: {},
+        docSummary: { invoices: [], returns: [], exports: [] },
+
         Init() {
             const now = new Date();
             document.getElementById('gstrToDate').valueAsDate = now;
-            document.getElementById('gstrFromDate').valueAsDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = '01';
+            document.getElementById('gstrFromDate').value = `${year}-${month}-${day}`;
+            
             this.Generate();
         },
 
         async Generate() {
             const tbody = document.getElementById('gstrSummaryBody');
-            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-muted fw-bold"><div class="spinner-border spinner-border-sm text-success me-2"></div> Extracting Ledgers and Recalculating Filing Schema...</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Structuring Portal Matrix...</td></tr>`;
             document.getElementById('gstrSummaryFoot').innerHTML = '';
-            this.CloseDetails();
+            this.CloseDetails(); 
 
-            // Clear configuration registers
             Object.keys(schemaStructure).forEach(k => {
-                schemaStructure[k].count = 0; schemaStructure[k].taxable = 0; schemaStructure[k].igst = 0;
-                schemaStructure[k].cgst = 0; schemaStructure[k].sgst = 0; schemaStructure[k].total = 0;
+                schemaStructure[k].uniqueInvoices.clear();
+                schemaStructure[k].count = 0; 
+                schemaStructure[k].taxable = 0; 
+                schemaStructure[k].igst = 0;
+                schemaStructure[k].cgst = 0; 
+                schemaStructure[k].sgst = 0; 
+                schemaStructure[k].total = 0;
                 schemaStructure[k].vouchers = [];
             });
+            this.hsnSummary = {};
+            this.docSummary = { invoices: [], returns: [], exports: [] };
 
             const fromDate = document.getElementById('gstrFromDate').value;
             const toDate = document.getElementById('gstrToDate').value;
@@ -165,69 +187,187 @@
                     }).catch(() => {})
                 ));
 
-                // Process Transactions Pool
+                const uniqueGLs = [...new Set(datasetPool.map(v => {
+                    const h = v.header || {};
+                    return h.entity ? String(h.entity).trim() : null; 
+                }).filter(Boolean))];
+
+                let liveCustomers = {};
+                
+                const masterLedgers = await API.Fetch(`Masters/LedgerCreation`).catch(() => null);
+                
+                if (masterLedgers) {
+                    Object.entries(masterLedgers).forEach(([key, val]) => {
+                        if (val) {
+                            const code = val.ledgerCode || key;
+                            liveCustomers[String(code).trim()] = val;
+                        }
+                    });
+                } else {
+                    await Promise.allSettled(uniqueGLs.map(gl => 
+                        API.Fetch(`Masters/LedgerCreation/${gl}`).then(res => {
+                            if(res) liveCustomers[gl] = res;
+                        }).catch((e) => console.warn(`Individual GL Fetch Failed for ${gl}:`, e))
+                    ));
+                }
+
+                const MY_COMPANY_STATE = "Rajasthan".trim().toLowerCase();
+
                 datasetPool.forEach(vch => {
-                    const header = vch.header || vch.meta || {};
+                    const header = vch.header || {};
                     const vDate = header.date || header.voucher_date;
 
                     if (!vDate || (fromDate && vDate < fromDate) || (toDate && vDate > toDate)) return;
 
-                    // Extract core tax matrix components
-                    let taxable = parseFloat(header.subTotal || header.taxable_value || header.basic_amount || 0);
-                    let cgst = parseFloat(header.cgst_amount || header.cgst || 0);
-                    let sgst = parseFloat(header.sgst_amount || header.sgst || 0);
-                    let igst = parseFloat(header.igst_amount || header.igst || 0);
-                    let total = parseFloat(header.grandTotal || header.total_amount || header.invoice_value || 0);
+                    const glCode = header.entity ? String(header.entity).trim() : '';
+                    const custData = liveCustomers[glCode] || {};
+                    const partyName = custData.name || custData.CompanyName || header.customer_name || 'Cash / Counter Customer';
+                    const gstin = (custData.GST || "").trim();
+                    const customerState = (custData.state || MY_COMPANY_STATE).trim();
+                    const isInterState = (customerState.toLowerCase() !== MY_COMPANY_STATE);
 
-                    // Dynamic reconstruction backup loop if transaction is flat
-                    if (taxable === 0 && vch.items) {
+                    const invoiceNumber = header.doc_no || header.Invoice || header.invoice_no || '-';
+                    const isReturn = vch._formType.includes('Return') || vch._formType.includes('CreditNote');
+                    
+                    // --- SUPPLY TYPE PARSING ---
+                    const supplyType = (header.pos || 'REGULAR').toUpperCase();
+                    const isExport = vch._formType === 'ExportInvoiceForm' || header.export_type || supplyType.startsWith('EXP');
+                    
+                    let portalInvoiceType = "Regular B2B";
+                    if (supplyType === 'SEZ_WPAY') portalInvoiceType = "SEZ supplies with payment";
+                    else if (supplyType === 'SEZ_WOPAY') portalInvoiceType = "SEZ supplies without payment";
+                    else if (supplyType === 'DEEMED') portalInvoiceType = "Deemed Exp";
+
+                    let portalExportType = "WOPAY";
+                    if (supplyType === 'EXP_WPAY') portalExportType = "WPAY";
+
+                    // Document Type Tracking
+                    if (isExport) this.docSummary.exports.push(invoiceNumber);
+                    else if (isReturn) this.docSummary.returns.push(invoiceNumber);
+                    else this.docSummary.invoices.push(invoiceNumber);
+
+                    let invoiceRates = {};
+                    let absoluteGrandTotal = 0; 
+                    let mult = isReturn ? -1 : 1; 
+
+                    if (vch.items) {
                         const rowItems = Array.isArray(vch.items) ? vch.items : Object.values(vch.items);
                         rowItems.forEach(i => {
-                            taxable += (parseFloat(i.qty || 1) * parseFloat(i.rate || i.amount || 0));
-                            cgst += parseFloat(i.cgst || 0); sgst += parseFloat(i.sgst || 0); igst += parseFloat(i.igst || 0);
+                            let rowQty = parseFloat(i.qty || 1);
+                            let rowRate = parseFloat(i.rate || 0);
+                            let rowTaxable = rowQty * rowRate;
+                            
+                            let taxPercentage = parseFloat(i.auto_item_name_ItemTax || 0);
+                            let rowTaxAmount = rowTaxable * (taxPercentage / 100);
+
+                            // --- SMART TAX ALLOCATION RULES ---
+                            let r_igst = 0, r_cgst = 0, r_sgst = 0;
+                            
+                            if (['EXP_WOPAY', 'SEZ_WOPAY', 'NIL', 'EXEMPT', 'NONGST'].includes(supplyType)) {
+                                rowTaxAmount = 0; 
+                            } else {
+                                if (isInterState || isExport || supplyType.startsWith('SEZ')) {
+                                    r_igst = rowTaxAmount;
+                                } else {
+                                    r_cgst = rowTaxAmount / 2;
+                                    r_sgst = rowTaxAmount / 2;
+                                }
+                            }
+
+                            // HSN Aggregation
+                            let hsn = (i.auto_item_name_itemHSN || "0000").toString().trim();
+                            let uqc = (i.uom || i.uqc || "NOS").toUpperCase().substring(0,3);
+                            let desc = (i.item_name || "Goods").substring(0, 30);
+                            let hsnKey = `${hsn}_${uqc}`;
+                            
+                            if (!this.hsnSummary[hsnKey]) {
+                                this.hsnSummary[hsnKey] = { hsn, desc, uqc, qty: 0, taxable: 0, igst: 0, cgst: 0, sgst: 0, total: 0 };
+                            }
+                            this.hsnSummary[hsnKey].qty += (rowQty * mult);
+                            this.hsnSummary[hsnKey].taxable += (rowTaxable * mult);
+                            this.hsnSummary[hsnKey].igst += (r_igst * mult);
+                            this.hsnSummary[hsnKey].cgst += (r_cgst * mult);
+                            this.hsnSummary[hsnKey].sgst += (r_sgst * mult);
+                            this.hsnSummary[hsnKey].total += ((rowTaxable + rowTaxAmount) * mult);
+
+                            if (!invoiceRates[taxPercentage]) invoiceRates[taxPercentage] = 0;
+                            invoiceRates[taxPercentage] += rowTaxable;
+                            
+                            absoluteGrandTotal += (rowTaxable + rowTaxAmount);
                         });
-                        total = taxable + cgst + sgst + igst;
                     }
 
-                    const partyName = header.customer_name || header.customer_ledger || header.entity || 'Cash / Counter Customer';
-                    const gstin = (header.customer_gstin || header.gstin || vch.meta?.gstin || "").trim();
-                    const isInterState = igst > 0 || (header.place_of_supply && header.place_of_supply !== header.company_state);
-                    const isExport = vch._formType === 'ExportInvoiceForm' || header.export_type;
-                    const isReturn = vch._formType.includes('Return') || vch._formType.includes('CreditNote');
+                    if (absoluteGrandTotal === 0 && Object.keys(invoiceRates).length === 0) return;
 
-                    let bucketKey = '7_B2CS'; // Catch-all default registry
-
+                    // --- BUCKET ROUTING LOGIC ---
+                    let bucketKey = '7_B2CS';
                     if (isReturn) {
                         bucketKey = gstin ? '9B_CDNR' : '9B_CDNUR';
-                        // Balance mapping inverted for Credit Note deductions
-                        taxable = -Math.abs(taxable); cgst = -Math.abs(cgst); sgst = -Math.abs(sgst); igst = -Math.abs(igst); total = -Math.abs(total);
+                        absoluteGrandTotal = -Math.abs(absoluteGrandTotal);
                     } else if (isExport) {
                         bucketKey = '6A_EXP';
-                    } else if (taxable > 0 && cgst === 0 && sgst === 0 && igst === 0) {
-                        bucketKey = '8_NIL';
+                    } else if (['NIL', 'EXEMPT', 'NONGST'].includes(supplyType) || (absoluteGrandTotal > 0 && invoiceRates[0] === absoluteGrandTotal)) {
+                        bucketKey = '8_NIL'; 
                     } else if (gstin && gstin.length >= 15) {
                         bucketKey = '4A_B2B';
-                    } else if (!gstin && isInterState && total > 250000) {
-                        bucketKey = '5A_B2CL';
+                    } else if (!gstin && isInterState && absoluteGrandTotal > 250000) {
+                        bucketKey = '5A_B2CL'; 
+                    } else {
+                        bucketKey = '7_B2CS';
                     }
 
-                    // Hydrate State Element target
                     const bucket = schemaStructure[bucketKey];
-                    bucket.count++;
-                    bucket.taxable += taxable; bucket.igst += igst; bucket.cgst += cgst; bucket.sgst += sgst; bucket.total += total;
-                    
-                    bucket.vouchers.push({
-                        date: vDate,
-                        docNo: header.doc_no || header.Invoice || header.invoice_no || '-',
-                        party: partyName,
-                        gstin: gstin || 'URD (Unregistered)',
-                        taxable: taxable,
-                        igst: igst,
-                        cgst: cgst,
-                        sgst: sgst,
-                        total: total,
-                        key: vch._key,
-                        formType: vch._formType
+                    bucket.uniqueInvoices.add(invoiceNumber); 
+
+                    Object.keys(invoiceRates).forEach(rateStr => {
+                        const rate = parseFloat(rateStr);
+                        let rowTaxable = invoiceRates[rateStr];
+                        
+                        if (isReturn) rowTaxable = -Math.abs(rowTaxable);
+
+                        let rowTaxAmt = 0;
+                        let r_igst = 0, r_cgst = 0, r_sgst = 0;
+
+                        if (!['EXP_WOPAY', 'SEZ_WOPAY', 'NIL', 'EXEMPT', 'NONGST'].includes(supplyType)) {
+                            rowTaxAmt = rowTaxable * (rate / 100);
+                            if (isInterState || isExport || supplyType.startsWith('SEZ')) {
+                                r_igst = rowTaxAmt;
+                            } else {
+                                r_cgst = rowTaxAmt / 2;
+                                r_sgst = rowTaxAmt / 2;
+                            }
+                        }
+
+                        let rowTotal = rowTaxable + rowTaxAmt;
+
+                        bucket.taxable += rowTaxable;
+                        bucket.igst += r_igst;
+                        bucket.cgst += r_cgst;
+                        bucket.sgst += r_sgst;
+                        bucket.total += rowTotal;
+
+                        bucket.vouchers.push({
+                            date: vDate,
+                            docNo: invoiceNumber,
+                            party: partyName, 
+                            gstin: gstin || 'URD', 
+                            taxable: rowTaxable,
+                            igst: r_igst,
+                            cgst: r_cgst,
+                            sgst: r_sgst,
+                            total: rowTotal,
+                            key: vch._key,
+                            formType: vch._formType,
+                            isInterState: isInterState,
+                            supplyType: supplyType,
+                            Portal_ExportType: portalExportType,
+                            Portal_InvoiceValue: absoluteGrandTotal, 
+                            Portal_Rate: rate,
+                            Portal_PlaceOfSupply: customerState,
+                            Portal_ReverseCharge: "N",
+                            Portal_InvoiceType: portalInvoiceType,
+                            Portal_DocumentType: isReturn ? "C" : "I"
+                        });
                     });
                 });
 
@@ -246,84 +386,121 @@
             let mCount = 0, mTaxable = 0, mIgst = 0, mCgst = 0, mSgst = 0, mTotal = 0;
 
             Object.entries(schemaStructure).forEach(([schemaKey, data]) => {
-                mCount += data.count; mTaxable += data.taxable; mIgst += data.igst;
-                mCgst += data.cgst; mSgst += data.sgst; mTotal += data.total;
+                data.count = data.uniqueInvoices.size; 
+                
+                mCount += data.count; 
+                mTaxable += data.taxable; 
+                mIgst += data.igst;
+                mCgst += data.cgst; 
+                mSgst += data.sgst; 
+                mTotal += data.total;
 
                 const tr = document.createElement('tr');
-                tr.className = "gstr-row-clickable";
-                tr.title = "Double-click to open breakdown register";
-                tr.ondblclick = () => this.OpenDrilldownRegister(schemaKey);
+                tr.className = "gstr-row-clickable align-middle border-bottom";
+                tr.style.cursor = 'pointer';
+                tr.style.transition = 'background-color 0.2s ease';
+                tr.onmouseover = () => tr.style.backgroundColor = '#f8f9fa';
+                tr.onmouseout = () => tr.style.backgroundColor = '';
+                tr.title = `Click to view ${data.count} invoices`;
+                
+                tr.onclick = () => this.OpenDrilldownRegister(schemaKey);
 
                 tr.innerHTML = `
-                    <td class="ps-3 align-middle">
-                        <div class="fw-bold text-dark mb-0">${data.name}</div>
-                        <div class="text-muted extra-small" style="font-size: 0.78rem;">${data.subHead}</div>
+                    <td class="ps-4 py-3">
+                        <div class="fw-bold text-primary mb-1" style="font-size: 0.95rem;">${data.name}</div>
+                        <div class="text-muted" style="font-size: 0.75rem; letter-spacing: 0.3px;">${data.subHead.toUpperCase()}</div>
                     </td>
-                    <td class="text-center fw-mono align-middle"><span class="badge bg-light border text-dark font-monospace">${data.count}</span></td>
-                    <td class="text-end fw-mono align-middle">${fmt(data.taxable)}</td>
-                    <td class="text-end fw-mono align-middle text-danger">${fmt(data.igst)}</td>
-                    <td class="text-end fw-mono align-middle text-primary">${fmt(data.cgst)}</td>
-                    <td class="text-end fw-mono align-middle text-info">${fmt(data.sgst)}</td>
-                    <td class="text-end fw-mono align-middle fw-bold pe-3">${fmt(data.total)}</td>
+                    <td class="text-center fw-medium"><span class="badge bg-light text-dark border px-3 py-2 rounded-pill">${data.count}</span></td>
+                    <td class="text-end fw-medium" style="color: #495057;">${fmt(data.taxable)}</td>
+                    <td class="text-end fw-medium" style="color: #dc3545;">${fmt(data.igst)}</td>
+                    <td class="text-end fw-medium" style="color: #0d6efd;">${fmt(data.cgst)}</td>
+                    <td class="text-end fw-medium" style="color: #0dcaf0;">${fmt(data.sgst)}</td>
+                    <td class="text-end fw-bold pe-4" style="color: #212529;">${fmt(data.total)}</td>
                 `;
                 tbody.appendChild(tr);
             });
 
             document.getElementById('gstrSummaryFoot').innerHTML = `
-                <tr>
-                    <td class="text-start ps-3 py-2">Total Effective Outward Supplies</td>
-                    <td class="text-center fw-mono">${mCount}</td>
-                    <td class="fw-mono">${fmt(mTaxable)}</td>
-                    <td class="fw-mono text-danger">${fmt(mIgst)}</td>
-                    <td class="fw-mono text-primary">${fmt(mCgst)}</td>
-                    <td class="fw-mono text-info">${fmt(mSgst)}</td>
-                    <td class="pe-3 fw-mono fs-6 text-white">${fmt(mTotal)}</td>
+                <tr class="bg-light">
+                    <td class="text-start ps-4 py-3 fw-bold text-dark text-uppercase" style="font-size: 0.85rem; letter-spacing: 0.5px;">Total Outward Supplies</td>
+                    <td class="text-center fw-bold text-dark fs-6">${mCount}</td>
+                    <td class="text-end fw-bold text-dark">${fmt(mTaxable)}</td>
+                    <td class="text-end fw-bold text-danger">${fmt(mIgst)}</td>
+                    <td class="text-end fw-bold text-primary">${fmt(mCgst)}</td>
+                    <td class="text-end fw-bold text-info">${fmt(mSgst)}</td>
+                    <td class="text-end fw-bolder pe-4 fs-6 text-dark">${fmt(mTotal)}</td>
                 </tr>
             `;
         },
 
         OpenDrilldownRegister(schemaKey) {
             const targetData = schemaStructure[schemaKey];
-            if (targetData.count === 0) return;
+            if (targetData.vouchers.length === 0) return;
 
-            document.getElementById('gstrDetailedSection').style.display = 'block';
-            document.getElementById('detailSectionTitle').innerHTML = `<i class="bi bi-folder2-open me-2"></i> Register View: <span class="fw-mono text-dark">${targetData.name.split(' - ')[0]}</span>`;
+            const summaryTableContainer = document.getElementById('gstrSummaryBody').closest('table') || document.getElementById('gstrSummaryBody').parentElement;
+            if(summaryTableContainer) summaryTableContainer.style.display = 'none';
+
+            const detailSection = document.getElementById('gstrDetailedSection');
+            detailSection.style.display = 'block';
+            
+            document.getElementById('detailSectionTitle').innerHTML = `
+                <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom">
+                    <div class="d-flex align-items-center">
+                        <button class="btn btn-outline-secondary btn-sm me-3 shadow-sm px-3" onclick="GSTR1App.CloseDetails()" title="Back to Summary">
+                            <i class="bi bi-arrow-left fw-bold"></i> Back
+                        </button>
+                        <div>
+                            <h5 class="mb-0 fw-bold text-dark" style="letter-spacing: 0.5px;">${targetData.name.split(' - ')[0]} Record Viewer</h5>
+                            <small class="text-muted">${targetData.subHead}</small>
+                        </div>
+                    </div>
+                    <span class="badge bg-primary px-3 py-2 rounded-pill shadow-sm fs-6">${targetData.vouchers.length} Items</span>
+                </div>
+            `;
             
             const tbody = document.getElementById('gstrDetailedBody');
             tbody.innerHTML = '';
 
-            // Chronological sort sequence execution
             const sortedArray = targetData.vouchers.sort((a, b) => new Date(a.date) - new Date(b.date));
 
             sortedArray.forEach((v, index) => {
                 const tr = document.createElement('tr');
-                tr.className = "gstr-row-clickable";
-                tr.title = "Double-click to view or edit original transaction invoice";
+                tr.className = "gstr-row-clickable align-middle border-bottom";
+                tr.style.cursor = 'pointer';
+                tr.style.transition = 'background-color 0.2s ease';
+                tr.onmouseover = () => tr.style.backgroundColor = '#f1f3f5';
+                tr.onmouseout = () => tr.style.backgroundColor = '';
+                tr.title = "Double-click to open original transaction invoice";
+                
                 tr.ondblclick = () => this.RouteToVoucherEdit(v.formType, v.key);
 
-                const signClass = v.total < 0 ? 'text-danger font-monospace fw-medium' : 'font-monospace';
+                const signClass = v.total < 0 ? 'text-danger fw-medium' : 'fw-medium text-dark';
 
                 tr.innerHTML = `
-                    <td class="text-center text-muted fw-mono ps-3">${index + 1}</td>
-                    <td class="fw-mono">${fmtDate(v.date)}</td>
-                    <td class="fw-bold text-dark fw-mono">${v.docNo}</td>
-                    <td class="text-truncate fw-medium" style="max-width: 240px;">${v.party}</td>
-                    <td class="text-muted fw-mono small">${v.gstin}</td>
+                    <td class="text-center text-muted ps-3" style="font-size: 0.85rem;">${index + 1}</td>
+                    <td class="fw-medium text-secondary">${fmtDate(v.date)}</td>
+                    <td class="fw-bold text-dark">${v.docNo}</td>
+                    <td class="text-truncate fw-medium" style="max-width: 240px; color: #495057;">
+                        ${v.party} 
+                        <span class="badge bg-light text-primary ms-2 border px-2 py-1">${v.Portal_Rate}% GST</span>
+                    </td>
+                    <td class="fw-medium" style="font-size: 0.85rem; color: #6c757d;">${v.gstin}</td>
                     <td class="text-end ${signClass}">${fmt(v.taxable)}</td>
-                    <td class="text-end text-danger fw-mono">${fmt(v.igst)}</td>
-                    <td class="text-end text-primary fw-mono">${fmt(v.cgst)}</td>
-                    <td class="text-end text-info fw-mono">${fmt(v.sgst)}</td>
+                    <td class="text-end text-danger fw-medium">${fmt(v.igst)}</td>
+                    <td class="text-end text-primary fw-medium">${fmt(v.cgst)}</td>
+                    <td class="text-end text-info fw-medium">${fmt(v.sgst)}</td>
                     <td class="text-end pe-3 fw-bold ${signClass}">${fmt(v.total)}</td>
                 `;
                 tbody.appendChild(tr);
             });
 
-            // Smooth automatic scroll into view sequence execution
-            document.getElementById('gstrDetailedSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            detailSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
         },
 
         CloseDetails() {
             document.getElementById('gstrDetailedSection').style.display = 'none';
+            const summaryTableContainer = document.getElementById('gstrSummaryBody').closest('table') || document.getElementById('gstrSummaryBody').parentElement;
+            if(summaryTableContainer) summaryTableContainer.style.display = '';
         },
 
         RouteToVoucherEdit(formType, databaseKey) {
@@ -345,10 +522,251 @@
             } else {
                 console.log(`Routing context requested: Type -> ${formType}, Key -> ${databaseKey}`);
             }
+        },
+
+        async ExportToGSTExcel() {
+            if (typeof XLSX === 'undefined') {
+                alert("SheetJS library is missing! Please include the XLSX script tag to enable Excel exports.");
+                return;
+            }
+
+            const tbody = document.getElementById('gstrSummaryBody');
+            const originalHTML = tbody.innerHTML;
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-success fw-bold"><div class="spinner-border spinner-border-sm me-2"></div> Compiling GST Portal Workbook V2.0...</td></tr>`;
+
+            try {
+                const wb = XLSX.utils.book_new();
+
+                const formatGSTDate = (dateStr) => {
+                    if (!dateStr) return "";
+                    const parts = dateStr.split('-');
+                    if (parts.length === 3) {
+                        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                        const d = new Date(parts[0], parts[1] - 1, parts[2]); 
+                        return `${String(d.getDate()).padStart(2, '0')}-${months[d.getMonth()]}-${d.getFullYear()}`;
+                    }
+                    return dateStr;
+                };
+
+                // Helper to format numeric values to 2 decimal places
+                const formatNumber = (val) => {
+                    if (val === undefined || val === null || isNaN(val)) return 0;
+                    return Math.round(parseFloat(val) * 100) / 100;
+                };
+
+                // 1. FORMAT B2B SHEET (b2b)
+                const b2bData = schemaStructure['4A_B2B'].vouchers.map(v => ({
+                    "GSTIN/UIN of Recipient": v.gstin || '',
+                    "Receiver Name": v.party || '',
+                    "Invoice Number": v.docNo || '',
+                    "Invoice date": formatGSTDate(v.date),
+                    "Invoice Value": formatNumber(v.Portal_InvoiceValue),
+                    "Place Of Supply": v.Portal_PlaceOfSupply || '',
+                    "Reverse Charge": v.Portal_ReverseCharge || "N",
+                    "Applicable % of Tax Rate": "", 
+                    "Invoice Type": v.Portal_InvoiceType || "Regular B2B",
+                    "E-Commerce GSTIN": v.ecommercegstin || "",
+                    "Rate": v.Portal_Rate || 0,
+                    "Taxable Value": formatNumber(v.taxable),
+                    "Cess Amount": 0
+                }));
+                const wsB2B = XLSX.utils.json_to_sheet(b2bData);
+                XLSX.utils.book_append_sheet(wb, wsB2B, "b2b,sez,de");
+
+                // 2. FORMAT B2CL SHEET (b2cl)
+                const b2clData = schemaStructure['5A_B2CL'].vouchers.map(v => ({
+                    "Invoice Number": v.docNo || '',
+                    "Invoice date": formatGSTDate(v.date),
+                    "Invoice Value": formatNumber(v.Portal_InvoiceValue),
+                    "Place Of Supply": v.Portal_PlaceOfSupply || '',
+                    "Applicable % of Tax Rate": "",
+                    "Rate": v.Portal_Rate || 0,
+                    "Taxable Value": formatNumber(v.taxable),
+                    "Cess Amount": 0,
+                    "E-Commerce GSTIN": ""
+                }));
+                const wsB2CL = XLSX.utils.json_to_sheet(b2clData);
+                XLSX.utils.book_append_sheet(wb, wsB2CL, "b2cl");
+
+                // 3. FORMAT B2CS SHEET (b2cs)
+                let b2csAggregated = {};
+                schemaStructure['7_B2CS'].vouchers.forEach(v => {
+                    const key = `${v.Portal_PlaceOfSupply || 'Unknown'}_${v.Portal_Rate || 0}`;
+                    if (!b2csAggregated[key]) {
+                        b2csAggregated[key] = {
+                            "Type": "OE", 
+                            "Place Of Supply": v.Portal_PlaceOfSupply || '',
+                            "Applicable % of Tax Rate": "",
+                            "Rate": v.Portal_Rate || 0,
+                            "Taxable Value": 0,
+                            "Cess Amount": 0,
+                            "E-Commerce GSTIN": ""
+                        };
+                    }
+                    b2csAggregated[key]["Taxable Value"] += formatNumber(v.taxable);
+                });
+                const wsB2CS = XLSX.utils.json_to_sheet(Object.values(b2csAggregated));
+                XLSX.utils.book_append_sheet(wb, wsB2CS, "b2cs");
+
+                // 4. FORMAT EXP SHEET (exp)
+                const expData = schemaStructure['6A_EXP'].vouchers.map(v => ({
+                    "Export Type": v.Portal_ExportType || "WOPAY", 
+                    "Invoice Number": v.docNo || '',
+                    "Invoice date": formatGSTDate(v.date),
+                    "Invoice Value": formatNumber(v.Portal_InvoiceValue),
+                    "Port Code": "",
+                    "Shipping Bill Number": "",
+                    "Shipping Bill Date": "",
+                    "Rate": v.Portal_Rate || 0,
+                    "Taxable Value": formatNumber(v.taxable),
+                    "Cess Amount": 0
+                }));
+                const wsEXP = XLSX.utils.json_to_sheet(expData);
+                XLSX.utils.book_append_sheet(wb, wsEXP, "exp");
+
+                // 5. FORMAT CDNR SHEET (cdnr)
+                const cdnrData = schemaStructure['9B_CDNR'].vouchers.map(v => ({
+                    "GSTIN/UIN of Recipient": v.gstin || '',
+                    "Receiver Name": v.party || '',
+                    "Note Number": v.docNo || '',
+                    "Note Date": formatGSTDate(v.date),
+                    "Note Type": v.Portal_DocumentType || "C", 
+                    "Place Of Supply": v.Portal_PlaceOfSupply || '',
+                    "Reverse Charge": v.Portal_ReverseCharge || "N",
+                    "Note Supply Type": v.Portal_InvoiceType || "Regular B2B",
+                    "Note Value": formatNumber(Math.abs(v.Portal_InvoiceValue || 0)),
+                    "Applicable % of Tax Rate": "",
+                    "Rate": v.Portal_Rate || 0,
+                    "Taxable Value": formatNumber(Math.abs(v.taxable || 0)),
+                    "Cess Amount": 0
+                }));
+                const wsCDNR = XLSX.utils.json_to_sheet(cdnrData);
+                XLSX.utils.book_append_sheet(wb, wsCDNR, "cdnr");
+
+                // 6. FORMAT CDNUR SHEET (cdnur)
+                const cdnurData = schemaStructure['9B_CDNUR'].vouchers.map(v => ({
+                    "UR Type": "B2CL", 
+                    "Note Number": v.docNo || '',
+                    "Note Date": formatGSTDate(v.date),
+                    "Note Type": v.Portal_DocumentType || "C",
+                    "Place Of Supply": v.Portal_PlaceOfSupply || '',
+                    "Note Value": formatNumber(Math.abs(v.Portal_InvoiceValue || 0)),
+                    "Applicable % of Tax Rate": "",
+                    "Rate": v.Portal_Rate || 0,
+                    "Taxable Value": formatNumber(Math.abs(v.taxable || 0)),
+                    "Cess Amount": 0
+                }));
+                const wsCDNUR = XLSX.utils.json_to_sheet(cdnurData);
+                XLSX.utils.book_append_sheet(wb, wsCDNUR, "cdnur");
+
+                // 7. FORMAT EXEMP SHEET (exemp)
+                let exempAgg = {
+                    interReg: { nil: 0, exempt: 0, nonGst: 0 },
+                    intraReg: { nil: 0, exempt: 0, nonGst: 0 },
+                    interUnreg: { nil: 0, exempt: 0, nonGst: 0 },
+                    intraUnreg: { nil: 0, exempt: 0, nonGst: 0 }
+                };
+
+                schemaStructure['8_NIL'].vouchers.forEach(v => {
+                    let isReg = v.gstin && v.gstin.length >= 15;
+                    let target = v.isInterState 
+                        ? (isReg ? exempAgg.interReg : exempAgg.interUnreg) 
+                        : (isReg ? exempAgg.intraReg : exempAgg.intraUnreg);
+
+                    if (v.supplyType === 'EXEMPT') target.exempt += formatNumber(v.taxable);
+                    else if (v.supplyType === 'NONGST') target.nonGst += formatNumber(v.taxable);
+                    else target.nil += formatNumber(v.taxable);
+                });
+                
+                const exempData = [
+                    { "Description": "Inter-State supplies to registered persons", "Nil Rated Supplies": formatNumber(exempAgg.interReg.nil), "Exempted (Other than Nil rated/non-GST supply)": formatNumber(exempAgg.interReg.exempt), "Non-GST Supplies": formatNumber(exempAgg.interReg.nonGst) },
+                    { "Description": "Intra-State supplies to registered persons", "Nil Rated Supplies": formatNumber(exempAgg.intraReg.nil), "Exempted (Other than Nil rated/non-GST supply)": formatNumber(exempAgg.intraReg.exempt), "Non-GST Supplies": formatNumber(exempAgg.intraReg.nonGst) },
+                    { "Description": "Inter-State supplies to unregistered persons", "Nil Rated Supplies": formatNumber(exempAgg.interUnreg.nil), "Exempted (Other than Nil rated/non-GST supply)": formatNumber(exempAgg.interUnreg.exempt), "Non-GST Supplies": formatNumber(exempAgg.interUnreg.nonGst) },
+                    { "Description": "Intra-State supplies to unregistered persons", "Nil Rated Supplies": formatNumber(exempAgg.intraUnreg.nil), "Exempted (Other than Nil rated/non-GST supply)": formatNumber(exempAgg.intraUnreg.exempt), "Non-GST Supplies": formatNumber(exempAgg.intraUnreg.nonGst) }
+                ];
+                const wsEXEMP = XLSX.utils.json_to_sheet(exempData);
+                XLSX.utils.book_append_sheet(wb, wsEXEMP, "exemp");
+
+                // 8. FORMAT HSN SUMMARY SHEET (hsn)
+                const hsnData = Object.values(this.hsnSummary).map(h => ({
+                    "HSN": h.hsn || "0000",
+                    "Description": h.desc || "",
+                    "UQC": h.uqc || "NOS",
+                    "Total Quantity": formatNumber(h.qty),
+                    "Total Value": formatNumber(h.total),
+                    "Rate": 0,
+                    "Taxable Value": formatNumber(h.taxable),
+                    "Integrated Tax Amount": formatNumber(h.igst),
+                    "Central Tax Amount": formatNumber(h.cgst),
+                    "State/UT Tax Amount": formatNumber(h.sgst),
+                    "Cess Amount": 0
+                }));
+                const wsHSN = XLSX.utils.json_to_sheet(hsnData);
+                XLSX.utils.book_append_sheet(wb, wsHSN, "hsn");
+
+                // 9. FORMAT DOCUMENT SUMMARY SHEET (docs)
+                const docsData = [];
+                const compileDocs = (arr, label) => {
+                    if (arr && arr.length > 0) {
+                        let sorted = [...arr].sort();
+                        docsData.push({
+                            "Nature of Document": label,
+                            "Sr. No. From": String(sorted[0] || ''),
+                            "Sr. No. To": String(sorted[sorted.length - 1] || ''),
+                            "Total Number": arr.length,
+                            "Cancelled": 0
+                        });
+                    }
+                };
+                compileDocs(this.docSummary.invoices, "Invoices for outward supply");
+                compileDocs(this.docSummary.returns, "Credit/Debit Notes");
+                compileDocs(this.docSummary.exports, "Export Invoices");
+                
+                const wsDOCS = XLSX.utils.json_to_sheet(docsData);
+                XLSX.utils.book_append_sheet(wb, wsDOCS, "docs");
+
+                // Generate and trigger download
+                const fromDate = document.getElementById('gstrFromDate')?.value || new Date().toISOString().split('T')[0];
+                const toDate = document.getElementById('gstrToDate')?.value || new Date().toISOString().split('T')[0];
+
+                const formatDateForFilename = (dateStr) => {
+                    if (!dateStr) return '';
+                    const parts = dateStr.split('-');
+                    if (parts.length === 3) {
+                        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+                    }
+                    return dateStr;
+                };
+
+                const formattedFromDate = formatDateForFilename(fromDate);
+                const formattedToDate = formatDateForFilename(toDate);
+
+                const fileName = `GSTR1_Export_${formattedFromDate}_to_${formattedToDate}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+
+                // Restore UI
+                tbody.innerHTML = originalHTML;
+
+            } catch (error) {
+                console.error("Excel Export Failed:", error);
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-danger fw-bold">Excel Generation Failed: ${error.message}</td></tr>`;
+                setTimeout(() => { tbody.innerHTML = originalHTML; }, 3000);
+            }
         }
     };
 
-    // Fast materialization deferred initialization
     setTimeout(() => GSTR1App.Init(), 100);
 })();
+
+// Global Keyboard Shortcut Listener for Ctrl + E
+document.addEventListener('keydown', function(event) {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'e') {
+        event.preventDefault(); 
+        
+        if (window.GSTR1App && typeof window.GSTR1App.ExportToGSTExcel === 'function') {
+            console.log("Ctrl + E detected. Triggering GST Excel Compilation...");
+            window.GSTR1App.ExportToGSTExcel();
+        }
+    }
+});
 </script>

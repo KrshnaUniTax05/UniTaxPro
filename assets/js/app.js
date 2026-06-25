@@ -677,16 +677,23 @@ window.printTransaction = async function(type, key) {
         const printMap = {
             "SalesInvoiceForm": "tax-invoice",
             "PurchaseInvoiceForm": "tax-invoice",
+            "PurchaseReturnForm": "tax-invoice",
+            "SalesReturnForm": "tax-invoice",
             "ReceiptVoucherForm": "receipt-vch",
-            "PaymentVoucherForm": "payment-vch",
+            "PaymentVoucherForm": "receipt-vch",
             "ReceiptPaymentForm": "receipt-pay"
         };
+        
         const templateName = printMap[type] || "receipt-vch";
         const isInvoice = type.includes("Invoice");
+        const isReturn = type.includes("Return");
+        const isReceipt = type.includes("Receipt");
+        const isPayment = type.includes("Payment");
 
         const data = await API.Fetch(`Transactions/${type}/${key}`);
         if (!data) throw new Error("Transaction data missing.");
-        console.log(data)
+        console.log(data);
+        
         // 1. LOAD SYSTEM SETTINGS
         let sysSettings = {};
         try { sysSettings = JSON.parse(localStorage.getItem('ERP_Settings')) || {}; } catch(e){}
@@ -739,6 +746,7 @@ window.printTransaction = async function(type, key) {
         let rawPartyName = data.header.customer_ledger || data.header.entity || data.header.PartyName || "";
         let partyName = rawPartyName, partyCode = "N/A", partyAddress = "N/A", partyGST = "N/A", partyState = "N/A", cleanPartyState = "";
         let partyemail = "", partyphone = "";
+        let partyAccountNumber = "", partyIFSC = "", partyAccountBranch = "", partySWIFT = "";
 
         if (rawPartyName && Object.keys(ledgerData).length > 0) {
             Object.values(ledgerData).forEach(l => {
@@ -747,11 +755,11 @@ window.printTransaction = async function(type, key) {
                 const searchTerm = rawPartyName.toLowerCase();
                 
                 if (ledgerName === searchTerm || ledgerCode === searchTerm) {
-                    partyName = l.name || l.ledgerName.toUpperCase();
+                    partyName = l.name || l.ledgerName || rawPartyName;
                     partyCode = l.ledgerCode || l.code || "N/A";
-                    partyGST = l.GST || l.gstNo || "N/A".toUpperCase();
-                    partyemail = (l.email || "").toLowerCase();
-                    partyphone = l.Mobile || "";
+                    partyGST = l.GST || l.gstNo || "N/A";
+                    partyemail = l.email ? "Email: " + l.email.toLowerCase() : "";
+                    partyphone = l.Mobile ? "Phone: " + l.Mobile : "";
                     partyAccountNumber = l.accountNumber || "";
                     partyIFSC = l.ifscCode || "";
                     partyAccountBranch = l.branchName || "";
@@ -832,7 +840,7 @@ window.printTransaction = async function(type, key) {
         // 7. DISPLAY TOGGLES
         const dBank = sysSettings.enableBankingInfo ? "flex" : "none";
         const dTerms = (sysSettings.enableTerms && sysSettings.invoiceTerms) ? "block" : "none";
-        const dSign = sysSettings.showSignatory !== false ? "flex" : "none";
+        const dSign = "flex" ;
         const dWords = sysSettings.showAmountInWords !== false ? "block" : "none";
 
         let upiDisplay = "none", upiLink = "", qrUrl = "";
@@ -846,19 +854,103 @@ window.printTransaction = async function(type, key) {
 
         const safeDeliveryAddr = [data.meta?.delivery_address, data.meta?.delivery_state, data.meta?.delivery_pin].filter(Boolean).join(", ");
         
+        // ==========================================
+        // TITLE DETERMINATION - FIXED
+        // ==========================================
+        let title;
+        const meta = data.meta || {};
+        const docType = meta.DocumentType || data.header.DocumentType || "";
+
+        // Check by form type first (most reliable)
+        if (type === "SalesInvoiceForm" || type === "PurchaseInvoiceForm") {
+            title = "TAX INVOICE";
+        } else if (type === "SalesReturnForm") {
+            title = "CREDIT NOTE";
+        } else if (type === "PurchaseReturnForm") {
+            title = "DEBIT NOTE";
+        } else if (type === "ReceiptVoucherForm" || type === "ReceiptPaymentForm") {
+            title = "RECEIPT VOUCHER";
+        } else if (type === "PaymentVoucherForm") {
+            title = "PAYMENT VOUCHER";
+        } else if (docType === "SALE" || docType === "PURCHASE" || docType === "SALES" || docType === "PURCHASES" || docType === "INVOICE") {
+            title = "TAX INVOICE";
+        } else if (docType === "SALES_RETURN" || docType === "SALESRETURN" || docType === "CREDIT_NOTE" || docType === "CREDITNOTE" || docType === "CREDIT") {
+            title = "CREDIT NOTE";
+        } else if (docType === "PURCHASE_RETURN" || docType === "PURCHASERETURN" || docType === "DEBIT_NOTE" || docType === "DEBITNOTE" || docType === "DEBIT") {
+            title = "DEBIT NOTE";
+        } else if (docType === "RECEIPT") {
+            title = "RECEIPT VOUCHER";
+        } else if (docType === "PAYMENT") {
+            title = "PAYMENT VOUCHER";
+        } else if (isInvoice) {
+            title = "TAX INVOICE";
+        } else if (isReturn) {
+            // Check if it's a sales return (Credit Note) or purchase return (Debit Note)
+            if (type.includes("Sales")) {
+                title = "CREDIT NOTE";
+            } else if (type.includes("Purchase")) {
+                title = "DEBIT NOTE";
+            } else {
+                title = "DEBIT/CEDIT NOTE";
+            }
+        } else if (isReceipt) {
+            title = "RECEIPT VOUCHER";
+        } else if (isPayment) {
+            title = "PAYMENT VOUCHER";
+        } else {
+            title = "DOCUMENT";
+        }
+
         const printData = {
-            display_bank: dBank, display_terms: dTerms, display_sign: dSign, display_words: dWords, display_upi: upiDisplay,
-            companyName: compName.toUpperCase(), companyAddress: compAddress, gstin: compGST.toUpperCase(), companyEmail: compEmail.toLowerCase(), companyPhone: compPhone,
-            bank_name: sysSettings.enableBankingInfo ? (sysSettings.bankName || "Not Set") : "", bank_ac_name: sysSettings.enableBankingInfo ? (sysSettings.bankAccountName || "Not Set") : "", bank_ac: sysSettings.enableBankingInfo ? (sysSettings.bankAccountNumber || "Not Set") : "", bank_ifsc: sysSettings.enableBankingInfo ? (sysSettings.bankIFSC || "Not Set") : "", invoice_terms: sysSettings.enableTerms ? (sysSettings.invoiceTerms || "") : "", upi_id: (sysSettings.enableBankingInfo && sysSettings.upiid) ? sysSettings.upiid.trim() : "", qr_url: qrUrl,
+            display_bank: dBank, 
+            display_terms: dTerms, 
+            display_sign: dSign, 
+            display_words: dWords, 
+            display_upi: upiDisplay,
+            companyName: compName.toUpperCase(), 
+            companyAddress: compAddress, 
+            gstin: compGST.toUpperCase(), 
+            companyEmail: compEmail.toLowerCase(), 
+            companyPhone: compPhone,
+            bank_name: sysSettings.enableBankingInfo ? (sysSettings.bankName || "") : "", 
+            bank_ac_name: sysSettings.enableBankingInfo ? (sysSettings.bankAccountName || "") : "", 
+            bank_ac: sysSettings.enableBankingInfo ? (sysSettings.bankAccountNumber || "") : "", 
+            bank_ifsc: sysSettings.enableBankingInfo ? (sysSettings.bankIFSC || "") : "", 
+            invoiceTerms: sysSettings.enableTerms ? (sysSettings.invoiceTerms || "") : "", 
+            upi_id: (sysSettings.enableBankingInfo && sysSettings.upiid) ? sysSettings.upiid.trim() : "", 
+            qr_url: qrUrl, 
+            Document_title: title,
             date: Utils.FormatDate(data.header.date || data.header.voucher_date || data.header.valueDate || data.header.Date),
             doc_no: data.header.doc_no || data.header.Invoice || data.header.DocNo || "N/A",
-            customer_name: partyName.toUpperCase(), customer_code: partyCode.toUpperCase(), customer_address: partyAddress.trim(), customer_gst: partyGST.toUpperCase(), customer_state: partyState, customer_email: partyemail, customer_phone: partyphone, ledger_IFSC:partyIFSC.toUpperCase(),ledger_code:partyCode, ledger_AccountNumber:partyAccountNumber,ledger_Branch:partyAccountBranch,ledger_swift:partySWIFT.toUpperCase(), ledger_name:partyName.toUpperCase(),
-            consignee_name: (data.meta?.consignee_name || "").toUpperCase(), Ledger_gst:partyGST, delivery_address: safeDeliveryAddr, vehicle_no: (data.meta?.vehicle_no || "").toUpperCase(), LR_No: (data.meta?.lr_no || "").toUpperCase(), delivery_phone: data.meta?.delivery_phone || "", delivery_email: data.meta?.delivery_email || "", Valuedate: Utils.FormatDate(data.header.date) , Instdate:Utils.FormatDate(data.header.instrumentDate) ,
-            subTotal: Utils.FormatINR(rawSubTotal), taxTotal: Utils.FormatINR(rawTaxTotal), grandTotal: Utils.FormatINR(rawTotal),
+            customer_name: partyName.toUpperCase(), 
+            customer_code: partyCode.toUpperCase(), 
+            customer_address: partyAddress.trim(), 
+            customer_gst: partyGST.toUpperCase(), 
+            customer_state: partyState, 
+            customer_email: partyemail, 
+            customer_phone: partyphone, 
+            ledger_IFSC: partyIFSC.toUpperCase(),
+            ledger_code: partyCode, 
+            ledger_AccountNumber: partyAccountNumber,
+            ledger_Branch: partyAccountBranch,
+            ledger_swift: partySWIFT.toUpperCase(), 
+            ledger_name: partyName.toUpperCase(),
+            consignee_name: (data.meta?.consignee_name || "").toUpperCase() , 
+            Ledger_gst: partyGST, 
+            delivery_address: safeDeliveryAddr,
+            vehicle_no: data.meta?.vehicle_no ? "Vehicle No: " + data.meta.vehicle_no.toUpperCase() : "",
+            LR_No: data.meta?.lr_no ? "LR No: " + data.meta.lr_no.toUpperCase() : "",
+            delivery_phone: data.meta?.delivery_phone ? "Phone: " + data.meta.delivery_phone : "",
+            delivery_email: data.meta?.delivery_email ? "Email: " + data.meta.delivery_email : "",
+            Valuedate: Utils.FormatDate(data.header.date), 
+            Instdate: Utils.FormatDate(data.header.instrumentDate),
+            subTotal: Utils.FormatINR(rawSubTotal), 
+            taxTotal: Utils.FormatINR(rawTaxTotal), 
+            grandTotal: Utils.FormatINR(rawTotal),
             amountInWords: (typeof window.NumberToWords === 'function') ? window.NumberToWords(Math.round(rawTotal)) : "Amount in words...",
             narration: data.header.narration || data.header.Narration || "",
-            items_html: itemsHtml || '<tr><td colspan="7" class="text-center">No Items Found</td></tr>', hsn_html: hsnHtml,
-            // --- CORRECTED BANK FIELDS ---
+            items_html: itemsHtml || '<tr><td colspan="7" class="text-center">No Items Found</td></tr>', 
+            hsn_html: hsnHtml,
             bank_code: data.items && data.items.length > 0 ? (data.items[0].offset_account || data.items[0].item_name || "N/A").toUpperCase() : "N/A",
             bank_gst: compGST.toUpperCase(),
             bank_state: compState.toUpperCase(),
@@ -875,7 +967,6 @@ window.printTransaction = async function(type, key) {
         alert("Error printing document: " + err.message);
     }
 };
-
 
 // search
 /**

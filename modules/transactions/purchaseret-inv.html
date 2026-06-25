@@ -197,35 +197,90 @@
 <script>
 (async function InitReturnAutomation() {
     // 1. Determine which form we are currently viewing
-    const salesForm = document.getElementById('SalesReturnForm');
-    const purchaseForm = document.getElementById('PurchaseReturnForm');
+    // Look for standard Return forms or specific Note forms
+    const salesForm = document.getElementById('SalesReturnForm') || document.getElementById('CreditNoteForm');
+    const purchaseForm = document.getElementById('PurchaseReturnForm') || document.getElementById('DebitNoteForm');
     
     const isSalesReturn = !!salesForm;
     const formEl = salesForm || purchaseForm;
     if (!formEl) return;
 
+    // Formatter for currency
+    const fmt = (val) => parseFloat(val || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
     // 2. Set up variables based on the form type
     const fetchPath = isSalesReturn ? 'Transactions/SalesInvoiceForm' : 'Transactions/PurchaseInvoiceForm';
+    
+    // Fetch from ALL possible return/note tables to ensure we don't miss any posted CNs
+    const returnFetchPaths = isSalesReturn 
+        ? ['Transactions/SalesReturnForm', 'Transactions/CreditNoteForm'] 
+        : ['Transactions/PurchaseReturnForm', 'Transactions/DebitNoteForm'];
+
     const inputName = isSalesReturn ? 'original_invoice_no' : 'original_bill_no';
     const dateInputName = isSalesReturn ? 'original_invoice_date' : 'original_bill_date';
     const datalistId = isSalesReturn ? 'originalSalesList' : 'originalPurchaseList';
     const tableBodyId = isSalesReturn ? 'salesReturnItemBody' : 'purchaseReturnItemBody';
     const entityName = isSalesReturn ? 'customer_ledger' : 'supplier_ledger';
-    const recalculateFunc = isSalesReturn ? recalculateCrnVoucher : recalculateDbnVoucher;
+    
+    // Fallback math calculation execution
+    const recalculateFunc = isSalesReturn 
+        ? (typeof recalculateCrnVoucher === 'function' ? recalculateCrnVoucher : (typeof window.recalculateVoucher === 'function' ? window.recalculateVoucher : null)) 
+        : (typeof recalculateDbnVoucher === 'function' ? recalculateDbnVoucher : (typeof window.recalculateVoucher === 'function' ? window.recalculateVoucher : null));
 
     const targetInput = formEl.querySelector(`[name="${inputName}"]`);
     const datalist = document.getElementById(datalistId);
 
     if (!targetInput || !datalist) return;
 
-    try {
-        // 3. Fetch original transactions from the database
-        // console.log(`⏳ Fetching original documents from: ${fetchPath}`);
-        const data = await API.Fetch(fetchPath);
-        if (!data) return;
+    // Helper function to robustly calculate absolute total value of a transaction
+    const getTransactionTotal = (txn) => {
+        let total = parseFloat(txn.header?.grandTotal || txn.header?.invoice_value || txn.header?.total_amount || 0);
+        if (total === 0 && txn.items) {
+            const itemsArray = Array.isArray(txn.items) ? txn.items : Object.values(txn.items);
+            itemsArray.forEach(i => {
+                let rowTaxable = parseFloat(i.qty || 1) * parseFloat(i.rate || i.amount || 0);
+                let cgst = parseFloat(i.cgst || i.cgst_amount || 0);
+                let sgst = parseFloat(i.sgst || i.sgst_amount || 0);
+                let igst = parseFloat(i.igst || i.igst_amount || 0);
+                
+                if (cgst === 0 && sgst === 0 && igst === 0) {
+                    let taxPrc = parseFloat(i.auto_item_name_ItemTax || i.taxRate || 0);
+                    rowTaxable += (rowTaxable * (taxPrc / 100));
+                } else {
+                    rowTaxable += (cgst + sgst + igst);
+                }
+                total += rowTaxable;
+            });
+        }
+        return Math.abs(total); 
+    };
 
-        // 4. Populate the datalist for auto-completion
-        const transactions = Object.values(data);
+    try {
+        // 3. Fetch original transactions AND existing returns simultaneously
+        const invoiceDataReq = API.Fetch(fetchPath).catch(() => null);
+        const returnDataReqs = returnFetchPaths.map(path => API.Fetch(path).catch(() => null));
+        
+        const [invoiceData, ...allReturnDatas] = await Promise.all([invoiceDataReq, ...returnDataReqs]);
+
+        if (!invoiceData) return;
+
+        // 4. Map existing returned amounts against their original invoice numbers
+        const returnedAmountsMap = {};
+        
+        allReturnDatas.forEach(returnData => {
+            if (returnData) {
+                Object.values(returnData).forEach(ret => {
+                    const refNo = ret.header?.[inputName] || ret.meta?.[inputName] || ret.header?.original_invoice_no || ret.header?.original_bill_no || '';
+                    if (refNo) {
+                        const retTotal = getTransactionTotal(ret);
+                        returnedAmountsMap[refNo] = (returnedAmountsMap[refNo] || 0) + retTotal;
+                    }
+                });
+            }
+        });
+
+        // 5. Populate the datalist, excluding fully returned invoices
+        const transactions = Object.values(invoiceData);
         datalist.innerHTML = ''; 
         
         transactions.forEach(txn => {
@@ -234,14 +289,27 @@
             const entity = txn.header?.entity || txn.header?.[entityName];
             
             if (docNo) {
-                const option = document.createElement('option');
-                option.value = docNo;
-                option.textContent = `${entity || 'Unknown'} | Date: ${Utils.FormatDate(docDate)}`;
-                datalist.appendChild(option);
+                const invTotal = getTransactionTotal(txn);
+                const alreadyReturned = returnedAmountsMap[docNo] || 0;
+                const remainingBalance = invTotal - alreadyReturned;
+
+                // Only add to datalist if there is a remaining balance 
+                if (invTotal === 0 || remainingBalance > 0.5) {
+                    const option = document.createElement('option');
+                    option.value = docNo;
+                    
+                    let displayString = `${entity || 'Unknown'} | Date: ${Utils.FormatDate(docDate)}`;
+                    if (invTotal > 0) {
+                        displayString += ` | Bal: ₹${fmt(remainingBalance)}`;
+                    }
+                    
+                    option.textContent = displayString;
+                    datalist.appendChild(option);
+                }
             }
         });
 
-        // 5. Listen for selection and map data to the return form
+        // 6. Listen for selection and map data to the return form
         targetInput.addEventListener('change', function(e) {
             const selectedDocNo = e.target.value.trim();
             if (!selectedDocNo) return;
@@ -253,8 +321,6 @@
             });
 
             if (matchedTxn) {
-                // console.log("🟢 Match Found! Mapping data...", matchedTxn);
-
                 // Map Header Data
                 const h = matchedTxn.header;
                 const dateField = formEl.querySelector(`[name="${dateInputName}"]`);
@@ -296,7 +362,6 @@
 
                         // Fill item inputs
                         Object.keys(item).forEach(key => {
-                            // Look for exact name or array name (e.g., rate or rate[])
                             const input = newRow.querySelector(`[name="${key}"], [name="${key}[]"]`);
                             if (input) input.value = item[key];
                         });

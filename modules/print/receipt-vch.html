@@ -1,223 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UniTax Pro | Receipt Voucher</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-    /* --- GLOBAL & PRINT RESETS --- */
-    :root {
-        --brand-color: #0b3d91;
-        --brand-light: #f4f7fa;
-        --text-dark: #111111;
-        --text-muted: #555555;
-        --border-color: #dce4ec;
-    }
+  :root {
+    --brand:         #1e3a8a;
+    --brand-mid:     #2563eb;
+    --brand-pale:    #eff6ff;
+    --accent:        #0ea5e9;
+    --success:       #10b981;
+    --text-dark:     #0f172a;
+    --text-mid:      #475569;
+    --text-muted:    #94a3b8;
+    --border:        #e2e8f0;
+    --border-strong: #cbd5e1;
+    --surface:       #f8fafc;
+  }
 
-    body, html {
-        margin: 0; padding: 0;
-        font-family: 'Segoe UI', Arial, sans-serif;
-        /* color: var(--text-dark); background: #e9ecef;  */
-        font-size: 10pt; line-height: 1.5;
-    }
+  * { box-sizing: border-box; }
 
-    /* --- ACTION BAR (Screen Only) --- */
-    .action-bar {
-        background: #333;
-        padding: 15px 30px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        color: white;
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-    }
-    
-    .action-bar button {
-        background: #4caf50; color: white; border: none; padding: 10px 20px;
-        font-size: 11pt; font-weight: bold; border-radius: 4px; cursor: pointer;
-        display: flex; align-items: center; gap: 8px;
-    }
-    
-    .action-bar button:hover { background: #43a047; }
+  body, html {
+    margin: 0; padding: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--text-dark);
+    background: #e0e5ef;
+    font-size: 9pt;
+    -webkit-font-smoothing: antialiased;
+  }
 
-    /* --- A4 SHEET PREVIEW (Screen) --- */
-    .print-document {
-        background: white; width: 210mm; min-height: 297mm;
-        margin: 30px auto; padding: 12mm 15mm;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1); box-sizing: border-box;
-    }
+  /* ── Action bar ── */
+  .action-bar {
+    background: #0f172a;
+    padding: 12px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #f1f5f9;
+    position: sticky;
+    top: 0;
+    z-index: 1100;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .brand-label {
+    font-size: 10pt;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #f1f5f9;
+  }
+  .brand-label span {
+    padding: 3px 9px;
+    background: var(--brand-mid);
+    font-size: 7.5pt;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: white;
+  }
+  .btn-print {
+    background: var(--success);
+    color: white;
+    border: none;
+    padding: 9px 22px;
+    font-weight: 700;
+    font-size: 9pt;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .btn-print:hover { background: #059669; transform: translateY(-1px); }
 
-    /* --- PRINT SPECIFIC RULES --- */
-    @media print {
-        @page { margin: 10mm; size: A4 portrait; }
-        body { background: white; }
-        .action-bar { display: none !important; } /* Hides the print button on paper */
-        .print-document { margin: 0; padding: 0; box-shadow: none; width: 100%; min-height: auto; }
-        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    }
+  /* ── Document ── */
+  .print-document {
+    background: white;
+    width: 210mm;
+    min-height: 297mm;
+    margin: 36px auto;
+    box-shadow: 0 4px 60px rgba(15,23,42,0.16);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
 
-    /* --- HEADER SECTION --- */
-    .brand-header {
-        display: flex; justify-content: space-between; align-items: flex-start;
-        border-bottom: 4px solid var(--brand-color); padding-bottom: 20px; margin-bottom: 25px;
-    }
-    .company-details h1 {
-        margin: 0 0 5px 0; font-size: 18pt; font-weight: 800;
-        color: var(--brand-color); text-transform: uppercase; letter-spacing: 0.5px;
-    }
-    .company-details p { margin: 0; font-size: 9pt; color: var(--text-muted); }
-    .company-details .gstin { margin-top: 5px; font-weight: bold; color: var(--text-dark); }
-    .doc-title h2 { margin: 0; font-size: 20pt; font-weight: 800; color: var(--brand-color); text-transform: uppercase; }
+  .page {
+    padding: 14mm 16mm;
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
 
-    /* --- THREE COLUMN GRID --- */
-    .meta-grid {
-        display: flex; border: 1px solid var(--border-color); border-radius: 4px;
-        margin-bottom: 25px; background: var(--brand-light); overflow: hidden;
-    }
+  /* Top accent stripe */
+  .page::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--brand) 0%, var(--brand-mid) 55%, var(--accent) 100%);
+  }
+  .page { padding-top: 18mm; }
 
-    .meta-box { flex: 1; padding: 12px 15px;     display: grid;}
-    .meta-box.border-right { border-right: 1px solid var(--border-color); }
+  /* ── Header ── */
+  .brand-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 18px;
+  }
+  .company-info h1 {
+    margin: 0 0 4px;
+    font-size: 18pt;
+    font-weight: 900;
+    color: var(--brand);
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+  .company-info .sub {
+    font-size: 8pt;
+    color: var(--text-mid);
+    line-height: 1.55;
+    margin: 0;
+  }
+  .gst-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 10px;
+    padding: 4px 10px;
+    background: var(--brand);
+    color: white;
+    font-weight: 700;
+    font-size: 7.5pt;
+    letter-spacing: 0.3px;
+  }
+  .voucher-badge { text-align: right; }
+  .voucher-badge .doc-word {
+    font-size: 28pt;
+    font-weight: 900;
+    color: #dde3ef;
+    line-height: 1;
+    letter-spacing: -1px;
+    text-transform: uppercase;
+    display: block;
+  }
+  .voucher-badge .doc-type {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 9pt;
+    font-weight: 700;
+    color: var(--brand-mid);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--brand-mid);
+    padding-bottom: 2px;
+  }
 
-    .meta-box .section-title {
-        font-size: 8pt; color: var(--brand-color); text-transform: uppercase; 
-        font-weight: 800; margin-bottom: 8px; letter-spacing: 0.5px;
-    }
+  .section-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 0 0 16px;
+  }
 
-    .party-name { font-size: 11pt; font-weight: 800; color: var(--text-dark); margin: 0 0 8px 0; text-transform: uppercase; line-height: 1.2;}
-    
-    .info-table { border-collapse: collapse; width: 100%; font-size: 8.5pt; }
-    .info-table td { padding: 3px 0; vertical-align: top; }
-    .info-table td.label { color: var(--text-muted);  font-weight: 600; }
-    .info-table td.val { color: var(--text-dark); font-weight: 500; }
+  /* ── Box title ── */
+  .box-title {
+    font-size: 7pt;
+    font-weight: 800;
+    color: var(--brand-mid);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 9px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .box-title::before {
+    content: '';
+    display: inline-block;
+    width: 10px;
+    height: 3px;
+    background: var(--brand-mid);
+  }
 
-    .highlight-total {
-        background: var(--brand-color); color: white; padding: 10px; border-radius: 4px;
-        margin-top: 10px; display: flex; flex-direction: column; align-items: flex-start;
-    }
-    .highlight-total span { font-size: 8pt; text-transform: uppercase; font-weight: 600; opacity: 0.9; }
-    .highlight-total strong { font-size: 14pt; font-weight: 800; margin-top: 2px;}
+  /* ── Meta grid ── */
+  .meta-grid {
+    display: grid;
+    grid-template-columns: 1.7fr 1fr;
+    margin-bottom: 18px;
+    border: 1px solid var(--border-strong);
+  }
+  .meta-box {
+    padding: 14px 16px;
+    border-right: 1px solid var(--border-strong);
+    background: var(--brand-pale);
+  }
+  .meta-box:last-child { border-right: none; background: var(--surface); }
 
-    /* --- DETAILS TABLE --- */
-    .voucher-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-    .voucher-table th { background: var(--brand-color); color: white; font-weight: 600; font-size: 9pt; text-transform: uppercase; padding: 10px 12px; text-align: left; }
-    .voucher-table td { padding: 12px; font-size: 10pt;  vertical-align: top; }
-    .voucher-table tbody tr { height: 120px; } 
-    .voucher-table tfoot td { font-weight: 800; font-size: 11pt; color: var(--brand-color); padding: 12px; border-top: 2px solid var(--brand-color); border-bottom: 2px solid var(--brand-color); }
+  .party-name {
+    font-size: 11pt;
+    font-weight: 800;
+    margin-bottom: 10px;
+    color: var(--text-dark);
+    line-height: 1.2;
+  }
 
-    .amount-words { font-size: 10pt; padding: 12px 15px; border-left: 4px solid var(--brand-color); background: #ffffff; border: 1px solid var(--border-color); margin-bottom: 50px; }
-    .amount-words strong { color: var(--brand-color); text-transform: uppercase; font-size: 8pt; display: block; margin-bottom: 4px;}
+  /* Bank-style flex rows (no table) */
+  .info-rows { width: 100%; font-size: 8.5pt; }
+  .info-row {
+    display: flex;
+    align-items: baseline;
+    padding: 3.5px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-lbl {
+    font-size: 7.5pt;
+    font-weight: 600;
+    color: var(--text-muted);
+    width: 110px;
+    flex-shrink: 0;
+  }
+  .info-val {
+    font-size: 8.5pt;
+    font-weight: 700;
+    color: var(--text-dark);
+    flex: 1;
+  }
+  .info-val.accent { color: var(--brand-mid); }
 
-    .signatures { display: flex; justify-content: space-between; padding: 0 30px; margin-top: auto; }
-    .sig-box { text-align: center; width: 180px; }
-    .sig-box .line { border-top: 1px solid var(--text-dark); margin-bottom: 8px; }
-    .sig-box p { margin: 0; font-size: 8pt; font-weight: bold; color: var(--text-muted); text-transform: uppercase; }
+  /* Total highlight card */
+  .total-card {
+    background: var(--brand);
+    color: white;
+    padding: 12px 14px;
+    margin-top: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .total-card .tc-label {
+    font-size: 7.5pt;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    opacity: 0.8;
+  }
+  .total-card .tc-amount {
+    font-size: 16pt;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+  }
 
-    .footer-note { margin-top: 40px; text-align: center; font-size: 8pt; color: var(--text-muted); border-top: 1px dashed var(--border-color); padding-top: 15px; }
+  /* ── Voucher table ── */
+  .voucher-wrap { border: 1px solid var(--border-strong); margin-bottom: 16px; }
+  .voucher-table { width: 100%; border-collapse: collapse; }
+  .voucher-table thead th {
+    background: var(--brand);
+    color: rgba(255,255,255,0.92);
+    padding: 10px 12px;
+    font-size: 7.5pt;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    border: none;
+  }
+  .voucher-table tbody td {
+    padding: 14px 12px;
+    font-size: 9.5pt;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--text-dark);
+  }
+  .voucher-table tbody tr:nth-child(even) td { background: var(--brand-pale); }
+  .voucher-table .narration-row td {
+    background: var(--surface);
+    font-size: 8.5pt;
+    color: var(--text-mid);
+    line-height: 1.6;
+    border-bottom: none;
+    padding: 12px;
+  }
+  .narration-row .narr-label {
+    font-size: 7pt;
+    font-weight: 800;
+    color: var(--brand-mid);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 4px;
+  }
+
+  /* tfoot total bar */
+  .voucher-table tfoot td {
+    padding: 12px;
+    font-size: 9pt;
+    font-weight: 700;
+    border-top: 2px solid var(--brand);
+    border-bottom: 2px solid var(--brand);
+    background: var(--brand-pale);
+    color: var(--brand);
+  }
+  .voucher-table .text-right { text-align: right; }
+  .voucher-table .text-center { text-align: center; }
+
+  /* ── Amount words ── */
+  .amount-words {
+    font-size: 8.5pt;
+    font-style: italic;
+    margin-bottom: 22px;
+    padding: 9px 13px;
+    border-left: 4px solid var(--brand-mid);
+    background: var(--brand-pale);
+    color: var(--text-mid);
+    line-height: 1.5;
+  }
+  .amount-words strong { color: var(--brand); font-style: normal; }
+
+  /* ── Signatures ── */
+  .signatures {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
+    margin-top: auto;
+    padding-top: 20px;
+  }
+  .sig-box {
+    text-align: center;
+    width: 160px;
+  }
+  .sig-space { height: 44px; }
+  .sig-line {
+    border-top: 1.5px solid var(--text-dark);
+    padding-top: 6px;
+    font-size: 7.5pt;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-mid);
+  }
+
+  /* ── Footer note ── */
+  .footer-note {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 7pt;
+    padding: 8px 0;
+    border-top: 1px dashed var(--border);
+    letter-spacing: 0.2px;
+    margin-top: 20px;
+  }
+
+  /* ── Print ── */
+  @media print {
+    @page { margin: 0; size: A4 portrait; }
+    body { background: white; }
+    .action-bar { display: none !important; }
+    .print-document { margin: 0; box-shadow: none; width: 100%; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  }
 </style>
+</head>
+<body>
 
-<div class="action-bar no-print">
-    <div style="font-size: 14pt; font-weight: bold;">Document Preview: {{doc_no}}</div>
-    <button onclick="window.print()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>
-        Print / Save PDF
-    </button>
+<!-- Action bar -->
+<div class="action-bar">
+  <div class="brand-label">UniTax Pro <span>DOCUMENT PREVIEW</span> — {{doc_no}}</div>
+  <button class="btn-print" onclick="window.print()">&#128438;&nbsp; Print / Save PDF</button>
 </div>
 
 <div class="print-document">
-    
+  <div class="page">
+
+    <!-- Header -->
     <div class="brand-header">
-        <div class="company-details">
-            <h1>{{companyName}}</h1>
-            <p>{{companyAddress}}</p>
-            <p class="gstin">GSTIN: {{gstin}}</p>
-        </div>
-        <div class="doc-title">
-            <h2>RECEIPT VOUCHER</h2>
-        </div>
+      <div class="company-info">
+        <h1>{{companyName}}</h1>
+        <p class="sub">{{companyAddress}}</p>
+        <div class="gst-tag">GSTIN &nbsp;{{gstin}}</div>
+      </div>
+      <div class="voucher-badge">
+        <span class="doc-word">DOC</span>
+        <div class="doc-type">{{Document_title}}</div>
+      </div>
     </div>
 
+    <hr class="section-divider">
+
+    <!-- Meta grid: Received In | Voucher Details -->
     <div class="meta-grid">
-        
-        <div class="meta-box border-right">
-            <div class="section-title">Received In</div>
-            <h3 class="party-name">{{ledger_name}}</h3>
-            <table class="info-table">
-                <tr><td class="label">GL Code:</td><td class="val">{{ledger_code}}</td></tr>
-                <tr><td class="label">Account Number:</td><td class="val">{{ledger_AccountNumber}}</td></tr>
-                <tr><td class="label">IFSC Code:</td><td class="val">{{ledger_IFSC}}</td></tr>
-                <tr><td class="label">Branch:</td><td class="val">{{ledger_Branch}}</td></tr>
-                <tr><td class="label">Swift Code:</td><td class="val">{{ledger_swift}}</td></tr>
-                <!-- <tr><td class="label">Address:</td><td class="val">{{customer_address}}</td></tr> -->
-                <tr><td class="label">GSTIN:</td><td class="val">{{Ledger_gst}}</td></tr>
-            </table>
+
+      <!-- Left: ledger / bank info -->
+      <div class="meta-box">
+        <div class="box-title">Received In</div>
+        <div class="party-name">{{ledger_name}}</div>
+        <div class="info-rows">
+          <div class="info-row">
+            <span class="info-lbl">GL Code</span>
+            <span class="info-val">{{ledger_code}}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-lbl">Account No</span>
+            <span class="info-val">{{ledger_AccountNumber}}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-lbl">IFSC Code</span>
+            <span class="info-val">{{ledger_IFSC}}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-lbl">Branch</span>
+            <span class="info-val">{{ledger_Branch}}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-lbl">Swift Code</span>
+            <span class="info-val">{{ledger_swift}}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-lbl">GSTIN</span>
+            <span class="info-val">{{Ledger_gst}}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: voucher details + total -->
+      <div class="meta-box">
+        <div class="box-title">Voucher Details</div>
+        <div class="info-rows">
+          <div class="info-row">
+            <span class="info-lbl">Doc No</span>
+            <span class="info-val accent">{{doc_no}}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-lbl">Instrument Date</span>
+            <span class="info-val">{{Instdate}}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-lbl">Value Date</span>
+            <span class="info-val">{{Valuedate}}</span>
+          </div>
         </div>
 
-        <!-- <div class="meta-box border-right">
-            <div class="section-title">Deposited Into (Account)</div>
-            <h3 class="party-name">{{bank_name}}</h3>
-            <table class="info-table">
-                <tr><td class="label">GL Code:</td><td class="val">{{bank_code}}</td></tr>
-                <tr><td class="label">GSTIN:</td><td class="val">{{bank_gst}}</td></tr>
-                <tr><td class="label">State:</td><td class="val">{{bank_state}}</td></tr>
-            </table>
-        </div> -->
-
-        <div class="meta-box">
-            <div class="section-title">Voucher Details</div>
-            <table class="info-table">
-                <tr><td class="label">Doc No:</td><td class="val" style="font-weight: 800; color: var(--brand-color);">{{doc_no}}</td></tr>
-                <tr><td class="label">Instrument Date:</td><td class="val">{{Instdate}}</td></tr>
-                <tr><td class="label">Value Date:</td><td class="val">{{Valuedate}}</td></tr>
-            </table>
-            
-            <div class="highlight-total">
-                <span>Total Received</span>
-                <strong>₹ {{grandTotal}}</strong>
-            </div>
+        <div class="total-card">
+          <span class="tc-label">Total Received</span>
+          <span class="tc-amount">&#8377; {{grandTotal}}</span>
         </div>
+      </div>
+
     </div>
 
-    <table class="voucher-table">
-            <thead>
-                <tr>
-                    <th width="8%" class="text-center">S.No</th>
-                    <th width="65%">Particulars / Narration</th>
-                    <th width="27%" style="text-align: right;">Amount (₹)</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{items_html}}
-                
-                <tr>
-                    <td colspan="3" style="padding-top: 15px; padding-bottom: 15px;">
-                        <strong>Header Narration / Remarks:</strong><br>
-                        <span style="color: #555; white-space: pre-wrap;">{{narration}}</span>
-                    </td>
-                </tr>
-            </tbody>
-            <tfoot>
-                <tr>
-                    <td colspan="2" style="text-align: right;">TOTAL AMOUNT</td>
-                    <td style="text-align: right;">₹ {{grandTotal}}</td>
-                </tr>
-            </tfoot>
-        </table>
+    <!-- Voucher line items -->
+    <div class="voucher-wrap">
+      <table class="voucher-table">
+        <thead>
+          <tr>
+            <th class="text-center" width="7%">S.No</th>
+            <th width="65%">Particulars / Narration</th>
+            <th class="text-right" width="28%">Amount (&#8377;)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{items_html}}
+          <tr class="narration-row">
+            <td colspan="3">
+              <div class="narr-label">Header Narration / Remarks</div>
+              <span style="white-space: pre-wrap;">{{narration}}</span>
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2" class="text-right" style="letter-spacing:0.5px; text-transform:uppercase; font-size:8pt;">Total Amount</td>
+            <td class="text-right" style="font-size:11pt; font-weight:900;">&#8377; {{grandTotal}}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
 
+    <!-- Amount in words -->
     <div class="amount-words">
-        <strong>Amount (in words)</strong> 
-        Indian Rupees {{amountInWords}} Only.
+      <strong>Amount in Words:</strong>&nbsp; Indian Rupees {{amountInWords}} Only.
     </div>
 
+    <!-- Signatures -->
     <div class="signatures">
-        <div class="sig-box">
-            <div class="line"></div>
-            <p>Prepared By</p>
-        </div>
-        <div class="sig-box">
-            <div class="line"></div>
-            <p>Authorized Signatory</p>
-        </div>
+      <div class="sig-box">
+        <div class="sig-space"></div>
+        <div class="sig-line">Prepared By</div>
+      </div>
+      <div class="sig-box">
+        <div class="sig-space"></div>
+        <div class="sig-line">Authorized Signatory</div>
+      </div>
     </div>
 
+    <!-- Footer -->
     <div class="footer-note">
-        * This is a computer generated receipt voucher. Subject to realization of cheque/draft/online transfer.
+      * This is a computer generated receipt voucher. Subject to realization of cheque / draft / online transfer.
     </div>
 
-</div>
+  </div><!-- /page -->
+</div><!-- /print-document -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

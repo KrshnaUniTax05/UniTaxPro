@@ -23,7 +23,7 @@
         
         /* Main Viewport Workspace */
         .admin-main { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
-        .admin-content { overflow-y: auto; padding: 1.5rem; flex-grow: 1; background-color: #f1f5f9; }
+        .admin-content { overflow-y: auto; padding: 1rem; flex-grow: 1; background-color: #f1f5f9; }
         
         /* High-Density Components */
         .card { border: none; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02); }
@@ -34,26 +34,25 @@
         .tab-view { display: none; }
         .tab-view.active-view { display: block; animation: viewFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         @keyframes viewFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-        
+        table td{padding: 5px !important;}
         /* Custom Table Header Pinning */
         .table-sticky-wrapper { max-height: calc(100vh - 210px); overflow-y: auto; }
         .table-sticky-wrapper thead th { position: sticky; top: 0; background-color: #f8fafc; z-index: 10; box-shadow: inset 0 -1px 0 var(--bs-border-color); }
     </style>
 </head>
 <body>
-
 <div aria-live="polite" aria-atomic="true" class="position-relative">
     <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer" style="z-index: 1090;"></div>
 </div>
 
 <div class="admin-layout">
     
-    <aside class="admin-sidebar shadow-lg">
-        <div class="p-4 border-bottom border-secondary border-opacity-25">
-            <h4 class="mb-0 fw-bold text-white d-flex align-items-center">
-                <i class="bi bi-shield-lock-fill text-primary me-2"></i> AdminPro
+    <aside class="admin-sidebar  shadow-lg">
+        <div class="p-2 border-bottom border-secondary  border-opacity-25">
+            <h4 class="mb-0 fw-bold text-white d-flex align-items-center justify-content-center">
+                <i class="bi bi-shield-lock-fill text-primary "></i> AdminPro
             </h4>
-            <small class="text-muted">Master Control Panel</small>
+            <small class="text justify-content-center d-flex">Master Control Panel</small>
         </div>
         
         <div class="p-3 flex-grow-1">
@@ -110,192 +109,194 @@
 
         <div class="admin-content">
             
-    <div id="view-notifications" class="tab-view active-view">
-        <div class="row g-4">
-            <div class="col-xl-4">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-white border-bottom py-3">
-                        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-send-fill text-primary me-2"></i> Compose Notification</h6>
-                    </div>
-                    <div class="card-body p-4">
-                        <form id="adminNotificationForm">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold small text-muted">Target Audience</label>
-                                <select name="target_user" id="notifTargetSelect" class="form-select form-select-sm" required>
-                                    <option value="all" selected>📢 Broadcast to ALL Users</option>
-                                </select>
+            <div id="view-notifications" class="tab-view active-view">
+                <div class="row g-4">
+                    <div class="col-xl-4">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-header bg-white border-bottom py-3">
+                                <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-send-fill text-primary me-2"></i> Compose Notification</h6>
                             </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label fw-bold small text-muted">Notification Title</label>
-                                <input type="text" name="title" class="form-control form-control-sm" placeholder="e.g., System Update" required>
-                            </div>
+                            <div class="card-body p-4">
+                                <form id="adminNotificationForm">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold small text-muted">Target Audience</label>
+                                        <select name="target_user" id="notifTargetSelect" class="form-select form-select-sm" required>
+                                            <option value="all" selected>📢 Broadcast to ALL Users</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold small text-muted">Notification Title</label>
+                                        <input type="text" name="title" class="form-control form-control-sm" placeholder="e.g., System Update" required>
+                                    </div>
 
-                            <div class="mb-3">
-                                <label class="form-label fw-bold small text-muted">Notification Type</label>
-                                <select name="type" class="form-select form-select-sm" required>
-                                    <option value="info" selected>ℹ️ General Info</option>
-                                    <option value="task">💼 Task / Assignment</option>
-                                    <option value="success">✅ Success / Approval</option>
-                                    <option value="warning">⚠️ Warning / Alert</option>
-                                    <option value="error">❌ Error / Failure</option>
-                                    <option value="payment">💰 Payment / Finance</option>
-                                    <option value="system">⚙️ System Update</option>
-                                    <option value="document">📄 Document / Report</option>
-                                    <option value="meeting">📅 Meeting / Event</option>
-                                    <option value="security">🔒 Security Alert</option>
-                                    <option value="announcement">📢 Announcement</option>
-                                </select>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold small text-muted">Notification Type</label>
+                                        <select name="type" class="form-select form-select-sm" required>
+                                            <option value="info" selected>ℹ️ General Info</option>
+                                            <option value="task">💼 Task / Assignment</option>
+                                            <option value="success">✅ Success / Approval</option>
+                                            <option value="warning">⚠️ Warning / Alert</option>
+                                            <option value="error">❌ Error / Failure</option>
+                                            <option value="payment">💰 Payment / Finance</option>
+                                            <option value="system">⚙️ System Update</option>
+                                            <option value="document">📄 Document / Report</option>
+                                            <option value="meeting">📅 Meeting / Event</option>
+                                            <option value="security">🔒 Security Alert</option>
+                                            <option value="announcement">📢 Announcement</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold small text-muted">Message Body</label>
+                                        <textarea name="message" class="form-control form-control-sm" rows="5" placeholder="Enter notification text here..." required></textarea>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold small text-muted">Redirect Link (Optional)</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light"><i class="bi bi-link-45deg"></i></span>
+                                            <input type="text" name="link" class="form-control" placeholder="e.g., reports/view">
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold py-2 shadow-sm">
+                                        Dispatch Broadcast <i class="bi bi-arrow-right-circle ms-2"></i>
+                                    </button>
+                                </form>
                             </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label fw-bold small text-muted">Message Body</label>
-                                <textarea name="message" class="form-control form-control-sm" rows="5" placeholder="Enter notification text here..." required></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-8">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-clock-history text-muted me-2"></i> Live Broadcast History</h6>
+                                <button class="btn btn-xs btn-outline-secondary px-2" onclick="AdminSystem.LoadNotifications()"><i class="bi bi-arrow-clockwise"></i> Sync</button>
                             </div>
-                            
-                            <div class="mb-4">
-                                <label class="form-label fw-bold small text-muted">Redirect Link (Optional)</label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light"><i class="bi bi-link-45deg"></i></span>
-                                    <input type="text" name="link" class="form-control" placeholder="e.g., reports/view">
-                                </div>
+                            <div class="table-responsive table-sticky-wrapper">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="text-muted small text-uppercase">
+                                        <tr>
+                                            <th class="ps-4">Title & Details</th>
+                                            <th>Audience</th>
+                                            <th>Timestamp</th>
+                                            <th class="text-end pe-4" style="width: 120px;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="notificationTableBody">
+                                        <tr><td colspan="4" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Connecting to stream...</td></tr>
+                                    </tbody>
+                                </table>
                             </div>
-                            
-                            <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold py-2 shadow-sm">
-                                Dispatch Broadcast <i class="bi bi-arrow-right-circle ms-2"></i>
-                            </button>
-                        </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-broadcasts" class="tab-view">
+                <div class="row g-4">
+                    <div class="col-xl-4">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-header bg-white border-bottom py-3">
+                                <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-broadcast-pin text-primary me-2"></i> Broadcast Services</h6>
+                            </div>
+                            <div class="card-body p-4">
+                                <form id="broadcastForm">
+                                    <input type="hidden" name="hiddenId">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold small text-muted">Target Audience (@all or ID;ID)</label>
+                                        <input type="text" name="target" class="form-control form-control-sm" placeholder="@all or user1;user2" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold small text-muted">Broadcast Title</label>
+                                        <input type="text" name="title" class="form-control form-control-sm" placeholder="e.g., Urgent Update" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold small text-muted">Notification Type</label>
+                                        <select name="type" class="form-select form-select-sm" required>
+                                            <option value="info">ℹ️ General Info</option>
+                                            <option value="success">✅ Success</option>
+                                            <option value="warning">⚠️ Warning</option>
+                                            <option value="error">❌ Error</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold small text-muted">Message Body</label>
+                                        <textarea name="message" class="form-control form-control-sm" rows="4" placeholder="Enter message..." required></textarea>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold small text-muted">Redirect Link</label>
+                                        <input type="text" name="link" class="form-control form-control-sm" placeholder="e.g., reports/gl-statement">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold py-2 shadow-sm">
+                                        Broadcast Now <i class="bi bi-send-fill ms-2"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-8">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-broadcast text-muted me-2"></i> Broadcast Registry</h6>
+                                <button class="btn btn-xs btn-outline-secondary px-2" onclick="BroadcastManager.LoadHistory()"><i class="bi bi-arrow-clockwise"></i></button>
+                            </div>
+                            <div class="table-responsive table-sticky-wrapper">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="text-muted small text-uppercase">
+                                        <tr>
+                                            <th class="ps-4">Title & Message</th>
+                                            <th>Audience</th>
+                                            <th>Stats</th>
+                                            <th class="text-end pe-4">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="broadcastHistoryBody">
+                                        <tr><td colspan="4" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <div class="col-xl-8">
-                <div class="card shadow-sm border-0 h-100">
+            <div id="view-users" class="tab-view">
+                <div class="card shadow-sm border-0">
                     <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-clock-history text-muted me-2"></i> Live Broadcast History</h6>
-                        <button class="btn btn-xs btn-outline-secondary px-2" onclick="AdminSystem.LoadNotifications()"><i class="bi bi-arrow-clockwise"></i> Sync</button>
+                        <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-people-fill text-muted me-2"></i> Active System Directories</h6>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-primary fw-bold px-3 shadow-sm" onclick="AdminSystem.OpenCreateUserModal()">
+                                <i class="bi bi-plus-circle me-1"></i> Add New User
+                            </button>
+                            <div class="input-group input-group-sm" style="width: 240px;">
+                                <input type="text" id="userSearchInput" class="form-control" placeholder="Search users...">
+                                <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                            </div>
+                        </div>
                     </div>
                     <div class="table-responsive table-sticky-wrapper">
                         <table class="table table-hover align-middle mb-0">
                             <thead class="text-muted small text-uppercase">
                                 <tr>
-                                    <th class="ps-4">Title & Details</th>
-                                    <th>Audience</th>
-                                    <th>Timestamp</th>
-                                    <th class="text-end pe-4" style="width: 120px;">Actions</th>
+                                    <th class="ps-4">User Identity</th>
+                                    <th>System Role</th>
+                                    <th>Status Flag</th>
+                                    <th>Data Anchor</th>
+                                    <th class="text-end pe-4" style="width: 140px;">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="notificationTableBody">
-                                <tr><td colspan="4" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Connecting to stream...</td></tr>
+                            <tbody id="view-users-tbody">
+                                <tr><td colspan="5" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Reading data arrays...</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div id="view-broadcasts" class="tab-view active-view">
-    <div class="row g-4">
-        <div class="col-xl-4">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white border-bottom py-3">
-                    <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-broadcast-pin text-primary me-2"></i> Broadcast Services</h6>
-                </div>
-                <div class="card-body p-4">
-                    <form id="broadcastForm">
-                        <input type="hidden" name="hiddenId">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small text-muted">Target Audience (@all or ID;ID)</label>
-                            <input type="text" name="target" class="form-control form-control-sm" placeholder="@all or user1;user2" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small text-muted">Broadcast Title</label>
-                            <input type="text" name="title" class="form-control form-control-sm" placeholder="e.g., Urgent Update" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small text-muted">Notification Type</label>
-                            <select name="type" class="form-select form-select-sm" required>
-                                <option value="info">ℹ️ General Info</option>
-                                <option value="success">✅ Success</option>
-                                <option value="warning">⚠️ Warning</option>
-                                <option value="error">❌ Error</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small text-muted">Message Body</label>
-                            <textarea name="message" class="form-control form-control-sm" rows="4" placeholder="Enter message..." required></textarea>
-                        </div>
-                        <div class="mb-4">
-                            <label class="form-label fw-bold small text-muted">Redirect Link</label>
-                            <input type="text" name="link" class="form-control form-control-sm" placeholder="e.g., reports/gl-statement">
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold py-2 shadow-sm">
-                            Broadcast Now <i class="bi bi-send-fill ms-2"></i>
-                        </button>
-                    </form>
-                </div>
-            </div>
         </div>
-
-        <div class="col-xl-8">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-broadcast text-muted me-2"></i> Broadcast Registry</h6>
-                    <button class="btn btn-xs btn-outline-secondary px-2" onclick="BroadcastManager.LoadHistory()"><i class="bi bi-arrow-clockwise"></i></button>
-                </div>
-                <div class="table-responsive table-sticky-wrapper">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="text-muted small text-uppercase">
-                            <tr>
-                                <th class="ps-4">Title & Message</th>
-                                <th>Audience</th>
-                                <th>Stats</th>
-                                <th class="text-end pe-4">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="broadcastHistoryBody">
-                            </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-    <div id="view-users" class="tab-view">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-people-fill text-muted me-2"></i> Active System Directories</h6>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-sm btn-primary fw-bold px-3 shadow-sm" onclick="AdminSystem.OpenCreateUserModal()">
-                        <i class="bi bi-plus-circle me-1"></i> Add New User
-                    </button>
-                    <div class="input-group input-group-sm" style="width: 240px;">
-                        <input type="text" id="userSearchInput" class="form-control" placeholder="Search users...">
-                        <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
-                    </div>
-                </div>
-            </div>
-            <div class="table-responsive table-sticky-wrapper">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="text-muted small text-uppercase">
-                        <tr>
-                            <th class="ps-4">User Identity</th>
-                            <th>System Role</th>
-                            <th>Status Flag</th>
-                            <th>Data Anchor</th>
-                            <th class="text-end pe-4" style="width: 140px;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="view-users-tbody">
-                        <tr><td colspan="5" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Reading data arrays...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-</div>
     </main>
 </div>
 
@@ -364,15 +365,15 @@
                 <form id="editNotificationForm">
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-secondary">Broadcast Title</label>
-                        <input type="text" id="editNotifTitle" class="form-control form-control-sm" required>
+                        <input type="text" id="editNotifTitle" name="title" class="form-control form-control-sm" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-bold text-secondary">Message Content Matrix</label>
-                        <textarea id="editNotifMessage" class="form-control form-control-sm" rows="4" required></textarea>
+                        <textarea id="editNotifMessage" name="message" class="form-control form-control-sm" rows="4" required></textarea>
                     </div>
                     <div class="mb-0">
                         <label class="form-label small fw-bold text-secondary">Redirection Path</label>
-                        <input type="text" id="editNotifLink" class="form-control form-control-sm">
+                        <input type="text" id="editNotifLink" name="link" class="form-control form-control-sm">
                     </div>
                 </form>
             </div>
@@ -384,6 +385,20 @@
     </div>
 </div>
 
+<!-- Add this hidden div for analytics modal if needed -->
+<div class="modal fade" id="analyticsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-light py-3">
+                <h6 class="modal-title fw-bold text-dark">Broadcast Analytics</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4" id="analyticsModalBody">
+                Loading...
+            </div>
+        </div>
+    </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -538,8 +553,8 @@ const AdminSystem = {
                                 </div>
                             </td>
                             <td><span class="badge bg-secondary bg-opacity-10 text-secondary border text-uppercase" style="font-size:7.5pt;">${role}</span></td>
-                            <td><span class="badge ${badgeClass} bg-opacity-10 border text-uppercase" style="font-size:7.5pt;">${status}</span></td>
-                            <td class="small text-muted font-monospace">ID: ${id.substring(0,6)}...</td>
+                            <td class="small text-muted font-monospace">${id}</td>
+                            <td><span class="badge ${badgeClass} bg-opacity-10 border text-uppercase text-center" style="font-size:7.5pt;">${status}</span></td>
                             <td class="text-end pe-4">
                                 <button class="btn btn-sm btn-outline-primary py-0 px-2 me-1" onclick="AdminSystem.OpenEditUserModal('${id}', '${safeName}', '${safeEmail}', '${role}', '${status}')">
                                     <i class="bi bi-pencil-square"></i>

@@ -47,15 +47,20 @@ window.enableEditing = function(btn) {
         el.style.display = el.getAttribute('data-original-display');
     });
     
-    // 🎯 Dynamically route back on Cancel
+    // 🎯 Dynamically route back on Cancel & include Delete action
     const controlPanel = document.getElementById('editControlPanel');
     if (controlPanel) {
         controlPanel.innerHTML = `
             <div class="alert alert-success d-flex justify-content-between align-items-center m-0 shadow-sm border-success">
                 <span><i class="bi bi-unlock-fill me-2"></i><strong>Editing Unlocked.</strong></span>
-                <button type="button" class="btn btn-outline-dark btn-sm fw-bold shadow-sm bg-white" onclick="window.goBackAndRefresh()">
-                    <i class="bi bi-arrow-left me-1"></i> Cancel
-                </button>
+                <div>
+                    <button type="button" class="btn btn-danger btn-sm fw-bold shadow-sm me-2" onclick="window.deleteCurrentEntry()">
+                        <i class="bi bi-trash-fill me-1"></i> Delete
+                    </button>
+                    <button type="button" class="btn btn-outline-dark btn-sm fw-bold shadow-sm bg-white" onclick="window.goBackAndRefresh()">
+                        <i class="bi bi-arrow-left me-1"></i> Cancel
+                    </button>
+                </div>
             </div>
         `;
     }
@@ -69,6 +74,36 @@ window.enableEditing = function(btn) {
     }
 };
 
+// 🗑️ Handle the deletion logic
+window.deleteCurrentEntry = async function() {
+    // Safety check before permanently deleting
+    if (confirm("Are you sure you want to permanently delete this entry? This action cannot be undone.")) {
+        
+        try {
+            // Retrieve the context/key of the item currently being edited
+            const editContext = JSON.parse(localStorage.getItem('editContext') || '{}');
+            
+            if (!editContext.key || !editContext.type) {
+                alert("Could not identify the record to delete.");
+                return;
+            }
+
+            // TODO: Replace with your actual database/API delete call.
+            // Example: await API.Delete(`Transactions/${editContext.type}/${editContext.key}`);
+            
+            console.log(`Successfully deleted ${editContext.type} with key: ${editContext.key}`);
+            
+            // Route back after successful deletion
+            window.goBackAndRefresh(); 
+
+        } catch (error) {
+            console.error("Deletion failed:", error);
+            alert("An error occurred while trying to delete the entry.");
+        }
+    }
+};
+
+
 // --- MAIN EDIT LOGIC ---
 (async function() {
     if (!rawContext) {
@@ -78,6 +113,74 @@ window.enableEditing = function(btn) {
     
     // Because this is inside a function, 'const' is perfectly safe here!
     const { type, key } = parsedContext; 
+
+    // 🗑️ DEFINED HERE: Delete Action utilizing Firebase API
+    window.deleteCurrentEntry = async function() {
+        if (confirm("Are you sure you want to permanently delete this transaction? This action cannot be undone.")) {
+            try {
+                if (typeof API !== 'undefined' && API.DB) {
+                    await API.DB.ref(`${App.State.userId}/Transactions/${type}/${key}`).remove();
+                    
+                    if (typeof App !== 'undefined' && App.UI) {
+                        App.UI.Notify('Deleted', 'Transaction successfully deleted.', 'success');
+                    } else {
+                        alert('Transaction successfully deleted.');
+                    }
+                    
+                    // Route back after successful deletion
+                    window.goBackAndRefresh(); 
+                } else {
+                    throw new Error("Database API not accessible.");
+                }
+            } catch (error) {
+                console.error("Deletion failed:", error);
+                if (typeof App !== 'undefined' && App.UI) {
+                    App.UI.Notify('Deletion Failed', error.message, 'danger');
+                } else {
+                    alert('An error occurred while trying to delete the entry.');
+                }
+            }
+        }
+    };
+
+    // ✏️ DEFINED HERE: Enable Editing UI State
+    window.enableEditing = function(btn) {
+        const form = document.querySelector('#editContainer form');
+        if(!form) return;
+        
+        form.querySelectorAll('input, textarea').forEach(el => el.readOnly = false);
+        form.querySelectorAll('select').forEach(el => el.style.pointerEvents = 'auto');
+        
+        form.querySelectorAll('[data-original-display]').forEach(el => {
+            el.style.display = el.getAttribute('data-original-display');
+        });
+        
+        // 🎯 Dynamically route back on Cancel & include Delete action
+        const controlPanel = document.getElementById('editControlPanel');
+        if (controlPanel) {
+            controlPanel.innerHTML = `
+                <div class="alert alert-success d-flex justify-content-between align-items-center m-0 shadow-sm border-success">
+                    <span><i class="bi bi-unlock-fill me-2"></i><strong>Editing Unlocked.</strong></span>
+                    <div>
+                        <button type="button" class="btn btn-danger btn-sm fw-bold shadow-sm me-2" onclick="window.deleteCurrentEntry()">
+                            <i class="bi bi-trash-fill me-1"></i> Delete
+                        </button>
+                        <button type="button" class="btn btn-outline-dark btn-sm fw-bold shadow-sm bg-white" onclick="window.goBackAndRefresh()">
+                            <i class="bi bi-arrow-left me-1"></i> Cancel
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.style.display = 'inline-block';
+            submitBtn.classList.replace('btn-primary', 'btn-success');
+            submitBtn.title = "Update changes";
+            submitBtn.innerHTML = '<i class="bi bi-check2 p-0"></i> Update';
+        }
+    };
     
     // Form Mappings
     const formRegistry = { "SalesInvoiceForm": "sales-inv", "ReceiptPaymentForm" : "receipt-pay", "PurchaseInvoiceForm": "purchase-inv", "ReceiptVoucherForm":"receipt-vch", "PaymentVoucherForm": "payment-vch", "SalesReturnForm": "salesret-inv", "PurchaseReturnForm": "purchaseret-inv" };
@@ -178,20 +281,24 @@ window.enableEditing = function(btn) {
             });
 
             // Inject Unlock, Back & Print Buttons
+            // Inject Unlock, Back, Print & Delete Buttons
             const controlPanel = document.getElementById('editControlPanel');
             if (controlPanel) {
                 controlPanel.innerHTML = `
                     <div class="alert alert-warning d-flex justify-content-between align-items-center m-0 shadow-sm border-warning">
                         <span><i class="bi bi-eye me-2 "></i><strong>Viewing Record:</strong> ${data.header?.doc_no || 'Document'}</span>
                         <div>
-                            <button type="button" class="btn btn-outline-primary btn-sm fw-bold shadow-sm  bg-white" onclick="window.printTransaction('${type}', '${key}')">
-                                <i class="bi bi-printer me-1"></i>
+                            <button type="button" title="Delete Record" class="btn btn-outline-danger btn-sm fw-bold shadow-sm bg-white me-1" onclick="window.deleteCurrentEntry()">
+                                <i class="bi bi-trash"></i>
                             </button>
-                            <button type="button" class="btn btn-outline-dark btn-sm fw-bold shadow-sm  bg-white" onclick="window.goBackAndRefresh()">
-                                <i class="bi bi-arrow-left me-1"></i>
+                            <button type="button" title="Print" class="btn btn-outline-primary btn-sm fw-bold shadow-sm bg-white me-1" onclick="window.printTransaction('${type}', '${key}')">
+                                <i class="bi bi-printer"></i>
                             </button>
-                            <button type="button" class="btn btn-warning btn-sm fw-bold shadow-sm" onclick="enableEditing(this)">
-                                <i class="bi bi-pencil-square me-1"></i>
+                            <button type="button" title="Go Back" class="btn btn-outline-dark btn-sm fw-bold shadow-sm bg-white me-1" onclick="window.goBackAndRefresh()">
+                                <i class="bi bi-arrow-left"></i>
+                            </button>
+                            <button type="button" title="Edit Record" class="btn btn-warning btn-sm fw-bold shadow-sm" onclick="window.enableEditing(this)">
+                                <i class="bi bi-pencil-square me-1"></i> Edit
                             </button>
                         </div>
                     </div>

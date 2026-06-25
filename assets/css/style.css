@@ -113,7 +113,7 @@ body {
 /* 4. Apply Card Body adjustments ONLY on normal pages (Not Settings) */
 .content-viewport:not(:has(.settings-wrapper)) .card .card-body {
     /* padding: 5px !important; */
-    border-radius: 20px !important;
+    /* border-radius: 20px !important; */
     min-height: 100% !important;
     height: auto !important;
     display: flex !important;
@@ -140,6 +140,15 @@ body {
     outline: none !important;
 }
 
+.gstr-master-table td{
+        color: var(--text-muted) !important;
+    }
+    .gstr-master-table .badge{
+        /* color: var(--text-muted) !important; */
+        color: var(--text-muted) !important;
+        padding: 0px !important;
+        background: none !important;
+    }
 
 
 /* 4. Sidebar (Offcanvas) */
@@ -216,8 +225,9 @@ body {
 .table-wrapper,
 .content-viewport,
 .card-body {
-    overflow: visible !important;
+    overflow: scroll !important;
     position: relative !important;
+    scrollbar-width: none;
 }
 
 /* If dropdown is inside a card, ensure card doesn't clip it */
