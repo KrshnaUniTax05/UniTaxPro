@@ -14,8 +14,8 @@
             <button class="btn btn-sm btn-outline-secondary me-1" onclick="CompanyManager.LoadList()" title="Refresh">
                 <i class="bi bi-arrow-clockwise"></i>
             </button>
-            <button class="btn btn-primary btn-sm shadow-sm" onclick="CompanyManager.CreateNew()">
-                <i class="bi bi-plus-lg me-1"></i> New Company
+            <button class="btn btn-primary btn-sm shadow-sm" title="Create New Company" onclick="CompanyManager.CreateNew()">
+                <i class="bi bi-plus-lg me-1"></i>
             </button>
         </div>
     </div>
@@ -37,23 +37,189 @@
     </div>
 </div>
 <script>
-// Company Form Handler with Back Button and Scroll Fix
-const CompanyFormObserver = new MutationObserver((mutations) => {
-    // Look for the Companies form
+// --- 1. GLOBAL MODULE CLEANUP (Prevents Identifier Crashes) ---
+if (window.CompanyFormObserver) {
+    window.CompanyFormObserver.disconnect();
+}
+
+// --- 2. COMPANY MANAGER DEFINITION ---
+window.CompanyManager = {
+    DbSheet: 'Companies',
+    FormUrl: 'modules/masters/company-cw.html',
+    data: [], 
+    
+    async LoadList(skipFetch = false) {
+        const tbody = document.getElementById('companyListBody');
+        if (!tbody) {
+            if (typeof App !== 'undefined' && App.Router) App.Router('masters/company-list');
+            else window.location.href = '#masters/company-list';
+            return;
+        }
+        
+        if (!skipFetch) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary me-2"></div><span class="text-muted">Loading companies...</span></td></tr>';
+            try {
+                let rawResponse = await API.Fetch(`Masters/${this.DbSheet}`);
+                let fetchedData = rawResponse?.data || rawResponse?.result || rawResponse;
+                
+                if (!fetchedData || Object.keys(fetchedData).length === 0) {
+                    this.data = [];
+                    return tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">
+                        <i class="bi bi-building fs-3 d-block mb-2"></i>
+                        No companies found. Create your first company!
+                    </td></tr>`;
+                }
+
+                this.data = Array.isArray(fetchedData) 
+                    ? fetchedData.map((v, i) => ({...v, ID: v.id || i})) 
+                    : Object.entries(fetchedData).map(([id, val]) => ({...val, ID: id}));
+                    
+            } catch (error) {
+                console.error('Load Error:', error);
+                return tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i> Error loading companies: ${error.message}
+                </td></tr>`;
+            }
+        }
+
+        this.RenderList(this.data);
+    },
+
+    RenderList(dataArray) {
+        const tbody = document.getElementById('companyListBody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        if (!dataArray || dataArray.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No companies available.</td></tr>`;
+            const countEl = document.getElementById('companyCount');
+            if (countEl) countEl.innerText = `(0 records)`;
+            return;
+        }
+
+        dataArray.forEach((record) => {
+            if (!record || typeof record !== 'object') return;
+            const id = record.ID || record.id;
+            const encodedData = encodeURIComponent(JSON.stringify(record));
+            const gstin = record.GSTIN || record.gstin || '-';
+            const state = record.Company_State || record.companyState || record.state || '-';
+            
+            tbody.innerHTML += `
+                <tr class="company-row" data-id="${id}">
+                    <td class="ps-4 fw-bold text-dark">${record.CompanyCode || record.companyCode || '-'}</td>
+                    <td>${record.companyName || record.CompanyName || 'Unknown'}</td>
+                    <td class="text-muted small">${record.companyAddress1 || ''} ${record.companyAddress2 || ''}</td>
+                    <td class="text-muted small">${state}</td>
+                    <td class="text-muted small">${gstin}</td>
+                    <td class="text-end pe-4" style="white-space: nowrap;">
+                        <button class="btn btn-sm btn-light text-primary border me-1" 
+                                onclick="window.CompanyManager.TriggerEdit('${id}', '${encodedData}')"
+                                title="Edit Company">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-light text-danger border" 
+                                onclick="window.CompanyManager.Delete('${id}', this)"
+                                title="Delete Company">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        const countEl = document.getElementById('companyCount');
+        if (countEl) countEl.innerText = `(${dataArray.length} records)`;
+    },
+
+    CreateNew() {
+        sessionStorage.removeItem('EditContext_Companies');
+        if (typeof App !== 'undefined' && App.Router) App.Router('masters/company-cw');
+        else window.location.href = '#masters/company-cw';
+    },
+
+    TriggerEdit(recordId, encodedData) {
+        const data = JSON.parse(decodeURIComponent(encodedData));
+        sessionStorage.setItem('EditContext_Companies', JSON.stringify({ id: recordId, payload: data }));
+
+        if (typeof App !== 'undefined' && App.Router) App.Router('masters/company-cw');
+        else window.location.href = '#masters/company-cw';
+    },
+
+    // 🔴 FIX 2: RE-VERIFY ACTIVE ROW ID FROM DATABASE BEFORE DELETION
+    async Delete(recordId, btn) {
+        const row = btn.closest('tr');
+        const codeCell = row?.querySelector('td:first-child')?.innerText || '';
+        if (['SYS-COMP', 'SYS-TEST'].includes(codeCell.trim())) {
+            if (App?.UI?.Notify) App.UI.Notify('Error', 'Cannot delete a protected system company.', 'danger');
+            return;
+        }
+        
+        if (!confirm('⚠️ Are you sure you want to delete this company?\n\nThis action cannot be undone!')) return;
+        
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        btn.disabled = true;
+        
+        try {
+            // Live verification step to find if the key location shifted under the hood
+            let finalDbKey = String(recordId).trim();
+            const serverCheck = await API.Fetch(`Masters/${this.DbSheet}`);
+            const liveData = serverCheck?.data || serverCheck?.result || serverCheck;
+            
+            if (liveData) {
+                // Look up row key by matching a unique natural property (Company Code)
+                const realServerKey = Object.keys(liveData).find(k => 
+                    String(liveData[k]?.CompanyCode || liveData[k]?.companyCode).trim() === codeCell.trim()
+                );
+                if (realServerKey) {
+                    finalDbKey = realServerKey;
+                }
+            }
+
+            await API.SafeMasterDelete(this.DbSheet, finalDbKey);
+            
+            if (row) {
+                row.style.transition = 'all 0.3s ease';
+                row.style.opacity = '0';
+                setTimeout(() => row.remove(), 300);
+            }
+            
+            if (App?.UI?.Notify) App.UI.Notify('Success', 'Company deleted successfully', 'success');
+            
+            if (this.data) {
+                this.data = this.data.filter(item => String(item.ID) !== String(finalDbKey));
+                const countEl = document.getElementById('companyCount');
+                if (countEl) countEl.innerText = `(${this.data.length} records)`;
+            }
+            
+        } catch (error) {
+            console.error('❌ Delete Error:', error);
+            if (App?.UI?.Notify) App.UI.Notify('Error', error.message || 'Delete failed', 'danger');
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+    },
+
+    FilterList() {
+        const query = document.getElementById('companySearchFilter')?.value?.toLowerCase() || '';
+        const rows = document.querySelectorAll('#companyListBody tr.company-row');
+        
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(query) ? '' : 'none';
+        });
+    }
+};
+
+// --- 3. OBSERVER: HYDRATE & FIX FORM ---
+window.CompanyFormObserver = new MutationObserver((mutations) => {
     const form = document.getElementById('Companies');
     
     if (form && !form.dataset.hydrated) {
         form.dataset.hydrated = "true";
 
-        // --- FIX: Ensure scrolling works ---
-        // Find and fix the container that might be restricting scroll
-        const container = form.closest('.content-viewport') || 
-                         form.closest('.main-content') || 
-                         form.closest('.page-content') || 
-                         form.closest('.card-body') ||
-                         form.closest('.tab-pane') ||
-                         form.parentElement;
-        
+        // --- CSS OVERFLOW FIXES ---
+        const container = form.closest('.content-viewport') || form.closest('.main-content') || form.closest('.page-content') || form.closest('.card-body') || form.closest('.tab-pane') || form.parentElement;
         if (container) {
             container.style.overflow = 'visible !important';
             container.style.overflowY = 'visible !important';
@@ -62,7 +228,6 @@ const CompanyFormObserver = new MutationObserver((mutations) => {
             container.style.minHeight = '100vh !important';
         }
         
-        // Also fix any parent containers that might have overflow hidden
         let parent = form.parentElement;
         while (parent && parent !== document.body) {
             const computedStyle = window.getComputedStyle(parent);
@@ -76,7 +241,6 @@ const CompanyFormObserver = new MutationObserver((mutations) => {
             parent = parent.parentElement;
         }
         
-        // Ensure body can scroll
         document.body.style.overflow = 'auto';
         document.body.style.overflowY = 'auto';
         document.body.style.height = 'auto';
@@ -87,6 +251,10 @@ const CompanyFormObserver = new MutationObserver((mutations) => {
         // --- ADD BACK BUTTON NEXT TO SUBMIT ---
         const submitBtn = form.querySelector('button[type="submit"]');
         if (submitBtn) {
+            submitBtn.type = 'button'; 
+            submitBtn.removeAttribute('onclick');
+            form.removeAttribute('onsubmit');
+
             let backBtn = form.querySelector('#backToListBtn');
             if (!backBtn) {
                 const btnGroup = document.createElement('div');
@@ -98,25 +266,7 @@ const CompanyFormObserver = new MutationObserver((mutations) => {
                 backBtn.className = 'btn btn-primary btn-sm shadow-sm fw-bold px-2 mb-0';
                 backBtn.title = 'Back to List';
                 backBtn.innerHTML = '<i class="bi bi-arrow-left"></i>';
-                backBtn.onclick = function() {
-    if (typeof App !== 'undefined' && App.Router) {
-        App.Router('masters/company-list');
-        // Load the list after navigation
-        setTimeout(() => {
-            if (typeof CompanyManager !== 'undefined' && CompanyManager.LoadList) {
-                CompanyManager.LoadList();
-            }
-        }, 300);
-    } else {
-        window.location.href = '#masters/company-list';
-        // Reload after hash change
-        setTimeout(() => {
-            if (typeof CompanyManager !== 'undefined' && CompanyManager.LoadList) {
-                CompanyManager.LoadList();
-            }
-        }, 500);
-    }
-};
+                backBtn.onclick = () => window.CompanyManager.LoadList();
 
                 submitBtn.parentNode.insertBefore(btnGroup, submitBtn);
                 btnGroup.appendChild(backBtn);
@@ -135,31 +285,21 @@ const CompanyFormObserver = new MutationObserver((mutations) => {
                 headerBackBtn.className = 'btn btn-light border shadow-sm px-3 me-2';
                 headerBackBtn.title = 'Back to List';
                 headerBackBtn.innerHTML = '<i class="bi bi-arrow-left"></i>';
-                headerBackBtn.onclick = function() {
-                    if (typeof App !== 'undefined' && App.Router) {
-                        App.Router('masters/company-list');
-                    } else {
-                        window.location.href = '#masters/company-list';
-                    }
-                };
+                headerBackBtn.onclick = () => window.CompanyManager.LoadList();
                 
                 const title = cardHeader.querySelector('h5');
-                if (title) {
-                    cardHeader.insertBefore(headerBackBtn, title);
-                } else {
-                    cardHeader.prepend(headerBackBtn);
-                }
+                if (title) cardHeader.insertBefore(headerBackBtn, title);
+                else cardHeader.prepend(headerBackBtn);
             }
         }
 
-        // 2. Check Memory for Edit Data
+        // --- EDIT CONTEXT MEMORY CHECK ---
         const editContextStr = sessionStorage.getItem('EditContext_Companies');
 
         if (editContextStr) {
             const context = JSON.parse(editContextStr);
             const data = context.payload;
 
-            // 3. Inject Hidden ID
             let hiddenId = form.querySelector('#companyHiddenId');
             if (!hiddenId) {
                 hiddenId = document.createElement('input');
@@ -170,332 +310,110 @@ const CompanyFormObserver = new MutationObserver((mutations) => {
             }
             hiddenId.value = context.id;
 
-            // 4. Auto-Fill the Inputs
             Object.keys(data).forEach(key => {
                 const input = form.querySelector(`[name="${key}"]`);
-                if (input) {
-                    input.value = data[key] || '';
-                }
+                if (input) input.value = data[key] || '';
             });
 
-            // 5. Change Button to "Update"
             if (submitBtn) {
-                submitBtn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>';
-                submitBtn.classList.remove('btn-success');
-                submitBtn.classList.add('btn-success');
-            }
-
-            // 6. Update Form Header
-            const header = form.querySelector('h5');
-            if (header) {
-                header.innerHTML = '<i class="bi bi-pencil-square me-2"></i>Edit Company';
-            }
-
-            // 7. Clear Memory
-            sessionStorage.removeItem('EditContext_Companies');
-            
-        } else {
-            // Create mode
-            const hiddenId = form.querySelector('#companyHiddenId');
-            if (hiddenId) hiddenId.remove();
-            
-            form.reset();
-            
-            const header = form.querySelector('h5');
-            if (header) {
-                header.innerHTML = '<i class="bi bi-plus-circle me-2"></i>Create New Company';
-            }
-            
-            if (submitBtn) {
-                submitBtn.innerHTML = '<i class="bi bi-check2 me-1"></i> Create Company';
+                submitBtn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> ';
+                submitBtn.title = 'Update Data';
                 submitBtn.classList.remove('btn-primary');
                 submitBtn.classList.add('btn-success');
             }
+
+            const header = form.querySelector('h5');
+            if (header) header.innerHTML = '<i class="bi bi-pencil-square me-2"></i>Edit Company';
+
+            sessionStorage.removeItem('EditContext_Companies');
+            
+        } else {
+            form.querySelector('#companyHiddenId')?.remove();
+            form.reset();
+            
+            const header = form.querySelector('h5');
+            if (header) header.innerHTML = '<i class="bi bi-plus-circle me-2"></i>Create New Company';
+            
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="bi bi-check2 me-1"></i> Create Company';
+                submitBtn.classList.remove('btn-success');
+                submitBtn.classList.add('btn-primary');
+            }
         }
 
-        // 8. Intercept Form Submission
-        form.onsubmit = async function(e) {
-            e.preventDefault();
-            
-            const submitBtn = form.querySelector('button[type="submit"]');
-            const originalHtml = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processing...';
-            submitBtn.disabled = true;
+        // --- BULLETPROOF SUBMISSION CLICK HANDLER ---
+        if (submitBtn) {
+            window.SaveMaster = (e) => { 
+                if (e) e.preventDefault(); 
+                return false; 
+            };
 
-            const formData = new FormData(form);
-            const payload = Object.fromEntries(formData.entries());
-            
-            form.querySelectorAll('input[type="checkbox"]:not(:checked)').forEach(cb => {
-                if (cb.name) payload[cb.name] = false;
-            });
-            
-            const recordId = form.querySelector('#companyHiddenId')?.value;
-            delete payload.hiddenRecordId;
+            submitBtn.onclick = async function (e) {
+                e.preventDefault();
 
-            try {
-                if (recordId) {
-                    // --- UPDATE ---
-                    let success = false;
-                    
-                    if (typeof API.UpdateTransaction === 'function') {
-                        success = await API.UpdateTransaction(`Masters/${CompanyManager.DbSheet}`, recordId, payload);
-                    } else {
-                        const result = await API.Update(`Masters/${CompanyManager.DbSheet}/${recordId}`, payload);
-                        success = result !== null && result !== undefined;
-                    }
-                    
-                    if (!success) throw new Error("Update operation failed.");
-                    
-                    if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                        App.UI.Notify('Success', 'Company Updated Successfully', 'success');
-                    } else {
-                        alert('Company Updated Successfully!');
-                    }
-                    
-                } else {
-                    // --- CREATE ---
-                    payload.created_at = new Date().toISOString();
-                    payload.updated_at = payload.created_at;
-                    
-                    const result = await API.Create(`Masters/${CompanyManager.DbSheet}`, payload);
-                    
-                    if (!result) throw new Error("Create operation failed.");
-                    
-                    if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                        App.UI.Notify('Success', 'Company Created Successfully', 'success');
-                    } else {
-                        alert('Company Created Successfully!');
-                    }
-                }
-                
-                // Route back to list
-                if (typeof App !== 'undefined' && App.Router) {
-                    App.Router('masters/company-list');
-                } else {
-                    window.location.href = '#masters/company-list';
-                }
+                const originalHtml = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processing...';
+                submitBtn.disabled = true;
 
-            } catch (error) {
-                console.error('Save Error:', error);
-                if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                    App.UI.Notify('Error', error.message || 'Save failed', 'danger');
-                } else {
-                    alert('Error saving data: ' + error.message);
+                try {
+                    const formData = new FormData(form);
+                    const payload = Object.fromEntries(formData.entries());
+
+                    form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                        payload[cb.name] = cb.checked;
+                    });
+
+                    const hiddenInput = form.querySelector("#companyHiddenId");
+                    const rawRecordId = hiddenInput ? hiddenInput.value.trim() : "";
+                    let recordId = (rawRecordId && rawRecordId !== 'undefined' && rawRecordId !== 'null') ? rawRecordId : null;
+
+                    delete payload.hiddenRecordId;
+                    delete payload.companyHiddenId;
+                    payload.updated_at = new Date().toISOString();
+
+                    // 🔴 FIX 1: MATCH CURRENT ROW ID IN LIVE DATA BASELINE BEFORE SAVING
+                    const targetCode = String(payload.CompanyCode || payload.companyCode || '').trim();
+                    const liveServerCheck = await API.Fetch(`Masters/${window.CompanyManager.DbSheet}`);
+                    const masterNode = liveServerCheck?.data || liveServerCheck?.result || liveServerCheck;
+                    
+                    if (masterNode && targetCode) {
+                        const directMatchId = Object.keys(masterNode).find(key => 
+                            String(masterNode[key]?.CompanyCode || masterNode[key]?.companyCode).trim() === targetCode
+                        );
+                        if (directMatchId) {
+                            recordId = directMatchId; // Always prioritize actual dynamic index from server
+                        }
+                    }
+
+                    // ===========================
+                    // EXECUTE MASTER WORK
+                    // ===========================
+                    if (recordId) {
+                        await API.SecureMasterUpdate(window.CompanyManager.DbSheet, recordId, payload);
+                        if (App?.UI?.Notify) App.UI.Notify("Success", "Company Updated Successfully", "success");
+                    } else {
+                        payload.created_at = payload.updated_at;
+                        await API.Create(`${window.CompanyManager.DbSheet}`, payload);
+                        if (App?.UI?.Notify) App.UI.Notify("Success", "Company Created Successfully", "success");
+                    }
+
+                    window.CompanyManager.LoadList();
+
+                } catch (error) {
+                    console.error("Save Error:", error);
+                    if (App?.UI?.Notify) App.UI.Notify("Error", error.message || "Save failed", "danger");
+                    
+                    submitBtn.innerHTML = originalHtml;
+                    submitBtn.disabled = false;
                 }
-                submitBtn.innerHTML = originalHtml;
-                submitBtn.disabled = false;
-            }
-        };
+            };
+        }
     }
 });
 
-// Start watching
-CompanyFormObserver.observe(document.body, { childList: true, subtree: true });
+// Start watching DOM changes
+window.CompanyFormObserver.observe(document.body, { childList: true, subtree: true });
 
-CompanyManager.LoadList()
-// Check immediately if form already exists
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('Companies');
-    if (form && !form.dataset.hydrated) {
-        setTimeout(() => {
-            const formCheck = document.getElementById('Companies');
-            if (formCheck && !formCheck.dataset.hydrated) {
-                const event = new MutationEvent('DOMNodeInserted', { bubbles: true });
-                document.body.dispatchEvent(event);
-            }
-        }, 100);
-    }
-});
-</script>
-<script>
-const CompanyManager = {
-    DbSheet: 'Companies',
-    FormUrl: 'modules/masters/company-cw.html',
-    
-    // 1. Fetch and build the list
-    async LoadList() {
-        const tbody = document.getElementById('companyListBody');
-        if (!tbody) return;
-        
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary me-2"></div><span class="text-muted">Loading companies...</span></td></tr>';
-        
-        try {
-            let rawResponse = await API.Fetch(`Masters/${this.DbSheet}`);
-            let data = rawResponse?.data || rawResponse?.result || rawResponse;
-            
-            tbody.innerHTML = '';
-            
-            if (!data || Object.keys(data).length === 0) {
-                return tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">
-                    <i class="bi bi-building fs-3 d-block mb-2"></i>
-                    No companies found. Create your first company!
-                </td></tr>`;
-            }
-
-            const entries = Array.isArray(data) ? data.map((v, i) => [v.id || i, v]) : Object.entries(data);
-
-            entries.forEach(([id, record]) => {
-                if (!record || typeof record !== 'object') return;
-                
-                const encodedData = encodeURIComponent(JSON.stringify(record));
-                const gstin = record.GSTIN || record.gstin || '-';
-                const state = record.Company_State || record.companyState || record.state || '-';
-                
-                tbody.innerHTML += `
-                    <tr class="company-row" data-id="${id}">
-                        <td class="ps-4 fw-bold text-dark">${record.CompanyCode || record.companyCode || '-'}</td>
-                        <td>${record.companyName || record.CompanyName || 'Unknown'}</td>
-                        <td class="text-muted small">${record.companyAddress1 || ''} ${record.companyAddress2 || ''}</td>
-                        <td class="text-muted small">${state}</td>
-                        <td class="text-muted small">${gstin}</td>
-                        <td class="text-end pe-4" style="white-space: nowrap;">
-                            <button class="btn btn-sm btn-light text-primary border me-1" 
-                                    onclick="CompanyManager.TriggerEdit('${id}', '${encodedData}')"
-                                    title="Edit Company">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button class="btn btn-sm btn-light text-danger border" 
-                                    onclick="CompanyManager.Delete('${id}', this)"
-                                    title="Delete Company">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-            
-            // Update count
-            const countEl = document.getElementById('companyCount');
-            if (countEl) {
-                countEl.innerText = `(${entries.length} records)`;
-            }
-            
-        } catch (error) {
-            console.error('Load Error:', error);
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">
-                <i class="bi bi-exclamation-triangle me-2"></i>
-                Error loading companies: ${error.message}
-            </td></tr>`;
-        }
-    },
-
-    // 2. ROUTE TO CREATE MODE
-    CreateNew() {
-        sessionStorage.removeItem('EditContext_Companies');
-        if (typeof App !== 'undefined' && App.Router) {
-            App.Router('masters/company-cw');
-        } else {
-            window.location.href = '#masters/company-cw';
-        }
-    },
-
-    // 3. ROUTE TO EDIT MODE
-    TriggerEdit(recordId, encodedData) {
-        const data = JSON.parse(decodeURIComponent(encodedData));
-        
-        sessionStorage.setItem('EditContext_Companies', JSON.stringify({
-            id: recordId,
-            payload: data
-        }));
-
-        if (typeof App !== 'undefined' && App.Router) {
-            App.Router('masters/company-cw');
-        } else {
-            window.location.href = '#masters/company-cw';
-        }
-    },
-
-    // 4. DELETE with confirmation
-    async Delete(recordId, btn) {
-        // Check if it's a system company
-        try {
-            const record = await API.Fetch(`Masters/${this.DbSheet}/${recordId}`);
-            const data = record?.data || record?.result || record;
-            
-            const companyCode = data?.CompanyCode || data?.companyCode || '';
-            const protectedCodes = ['SYS-COMP', 'SYS-TEST'];
-            
-            if (protectedCodes.includes(companyCode)) {
-                if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                    App.UI.Notify('Error', 'Cannot delete system company. This is a protected record.', 'danger');
-                } else {
-                    alert('Cannot delete system company.');
-                }
-                return;
-            }
-        } catch (e) {
-            // Continue if can't fetch
-        }
-        
-        if (!confirm('⚠️ Are you sure you want to delete this company?\n\nThis action cannot be undone!')) {
-            return;
-        }
-        
-        const originalHtml = btn.innerHTML;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-        btn.disabled = true;
-        
-        try {
-            let success = false;
-            
-            if (typeof API.DeleteTransaction === 'function') {
-                success = await API.DeleteTransaction(`Masters/${CompanyManager.DbSheet}`, recordId);
-            } else {
-                const result = await API.Delete(`Masters/${CompanyManager.DbSheet}/${recordId}`);
-                success = result !== null && result !== undefined;
-            }
-            
-            if (!success) throw new Error("Delete operation failed.");
-            
-            // Animate row removal
-            const row = btn.closest('tr');
-            if (row) {
-                row.style.transition = 'all 0.3s ease';
-                row.style.opacity = '0';
-                setTimeout(() => row.remove(), 300);
-            }
-            
-            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                App.UI.Notify('Success', 'Company deleted successfully', 'success');
-            }
-            
-            // Refresh list after deletion
-            setTimeout(() => CompanyManager.LoadList(), 500);
-            
-        } catch (error) {
-            console.error('Delete Error:', error);
-            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                App.UI.Notify('Error', error.message || 'Delete failed', 'danger');
-            } else {
-                alert('Delete failed: ' + error.message);
-            }
-            btn.innerHTML = originalHtml;
-            btn.disabled = false;
-        }
-    },
-
-    // 5. SEARCH/FILTER
-    FilterList() {
-        const query = document.getElementById('companySearchFilter')?.value?.toLowerCase() || '';
-        const rows = document.querySelectorAll('#companyListBody tr.company-row');
-        
-        rows.forEach(row => {
-            const code = row.querySelector('td:first-child')?.innerText?.toLowerCase() || '';
-            const name = row.querySelector('td:nth-child(2)')?.innerText?.toLowerCase() || '';
-            const address = row.querySelector('td:nth-child(3)')?.innerText?.toLowerCase() || '';
-            const state = row.querySelector('td:nth-child(4)')?.innerText?.toLowerCase() || '';
-            const gstin = row.querySelector('td:nth-child(5)')?.innerText?.toLowerCase() || '';
-            
-            const match = code.includes(query) || name.includes(query) || 
-                         address.includes(query) || state.includes(query) || 
-                         gstin.includes(query);
-            row.style.display = match ? '' : 'none';
-        });
-    }
-};
-
-
-
-CompanyManager.LoadList()
-
+// Load initial data
+window.CompanyManager.LoadList();
 </script>

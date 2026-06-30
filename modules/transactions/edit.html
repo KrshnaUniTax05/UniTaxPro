@@ -10,21 +10,17 @@
     </div>
 
 <script>
-// =====================================================================
-// DYNAMIC ROUTING & AUTO-REFRESH ENGINE
+    // =====================================================================
+// DYNAMIC ROUTING, AUTO-REFRESH & ROBUST CRUD ENGINE
 // =====================================================================
 
-// 🎯 FIX: Changed 'const' to 'var' to prevent SPA router crash on multiple opens
 var rawContext = localStorage.getItem('editContext');
 var parsedContext = rawContext ? JSON.parse(rawContext) : {};
 window.activeReturnRoute = parsedContext.returnRoute || 'reports/gl-statement';
 
 window.goBackAndRefresh = function() {
     if (typeof App !== 'undefined' && App.Router) {
-        // Navigate back to the exact window the user came from
         App.Router(window.activeReturnRoute);
-        
-        // Wait 150ms for the DOM to render, then trigger the specific refresh function
         setTimeout(() => {
             if (window.activeReturnRoute.includes('gl-statement') && typeof window.generateStatement === 'function') {
                 window.generateStatement(); 
@@ -35,132 +31,69 @@ window.goBackAndRefresh = function() {
     }
 };
 
-// UNLOCK FUNCTION
-window.enableEditing = function(btn) {
-    const form = document.querySelector('form');
-    if(!form) return;
-    
-    form.querySelectorAll('input, textarea').forEach(el => el.readOnly = false);
-    form.querySelectorAll('select').forEach(el => el.style.pointerEvents = 'auto');
-    
-    form.querySelectorAll('[data-original-display]').forEach(el => {
-        el.style.display = el.getAttribute('data-original-display');
-    });
-    
-    // 🎯 Dynamically route back on Cancel & include Delete action
-    const controlPanel = document.getElementById('editControlPanel');
-    if (controlPanel) {
-        controlPanel.innerHTML = `
-            <div class="alert alert-success d-flex justify-content-between align-items-center m-0 shadow-sm border-success">
-                <span><i class="bi bi-unlock-fill me-2"></i><strong>Editing Unlocked.</strong></span>
-                <div>
-                    <button type="button" class="btn btn-danger btn-sm fw-bold shadow-sm me-2" onclick="window.deleteCurrentEntry()">
-                        <i class="bi bi-trash-fill me-1"></i> Delete
-                    </button>
-                    <button type="button" class="btn btn-outline-dark btn-sm fw-bold shadow-sm bg-white" onclick="window.goBackAndRefresh()">
-                        <i class="bi bi-arrow-left me-1"></i> Cancel
-                    </button>
-                </div>
-            </div>
-        `;
-    }
-    
-    const submitBtn = form.querySelector('button[type="submit"]');
-    if (submitBtn) {
-        submitBtn.style.display = 'inline-block';
-        submitBtn.classList.replace('btn-primary', 'btn-success');
-        submitBtn.title = "Update changes";
-        submitBtn.innerHTML = '<i class="bi bi-check2 p-0"></i>';
-    }
-};
-
-// 🗑️ Handle the deletion logic
-window.deleteCurrentEntry = async function() {
-    // Safety check before permanently deleting
-    if (confirm("Are you sure you want to permanently delete this entry? This action cannot be undone.")) {
-        
-        try {
-            // Retrieve the context/key of the item currently being edited
-            const editContext = JSON.parse(localStorage.getItem('editContext') || '{}');
-            
-            if (!editContext.key || !editContext.type) {
-                alert("Could not identify the record to delete.");
-                return;
-            }
-
-            // TODO: Replace with your actual database/API delete call.
-            // Example: await API.Delete(`Transactions/${editContext.type}/${editContext.key}`);
-            
-            console.log(`Successfully deleted ${editContext.type} with key: ${editContext.key}`);
-            
-            // Route back after successful deletion
-            window.goBackAndRefresh(); 
-
-        } catch (error) {
-            console.error("Deletion failed:", error);
-            alert("An error occurred while trying to delete the entry.");
-        }
-    }
-};
-
-
 // --- MAIN EDIT LOGIC ---
 (async function() {
     if (!rawContext) {
-        document.getElementById('editContainer').innerHTML = `<div class="alert alert-danger">No edit context found.</div>`;
+        document.getElementById('editContainer').innerHTML = `<div class="alert alert-danger shadow-sm">No edit context found. Redirecting...</div>`;
+        setTimeout(() => window.goBackAndRefresh(), 2000);
         return;
     }
     
-    // Because this is inside a function, 'const' is perfectly safe here!
     const { type, key } = parsedContext; 
+    let originalData = null; // High-level variable to store state for Delta Comparison
 
-    // 🗑️ DEFINED HERE: Delete Action utilizing Firebase API
+    /**
+     * 🗑️ DELETE TRANSACTION
+     */
     window.deleteCurrentEntry = async function() {
-        if (confirm("Are you sure you want to permanently delete this transaction? This action cannot be undone.")) {
+        if (confirm("🚨 PERMANENT DELETE: Are you sure? This will remove the record from all financial books and cannot be undone.")) {
             try {
-                if (typeof API !== 'undefined' && API.DB) {
-                    await API.DB.ref(`${App.State.userId}/Transactions/${type}/${key}`).remove();
-                    
-                    if (typeof App !== 'undefined' && App.UI) {
-                        App.UI.Notify('Deleted', 'Transaction successfully deleted.', 'success');
-                    } else {
-                        alert('Transaction successfully deleted.');
-                    }
-                    
-                    // Route back after successful deletion
-                    window.goBackAndRefresh(); 
-                } else {
-                    throw new Error("Database API not accessible.");
-                }
+                await API.DB.ref(`${App.State.userId}/Transactions/${type}/${key}`).remove();
+                App.UI.Notify('Deleted', 'Transaction successfully purged.', 'success');
+                window.goBackAndRefresh(); 
             } catch (error) {
-                console.error("Deletion failed:", error);
-                if (typeof App !== 'undefined' && App.UI) {
-                    App.UI.Notify('Deletion Failed', error.message, 'danger');
-                } else {
-                    alert('An error occurred while trying to delete the entry.');
-                }
+                App.UI.Notify('Deletion Failed', error.message, 'danger');
             }
         }
     };
 
-    // ✏️ DEFINED HERE: Enable Editing UI State
+    /**
+     * ✏️ UI UNLOCK ENGINE
+     * Enables all field types including Selects and Custom Grids
+     */
     window.enableEditing = function(btn) {
         const form = document.querySelector('#editContainer form');
         if(!form) return;
+
+        // 1. Mark as Updating
+        let hiddenInput = form.querySelector('input[name="UpdateStatus"]');
+        if (!hiddenInput) {
+            hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'UpdateStatus';
+            form.appendChild(hiddenInput);
+        }
+        hiddenInput.value = 'updating';
         
-        form.querySelectorAll('input, textarea').forEach(el => el.readOnly = false);
-        form.querySelectorAll('select').forEach(el => el.style.pointerEvents = 'auto');
-        
-        form.querySelectorAll('[data-original-display]').forEach(el => {
-            el.style.display = el.getAttribute('data-original-display');
+        // 2. Unlock all inputs, textareas, and SELECT dropdowns
+        form.querySelectorAll('input, textarea, select').forEach(el => {
+            el.readOnly = false;
+            el.disabled = false;
+            el.style.pointerEvents = 'auto';
+            if(el.tagName === 'SELECT') el.style.backgroundColor = "#fff";
         });
         
-        // 🎯 Dynamically route back on Cancel & include Delete action
+        // 3. Show hidden action buttons (Add Row, Delete Row)
+        form.querySelectorAll('[data-original-display], .btn-link, .delete-row-button').forEach(el => {
+            el.style.display = el.getAttribute('data-original-display') || 'inline-block';
+        });
+        
+        // 4. Update Header UI
         const controlPanel = document.getElementById('editControlPanel');
         if (controlPanel) {
             controlPanel.innerHTML = `
-                <div class="alert alert-success d-flex justify-content-between align-items-center m-0 shadow-sm border-success">
-                    <span><i class="bi bi-unlock-fill me-2"></i><strong>Editing Unlocked.</strong></span>
+                <div class="alert alert-success d-flex justify-content-between align-items-center m-0 shadow-sm border-success animate-in">
+                    <span><i class="bi bi-unlock-fill me-2"></i><strong>Editing Unlocked.</strong> Update fields and click Save.</span>
                     <div>
                         <button type="button" class="btn btn-danger btn-sm fw-bold shadow-sm me-2" onclick="window.deleteCurrentEntry()">
                             <i class="bi bi-trash-fill me-1"></i> Delete
@@ -176,261 +109,246 @@ window.deleteCurrentEntry = async function() {
         const submitBtn = form.querySelector('button[type="submit"]');
         if (submitBtn) {
             submitBtn.style.display = 'inline-block';
-            submitBtn.classList.replace('btn-primary', 'btn-success');
-            submitBtn.title = "Update changes";
-            submitBtn.innerHTML = '<i class="bi bi-check2 p-0"></i> Update';
+            submitBtn.className = "btn btn-success btn-sm px-4 fw-bold shadow-sm";
+            submitBtn.innerHTML = '<i class="bi bi-cloud-upload me-1"></i> Update Changes';
         }
+        if(btn) btn.style.display = 'none';
     };
     
-    // Form Mappings
-    const formRegistry = { "SalesInvoiceForm": "sales-inv", "ReceiptPaymentForm" : "receipt-pay", "PurchaseInvoiceForm": "purchase-inv", "ReceiptVoucherForm":"receipt-vch", "PaymentVoucherForm": "payment-vch", "SalesReturnForm": "salesret-inv", "PurchaseReturnForm": "purchaseret-inv" };
+    // Module Mapping
+    const formRegistry = { 
+        "SalesInvoiceForm": "sales-inv", 
+        "ReceiptPaymentForm" : "receipt-pay", 
+        "PurchaseInvoiceForm": "purchase-inv", 
+        "ReceiptVoucherForm":"receipt-vch", 
+        "PaymentVoucherForm": "payment-vch" 
+    };
     
-    // Multi-map to handle population across all form types
-    const possibleNames = {
-        date: ['voucher_date', 'valueDate', 'original_bill_date', 'original_invoice_date'],
-        doc_no: ['Invoice', 'paymentRef', 'supplier_bill_no', 'original_bill_no', 'original_invoice_no'],
-        entity: ['customer_ledger', 'supplier_ledger', 'gl_account', 'party_account'],
-        CompanyCode: ['CompanyName']
+    // Smart Field Mapping (Maps DB Keys to diverse HTML names)
+    const dbToHtmlMap = {
+        date: ['voucher_date', 'valueDate', 'date'],
+        doc_no: ['Invoice', 'paymentRef', 'supplier_bill_no'],
+        entity: ['customer_ledger', 'gl_account', 'supplier_ledger']
     };
 
     try {
-        // 1. FETCH DATA & HTML TEMPLATE
-        const data = await API.Fetch(`Transactions/${type}/${key}`);
-        if (!data) throw new Error("Transaction data not found.");
+        // 1. FETCH REMOTE DATA
+        originalData = await API.Fetch(`Transactions/${type}/${key}`);
+        if (!originalData) throw new Error("Transaction record missing on server.");
 
+        // 2. LOAD MODULE TEMPLATE
         const formBaseName = formRegistry[type] || type.replace('Form', '').toLowerCase();
         const res = await fetch(`modules/transactions/${formBaseName}.html`);
-        if (!res.ok) throw new Error("Template missing: " + formBaseName);
-        
         const container = document.getElementById('editContainer');
         container.innerHTML = await res.text();
         const form = container.querySelector('form');
 
-        // Re-hydrate native scripts safely
+        // 3. EXECUTE MODULE SCRIPTS (For math/grid logic)
         container.querySelectorAll("script").forEach(oldScript => {
             const newScript = document.createElement("script");
             newScript.text = oldScript.innerHTML;
             document.body.appendChild(newScript).parentNode.removeChild(newScript);
         });
 
-        // 2. POPULATE HEADER 
-        if (data.header) {
-            Object.entries(data.header).forEach(([k, v]) => {
-                let inputNameMatches = possibleNames[k] || [k];
-                let input = null;
-                for (let name of inputNameMatches) {
-                    input = form.querySelector(`[name="${name}"]`);
-                    if (input) break;
-                }
-                if(input) input.value = v;
+        /**
+         * 4. ROBUST DATA POPULATION ENGINE
+         * Fills All: Inputs (text/hidden/date), Selects, and Textareas
+         */
+        const fillForm = (dataSource, scope = form) => {
+            Object.entries(dataSource).forEach(([k, v]) => {
+                let keysToTry = dbToHtmlMap[k] || [k];
+                keysToTry.forEach(inputName => {
+                    const fields = scope.querySelectorAll(`[name="${inputName}"], [name="${inputName}[]"]`);
+                    fields.forEach(field => {
+                        if (field.tagName === 'SELECT') {
+                            field.value = v; // Handles Select population
+                        } else {
+                            field.value = v; // Handles Input/Hidden/Textarea
+                        }
+                    });
+                });
             });
-        }
+        };
 
-        // 3. POPULATE DYNAMIC META FIELDS
-        if (data.meta) {
-            Object.entries(data.meta).forEach(([k, v]) => {
-                if (k === 'user' || k === 'form_id') return;
-                let input = form.querySelector(`[name="${k}"]`);
-                if(input) input.value = v;
-            });
-        }
+        // Fill Header & Meta
+        if (originalData.header) fillForm(originalData.header);
+        if (originalData.meta) fillForm(originalData.meta);
 
-        // 4. THE CLONE PATTERN (Bulletproof Row Population)
+        // Fill Items Grid (Clone Pattern)
         const tbody = form.querySelector('tbody');
-        if (tbody && data.items && data.items.length > 0) {
+        if (tbody && originalData.items && originalData.items.length > 0) {
             const templateRow = tbody.querySelector('tr').cloneNode(true);
             tbody.innerHTML = ''; 
-            
-            data.items.forEach((item, index) => {
+            originalData.items.forEach((item, index) => {
                 const newRow = templateRow.cloneNode(true);
                 const srNo = newRow.querySelector('.sr-no');
                 if (srNo) srNo.innerText = index + 1;
-                
-                Object.entries(item).forEach(([k, v]) => {
-                    const input = newRow.querySelector(`[name="${k}"], [name="${k}[]"]`);
-                    if(input) input.value = v;
-                });
+                fillForm(item, newRow);
                 tbody.appendChild(newRow);
             });
-
-            if (typeof App !== 'undefined' && App.InitERPLogic) {
-                App.InitERPLogic(`transactions/${formBaseName}`);
-            }
+            // Re-bind lookup engine to new rows
+            if (typeof App !== 'undefined' && App.InitERPLogic) App.InitERPLogic(`transactions/${formBaseName}`);
         }
 
-        // 🛡️ SAFETY SHIELD: Wrap math functions in try/catch to prevent UI crash
-        try {
-            if (typeof window.recalculateVoucher === 'function') window.recalculateVoucher();
-            if (typeof window.recalculateCrnVoucher === 'function') window.recalculateCrnVoucher();
-            if (typeof window.recalculateDbnVoucher === 'function') window.recalculateDbnVoucher();
-        } catch (mathErr) {
-            console.warn("Math recalculation skipped (Missing DOM Element):", mathErr.message);
-        }
+        // 5. LOCK UI (VIEW MODE)
+const lockUI = () => {
+    form.querySelectorAll('input, textarea, select').forEach(el => {
+        el.readOnly = true;
+        el.disabled = true;
+        el.style.pointerEvents = 'none';
+    });
+    
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.style.display = 'none';
 
-        // 5. VIEW-ONLY UI WITH BACK & PRINT BUTTONS
-        const lockForm = () => {
-            form.querySelectorAll('input, textarea').forEach(el => el.readOnly = true);
-            form.querySelectorAll('select').forEach(el => el.style.pointerEvents = 'none');
-            
-            const submitBtn = form.querySelector('button[type="submit"]');
-            if(submitBtn) submitBtn.style.display = 'none';
+    form.querySelectorAll('.btn-danger, .btn-link, [onclick*="AddRow"], [onclick*="removeRow"]').forEach(btn => {
+        btn.setAttribute('data-original-display', btn.style.display || 'inline-block');
+        btn.style.display = 'none';
+    });
 
-            form.querySelectorAll('.btn-danger, .btn-link, [onclick*="addNewRow"], [onclick*="removeRow"], [onclick*="rvAddRow"], [onclick*="addNewCrnRow"], [onclick*="removeCrnRow"], [onclick*="addNewDbnRow"], [onclick*="removeDbnRow"]').forEach(btn => {
-                btn.setAttribute('data-original-display', btn.style.display || 'inline-block');
-                btn.style.display = 'none';
-            });
-
-            // Inject Unlock, Back & Print Buttons
-            // Inject Unlock, Back, Print & Delete Buttons
-            const controlPanel = document.getElementById('editControlPanel');
-            if (controlPanel) {
-                controlPanel.innerHTML = `
-                    <div class="alert alert-warning d-flex justify-content-between align-items-center m-0 shadow-sm border-warning">
-                        <span><i class="bi bi-eye me-2 "></i><strong>Viewing Record:</strong> ${data.header?.doc_no || 'Document'}</span>
-                        <div>
-                            <button type="button" title="Delete Record" class="btn btn-outline-danger btn-sm fw-bold shadow-sm bg-white me-1" onclick="window.deleteCurrentEntry()">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                            <button type="button" title="Print" class="btn btn-outline-primary btn-sm fw-bold shadow-sm bg-white me-1" onclick="window.printTransaction('${type}', '${key}')">
-                                <i class="bi bi-printer"></i>
-                            </button>
-                            <button type="button" title="Go Back" class="btn btn-outline-dark btn-sm fw-bold shadow-sm bg-white me-1" onclick="window.goBackAndRefresh()">
-                                <i class="bi bi-arrow-left"></i>
-                            </button>
-                            <button type="button" title="Edit Record" class="btn btn-warning btn-sm fw-bold shadow-sm" onclick="window.enableEditing(this)">
-                                <i class="bi bi-pencil-square me-1"></i> Edit
-                            </button>
-                        </div>
+    const controlPanel = document.getElementById('editControlPanel');
+    if (controlPanel) {
+        // Create safe variables
+        const docNo = (originalData?.header?.doc_no || originalData?.header?.voucher_no || 'Document');
+        const typeStr = type || 'Transaction';
+        const keyStr = key || '';
+        
+        controlPanel.innerHTML = `
+            <div class="card bg-white border-0 shadow-sm mb-3" style="border-radius: 8px;">
+                <div class="d-flex justify-content-between p-2" style="min-height: 52px;">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="badge bg-primary bg-opacity-10 text-primary border-0 px-3 py-1" style="font-weight: 500; font-size: 0.7rem; letter-spacing: 0.3px;">
+                            <i class="bi bi-eye me-1"></i> VIEW
+                        </span>
+                        <span class="fw-semibold text-dark" style="font-size: 0.9rem;">
+                            <i class="bi bi-file-text me-1 text-muted"></i>
+                            ${docNo}
+                        </span>
+                        <span class="badge bg-light text-secondary border-0 px-2 py-1" style="font-size: 0.65rem; font-weight: 400;">
+                            ${typeStr}
+                        </span>
                     </div>
-                `;
-            }
-        };
-        lockForm();
+                    <div class="d-flex gap-1 align-items-center">
+                        <button type="button" class="btn btn-outline-secondary btn-sm " 
+                                style="width: 32px; height: 32px; border-radius: 6px; padding: 0;"
+                                onclick="window.goBackAndRefresh()" 
+                                title="Go Back">
+                            <i class="bi bi-arrow-left" style="font-size: 0.95rem;"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm " 
+                                style="width: 32px; height: 32px; border-radius: 6px; padding: 0;"
+                                onclick="window.printTransaction('${typeStr}', '${keyStr}')" 
+                                title="Print Document">
+                            <i class="bi bi-printer" style="font-size: 0.95rem;"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm " 
+                                style="width: 32px; height: 32px; border-radius: 6px; padding: 0;"
+                                onclick="window.deleteCurrentEntry()" 
+                                title="Delete Transaction">
+                            <i class="bi bi-trash3" style="font-size: 0.95rem;"></i>
+                        </button>
+                        <div class="vr mx-1" style="height: 24px; opacity: 0.3;"></div>
+                        <button type="button" class="btn btn-warning btn-sm fw-semibold px-2" 
+                                style="border-radius: 6px; font-size: 0.8rem;"
+                                onclick="window.enableEditing(this)">
+                            <i class="bi bi-pencil-square me-1" style="font-size: 0.85rem;"></i> Edit
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+};
+lockUI();
 
-        // 6. CRUD: HANDLE DATABASE UPDATE
+        // 6. 🔥 DELTA-SMART UPDATE HANDLER
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const formDataObj = new FormData(form);
-            const rawFormInputs = Object.fromEntries(formDataObj.entries());
-            
-            const standardKeys = [
-                'Invoice', 'paymentRef', 'supplier_bill_no', 'original_bill_no', 'original_invoice_no',
-                'customer_ledger', 'supplier_ledger', 'gl_account', 'party_account', 'entity',
-                'voucher_date', 'valueDate', 'original_bill_date', 'original_invoice_date', 'date',
-                'project', 'CompanyName', 'instrumentDate', 'narration', 'pos', 'return_reason', 'documentType'
-            ];
+            const currentHeader = {};
+            const currentItems = [];
+            const currentMeta = {};
 
-            const updatedMeta = { ...data.meta };
-            
-            // Strictly exclude item rows and known standard keys from Meta
-            form.querySelectorAll('input, select, textarea').forEach(el => {
-                if (!el.name || el.closest('tbody')) return;
-                let k = el.name.replace('[]', '');
-                if (!standardKeys.includes(k)) {
-                    updatedMeta[k] = el.value;
+            // Collect Header
+            form.querySelectorAll('.card-body > .row input, .card-body > .row select, .p-4 > .row input').forEach(el => {
+                if(!el.name) return;
+                let dbK = el.name;
+                // Standardize keys to match Firebase
+                if (['Invoice', 'paymentRef', 'supplier_bill_no'].includes(dbK)) dbK = 'doc_no';
+                if (['voucher_date', 'valueDate', 'date'].includes(dbK)) dbK = 'date';
+                if (['customer_ledger', 'gl_account'].includes(dbK)) dbK = 'entity';
+                currentHeader[dbK] = el.value;
+            });
+
+            // Collect Items
+            form.querySelectorAll('tbody tr').forEach(row => {
+                const item = {};
+                row.querySelectorAll('input, select').forEach(el => {
+                    if(!el.name) return;
+                    item[el.name.replace('[]', '')] = el.value;
+                });
+                if(item.item_name || item.offset_account || item.amount) currentItems.push(item);
+            });
+
+            // Recalculate Totals (Accounting Integrity)
+            let sub = 0, tax = 0;
+            currentItems.forEach(i => {
+                const b = (parseFloat(i.qty) || 1) * (parseFloat(i.rate) || parseFloat(i.amount) || 0);
+                sub += b;
+                tax += b * ((parseFloat(i.auto_item_name_ItemTax) || 0) / 100);
+            });
+            currentHeader.subTotal = sub;
+            currentHeader.taxTotal = tax;
+            currentHeader.grandTotal = sub + tax;
+
+            // --- DELTA CALCULATION ---
+            const updatePayload = {};
+
+            // Compare Header (including Select values)
+            Object.entries(currentHeader).forEach(([k, v]) => {
+                if (String(v) !== String(originalData.header[k])) {
+                    updatePayload[`header/${k}`] = v;
                 }
             });
 
-            const payload = { 
-                header: { ...data.header }, 
-                items: [], 
-                meta: updatedMeta 
-            };
-
-            // Map Header exactly the same for EVERY form
-            form.querySelectorAll('.card-body > .row input, .card-body > .row select, .p-4 > .row input, .p-4 > .row select').forEach(el => {
-                if(el.name) {
-                    let dbKey = el.name;
-                    
-                    if (['Invoice', 'paymentRef', 'supplier_bill_no', 'original_bill_no', 'original_invoice_no'].includes(dbKey)) dbKey = 'doc_no';
-                    if (['voucher_date', 'valueDate', 'original_bill_date', 'original_invoice_date'].includes(dbKey)) dbKey = 'date';
-                    if (['customer_ledger', 'supplier_ledger', 'gl_account', 'party_account'].includes(dbKey)) dbKey = 'entity';
-                    
-                    payload.header[dbKey] = el.value;
-                }
-            });
-
-            if (rawFormInputs.documentType) {
-                payload.meta.documentType = rawFormInputs.documentType;
+            // Compare Items
+            if (JSON.stringify(currentItems) !== JSON.stringify(originalData.items)) {
+                updatePayload['items'] = currentItems;
             }
 
-            // Map Items and handle empty numeric values
-            form.querySelectorAll('tbody tr').forEach(row => {
-                const itemObj = {};
-                row.querySelectorAll('input, select').forEach(el => {
-                    if(el.name) {
-                        let key = el.name.replace('[]', '');
-                        let val = el.value;
-                        if (['debit', 'credit', 'amount', 'dr_amount', 'cr_amount', 'rate', 'tax'].includes(key) && val === '') {
-                            val = 0;
-                        }
-                        itemObj[key] = val;
-                    }
-                });
-                if(Object.keys(itemObj).length > 0) payload.items.push(itemObj);
+            // Compare Meta
+            form.querySelectorAll('input, select').forEach(el => {
+                if (!el.name || el.closest('tbody')) return;
+                if (String(el.value) !== String(originalData.meta[el.name])) {
+                    updatePayload[`meta/${el.name}`] = el.value;
+                }
             });
 
-            // Double Entry Math Recalculation
-            let subTotal = 0;
-            let taxTotal = 0;
-            payload.items.forEach(i => {
-                const qty = parseFloat(i.qty) || 1;
-                const rate = parseFloat(i.rate) || parseFloat(i.amount) || 0;
-                const taxPrc = parseFloat(i.auto_item_name_ItemTax) || parseFloat(i.taxRate) || 0;
-                const base = qty * rate;
-                subTotal += base;
-                taxTotal += base * (taxPrc / 100);
-            });
-            payload.header.subTotal = subTotal;
-            payload.header.taxTotal = taxTotal;
-            payload.header.grandTotal = subTotal + taxTotal;
+            if (Object.keys(updatePayload).length === 0) {
+                App.UI.Notify('No Changes', 'Record is already up to date.', 'info');
+                window.goBackAndRefresh();
+                return;
+            }
 
             try {
                 const btn = form.querySelector('button[type="submit"]');
-                const origText = btn ? btn.innerHTML : '';
-                if(btn) {
-                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
-                    btn.disabled = true;
-                }
+                btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Updating...`;
+                btn.disabled = true;
 
-                // Call Database
-                if (typeof API !== 'undefined' && API.DB) {
-                    await API.DB.ref(`${App.State.userId}/Transactions/${type}/${key}`).update(payload);
-                } else {
-                    throw new Error("Database API not accessible.");
-                }
-
-                if (typeof App !== 'undefined' && App.UI) {
-                    App.UI.Notify('Success', 'Transaction successfully updated.', 'success');
-                } else {
-                    alert('Transaction successfully updated.');
-                }
+                await API.DB.ref(`${App.State.userId}/Transactions/${type}/${key}`).update(updatePayload);
                 
-                // 🎯 Route back to exact previous location
+                App.UI.Notify('Updated', 'Record successfully modified.', 'success');
                 window.goBackAndRefresh(); 
 
             } catch (error) {
-                if (typeof App !== 'undefined' && App.UI) {
-                    App.UI.Notify('Update Failed', error.message, 'danger');
-                } else {
-                    alert('Update Failed: ' + error.message);
-                }
-                
-                const btn = form.querySelector('button[type="submit"]');
-                if(btn) {
-                    btn.innerHTML = '<i class="bi bi-check2 p-0"></i> Update';
-                    btn.disabled = false;
-                }
+                App.UI.Notify('Error', error.message, 'danger');
+                btn.disabled = false;
             }
         });
 
     } catch (err) {
-        console.error("Edit Flow Exception:", err);
-        const container = document.getElementById('editContainer');
-        if (container) {
-            container.innerHTML = `<div class="alert alert-danger shadow-sm">${err.message}</div>`;
-        }
+        console.error("CRUD Error:", err);
+        document.getElementById('editContainer').innerHTML = `<div class="alert alert-danger m-4 shadow-sm">${err.message}</div>`;
     }
 })();
 </script>

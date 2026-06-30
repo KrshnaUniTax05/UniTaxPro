@@ -10,8 +10,8 @@
             <button class="btn btn-sm btn-outline-secondary me-1" onclick="StockManager.LoadList()" title="Refresh">
                 <i class="bi bi-arrow-clockwise"></i>
             </button>
-            <button class="btn btn-primary btn-sm shadow-sm" onclick="StockManager.CreateNew()">
-                <i class="bi bi-plus-lg me-1"></i> New Stock Item
+            <button class="btn btn-primary btn-sm shadow-sm text-center" title="Create New Item" onclick="StockManager.CreateNew()">
+                <i class="bi bi-plus-lg me-1"></i>
             </button>
         </div>
     </div>
@@ -19,9 +19,11 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light text-muted small">
                 <tr>
-                    <th class="ps-4">Code</th>
-                    <th>Item Name</th>
-                    <th>HSN</th>
+                    <th width="10%" class="ps-4">Code</th>
+                    <th width="20%">Item Name</th>
+                    <th width="10%">HSN</th>
+                    <th width="15%">UQC</th>
+                    <th width="10%">Tax Rate</th>
                     <th class="text-end">Opening Qty</th>
                     <th class="text-end">Opening Value</th>
                     <th class="text-end pe-4">Actions</th>
@@ -34,210 +36,202 @@
 </div>
 
 <script>
-const StockManager = {
+// --- 1. GLOBAL MODULE CLEANUP (Prevents Identifier Crashes) ---
+if (window.StockFormObserver) {
+    window.StockFormObserver.disconnect();
+}
+
+// --- 2. STOCK MANAGER DEFINITION ---
+window.StockManager = {
     DbSheet: 'Stock',
     FormUrl: 'modules/masters/stock-cw.html',
+    data: [], // Local cache for faster UI updates without server re-fetches
     
-    // 1. Fetch and build the list
-    async LoadList() {
+    // Fetch and build the list
+    async LoadList(skipFetch = false) {
+        const tbody = document.getElementById('stockListBody');
+        if (!tbody) {
+            if (typeof App !== 'undefined' && App.Router) App.Router('masters/stock-list');
+            else window.location.href = '#masters/stock-list';
+            return;
+        }
+        
+        if (!skipFetch) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary me-2"></div><span class="text-muted">Loading stock items...</span></td></tr>';
+            try {
+                let rawResponse = await API.Fetch(`Masters/${this.DbSheet}`);
+                let fetchedData = rawResponse?.data || rawResponse?.result || rawResponse;
+                
+                if (!fetchedData || Object.keys(fetchedData).length === 0) {
+                    this.data = [];
+                    return tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">
+                        <i class="bi bi-box-seam fs-3 d-block mb-2"></i>
+                        No stock items found. Create your first stock item!
+                    </td></tr>`;
+                }
+
+                // Map data locally for filtering and rendering
+                this.data = Array.isArray(fetchedData) 
+                    ? fetchedData.map((v, i) => ({...v, ID: v.id || i})) 
+                    : Object.entries(fetchedData).map(([id, val]) => ({...val, ID: id}));
+                    
+            } catch (error) {
+                console.error('Load Error:', error);
+                return tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i> Error loading stock items: ${error.message}
+                </td></tr>`;
+            }
+        }
+
+        this.RenderList(this.data);
+    },
+
+    // Render List from local data
+    RenderList(dataArray) {
         const tbody = document.getElementById('stockListBody');
         if (!tbody) return;
         
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary me-2"></div><span class="text-muted">Loading stock items...</span></td></tr>';
-        
-        try {
-            let rawResponse = await API.Fetch(`Masters/${this.DbSheet}`);
-            let data = rawResponse?.data || rawResponse?.result || rawResponse;
-            
-            tbody.innerHTML = '';
-            
-            if (!data || Object.keys(data).length === 0) {
-                return tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">
-                    <i class="bi bi-box-seam fs-3 d-block mb-2"></i>
-                    No stock items found. Create your first stock item!
-                </td></tr>`;
-            }
-
-            const entries = Array.isArray(data) ? data.map((v, i) => [v.id || i, v]) : Object.entries(data);
-
-            entries.forEach(([id, record]) => {
-                if (!record || typeof record !== 'object') return;
-                
-                const encodedData = encodeURIComponent(JSON.stringify(record));
-                const itemCode = record.Stock_Code || record.stockCode || record.itemCode || '-';
-                const itemName = record.itemName || record.ItemName || 'Unknown';
-                const hsn = record.itemHSN || record.hsn || '-';
-                const openingQty = parseFloat(record.openingQty || record.OpeningQty || 0);
-                const openingVal = parseFloat(record.openingAmount || record.OpeningAmount || 0);
-                
-                tbody.innerHTML += `
-                    <tr class="stock-row small" data-id="${id}">
-                        <td class="ps-4 fw-bold text-dark">${itemCode}</td>
-                        <td>${itemName}</td>
-                        <td class="text-muted small">${hsn}</td>
-                        <td class="text-end">${openingQty.toFixed(2)}</td>
-                        <td class="text-end">${ openingVal > 0 ? '₹ ' + openingVal.toFixed(2) : '-'}</td>
-                        <td class="text-end pe-4" style="white-space: nowrap;">
-                            <button class="btn btn-sm btn-light text-primary border me-1" 
-                                    onclick="StockManager.TriggerEdit('${id}', '${encodedData}')"
-                                    title="Edit Stock Item">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button class="btn btn-sm btn-light text-danger border" 
-                                    onclick="StockManager.Delete('${id}', this)"
-                                    title="Delete Stock Item">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-            
-            // Update count
+        tbody.innerHTML = '';
+        if (!dataArray || dataArray.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No stock items available.</td></tr>`;
             const countEl = document.getElementById('stockCount');
-            if (countEl) {
-                countEl.innerText = `(${entries.length} records)`;
-            }
-            
-        } catch (error) {
-            console.error('Load Error:', error);
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">
-                <i class="bi bi-exclamation-triangle me-2"></i>
-                Error loading stock items: ${error.message}
-            </td></tr>`;
-        }
-    },
-
-    // 2. ROUTE TO CREATE MODE
-    CreateNew() {
-        sessionStorage.removeItem('EditContext_Stock');
-        if (typeof App !== 'undefined' && App.Router) {
-            App.Router('masters/stock-cw');
-        } else {
-            window.location.href = '#masters/stock-cw';
-        }
-    },
-
-    // 3. ROUTE TO EDIT MODE
-    TriggerEdit(recordId, encodedData) {
-        const data = JSON.parse(decodeURIComponent(encodedData));
-        
-        sessionStorage.setItem('EditContext_Stock', JSON.stringify({
-            id: recordId,
-            payload: data
-        }));
-
-        if (typeof App !== 'undefined' && App.Router) {
-            App.Router('masters/stock-cw');
-        } else {
-            window.location.href = '#masters/stock-cw';
-        }
-    },
-
-    // 4. DELETE with confirmation
-    async Delete(recordId, btn) {
-        // Check if it's a system stock item
-        try {
-            const record = await API.Fetch(`Masters/${this.DbSheet}/${recordId}`);
-            const data = record?.data || record?.result || record;
-            
-            const itemCode = data?.Stock_Code || data?.stockCode || data?.itemCode || '';
-            const protectedCodes = ['SYS-STOCK', 'SYS-TEST'];
-            
-            if (protectedCodes.includes(itemCode)) {
-                if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                    App.UI.Notify('Error', 'Cannot delete system stock item. This is a protected record.', 'danger');
-                } else {
-                    alert('Cannot delete system stock item.');
-                }
-                return;
-            }
-        } catch (e) {
-            // Continue if can't fetch
-        }
-        
-        if (!confirm('⚠️ Are you sure you want to delete this stock item?\n\nThis action cannot be undone!')) {
+            if (countEl) countEl.innerText = `(0 records)`;
             return;
         }
+
+        dataArray.forEach((record) => {
+            if (!record || typeof record !== 'object') return;
+            const id = record.ID || record.id;
+            const encodedData = encodeURIComponent(JSON.stringify(record));
+            const itemCode = record.Stock_Code || record.stockCode || record.itemCode || '-';
+            const itemCompany = record.CompanyName || '-';
+            const itemunit = record.ItemUnit || '-';
+            const itemTax = record.ItemTax || '-';
+            const itemName = record.itemName || record.ItemName || 'Unknown';
+            const hsn = record.itemHSN || record.hsn || '-';
+            const openingQty = parseFloat(record.openingQty || record.OpeningQty || 0);
+            const openingVal = parseFloat(record.openingAmount || record.OpeningAmount || 0);
+            
+            tbody.innerHTML += `
+                <tr class="stock-row small" data-id="${id}">
+                    <td class="ps-4  ">${itemCode}</td>
+                    <td>${itemName}</td>
+                    <td class="text-muted text-start">${hsn}</td>
+                    <td class="text-muted text-start">${itemTax}</td>
+                    <td class="text-muted text-start">${itemunit}</td>
+                    <td class="text-end text-muted">${openingQty}</td>
+                    <td class="text-end text-muted">${openingVal > 0 ? '₹ ' + openingVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}</td>
+                    <td class="text-end pe-4" style="white-space: nowrap;">
+                        <button class="btn btn-sm btn-light text-primary border me-1" 
+                                onclick="window.StockManager.TriggerEdit('${id}', '${encodedData}')"
+                                title="Edit Stock Item">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-light text-danger border" 
+                                onclick="window.StockManager.Delete('${id}', this)"
+                                title="Delete Stock Item">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        const countEl = document.getElementById('stockCount');
+        if (countEl) countEl.innerText = `(${dataArray.length} records)`;
+    },
+
+    CreateNew() {
+        sessionStorage.removeItem('EditContext_Stock');
+        if (typeof App !== 'undefined' && App.Router) App.Router('masters/stock-cw');
+        else window.location.href = '#masters/stock-cw';
+    },
+
+    TriggerEdit(recordId, encodedData) {
+        const data = JSON.parse(decodeURIComponent(encodedData));
+        sessionStorage.setItem('EditContext_Stock', JSON.stringify({ id: recordId, payload: data }));
+
+        if (typeof App !== 'undefined' && App.Router) App.Router('masters/stock-cw');
+        else window.location.href = '#masters/stock-cw';
+    },
+
+    async Delete(recordId, btn) {
+        const row = btn.closest('tr');
+        const codeCell = row?.querySelector('td:first-child')?.innerText || '';
+        
+        if (['SYS-STOCK', 'SYS-TEST'].includes(codeCell.trim())) {
+            if (App?.UI?.Notify) App.UI.Notify('Error', 'Cannot delete a protected system stock item.', 'danger');
+            else alert('Cannot delete system stock item.');
+            return;
+        }
+        
+        if (!confirm('⚠️ Are you sure you want to delete this stock item?\n\nThis action cannot be undone!')) return;
         
         const originalHtml = btn.innerHTML;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
         btn.disabled = true;
         
         try {
-            let success = false;
+            // 🔴 LIVE VERIFICATION: Find true key location before deletion
+            let finalDbKey = String(recordId).trim();
+            const serverCheck = await API.Fetch(`Masters/${this.DbSheet}`);
+            const liveData = serverCheck?.data || serverCheck?.result || serverCheck;
             
-            if (typeof API.DeleteTransaction === 'function') {
-                success = await API.DeleteTransaction(`Masters/${StockManager.DbSheet}`, recordId);
-            } else {
-                const result = await API.Delete(`Masters/${StockManager.DbSheet}/${recordId}`);
-                success = result !== null && result !== undefined;
+            if (liveData) {
+                const realServerKey = Object.keys(liveData).find(k => 
+                    String(liveData[k]?.Stock_Code || liveData[k]?.stockCode || liveData[k]?.itemCode).trim() === codeCell.trim()
+                );
+                if (realServerKey) finalDbKey = realServerKey;
             }
+
+            // Using the new API method
+            await API.SafeMasterDelete(this.DbSheet, finalDbKey);
             
-            if (!success) throw new Error("Delete operation failed.");
-            
-            // Animate row removal
-            const row = btn.closest('tr');
             if (row) {
                 row.style.transition = 'all 0.3s ease';
                 row.style.opacity = '0';
                 setTimeout(() => row.remove(), 300);
             }
             
-            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                App.UI.Notify('Success', 'Stock item deleted successfully', 'success');
-            }
+            if (App?.UI?.Notify) App.UI.Notify('Success', 'Stock item deleted successfully', 'success');
             
-            // Refresh list after deletion
-            setTimeout(() => StockManager.LoadList(), 500);
+            // Update local cache
+            if (this.data) {
+                this.data = this.data.filter(item => String(item.ID) !== String(finalDbKey));
+                const countEl = document.getElementById('stockCount');
+                if (countEl) countEl.innerText = `(${this.data.length} records)`;
+            }
             
         } catch (error) {
-            console.error('Delete Error:', error);
-            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                App.UI.Notify('Error', error.message || 'Delete failed', 'danger');
-            } else {
-                alert('Delete failed: ' + error.message);
-            }
+            console.error('❌ Delete Error:', error);
+            if (App?.UI?.Notify) App.UI.Notify('Error', error.message || 'Delete failed', 'danger');
+            else alert('Delete failed: ' + error.message);
+            
             btn.innerHTML = originalHtml;
             btn.disabled = false;
         }
     },
 
-    // 5. SEARCH/FILTER
     FilterList() {
         const query = document.getElementById('stockSearchFilter')?.value?.toLowerCase() || '';
         const rows = document.querySelectorAll('#stockListBody tr.stock-row');
         
         rows.forEach(row => {
-            const code = row.querySelector('td:first-child')?.innerText?.toLowerCase() || '';
-            const name = row.querySelector('td:nth-child(2)')?.innerText?.toLowerCase() || '';
-            const hsn = row.querySelector('td:nth-child(3)')?.innerText?.toLowerCase() || '';
-            
-            const match = code.includes(query) || name.includes(query) || hsn.includes(query);
-            row.style.display = match ? '' : 'none';
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(query) ? '' : 'none';
         });
     }
 };
 
-StockManager.LoadList()
-
-</script>
-<script>
-// Stock Form Handler with Back Button and Scroll Fix
-const StockFormObserver = new MutationObserver((mutations) => {
-    // Look for the Stock form
+// --- 3. OBSERVER: HYDRATE & FIX FORM ---
+window.StockFormObserver = new MutationObserver((mutations) => {
     const form = document.getElementById('Stock');
     
     if (form && !form.dataset.hydrated) {
         form.dataset.hydrated = "true";
 
-        // --- FIX: Ensure scrolling works ---
-        const container = form.closest('.content-viewport') || 
-                         form.closest('.main-content') || 
-                         form.closest('.page-content') || 
-                         form.closest('.card-body') ||
-                         form.closest('.tab-pane') ||
-                         form.parentElement;
+        // --- CSS OVERFLOW FIXES ---
+        const container = form.closest('.content-viewport') || form.closest('.main-content') || form.closest('.page-content') || form.closest('.card-body') || form.closest('.tab-pane') || form.parentElement;
         
         if (container) {
             container.style.overflow = 'visible !important';
@@ -247,7 +241,6 @@ const StockFormObserver = new MutationObserver((mutations) => {
             container.style.minHeight = '100vh !important';
         }
         
-        // Fix parent containers
         let parent = form.parentElement;
         while (parent && parent !== document.body) {
             const computedStyle = window.getComputedStyle(parent);
@@ -271,6 +264,10 @@ const StockFormObserver = new MutationObserver((mutations) => {
         // --- ADD BACK BUTTON NEXT TO SUBMIT ---
         const submitBtn = form.querySelector('button[type="submit"]');
         if (submitBtn) {
+            submitBtn.type = 'button'; 
+            submitBtn.removeAttribute('onclick');
+            form.removeAttribute('onsubmit');
+
             let backBtn = form.querySelector('#backToListBtn');
             if (!backBtn) {
                 const btnGroup = document.createElement('div');
@@ -282,25 +279,7 @@ const StockFormObserver = new MutationObserver((mutations) => {
                 backBtn.className = 'btn btn-primary btn-sm shadow-sm fw-bold px-2 mb-0';
                 backBtn.title = 'Back to List';
                 backBtn.innerHTML = '<i class="bi bi-arrow-left"></i>';
-                backBtn.onclick = function() {
-                    sessionStorage.removeItem('EditContext_Stock');
-                    
-                    if (typeof App !== 'undefined' && App.Router) {
-                        App.Router('masters/stock-list');
-                        setTimeout(() => {
-                            if (typeof StockManager !== 'undefined' && StockManager.LoadList) {
-                                StockManager.LoadList();
-                            }
-                        }, 300);
-                    } else {
-                        window.location.href = '#masters/stock-list';
-                        setTimeout(() => {
-                            if (typeof StockManager !== 'undefined' && StockManager.LoadList) {
-                                StockManager.LoadList();
-                            }
-                        }, 500);
-                    }
-                };
+                backBtn.onclick = () => window.StockManager.LoadList();
 
                 submitBtn.parentNode.insertBefore(btnGroup, submitBtn);
                 btnGroup.appendChild(backBtn);
@@ -319,43 +298,21 @@ const StockFormObserver = new MutationObserver((mutations) => {
                 headerBackBtn.className = 'btn btn-light border shadow-sm px-3 me-2';
                 headerBackBtn.title = 'Back to List';
                 headerBackBtn.innerHTML = '<i class="bi bi-arrow-left"></i>';
-                headerBackBtn.onclick = function() {
-                    sessionStorage.removeItem('EditContext_Stock');
-                    
-                    if (typeof App !== 'undefined' && App.Router) {
-                        App.Router('masters/stock-list');
-                        setTimeout(() => {
-                            if (typeof StockManager !== 'undefined' && StockManager.LoadList) {
-                                StockManager.LoadList();
-                            }
-                        }, 300);
-                    } else {
-                        window.location.href = '#masters/stock-list';
-                        setTimeout(() => {
-                            if (typeof StockManager !== 'undefined' && StockManager.LoadList) {
-                                StockManager.LoadList();
-                            }
-                        }, 500);
-                    }
-                };
+                headerBackBtn.onclick = () => window.StockManager.LoadList();
                 
                 const title = cardHeader.querySelector('h5');
-                if (title) {
-                    cardHeader.insertBefore(headerBackBtn, title);
-                } else {
-                    cardHeader.prepend(headerBackBtn);
-                }
+                if (title) cardHeader.insertBefore(headerBackBtn, title);
+                else cardHeader.prepend(headerBackBtn);
             }
         }
 
-        // 2. Check Memory for Edit Data
+        // --- EDIT CONTEXT MEMORY CHECK ---
         const editContextStr = sessionStorage.getItem('EditContext_Stock');
 
         if (editContextStr) {
             const context = JSON.parse(editContextStr);
             const data = context.payload;
 
-            // 3. Inject Hidden ID
             let hiddenId = form.querySelector('#stockHiddenId');
             if (!hiddenId) {
                 hiddenId = document.createElement('input');
@@ -366,130 +323,116 @@ const StockFormObserver = new MutationObserver((mutations) => {
             }
             hiddenId.value = context.id;
 
-            // 4. Auto-Fill the Inputs
             Object.keys(data).forEach(key => {
                 const input = form.querySelector(`[name="${key}"]`);
-                if (input) {
-                    input.value = data[key] || '';
-                }
+                if (input) input.value = data[key] || '';
             });
 
-            // 5. Change Button to "Update"
             if (submitBtn) {
                 submitBtn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>';
-                submitBtn.classList.remove('btn-success');
-                submitBtn.classList.add('btn-success');
-            }
-
-            // 6. Update Form Header
-            const header = form.querySelector('h5');
-            if (header) {
-                header.innerHTML = '<i class="bi bi-pencil-square me-2"></i>Edit Stock Item';
-            }
-
-            // 7. Clear Memory
-            sessionStorage.removeItem('EditContext_Stock');
-            
-        } else {
-            // Create mode
-            const hiddenId = form.querySelector('#stockHiddenId');
-            if (hiddenId) hiddenId.remove();
-            
-            form.reset();
-            
-            const header = form.querySelector('h5');
-            if (header) {
-                header.innerHTML = '<i class="bi bi-plus-circle me-2"></i>Create New Stock Item';
-            }
-            
-            if (submitBtn) {
-                submitBtn.innerHTML = '<i class="bi bi-check2 me-1"></i> Create Stock Item';
+                submitBtn.title = 'Update item';
                 submitBtn.classList.remove('btn-primary');
                 submitBtn.classList.add('btn-success');
             }
+
+            const header = form.querySelector('h5');
+            if (header) header.innerHTML = '<i class="bi bi-pencil-square me-2"></i>Edit Stock Item';
+
+            sessionStorage.removeItem('EditContext_Stock');
+            
+        } else {
+            form.querySelector('#stockHiddenId')?.remove();
+            form.reset();
+            
+            const header = form.querySelector('h5');
+            if (header) header.innerHTML = '<i class="bi bi-plus-circle me-2"></i>Create New Stock Item';
+            
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="bi bi-check2 me-1"></i> Create Stock Item';
+                submitBtn.classList.remove('btn-success');
+                submitBtn.classList.add('btn-primary');
+            }
         }
 
-        // 8. Intercept Form Submission
-        form.onsubmit = async function(e) {
-            e.preventDefault();
-            
-            const submitBtn = form.querySelector('button[type="submit"]');
-            const originalHtml = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processing...';
-            submitBtn.disabled = true;
+        // --- BULLETPROOF SUBMISSION CLICK HANDLER ---
+        if (submitBtn) {
+            window.SaveMaster = (e) => { 
+                if (e) e.preventDefault(); 
+                console.warn("🛑 Global SaveMaster blocked to prevent duplicate entries."); 
+                return false; 
+            };
 
-            const formData = new FormData(form);
-            const payload = Object.fromEntries(formData.entries());
-            
-            form.querySelectorAll('input[type="checkbox"]:not(:checked)').forEach(cb => {
-                if (cb.name) payload[cb.name] = false;
-            });
-            
-            const recordId = form.querySelector('#stockHiddenId')?.value;
-            delete payload.hiddenRecordId;
+            submitBtn.onclick = async function (e) {
+                e.preventDefault();
 
-            try {
-                if (recordId) {
-                    // --- UPDATE ---
-                    let success = false;
-                    
-                    if (typeof API.UpdateTransaction === 'function') {
-                        success = await API.UpdateTransaction(`Masters/${StockManager.DbSheet}`, recordId, payload);
-                    } else {
-                        const result = await API.Update(`Masters/${StockManager.DbSheet}/${recordId}`, payload);
-                        success = result !== null && result !== undefined;
-                    }
-                    
-                    if (!success) throw new Error("Update operation failed.");
-                    
-                    if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                        App.UI.Notify('Success', 'Stock item updated successfully', 'success');
-                    } else {
-                        alert('Stock item updated successfully!');
-                    }
-                    
-                } else {
-                    // --- CREATE ---
-                    payload.created_at = new Date().toISOString();
-                    payload.updated_at = payload.created_at;
-                    
-                    const result = await API.Create(`Masters/${StockManager.DbSheet}`, payload);
-                    
-                    if (!result) throw new Error("Create operation failed.");
-                    
-                    if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                        App.UI.Notify('Success', 'Stock item created successfully', 'success');
-                    } else {
-                        alert('Stock item created successfully!');
-                    }
-                }
-                
-                // Route back to list
-                if (typeof App !== 'undefined' && App.Router) {
-                    App.Router('masters/stock-list');
-                } else {
-                    window.location.href = '#masters/stock-list';
-                }
+                const originalHtml = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processing...';
+                submitBtn.disabled = true;
 
-            } catch (error) {
-                console.error('Save Error:', error);
-                if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                    App.UI.Notify('Error', error.message || 'Save failed', 'danger');
-                } else {
-                    alert('Error saving data: ' + error.message);
+                try {
+                    const formData = new FormData(form);
+                    const payload = Object.fromEntries(formData.entries());
+
+                    form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                        payload[cb.name] = cb.checked;
+                    });
+
+                    const hiddenInput = form.querySelector("#stockHiddenId");
+                    const rawRecordId = hiddenInput ? hiddenInput.value.trim() : "";
+                    let recordId = (rawRecordId && rawRecordId !== 'undefined' && rawRecordId !== 'null') ? rawRecordId : null;
+
+                    delete payload.hiddenRecordId;
+                    delete payload.stockHiddenId;
+                    payload.updated_at = new Date().toISOString();
+
+                    // 🔴 LIVE VERIFICATION: Align local ID with actual Database ID
+                    const targetCode = String(payload.Stock_Code || payload.stockCode || payload.itemCode || '').trim();
+                    const liveServerCheck = await API.Fetch(`Masters/${window.StockManager.DbSheet}`);
+                    const masterNode = liveServerCheck?.data || liveServerCheck?.result || liveServerCheck;
+                    
+                    if (masterNode && targetCode) {
+                        const directMatchId = Object.keys(masterNode).find(key => 
+                            String(masterNode[key]?.Stock_Code || masterNode[key]?.stockCode || masterNode[key]?.itemCode).trim() === targetCode
+                        );
+                        if (directMatchId) {
+                            recordId = directMatchId; // Override with true database key
+                        }
+                    }
+
+                    // ===========================
+                    // EXECUTE MASTER WORK
+                    // ===========================
+                    if (recordId) {
+                        await API.SecureMasterUpdate(window.StockManager.DbSheet, recordId, payload);
+                        if (App?.UI?.Notify) App.UI.Notify("Success", "Stock Item Updated Successfully", "success");
+                    } else {
+                        payload.created_at = payload.updated_at;
+                        await API.Create(`${window.StockManager.DbSheet}`, payload);
+                        if (App?.UI?.Notify) App.UI.Notify("Success", "Stock Item Created Successfully", "success");
+                    }
+
+                    window.StockManager.LoadList();
+
+                } catch (error) {
+                    console.error("Save Error:", error);
+                    if (App?.UI?.Notify) App.UI.Notify("Error", error.message || "Save failed", "danger");
+                    else alert(error.message);
+
+                    submitBtn.innerHTML = originalHtml;
+                    submitBtn.disabled = false;
                 }
-                submitBtn.innerHTML = originalHtml;
-                submitBtn.disabled = false;
-            }
-        };
+            };
+        }
     }
 });
 
-// Start watching
-StockFormObserver.observe(document.body, { childList: true, subtree: true });
+// Start watching DOM changes
+window.StockFormObserver.observe(document.body, { childList: true, subtree: true });
 
-StockManager.LoadList();
-// Check immediately if form already exists
+// Load initial data
+window.StockManager.LoadList();
+
+// Edge case handling if form already exists
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('Stock');
     if (form && !form.dataset.hydrated) {
@@ -498,7 +441,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (formCheck && !formCheck.dataset.hydrated) {
                 const event = new MutationEvent('DOMNodeInserted', { bubbles: true });
                 document.body.dispatchEvent(event);
-                StockManager.LoadList()
             }
         }, 100);
     }

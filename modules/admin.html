@@ -179,13 +179,14 @@
                                     <thead class="text-muted small text-uppercase">
                                         <tr>
                                             <th class="ps-4">Title & Details</th>
+                                            <th>Type</th>
                                             <th>Audience</th>
                                             <th>Timestamp</th>
                                             <th class="text-end pe-4" style="width: 120px;">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="notificationTableBody">
-                                        <tr><td colspan="4" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Connecting to stream...</td></tr>
+                                        <tr><td colspan="5" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Connecting to stream...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -216,9 +217,16 @@
                                         <label class="form-label fw-bold small text-muted">Notification Type</label>
                                         <select name="type" class="form-select form-select-sm" required>
                                             <option value="info">ℹ️ General Info</option>
+                                            <option value="task">💼 Task / Assignment</option>
                                             <option value="success">✅ Success</option>
                                             <option value="warning">⚠️ Warning</option>
                                             <option value="error">❌ Error</option>
+                                            <option value="payment">💰 Payment / Finance</option>
+                                            <option value="system">⚙️ System Update</option>
+                                            <option value="document">📄 Document / Report</option>
+                                            <option value="meeting">📅 Meeting / Event</option>
+                                            <option value="security">🔒 Security Alert</option>
+                                            <option value="announcement">📢 Announcement</option>
                                         </select>
                                     </div>
                                     <div class="mb-3">
@@ -248,13 +256,14 @@
                                     <thead class="text-muted small text-uppercase">
                                         <tr>
                                             <th class="ps-4">Title & Message</th>
+                                            <th>Type</th>
                                             <th>Audience</th>
                                             <th>Stats</th>
                                             <th class="text-end pe-4">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="broadcastHistoryBody">
-                                        <tr><td colspan="4" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</td></tr>
+                                        <tr><td colspan="5" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -354,33 +363,111 @@
     </div>
 </div>
 
-<div class="modal fade" id="editNotificationModal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-light py-3">
-                <h6 class="modal-title fw-bold text-dark">Modify Dispatched Payload</h6>
+<!-- Edit Notification Modal -->
+<div class="modal fade" id="editNotificationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-bell-fill text-warning me-2"></i>Edit Notification</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-4">
-                <form id="editNotificationForm">
+            <form id="editNotificationForm">
+                <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-secondary">Broadcast Title</label>
-                        <input type="text" id="editNotifTitle" name="title" class="form-control form-control-sm" required>
+                        <label class="form-label fw-bold small">Title</label>
+                        <input type="text" class="form-control" id="editNotifTitle" name="title" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label small fw-bold text-secondary">Message Content Matrix</label>
-                        <textarea id="editNotifMessage" name="message" class="form-control form-control-sm" rows="4" required></textarea>
+                        <label class="form-label fw-bold small">Message</label>
+                        <textarea class="form-control" id="editNotifMessage" name="message" rows="3" required></textarea>
                     </div>
-                    <div class="mb-0">
-                        <label class="form-label small fw-bold text-secondary">Redirection Path</label>
-                        <input type="text" id="editNotifLink" name="link" class="form-control form-control-sm">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Notification Type</label>
+                        <select class="form-select" id="editNotifType" name="type">
+                            <option value="info">ℹ️ General Info</option>
+                            <option value="task">💼 Task / Assignment</option>
+                            <option value="success">✅ Success / Approval</option>
+                            <option value="warning">⚠️ Warning / Alert</option>
+                            <option value="error">❌ Error / Failure</option>
+                            <option value="payment">💰 Payment / Finance</option>
+                            <option value="system">⚙️ System Update</option>
+                            <option value="document">📄 Document / Report</option>
+                            <option value="meeting">📅 Meeting / Event</option>
+                            <option value="security">🔒 Security Alert</option>
+                            <option value="announcement">📢 Announcement</option>
+                        </select>
                     </div>
-                </form>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Link (Optional)</label>
+                        <input type="url" class="form-control" id="editNotifLink" name="link" placeholder="https://example.com">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i> Update Notification
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Broadcast Modal -->
+<div class="modal fade" id="editBroadcastModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil-square text-primary me-2"></i>Edit Broadcast</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-footer bg-light border-top-0 py-2">
-                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-sm btn-primary fw-bold px-4" onclick="AdminSystem.SaveNotification()">Update Payload</button>
-            </div>
+            <form id="editBroadcastForm">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-bold small">Broadcast Title</label>
+                            <input type="text" class="form-control" id="editBroadcastTitle" name="title" required placeholder="Enter broadcast title">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold small">Message</label>
+                            <textarea class="form-control" id="editBroadcastMessage" name="message" rows="3" required placeholder="Enter your message"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Notification Type</label>
+                            <select class="form-select" id="editBroadcastType" name="type">
+                                <option value="info">ℹ️ General Info</option>
+                                <option value="task">💼 Task / Assignment</option>
+                                <option value="success">✅ Success / Approval</option>
+                                <option value="warning">⚠️ Warning / Alert</option>
+                                <option value="error">❌ Error / Failure</option>
+                                <option value="payment">💰 Payment / Finance</option>
+                                <option value="system">⚙️ System Update</option>
+                                <option value="document">📄 Document / Report</option>
+                                <option value="meeting">📅 Meeting / Event</option>
+                                <option value="security">🔒 Security Alert</option>
+                                <option value="announcement">📢 Announcement</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Target Audience</label>
+                            <select class="form-select" id="editBroadcastTarget" name="target">
+                                <option value="all">📢 All Users</option>
+                                <!-- Users will be populated dynamically -->
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold small">Link (Optional)</label>
+                            <input type="url" class="form-control" id="editBroadcastLink" name="link" placeholder="https://example.com">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i> Update Broadcast
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -404,8 +491,6 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-<script src="admin-standalone.js"></script>
-
 <script>
     function switchAdminView(targetId, navElement) {
         document.querySelectorAll('.tab-view').forEach(el => el.classList.remove('active-view'));
@@ -418,9 +503,8 @@
     }
 </script>
 
-
 <script>
-    /**
+/**
  * ==============================================================================
  * STANDALONE ADMIN PANEL SCRIPT (Complete & Independent)
  * Includes Firebase Init, Custom UI Notifications, and Full CRUD Logic
@@ -431,11 +515,11 @@
 // 1. FIREBASE INITIALIZATION
 // ==========================================
 const firebaseConfig =  {
-            apiKey: "AIzaSyB2iNWYkj_lIWwOtLNmZjBtfKgTYKrjAQU",
-            authDomain: "unitax-8d2e2.firebaseapp.com",
-            databaseURL: "https://unitax-8d2e2-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "unitax-8d2e2"
-        };
+    apiKey: "AIzaSyB2iNWYkj_lIWwOtLNmZjBtfKgTYKrjAQU",
+    authDomain: "unitax-8d2e2.firebaseapp.com",
+    databaseURL: "https://unitax-8d2e2-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "unitax-8d2e2"
+};
 
 // Initialize Firebase only if it hasn't been initialized yet
 if (!firebase.apps.length) {
@@ -497,7 +581,22 @@ const UIUtils = {
 const AdminSystem = {
     currentEditUserId: null,
     currentEditNotifId: null,
-    adminId: "super_admin_001", // Hardcoded identifier for the admin sending notifications
+    adminId: "super_admin_001",
+
+    // All notification types with their display names and icons
+    notificationTypes: {
+        'info': { label: 'General Info', icon: 'ℹ️', badge: 'info' },
+        'task': { label: 'Task / Assignment', icon: '💼', badge: 'primary' },
+        'success': { label: 'Success / Approval', icon: '✅', badge: 'success' },
+        'warning': { label: 'Warning / Alert', icon: '⚠️', badge: 'warning' },
+        'error': { label: 'Error / Failure', icon: '❌', badge: 'danger' },
+        'payment': { label: 'Payment / Finance', icon: '💰', badge: 'success' },
+        'system': { label: 'System Update', icon: '⚙️', badge: 'primary' },
+        'document': { label: 'Document / Report', icon: '📄', badge: 'info' },
+        'meeting': { label: 'Meeting / Event', icon: '📅', badge: 'primary' },
+        'security': { label: 'Security Alert', icon: '🔒', badge: 'danger' },
+        'announcement': { label: 'Announcement', icon: '📢', badge: 'warning' }
+    },
 
     Init() {
         this.LoadUsers();
@@ -505,6 +604,7 @@ const AdminSystem = {
         this.BindNotificationForm();
         this.BindUserSearch();
         this.BindModalSaveButtons();
+        this.BindEditNotificationForm();
     },
 
     // ------------------------------------------
@@ -514,7 +614,7 @@ const AdminSystem = {
         const tableBody = document.querySelector('#view-users tbody');
         const targetSelect = document.getElementById('notifTargetSelect');
         
-        if (tableBody) tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading users...</td></tr>';
+        if (tableBody) tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading users...</span></td></tr>';
         
         try {
             const snap = await db.ref('Users').once('value');
@@ -574,7 +674,6 @@ const AdminSystem = {
         }
     },
 
-    // Add this helper function anywhere inside your AdminSystem object
     GenerateUserId(length = 10) {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         let result = '';
@@ -591,7 +690,6 @@ const AdminSystem = {
         const form = document.getElementById('editUserForm');
         form.reset();
         
-        // Ensure email and password are required for new users
         document.getElementById('email').removeAttribute('readonly');
         document.getElementById('password').setAttribute('required', 'true');
         document.getElementById('passwordHelp').style.display = 'none';
@@ -609,10 +707,9 @@ const AdminSystem = {
         document.getElementById('role').value = role.toLowerCase();
         document.getElementById('status').value = status.toLowerCase();
 
-        // --- ADD/ENSURE THESE 3 LINES ARE HERE ---
-        document.getElementById('password').value = ''; // Forces the box to be empty
-        document.getElementById('password').removeAttribute('required'); // Makes it optional
-        document.getElementById('passwordHelp').style.display = 'block'; // Shows the "leave blank" helper text
+        document.getElementById('password').value = '';
+        document.getElementById('password').removeAttribute('required');
+        document.getElementById('passwordHelp').style.display = 'block';
 
         bootstrap.Modal.getOrCreateInstance(document.getElementById('editUserModal')).show();
     },
@@ -620,13 +717,11 @@ const AdminSystem = {
     async SaveUser() {
         const form = document.getElementById('editUserForm');
         
-        // Trigger native HTML5 validation
         if (!form.checkValidity()) { 
             form.reportValidity(); 
             return; 
         }
 
-        // Build the core payload mapping your custom IDs
         const userData = {
             name: document.getElementById('legalName').value.trim(),
             email: document.getElementById('email').value.trim(),
@@ -634,7 +729,6 @@ const AdminSystem = {
             status: document.getElementById('status').value
         };
 
-        // Only update password if they typed something new
         const pwdInput = document.getElementById('password').value;
         if (pwdInput !== "") {
             userData.password = pwdInput; 
@@ -642,16 +736,12 @@ const AdminSystem = {
 
         try {
             if (this.currentEditUserId) {
-                // UPDATE EXISTING
                 userData.updated_at = firebase.database.ServerValue.TIMESTAMP;
                 await db.ref(`Users/${this.currentEditUserId}`).update(userData);
                 UIUtils.Notify('Success', 'User profile updated.', 'success');
             } else {
-                // CREATE NEW WITH GENERATED 10-DIGIT ID
                 const customUserId = this.GenerateUserId(10);
                 userData.created_at = firebase.database.ServerValue.TIMESTAMP;
-                
-                // Instead of using .push(), we use .set() on the specific generated ID
                 await db.ref(`Users/${customUserId}`).set(userData);
                 UIUtils.Notify('Success', `New user added with ID: ${customUserId}`, 'success');
             }
@@ -692,7 +782,7 @@ const AdminSystem = {
     // ------------------------------------------
     // MODULE B: NOTIFICATIONS
     // ------------------------------------------
-BindNotificationForm() {
+    BindNotificationForm() {
         const form = document.getElementById('adminNotificationForm');
         if (!form) return;
 
@@ -706,10 +796,9 @@ BindNotificationForm() {
 
             const formData = new FormData(form);
             
-            // Construct the payload, ensuring the new 'type' field is captured
             const payload = {
                 target: formData.get('target_user'),
-                type: formData.get('type') || 'info', // <-- CAPTURES THE NOTIFICATION TYPE
+                type: formData.get('type') || 'info',
                 title: (formData.get('title') || '').trim(),
                 message: (formData.get('message') || '').trim(),
                 link: (formData.get('link') || '').trim(),
@@ -719,22 +808,40 @@ BindNotificationForm() {
 
             try {
                 await db.ref('Notifications').push(payload);
-                if (window.UIUtils) UIUtils.Notify('Success', 'Broadcast dispatched successfully.', 'success');
+                UIUtils.Notify('Success', 'Broadcast dispatched successfully.', 'success');
                 form.reset();
                 this.LoadNotifications(); 
             } catch (err) {
                 console.error("Broadcast Error:", err);
-                if (window.UIUtils) UIUtils.Notify('Error', 'Failed to send broadcast.', 'danger');
+                UIUtils.Notify('Error', 'Failed to send broadcast.', 'danger');
             }
 
             btn.innerHTML = origHtml; 
             btn.disabled = false;
         });
     },
+
+    getTypeBadge(type) {
+        const typeMap = {
+            'info': '<span class="badge bg-info bg-opacity-10 text-info border border-info-subtle">ℹ️ Info</span>',
+            'task': '<span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle">💼 Task</span>',
+            'success': '<span class="badge bg-success bg-opacity-10 text-success border border-success-subtle">✅ Success</span>',
+            'warning': '<span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle">⚠️ Warning</span>',
+            'error': '<span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle">❌ Error</span>',
+            'payment': '<span class="badge bg-success bg-opacity-10 text-success border border-success-subtle">💰 Payment</span>',
+            'system': '<span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle">⚙️ System</span>',
+            'document': '<span class="badge bg-info bg-opacity-10 text-info border border-info-subtle">📄 Document</span>',
+            'meeting': '<span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle">📅 Meeting</span>',
+            'security': '<span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle">🔒 Security</span>',
+            'announcement': '<span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle">📢 Announcement</span>'
+        };
+        return typeMap[type] || typeMap['info'];
+    },
+
     async LoadNotifications() {
         const tableBody = document.getElementById('notificationTableBody');
         if (!tableBody) return;
-        tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading history...</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading history...</span></td></tr>';
 
         try {
             const snap = await db.ref('Notifications').orderByChild('timestamp').limitToLast(100).once('value');
@@ -743,11 +850,10 @@ BindNotificationForm() {
             tableBody.innerHTML = '';
 
             if (Object.keys(notifs).length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">No broadcast history found.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No broadcast history found.</td></tr>';
                 return;
             }
 
-            // Sort newest first
             const sortedNotifs = Object.entries(notifs).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
 
             sortedNotifs.forEach(([id, notif]) => {
@@ -757,6 +863,9 @@ BindNotificationForm() {
                 const safeTitle = (notif.title || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
                 const safeMsg = (notif.message || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
                 const safeLink = (notif.link || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                const safeType = (notif.type || "info").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+                const typeBadge = this.getTypeBadge(notif.type);
 
                 tableBody.innerHTML += `
                     <tr>
@@ -764,10 +873,11 @@ BindNotificationForm() {
                             <div class="fw-bold text-dark text-truncate" style="max-width: 220px;">${notif.title}</div>
                             <div class="small text-muted text-truncate" style="max-width: 280px;" title="${safeMsg}">${notif.message}</div>
                         </td>
+                        <td>${typeBadge}</td>
                         <td>${targetLabel}</td>
                         <td class="small text-muted font-monospace" style="font-size:8pt;">${dateStr}</td>
                         <td class="text-end pe-4">
-                            <button class="btn btn-sm btn-outline-primary py-0 px-2 me-1" onclick="AdminSystem.OpenEditNotifModal('${id}', '${safeTitle}', '${safeMsg}', '${safeLink}')">
+                            <button class="btn btn-sm btn-outline-primary py-0 px-2 me-1" onclick="AdminSystem.OpenEditNotifModal('${id}', '${safeTitle}', '${safeMsg}', '${safeLink}', '${safeType}')">
                                 <i class="bi bi-pencil-square"></i>
                             </button>
                             <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="AdminSystem.DeleteNotification('${id}')">
@@ -778,55 +888,70 @@ BindNotificationForm() {
                 `;
             });
         } catch (err) {
-            tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">Error loading data.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger">Error loading data.</td></tr>';
         }
     },
 
-    OpenEditNotifModal(id, title, msg, link) {
+    OpenEditNotifModal(id, title, msg, link, type) {
         this.currentEditNotifId = id;
-        document.getElementById('editNotifTitle').value = title;
-        document.getElementById('editNotifMessage').value = msg;
-        document.getElementById('editNotifLink').value = link;
+        document.getElementById('editNotifTitle').value = title || '';
+        document.getElementById('editNotifMessage').value = msg || '';
+        document.getElementById('editNotifLink').value = link || '';
+        document.getElementById('editNotifType').value = type || 'info';
         bootstrap.Modal.getOrCreateInstance(document.getElementById('editNotificationModal')).show();
     },
 
+    BindEditNotificationForm() {
+        const form = document.getElementById('editNotificationForm');
+        if (!form) return;
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.SaveNotification();
+        });
+    },
+
     async SaveNotification() {
-    if (!this.currentEditNotifId) return;
-    
-    // 1. Get the form element
-    const form = document.getElementById('editNotificationForm'); // Ensure your form has this ID
-    if (!form) {
-        console.error("Edit form not found!");
-        return;
-    }
-
-    // 2. Automatically grab ALL inputs in the form
-    // Any input with a 'name' attribute will be included in updateData
-    const formData = new FormData(form);
-    const updateData = Object.fromEntries(formData.entries());
-
-    // 3. (Optional) Sanitize/Validate: Ensure the message isn't empty
-    if (!updateData.title || !updateData.message) {
-        if(window.UIUtils) UIUtils.Notify('Error', 'Title and Message are required.', 'warning');
-        return;
-    }
-
-    try {
-        // 4. Update Firebase
-        // This will send every key-value pair found in the form
-        await firebase.database().ref(`Notifications/${this.currentEditNotifId}`).update(updateData);
+        if (!this.currentEditNotifId) {
+            UIUtils.Notify('Error', 'No notification selected for editing.', 'danger');
+            return;
+        }
         
-        if(window.UIUtils) UIUtils.Notify('Success', 'Broadcast metrics modified.', 'success');
+        const form = document.getElementById('editNotificationForm');
+        if (!form) {
+            console.error("Edit form not found!");
+            return;
+        }
+
+        const title = document.getElementById('editNotifTitle').value.trim();
+        const message = document.getElementById('editNotifMessage').value.trim();
         
-        const modal = bootstrap.Modal.getInstance(document.getElementById('editNotificationModal'));
-        if (modal) modal.hide();
-        
-        this.LoadNotifications();
-    } catch (err) {
-        console.error("Firebase Update Error:", err);
-        if(window.UIUtils) UIUtils.Notify('Error', 'Failed to update notification.', 'danger');
-    }
-},
+        if (!title || !message) {
+            UIUtils.Notify('Error', 'Title and Message are required.', 'warning');
+            return;
+        }
+
+        const updateData = {
+            title: title,
+            message: message,
+            link: document.getElementById('editNotifLink').value.trim(),
+            type: document.getElementById('editNotifType').value,
+            updated_at: firebase.database.ServerValue.TIMESTAMP
+        };
+
+        try {
+            await db.ref(`Notifications/${this.currentEditNotifId}`).update(updateData);
+            UIUtils.Notify('Success', 'Notification updated successfully.', 'success');
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editNotificationModal'));
+            if (modal) modal.hide();
+            
+            this.LoadNotifications();
+        } catch (err) {
+            console.error("Firebase Update Error:", err);
+            UIUtils.Notify('Error', 'Failed to update notification.', 'danger');
+        }
+    },
 
     async DeleteNotification(id) {
         if (confirm('Recall this notification? It will be removed from users screens.')) {
@@ -849,45 +974,90 @@ BindNotificationForm() {
     }
 };
 
+// ==========================================
+// 4. BROADCAST MANAGER
+// ==========================================
 const BroadcastManager = {
-    // 1. LOAD HISTORY & POPULATE TABLE
-    async LoadHistory() {
-        const body = document.getElementById('broadcastHistoryBody');
-        const snap = await firebase.database().ref('Broadcast-Services').once('value');
-        body.innerHTML = '';
+    currentEditBroadcastId: null,
 
-        if (!snap.exists()) {
-            body.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No broadcasts found.</td></tr>';
-            return;
-        }
-
-        snap.forEach(child => {
-            const n = child.val();
-            const id = child.key;
-            const readCount = Object.keys(n.ReadStatus || {}).length;
-
-            body.innerHTML += `
-                <tr>
-                    <td class="ps-4">
-                        <div class="fw-bold small text-dark">${n.title}</div>
-                        <div class="text-muted small text-truncate" style="max-width: 200px;">${n.message}</div>
-                    </td>
-                    <td><small class="text-muted">${Array.isArray(n.target) ? n.target.join('; ') : n.target}</small></td>
-                    <td>
-                        <button class="btn btn-xs btn-outline-success" onclick="BroadcastManager.ShowAnalytics('${id}')">
-                            ${readCount} Seen
-                        </button>
-                    </td>
-                    <td class="text-end pe-4">
-                        <button class="btn btn-xs btn-outline-warning" onclick="BroadcastManager.Edit('${id}')"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-xs btn-outline-danger" onclick="BroadcastManager.Delete('${id}')"><i class="bi bi-trash"></i></button>
-                    </td>
-                </tr>
-            `;
-        });
+    getTypeBadge(type) {
+        const typeMap = {
+            'info': '<span class="badge bg-info bg-opacity-10 text-info border border-info-subtle">ℹ️ Info</span>',
+            'task': '<span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle">💼 Task</span>',
+            'success': '<span class="badge bg-success bg-opacity-10 text-success border border-success-subtle">✅ Success</span>',
+            'warning': '<span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle">⚠️ Warning</span>',
+            'error': '<span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle">❌ Error</span>',
+            'payment': '<span class="badge bg-success bg-opacity-10 text-success border border-success-subtle">💰 Payment</span>',
+            'system': '<span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle">⚙️ System</span>',
+            'document': '<span class="badge bg-info bg-opacity-10 text-info border border-info-subtle">📄 Document</span>',
+            'meeting': '<span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle">📅 Meeting</span>',
+            'security': '<span class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle">🔒 Security</span>',
+            'announcement': '<span class="badge bg-warning bg-opacity-10 text-warning border border-warning-subtle">📢 Announcement</span>'
+        };
+        return typeMap[type] || typeMap['info'];
     },
 
-    // 2. ANALYTICS MODAL
+    async LoadHistory() {
+        const body = document.getElementById('broadcastHistoryBody');
+        if (!body) return;
+        
+        body.innerHTML = '<tr><td colspan="5" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading broadcasts...</span></td></tr>';
+
+        try {
+            const snap = await firebase.database().ref('Broadcast-Services').orderByChild('timestamp').once('value');
+            const broadcasts = snap.val() || {};
+            
+            body.innerHTML = '';
+
+            if (Object.keys(broadcasts).length === 0) {
+                body.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No broadcasts found.</td></tr>';
+                return;
+            }
+
+            const sortedBroadcasts = Object.entries(broadcasts).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+
+            sortedBroadcasts.forEach(([id, broadcast]) => {
+                const readCount = Object.keys(broadcast.ReadStatus || {}).length;
+                const targetDisplay = broadcast.target === 'all' ? 'All Users' : 
+                                      Array.isArray(broadcast.target) ? broadcast.target.join('; ') : broadcast.target;
+                
+                const safeTitle = (broadcast.title || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                const safeMsg = (broadcast.message || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                const safeLink = (broadcast.link || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                const safeType = (broadcast.type || "info").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+                const typeBadge = this.getTypeBadge(broadcast.type);
+
+                body.innerHTML += `
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold small text-dark">${broadcast.title}</div>
+                            <div class="text-muted small text-truncate" style="max-width: 200px;" title="${safeMsg}">${broadcast.message}</div>
+                        </td>
+                        <td>${typeBadge}</td>
+                        <td><small class="text-muted">${targetDisplay}</small></td>
+                        <td>
+                            <button class="btn btn-xs btn-outline-success" onclick="BroadcastManager.ShowAnalytics('${id}')">
+                                ${readCount} Seen
+                            </button>
+                        </td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-sm btn-outline-primary py-0 px-2 me-1" onclick="BroadcastManager.OpenEditBroadcastModal('${id}', '${safeTitle}', '${safeMsg}', '${safeLink}', '${safeType}', '${targetDisplay}')">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="BroadcastManager.Delete('${id}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        } catch (err) {
+            body.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger">Error loading broadcasts.</td></tr>';
+            console.error(err);
+        }
+    },
+
     async ShowAnalytics(id) {
         const snap = await firebase.database().ref(`Broadcast-Services/${id}`).once('value');
         const n = snap.val();
@@ -895,10 +1065,11 @@ const BroadcastManager = {
         
         let usersHtml = '<ul class="list-group list-group-flush">';
         if (n.ReadStatus) {
-            Object.keys(n.ReadStatus).forEach(uid => {
+            Object.entries(n.ReadStatus).forEach(([uid, data]) => {
+                const readTime = data.timestamp ? new Date(data.timestamp).toLocaleString() : 'Unknown';
                 usersHtml += `<li class="list-group-item d-flex justify-content-between">
                     <span class="small">${uid}</span>
-                    <span class="badge bg-success">Read</span>
+                    <span class="badge bg-success">Read at ${readTime}</span>
                 </li>`;
             });
         } else {
@@ -915,78 +1086,162 @@ const BroadcastManager = {
         modal.show();
     },
 
-    // 3. EDIT ACTION: Populate form
-    async Edit(id) {
-        const snap = await firebase.database().ref(`Broadcast-Services/${id}`).once('value');
-        const n = snap.val();
-        const form = document.getElementById('broadcastForm');
-
-        form.querySelector('[name="title"]').value = n.title;
-        form.querySelector('[name="message"]').value = n.message;
-        form.querySelector('[name="target"]').value = Array.isArray(n.target) ? n.target.join(';') : n.target;
-        form.querySelector('[name="link"]').value = n.link || '';
-        form.querySelector('[name="type"]').value = n.type || 'info';
-        form.querySelector('[name="hiddenId"]').value = id;
-
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    OpenEditBroadcastModal(id, title, msg, link, type, target) {
+        this.currentEditBroadcastId = id;
+        
+        document.getElementById('editBroadcastTitle').value = title || '';
+        document.getElementById('editBroadcastMessage').value = msg || '';
+        document.getElementById('editBroadcastLink').value = link || '';
+        document.getElementById('editBroadcastType').value = type || 'info';
+        
+        const targetSelect = document.getElementById('editBroadcastTarget');
+        if (targetSelect) {
+            if (target === 'All Users' || target === 'all') {
+                targetSelect.value = 'all';
+            } else {
+                const options = targetSelect.options;
+                let found = false;
+                for (let opt of options) {
+                    if (opt.value === target) {
+                        targetSelect.value = target;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    const opt = document.createElement('option');
+                    opt.value = target;
+                    opt.textContent = target;
+                    opt.selected = true;
+                    targetSelect.appendChild(opt);
+                }
+            }
+        }
+        
+        const modal = new bootstrap.Modal(document.getElementById('editBroadcastModal'));
+        modal.show();
     },
 
-    // 4. DELETE ACTION
-    async Delete(id) {
-        if(confirm('Delete this broadcast? This action is permanent.')) {
-            await firebase.database().ref(`Broadcast-Services/${id}`).remove();
+    async SaveEditedBroadcast() {
+        if (!this.currentEditBroadcastId) {
+            UIUtils.Notify('Error', 'No broadcast selected for editing.', 'danger');
+            return;
+        }
+
+        const form = document.getElementById('editBroadcastForm');
+        if (!form) return;
+
+        const formData = new FormData(form);
+        const title = formData.get('title')?.trim();
+        const message = formData.get('message')?.trim();
+        
+        if (!title || !message) {
+            UIUtils.Notify('Error', 'Title and Message are required.', 'warning');
+            return;
+        }
+
+        const updateData = {
+            title: title,
+            message: message,
+            link: formData.get('link')?.trim() || '',
+            type: formData.get('type') || 'info',
+            updated_at: Date.now()
+        };
+
+        const targetInput = formData.get('target');
+        if (targetInput === 'all') {
+            updateData.target = 'all';
+        } else if (targetInput) {
+            updateData.target = targetInput.includes(';') ? 
+                targetInput.split(';').map(s => s.trim()) : 
+                targetInput;
+        }
+
+        try {
+            await firebase.database().ref(`Broadcast-Services/${this.currentEditBroadcastId}`).update(updateData);
+            UIUtils.Notify('Success', 'Broadcast updated successfully.', 'success');
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editBroadcastModal'));
+            if (modal) modal.hide();
+            
             this.LoadHistory();
+        } catch (err) {
+            console.error("Update Error:", err);
+            UIUtils.Notify('Error', 'Failed to update broadcast.', 'danger');
         }
     },
 
-    // 5. SAVE OR UPDATE
+    async Delete(id) {
+        if(confirm('Delete this broadcast? This action is permanent.')) {
+            try {
+                await firebase.database().ref(`Broadcast-Services/${id}`).remove();
+                UIUtils.Notify('Deleted', 'Broadcast removed successfully.', 'warning');
+                this.LoadHistory();
+            } catch (err) {
+                UIUtils.Notify('Error', 'Failed to delete broadcast.', 'danger');
+            }
+        }
+    },
+
     async Save(payload, id) {
-        if(id) await firebase.database().ref(`Broadcast-Services/${id}`).update(payload);
-        else await firebase.database().ref('Broadcast-Services').push(payload);
+        if(id) {
+            await firebase.database().ref(`Broadcast-Services/${id}`).update(payload);
+        } else {
+            await firebase.database().ref('Broadcast-Services').push(payload);
+        }
         this.LoadHistory();
     }
 };
 
-// 6. FORM SUBMIT HOOK
-document.getElementById('broadcastForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const data = new FormData(e.target);
-    const id = data.get('hiddenId');
-    
-    const targetInput = data.get('target');
-    const targets = targetInput === '@all' ? 'all' : targetInput.split(';').map(s => s.trim());
-    
-    const payload = {
-        title: data.get('title'),
-        message: data.get('message'),
-        target: targets,
-        link: data.get('link'),
-        type: data.get('type'),
-        timestamp: Date.now()
-    };
-
-    await BroadcastManager.Save(payload, id);
-    
-    // Cleanup form
-    e.target.reset();
-    e.target.querySelector('[name="hiddenId"]').value = '';
-});
-
-
-
-
 // ==========================================
-// 4. INITIALIZE APP ON DOM LOAD
+// 5. BROADCAST CREATE FORM SUBMIT HOOK
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-    // Wait slightly to ensure Firebase and Bootstrap are fully parsed
+    const broadcastForm = document.getElementById('broadcastForm');
+    if (broadcastForm) {
+        broadcastForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = new FormData(e.target);
+            const id = data.get('hiddenId');
+            
+            const targetInput = data.get('target');
+            const targets = targetInput === 'all' ? 'all' : targetInput.split(';').map(s => s.trim());
+            
+            const payload = {
+                title: data.get('title'),
+                message: data.get('message'),
+                target: targets,
+                link: data.get('link'),
+                type: data.get('type'),
+                timestamp: Date.now()
+            };
+
+            await BroadcastManager.Save(payload, id);
+            
+            e.target.reset();
+            e.target.querySelector('[name="hiddenId"]').value = '';
+            UIUtils.Notify('Success', 'Broadcast sent successfully.', 'success');
+        });
+    }
+
+    const editBroadcastForm = document.getElementById('editBroadcastForm');
+    if (editBroadcastForm) {
+        editBroadcastForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await BroadcastManager.SaveEditedBroadcast();
+        });
+    }
+});
+
+// ==========================================
+// 6. INITIALIZE APP ON DOM LOAD
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         BroadcastManager.LoadHistory();
         AdminSystem.Init();
-        // BroadcastManager.Init();
     }, 100);
 });
-
 
 </script>
 </body>

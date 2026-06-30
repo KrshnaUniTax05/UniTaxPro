@@ -217,109 +217,190 @@ const API = {
     },
 
 // 2. UPDATED POST VOUCHER (Calculates Subtotal, Taxes & Dynamic Meta)
-    async PostVoucher(form) {
-        const formData = new FormData(form);
-        const raw = Object.fromEntries(formData.entries());
-        const formId = form.id || form.getAttribute('id');
-        const rawDocNo = raw.Invoice || raw.paymentRef || raw.supplier_bill_no || `VCH-${Math.floor(Math.random() * 100000)}`;
+async PostVoucher(form) {
+    console.log("post voucher worked", form);
+    
+    // =============================================================
+    // 🔒 CHECK FOR HIDDEN UpdateStatus FIELD
+    // =============================================================
+    
+    // Check if hidden UpdateStatus field exists and has value
+    const updateStatusField = form.querySelector('[name="UpdateStatus"]');
+    if (updateStatusField) {
+        console.warn(`[PostVoucher] 🔒 UpdateStatus field found with value: ${updateStatusField.value}`);
+        console.warn(`[PostVoucher] 🔒 This is an UPDATE operation. PostVoucher() is for CREATE only.`);
         
-        if (formId.includes('Sale') || formId.includes('Purchase')) {
-            await this.EnsureSystemLedgers();
+        if (typeof App !== 'undefined' && App.UI) {
+            App.UI.Notify('Blocked', 'This is an update operation. Use the Update button.', 'warning');
+        } else {
+            alert('This is an update operation. Please use the Update button.');
         }
-
-        // --- EXTRACT ADDITIONAL DYNAMIC DATA FOR META ---
-        // List of known standard fields to exclude from the meta dump
-        const standardKeys = [
-            'Invoice', 'paymentRef', 'supplier_bill_no', 'customer_ledger', 'gl_account',
-            'voucher_date', 'valueDate', 'project', 'CompanyName', 'instrumentDate', 'narration'
-        ];
         
-        const dynamicMetaData = {};
-        for (let key in raw) {
-            // Include only if it's NOT a standard header key, and NOT an item array field (which have '[]' in their names)
-            if (!standardKeys.includes(key) && !key.includes('[]')) {
-                dynamicMetaData[key] = raw[key];
+        return false; // Prevent posting - this is an update, not a create
+    }
+    
+    // =============================================================
+    // ALSO CHECK IF WE'RE IN EDIT MODE VIA URL PARAMS
+    // =============================================================
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const vchKey = urlParams.get('key');
+    const formType = urlParams.get('type');
+    
+    if (vchKey && formType) {
+        console.warn(`[PostVoucher] 🔒 URL params indicate EDIT mode (key: ${vchKey}, type: ${formType})`);
+        console.warn(`[PostVoucher] 🔒 PostVoucher() is for CREATE only. Use UpdateVoucher() for updates.`);
+        
+        if (typeof App !== 'undefined' && App.UI) {
+            App.UI.Notify('Blocked', 'Cannot create new record in edit mode. Use Update.', 'warning');
+        } else {
+            alert('Cannot create new record in edit mode. Please use the Update button.');
+        }
+        
+        return false; // Prevent posting - this is an edit mode
+    }
+    
+    // =============================================================
+    // CHECK INTERNAL LOCK (if exists)
+    // =============================================================
+    
+    if (typeof INTERNAL !== 'undefined') {
+        if (INTERNAL.isAlreadyUpdated) {
+            console.warn(`[PostVoucher] 🔒 INTERNAL.isAlreadyUpdated is true. Ignoring.`);
+            if (typeof App !== 'undefined' && App.UI) {
+                App.UI.Notify('Locked', 'This record has already been updated.', 'warning');
             }
-        }
-
-        // --- CALCULATE STOCK ACCUMULATED AMOUNT ---
-        const items = this._GetGridItems(form);
-        let subTotal = 0; // The pure stock/item amount
-        let taxTotal = 0; // The tax amount
-        
-        items.forEach(i => {
-            const qty = parseFloat(i.qty) || 1;
-            const rate = parseFloat(i.rate) || parseFloat(i.amount) || 0;
-            const tax = parseFloat(i.auto_item_name_ItemTax) || parseFloat(i.taxRate) || 0;
-            
-            const base = qty * rate;
-            subTotal += base;
-            taxTotal += base * (tax / 100);
-        });
-        
-        const grandTotal = subTotal + taxTotal;
-
-        // --- DOUBLE ENTRY ROUTING ---
-        let primaryDebit = "";
-        let primaryCredit = "";
-        let taxLedger = "Duties and Taxes";
-        let entity = raw.customer_ledger || raw.gl_account || "Unknown";
-
-        if (formId.toLowerCase().includes('sale')) {
-            primaryDebit = entity;             // Customer gets Grand Total
-            primaryCredit = "Sales Account";   // Sales gets SubTotal
-        } 
-        else if (formId.toLowerCase().includes('purchase')) {
-            primaryDebit = "Purchase Account"; // Purchase gets SubTotal
-            primaryCredit = entity;            // Supplier gets Grand Total
-        } 
-        else if (formId.toLowerCase().includes('receipt')) {
-            primaryDebit = entity;             
-            primaryCredit = "MULTIPLE";        
-        } 
-        else if (formId.toLowerCase().includes('payment')) {
-            primaryDebit = "MULTIPLE";         
-            primaryCredit = entity;            
-        }
-
-        const transaction = {
-            header: {
-                doc_no: rawDocNo.toUpperCase(),
-                date: raw.voucher_date || raw.valueDate || new Date().toISOString().split('T')[0],
-                entity: entity,
-                debitLedger: primaryDebit,   
-                creditLedger: primaryCredit, 
-                taxLedger: taxLedger,
-                subTotal: subTotal,     // Saved securely to database
-                taxTotal: taxTotal,     // Saved securely to database
-                grandTotal: grandTotal, // Saved securely to database
-                project: raw.project || 'General',
-                CompanyCode: raw.CompanyName || '',
-                instrumentDate: raw.instrumentDate || '',
-                narration: raw.narration || '',
-                posted_at: firebase.database.ServerValue.TIMESTAMP,
-                status: 'POSTED'
-            },
-            items: items,
-            meta: { 
-                user: App.State.userId, 
-                form_id: formId,
-                ...dynamicMetaData // Automatically spreads fields like lr_no, vehicle_no, transporter into the DB
-            }
-        };
-
-        try {
-            const path = `${App.State.userId}/Transactions/${formId}`;
-            await this.DB.ref(path).push(transaction);
-            App.UI.Notify('Success', `Document ${transaction.header.doc_no} Posted`, 'success');
-            return true;
-        } catch (e) {
-            App.UI.Notify('Firebase Error', "Invalid data format.", 'danger');
             return false;
         }
-    },
+        
+        if (INTERNAL.isUpdating) {
+            console.warn(`[PostVoucher] 🔒 INTERNAL.isUpdating is true. Update in progress.`);
+            if (typeof App !== 'undefined' && App.UI) {
+                App.UI.Notify('Please Wait', 'Update already in progress.', 'info');
+            }
+            return false;
+        }
+    }
+    
+    // Check hidden internal lock field
+    try {
+        const lockField = document.getElementById('_internal_lock');
+        if (lockField && lockField.value === 'locked') {
+            console.warn(`[PostVoucher] 🔒 Hidden lock field indicates record is locked. Ignoring.`);
+            if (typeof App !== 'undefined' && App.UI) {
+                App.UI.Notify('Locked', 'This record has already been updated.', 'warning');
+            }
+            return false;
+        }
+    } catch (e) {
+        // Ignore if element not found
+    }
+    
+    // =============================================================
+    // CONTINUE WITH NORMAL PROCESSING (CREATE MODE)
+    // =============================================================
+    
+    const formData = new FormData(form);
+    const raw = Object.fromEntries(formData.entries());
+    const formId = form.id || form.getAttribute('id');
+    const rawDocNo = raw.Invoice || raw.paymentRef || raw.supplier_bill_no || `VCH-${Math.floor(Math.random() * 100000)}`;
+    
+    if (formId.includes('Sale') || formId.includes('Purchase')) {
+        await this.EnsureSystemLedgers();
+    }
+
+    // --- EXTRACT ADDITIONAL DYNAMIC DATA FOR META ---
+    const standardKeys = [
+        'Invoice', 'paymentRef', 'supplier_bill_no', 'customer_ledger', 'gl_account',
+        'voucher_date', 'valueDate', 'project', 'CompanyName', 'instrumentDate', 'narration'
+    ];
+    
+    const dynamicMetaData = {};
+    for (let key in raw) {
+        if (!standardKeys.includes(key) && !key.includes('[]')) {
+            dynamicMetaData[key] = raw[key];
+        }
+    }
+
+    // --- CALCULATE STOCK ACCUMULATED AMOUNT ---
+    const items = this._GetGridItems(form);
+    let subTotal = 0;
+    let taxTotal = 0;
+    
+    items.forEach(i => {
+        const qty = parseFloat(i.qty) || 1;
+        const rate = parseFloat(i.rate) || parseFloat(i.amount) || 0;
+        const tax = parseFloat(i.auto_item_name_ItemTax) || parseFloat(i.taxRate) || 0;
+        
+        const base = qty * rate;
+        subTotal += base;
+        taxTotal += base * (tax / 100);
+    });
+    
+    const grandTotal = subTotal + taxTotal;
+
+    // --- DOUBLE ENTRY ROUTING ---
+    let primaryDebit = "";
+    let primaryCredit = "";
+    let taxLedger = "Duties and Taxes";
+    let entity = raw.customer_ledger || raw.gl_account || "Unknown";
+
+    if (formId.toLowerCase().includes('sale')) {
+        primaryDebit = entity;
+        primaryCredit = "Sales Account";
+    } 
+    else if (formId.toLowerCase().includes('purchase')) {
+        primaryDebit = "Purchase Account";
+        primaryCredit = entity;
+    } 
+    else if (formId.toLowerCase().includes('receipt')) {
+        primaryDebit = entity;
+        primaryCredit = "MULTIPLE";
+    } 
+    else if (formId.toLowerCase().includes('payment')) {
+        primaryDebit = "MULTIPLE";
+        primaryCredit = entity;
+    }
+
+    const transaction = {
+        header: {
+            doc_no: rawDocNo.toUpperCase(),
+            date: raw.voucher_date || raw.valueDate || new Date().toISOString().split('T')[0],
+            entity: entity,
+            debitLedger: primaryDebit,
+            creditLedger: primaryCredit,
+            taxLedger: taxLedger,
+            subTotal: subTotal,
+            taxTotal: taxTotal,
+            grandTotal: grandTotal,
+            project: raw.project || 'General',
+            CompanyCode: raw.CompanyName || '',
+            instrumentDate: raw.instrumentDate || '',
+            narration: raw.narration || '',
+            posted_at: firebase.database.ServerValue.TIMESTAMP,
+            status: 'POSTED'
+        },
+        items: items,
+        meta: { 
+            user: App.State.userId, 
+            form_id: formId,
+            ...dynamicMetaData
+        }
+    };
+
+    try {
+        const path = `${App.State.userId}/Transactions/${formId}`;
+        await this.DB.ref(path).push(transaction);
+        App.UI.Notify('Success', `Document ${transaction.header.doc_no} Posted`, 'success');
+        return true;
+    } catch (e) {
+        App.UI.Notify('Firebase Error', "Invalid data format.", 'danger');
+        return false;
+    }
+},
 
     async SaveMaster(formId, data) {
+        console.log("Save master ran")
         try {
             // --- 1. STRICT AUTO-LIST VALIDATION ---
             // Grab the form element from the DOM (assuming formId matches the HTML id)
@@ -416,7 +497,70 @@ const API = {
             return null;
         }
     },
+    async Delete(endpoint) {
+        try {
+            console.log('🗑️ API.Delete called with endpoint:', endpoint);
+            
+            // ==========================================
+            // METHOD 1: Native Firebase SDK (Preferred & Fastest)
+            // ==========================================
+            if (this.DB) {
+                // Ensure it routes to the correct user's database node
+                let dbPath = endpoint;
+                if (typeof App !== 'undefined' && App.State && App.State.userId) {
+                    // Prevent double-prefixing if endpoint already contains userId
+                    if (!dbPath.startsWith(App.State.userId)) {
+                        dbPath = `${App.State.userId}/${dbPath}`;
+                    }
+                }
+                
+                await this.DB.ref(dbPath).remove();
+                console.log('✅ Delete successful via Firebase SDK');
+                return true;
+            }
 
+            // ==========================================
+            // METHOD 2: Firebase REST API Fallback (fetch)
+            // ==========================================
+            // Firebase Realtime DB REST requires ".json" at the end of the URL
+            let targetUrl = `${this.baseURL}/${endpoint}.json`;
+            
+            // Firebase REST auth uses query parameters, not Bearer headers
+            const token = localStorage.getItem('token') || localStorage.getItem('idToken');
+            if (token) {
+                targetUrl += `?auth=${token}`;
+            }
+
+            const response = await fetch(targetUrl, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            console.log('📊 Response status:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ Delete failed with status:', response.status, errorText);
+                throw new Error(`Delete failed: ${response.status} ${errorText}`);
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                const result = await response.json();
+                console.log('✅ REST Delete successful, result:', result);
+                return result;
+            }
+            
+            console.log('✅ REST Delete successful (no content)');
+            return true;
+            
+        } catch (error) {
+            console.error('❌ API.Delete error:', error);
+            throw error;
+        }
+    },
     async DeleteTransaction(formId, key) {
         try {
             await this.DB.ref(`${App.State.userId}/Transactions/${formId}/${key}`).remove();
@@ -440,17 +584,228 @@ const API = {
     },
     // Add to API object
     async UpdateTransaction(formId, key, updatedData) {
-        try {
-            await this.DB.ref(`${App.State.userId}/Transactions/${formId}/${key}`).update(updatedData);
-            App.UI.Notify('Success', 'Transaction Updated', 'success');
-            return true;
-        } catch (e) {
-            App.UI.Notify('Error', 'Update failed', 'danger');
-            return false;
+    console.log("UpdateTransaction:", { formId, key, updatedData });
+
+    try {
+        if (!formId) throw new Error("Missing formId.");
+        if (!key) throw new Error("Missing record key.");
+        if (!updatedData || typeof updatedData !== "object") {
+            throw new Error("Invalid update data.");
         }
+
+        // Update timestamp automatically
+        updatedData.updated_at = Date.now();
+
+        const ref = this.DB.ref(
+            `${App.State.userId}/Transactions/${formId}/${key}`
+        );
+
+        // Only updates the supplied fields
+        await ref.update(updatedData);
+
+        App.UI.Notify(
+            "Success",
+            "Transaction Updated Successfully",
+            "success"
+        );
+
+        return {
+            success: true,
+            id: key
+        };
+
+    } catch (error) {
+        console.error("UpdateTransaction Error:", error);
+
+        App.UI.Notify(
+            "Error",
+            error.message || "Update failed",
+            "danger"
+        );
+
+        return {
+            success: false,
+            error: error.message
+        };
+    }
+},
+    async Update(endpoint, payload) {
+        try {
+            console.log('🔄 API.Update called with endpoint:', endpoint);
+
+            // ==========================================
+            // METHOD 1: Native Firebase SDK (Preferred & Fastest)
+            // ==========================================
+            if (this.DB) {
+                // Ensure correct user routing
+                let dbPath = endpoint;
+                if (typeof App !== 'undefined' && App.State && App.State.userId) {
+                    if (!dbPath.startsWith(App.State.userId)) {
+                        dbPath = `${App.State.userId}/${dbPath}`;
+                    }
+                }
+
+                const targetRef = this.DB.ref(dbPath);
+
+                // 🛑 SAFETY CHECK: Ensure the record already exists to prevent duplication
+                const snapshot = await targetRef.once('value');
+                if (!snapshot.exists()) {
+                    console.error(`❌ Update aborted: No existing record found at path -> ${dbPath}`);
+                    throw new Error("Record does not exist. Cannot update.");
+                }
+
+                // Perform the update safely
+                await targetRef.update(payload);
+                console.log('✅ Update successful via Firebase SDK');
+                return true;
+            }
+
+            // ==========================================
+            // METHOD 2: Firebase REST API Fallback (fetch)
+            // ==========================================
+            let targetUrl = `${this.baseURL}/${endpoint}.json`;
+            const token = localStorage.getItem('token') || localStorage.getItem('idToken');
+            if (token) {
+                targetUrl += `?auth=${token}`;
+            }
+
+            // 🛑 SAFETY CHECK (REST): Fetch first to ensure it exists
+            const checkResponse = await fetch(targetUrl);
+            const existingData = await checkResponse.json();
+            if (existingData === null) {
+                console.error(`❌ REST Update aborted: No existing record found at -> ${endpoint}`);
+                throw new Error("Record does not exist. Cannot update.");
+            }
+
+            // Perform PATCH request
+            // Note: We use PATCH instead of PUT. PUT deletes everything and replaces it. PATCH only updates provided keys.
+            const response = await fetch(targetUrl, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            console.log('📊 Response status:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ Update failed with status:', response.status, errorText);
+                throw new Error(`Update failed: ${response.status} ${errorText}`);
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                const result = await response.json();
+                console.log('✅ REST Update successful, result:', result);
+                return result;
+            }
+            
+            console.log('✅ REST Update successful (no content)');
+            return true;
+            
+        } catch (error) {
+            console.error('❌ API.Update error:', error);
+            throw error;
+        }
+    },
+   
+    async SecureMasterUpdate(moduleName, recordId, payload) {
+        console.log(`[SecureMasterUpdate] Initiating for ${moduleName} / ${recordId}`);
+
+        // 1. Strict Input Sanitization
+        const cleanId = typeof recordId === 'string' ? recordId.trim() : recordId;
+        if (!cleanId || cleanId === 'undefined' || cleanId === 'null') {
+            throw new Error("Invalid Record ID provided. Update aborted to prevent phantom duplication.");
+        }
+
+        const cleanModule = String(moduleName).trim();
+        const basePath = (typeof App !== 'undefined' && App.State && App.State.userId) ? App.State.userId : '';
+        const dbPath = basePath ? `${basePath}/Masters/${cleanModule}/${cleanId}` : `Masters/${cleanModule}/${cleanId}`;
+
+        // Inject timestamp automatically
+        const finalPayload = { ...payload, updated_at: new Date().toISOString() };
+
+        // 2. Firebase SDK Approach (Primary)
+        if (this.DB) {
+            const targetRef = this.DB.ref(dbPath);
+
+            // READ-BEFORE-WRITE LOCK: The ultimate anti-duplicate shield
+            const snapshot = await targetRef.once('value');
+            if (!snapshot.exists()) {
+                throw new Error(`Record ID '${cleanId}' does not exist in ${cleanModule}. Cannot update a ghost record.`);
+            }
+
+            await targetRef.update(finalPayload);
+            console.log(`[SecureMasterUpdate] ✅ Successfully updated via SDK`);
+            return true;
+        }
+
+        // 3. REST API Fallback
+        let targetUrl = `${this.baseURL}/${dbPath}.json`;
+        const token = localStorage.getItem('token') || localStorage.getItem('idToken');
+        if (token) targetUrl += `?auth=${token}`;
+
+        // Check existence first
+        const checkRes = await fetch(targetUrl);
+        const existingData = await checkRes.json();
+        if (existingData === null) {
+            throw new Error(`Record ID '${cleanId}' does not exist in ${cleanModule}. Update aborted.`);
+        }
+
+        // Execute PATCH (Not PUT, so it only updates specific fields)
+        const response = await fetch(targetUrl, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(finalPayload)
+        });
+
+        if (!response.ok) throw new Error(`REST Update failed with status: ${response.status}`);
+        return true;
+    },
+
+    /**
+     * Deletes a Master record safely.
+     * @param {String} moduleName - e.g., 'Companies', 'Ledgers', 'Stock'
+     * @param {String} recordId - The exact Firebase Key
+     */
+    async SafeMasterDelete(moduleName, recordId) {
+        console.log(`[SafeMasterDelete] Initiating for ${moduleName} / ${recordId}`);
+
+        // 1. Strict Input Sanitization
+        const cleanId = typeof recordId === 'string' ? recordId.trim() : recordId;
+        if (!cleanId || cleanId === 'undefined' || cleanId === 'null') {
+            throw new Error("Invalid Record ID. Deletion aborted.");
+        }
+
+        const cleanModule = String(moduleName).trim();
+        const basePath = (typeof App !== 'undefined' && App.State && App.State.userId) ? App.State.userId : '';
+        const dbPath = basePath ? `${basePath}/Masters/${cleanModule}/${cleanId}` : `Masters/${cleanModule}/${cleanId}`;
+
+        // 2. Firebase SDK Approach (Primary)
+        if (this.DB) {
+            await this.DB.ref(dbPath).remove();
+            console.log(`[SafeMasterDelete] ✅ Successfully deleted via SDK`);
+            return true;
+        }
+
+        // 3. REST API Fallback
+        let targetUrl = `${this.baseURL}/${dbPath}.json`;
+        const token = localStorage.getItem('token') || localStorage.getItem('idToken');
+        if (token) targetUrl += `?auth=${token}`;
+
+        const response = await fetch(targetUrl, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) throw new Error(`REST Delete failed with status: ${response.status}`);
+        return true;
     },
     // Add to API object in api.js
     async UpdateVoucher(form, formId, passedKey) {
+        console.log("calling update voucher")
     // 1. Hunt for the key: Check the parameter first, then check the hidden input
     const key = passedKey || form.querySelector('[name="voucher_key"]')?.value || document.getElementById('active_voucher_key')?.value;
 

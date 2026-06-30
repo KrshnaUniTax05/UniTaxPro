@@ -83,9 +83,35 @@
                                 <div class="col-md-3">
                                     <label class="form-label small fw-bold">Supply Type</label>
                                     <select name="pos" class="form-select form-select-sm">
-                                        <option value="INTRA">Intra-State</option>
-                                        <option value="INTER">Inter-State</option>
+                                        
+                                        <optgroup label="Domestic (Tax Auto-Computed)">
+                                            <option value="REGULAR" selected>Regular Sale</option>
+                                        </optgroup>
+
+                                        <optgroup label="Exports">
+                                            <option value="EXP_WPAY">Export (With Payment of Tax)</option>
+                                            <option value="EXP_WOPAY">Export (Without Payment of Tax)</option>
+                                        </optgroup>
+
+                                        <optgroup label="SEZ & Deemed Exports">
+                                            <option value="SEZ_WPAY">SEZ Supplies (With Payment of Tax)</option>
+                                            <option value="SEZ_WOPAY">SEZ Supplies (Without Payment of Tax)</option>
+                                            <option value="DEEMED">Deemed Exports</option>
+                                        </optgroup>
+
+                                        <optgroup label="Zero / Nil / Exempt">
+                                            <option value="NIL">Nil Rated Supplies</option>
+                                            <option value="EXEMPT">Exempted Supplies</option>
+                                            <option value="NONGST">Non-GST Supplies</option>
+                                        </optgroup>
+                                        
                                     </select>
+                                </div>
+                            </div>
+                            <div class="row pt-2">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Narration</label>
+                                    <input type="text" name="narration"  class="form-control form-control-sm" >
                                 </div>
                             </div>
                         </div>

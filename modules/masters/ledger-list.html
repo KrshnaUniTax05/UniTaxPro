@@ -14,8 +14,8 @@
                     </div>
                 </div>
                 <div class="col-md-auto text-end">
-                    <button class="btn btn-primary btn-sm px-3 shadow-sm fw-bold w-100" onclick="LedgerApp.ShowCreateForm()">
-                        <i class="bi bi-plus-lg me-1"></i> New Ledger
+                    <button class="btn btn-primary btn-sm px-3 shadow-sm fw-bold w-100" onclick="LedgerApp.ShowCreateForm()" title="Create New Ledger">
+                        <i class="bi bi-plus-lg me-1"></i>
                     </button>
                 </div>
             </div>
@@ -220,22 +220,18 @@ const LedgerApp = {
         }
     },
 
-    // --- INITIALIZE DYNAMIC FIELDS (Your exact function) ---
+    // --- INITIALIZE DYNAMIC FIELDS ---
     initializeDynamicFields(form) {
         const ledgerTypeInput = form.querySelector('input[name="ledgerType"]');
         
         if (ledgerTypeInput) {
-            // Store reference to this
             const self = this;
             
-            // Remove existing listener if any
             ledgerTypeInput.removeEventListener('change', self.handleLedgerTypeChange);
-            // Add change event listener
             ledgerTypeInput.addEventListener('change', function(e) {
                 self.handleLedgerTypeChange(e);
             });
             
-            // Also handle input events for datalist selection
             ledgerTypeInput.addEventListener('input', function() {
                 const datalist = document.getElementById('led-groups');
                 if (datalist) {
@@ -250,7 +246,6 @@ const LedgerApp = {
                 }
             });
 
-            // Trigger initial load if value exists
             if (ledgerTypeInput.value) {
                 setTimeout(() => {
                     self.handleLedgerTypeChange({ target: ledgerTypeInput });
@@ -276,14 +271,19 @@ const LedgerApp = {
             const formElement = doc.querySelector('form');
             if (!formElement) throw new Error("No <form> tag found inside ledger-cw.html");
 
-            // Add unique ID to form
             const formId = `ledgerForm_${formInstanceId}_${Date.now()}`;
             formElement.id = formId;
             formElement.dataset.instanceId = formInstanceId;
 
+            // Neutralize implicit form submissions
+            formElement.removeAttribute('onsubmit');
+
             // Add Back Button
             const submitBtn = formElement.querySelector('button[type="submit"]');
             if (submitBtn) {
+                submitBtn.type = 'button'; // Neutralize button
+                submitBtn.removeAttribute('onclick');
+
                 const btnGroup = document.createElement('div');
                 btnGroup.className = 'd-flex gap-2 align-items-center';
                 const backBtn = document.createElement('button');
@@ -296,27 +296,24 @@ const LedgerApp = {
                 submitBtn.parentNode.insertBefore(btnGroup, submitBtn);
                 btnGroup.appendChild(backBtn);
                 btnGroup.appendChild(submitBtn);
+
+                // Bind new click handler directly
+                submitBtn.addEventListener('click', (e) => LedgerApp.HandleSubmit(e, formElement));
             }
 
             container.innerHTML = ''; 
             container.appendChild(formElement);
             
             const newForm = container.querySelector('form');
-            newForm.addEventListener('submit', LedgerApp.HandleSubmit);
 
             // --- Populate datalists ---
             await LedgerApp.PopulateAllDatalists(newForm);
             
-            // --- Initialize dynamic fields (Your function) ---
+            // --- Initialize dynamic fields ---
             LedgerApp.initializeDynamicFields(newForm);
 
-            // Dispatch event
             document.dispatchEvent(new CustomEvent('DynamicFormLoaded', { 
-                detail: { 
-                    form: newForm, 
-                    instanceId: formInstanceId,
-                    formId: formId
-                } 
+                detail: { form: newForm, instanceId: formInstanceId, formId: formId } 
             }));
 
             return newForm;
@@ -353,11 +350,9 @@ const LedgerApp = {
                 
                 if (!data) {
                     input.style.opacity = '0.7';
-                    
                     let rawResponse = await API.Fetch(`Masters/${sheet}`);
                     data = rawResponse?.data || rawResponse?.result || rawResponse;
                     this._masterCache[sheet] = data;
-                    
                     input.style.opacity = '';
                 }
                 
@@ -392,9 +387,7 @@ const LedgerApp = {
                         }
                     });
                     
-                    const event = new CustomEvent('datalistPopulated', { 
-                        detail: { sheet: sheet, listId: listId, count: dataArray.length }
-                    });
+                    const event = new CustomEvent('datalistPopulated', { detail: { sheet: sheet, listId: listId, count: dataArray.length }});
                     input.dispatchEvent(event);
                 }
             } catch (error) {
@@ -434,7 +427,6 @@ const LedgerApp = {
         if (title) title.innerText = 'Create New Ledger';
         
         form.reset();
-        
         const hiddenId = form.querySelector('[name="hiddenRecordId"]');
         if (hiddenId) hiddenId.remove();
     },
@@ -448,7 +440,6 @@ const LedgerApp = {
 
         const data = JSON.parse(decodeURIComponent(encodedData));
 
-        // Inject ID
         let hiddenId = form.querySelector('[name="hiddenRecordId"]');
         if (!hiddenId) {
             hiddenId = document.createElement('input');
@@ -458,18 +449,15 @@ const LedgerApp = {
         }
         hiddenId.value = recordId;
 
-        // First set the ledgerType value to trigger dynamic fields
         const ledgerTypeInput = form.querySelector('[name="ledgerType"]');
         if (ledgerTypeInput && data.ledgerType) {
             ledgerTypeInput.value = data.ledgerType;
-            // Trigger change event to load dynamic fields
             setTimeout(() => {
                 const event = new Event('change', { bubbles: true });
                 ledgerTypeInput.dispatchEvent(event);
             }, 100);
         }
 
-        // Hydrate form fields
         const hydrate = () => {
             Object.keys(data).forEach(key => {
                 const inputs = form.querySelectorAll(`[name="${key}"]`);
@@ -491,71 +479,75 @@ const LedgerApp = {
             });
         };
 
-        // Run hydrate multiple times with delays
         setTimeout(hydrate, 200);
         setTimeout(hydrate, 500);
         setTimeout(hydrate, 1000);
 
-        // UI Polish
         const title = form.querySelector('h5');
         if (title) {
             const displayName = data.name || data.LedgerName || data.ledgerName || '';
             title.innerText = `Edit Ledger: ${displayName}`;
         }
         
-        const btn = form.querySelector('button[type="submit"]');
+        const btn = form.querySelector('button[type="button"]');
         if (btn) {
-            btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> ';
-            // btn.classList.remove('btn-success');
-            // btn.classList.add('btn-primary');
-            btn.title = "Update Data"
+            btn.classList = 'btn btn-primary btn-sm shadow-sm fw-bold px-2 mb-0';
+            btn.innerHTML = '<i class="bi bi-arrow-left me-1"></i>';
+            btn.title = "Back"
         }
     },
 
-    // --- 4. FORM SUBMIT HANDLER ---
-    async HandleSubmit(e) {
-        e.preventDefault();
-        const form = e.target;
+    // --- 4. SECURE FORM SUBMIT HANDLER ---
+    async HandleSubmit(e, formElement) {
+        e.preventDefault();     
+        const form = formElement || e.target.closest('form');
+        if (!form) return;
         
-        const btn = form.querySelector('button[type="submit"]');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processing...';
-        btn.disabled = true;
+        const btn = form.querySelector('button[type="button"]') || form.querySelector('button[type="submit"]');
+        const originalText = btn ? btn.innerHTML : 'Processing...';
+        
+        if (btn) {
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processing...';
+            btn.disabled = true;
+        }
 
         const formData = new FormData(form);
         const payload = Object.fromEntries(formData.entries());
         
-        // Handle unchecked checkboxes
         form.querySelectorAll('input[type="checkbox"]:not(:checked)').forEach(cb => {
             if (cb.name) payload[cb.name] = false; 
         });
 
-        const recordId = payload.hiddenRecordId;
+        const rawRecordId = payload.hiddenRecordId;
+        let recordId = (rawRecordId && rawRecordId !== 'undefined' && rawRecordId !== 'null') ? String(rawRecordId).trim() : null;
+        
         delete payload.hiddenRecordId;
+        payload.updated_at = new Date().toISOString();
 
         try {
-            if (recordId) {
-                let success = false;
-                
-                if (typeof API.UpdateTransaction === 'function') {
-                    success = await API.UpdateTransaction(`Masters/${LedgerApp.DbSheet}`, recordId, payload);
-                } else {
-                    const result = await API.Update(`Masters/${LedgerApp.DbSheet}/${recordId}`, payload);
-                    success = result !== null && result !== undefined;
+            // 🔴 LIVE VERIFICATION: Ensure we match the exact key sitting in the DB
+            const targetCode = String(payload.ledgerCode || payload.LedgerCode || payload.code || '').trim();
+            if (targetCode) {
+                const liveServerCheck = await API.Fetch(`Masters/${LedgerApp.DbSheet}`);
+                const masterNode = liveServerCheck?.data || liveServerCheck?.result || liveServerCheck;
+
+                if (masterNode) {
+                    const directMatchId = Object.keys(masterNode).find(key => 
+                        String(masterNode[key]?.ledgerCode || masterNode[key]?.LedgerCode || masterNode[key]?.code).trim() === targetCode
+                    );
+                    if (directMatchId) recordId = directMatchId;
                 }
-                
-                if (!success) throw new Error("Update operation failed.");
-                
+            }
+
+            if (recordId) {
+                // UPDATE VIA NEW SECURE MASTER UPDATE
+                await API.SecureMasterUpdate(LedgerApp.DbSheet, recordId, payload);
                 App.UI.Notify('Success', 'Ledger Updated Successfully', 'success');
-                
             } else {
-                payload.created_at = new Date().toISOString();
-                payload.updated_at = payload.created_at;
-                
-                const result = await API.Create(`Masters/${LedgerApp.DbSheet}`, payload);
-                
+                // CREATE
+                payload.created_at = payload.updated_at;
+                const result = await API.SaveMaster(`${LedgerApp.DbSheet}`, payload);
                 if (!result) throw new Error("Create operation failed.");
-                
                 App.UI.Notify('Success', 'Ledger Created Successfully', 'success');
             }
             
@@ -565,80 +557,81 @@ const LedgerApp = {
         } catch (error) {
             console.error("Save Error:", error);
             App.UI.Notify('Error', error.message || 'Save failed', 'danger');
-            btn.innerHTML = originalText;
-            btn.disabled = false;
+            if (btn) {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
         }
     },
-// --- 5. DELETE TRANSACTION (With System GL Protection) ---
-async DeleteRecord(id, btnElement) {
-    // First, fetch the record to check if it's a system GL
-    try {
-        const record = await API.Fetch(`Masters/${LedgerApp.DbSheet}/${id}`);
-        const data = record?.data || record?.result || record;
-        
-        // Check if it's a system GL code
-        const glCode = data?.ledgerCode || data?.LedgerCode || data?.code || '';
-        const protectedCodes = ['SYS-SALES', 'SYS-PURCH', 'SYS-TAX'];
-        
-        if (protectedCodes.includes(glCode)) {
-            App.UI.Notify('Error', `Cannot delete system ledger: ${glCode}. This is a protected system record.`, 'danger');
-            return;
+
+    // --- 5. SECURE DELETE TRANSACTION ---
+    async DeleteRecord(id, btnElement) {
+        try {
+            const record = await API.Fetch(`Masters/${LedgerApp.DbSheet}/${id}`);
+            const data = record?.data || record?.result || record;
+            
+            const glCode = data?.ledgerCode || data?.LedgerCode || data?.code || '';
+            const protectedCodes = ['SYS-SALES', 'SYS-PURCH', 'SYS-TAX'];
+            
+            if (protectedCodes.includes(glCode)) {
+                App.UI.Notify('Error', `Cannot delete system ledger: ${glCode}. This is a protected system record.`, 'danger');
+                return;
+            }
+            
+            const name = data?.name || data?.LedgerName || '';
+            if (name.includes('SYS-') || name.includes('System')) {
+                App.UI.Notify('Error', 'Cannot delete system ledger. This is a protected system record.', 'danger');
+                return;
+            }
+        } catch (error) {
+            console.warn('Could not fetch record details:', error);
+            if (!confirm('⚠️ Warning: Could not verify record details.\n\nAre you sure you want to delete this ledger?')) return;
         }
         
-        // Also check by name as fallback
-        const name = data?.name || data?.LedgerName || '';
-        if (name.includes('SYS-') || name.includes('System')) {
-            App.UI.Notify('Error', 'Cannot delete system ledger. This is a protected system record.', 'danger');
-            return;
+        if (!confirm('⚠️ Are you sure you want to delete this ledger?\n\nThis action cannot be undone!')) return;
+        
+        const originalHtml = btnElement.innerHTML;
+        btnElement.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        btnElement.disabled = true;
+        
+        try {
+            // 🔴 LIVE VERIFICATION: Locate current key
+            let finalDbKey = String(id).trim();
+            const row = btnElement.closest('tr');
+            const codeCell = row?.querySelector('.ledger-code')?.innerText?.trim();
+            
+            if (codeCell) {
+                const serverCheck = await API.Fetch(`Masters/${LedgerApp.DbSheet}`);
+                const liveData = serverCheck?.data || serverCheck?.result || serverCheck;
+                
+                if (liveData) {
+                    const realServerKey = Object.keys(liveData).find(k => 
+                        String(liveData[k]?.ledgerCode || liveData[k]?.LedgerCode || liveData[k]?.code).trim() === codeCell
+                    );
+                    if (realServerKey) finalDbKey = realServerKey;
+                }
+            }
+
+            // Execute secure delete
+            await API.SafeMasterDelete(LedgerApp.DbSheet, finalDbKey);
+            
+            if (row) {
+                row.style.transition = 'all 0.3s ease';
+                row.style.opacity = '0';
+                setTimeout(() => row.remove(), 300);
+            }
+            
+            App.UI.Notify('Success', 'Ledger Deleted Successfully', 'success');
+            LedgerApp._masterCache = {};
+            setTimeout(() => LedgerApp.FetchAndRenderList(), 500);
+            
+        } catch (error) {
+            console.error("Delete Error:", error);
+            App.UI.Notify('Error', error.message || 'Delete failed', 'danger');
+            btnElement.innerHTML = originalHtml;
+            btnElement.disabled = false;
         }
-        
-    } catch (error) {
-        console.warn('Could not fetch record details:', error);
-        // Continue with deletion if we can't fetch details (but warn)
-        if (!confirm('⚠️ Warning: Could not verify record details.\n\nAre you sure you want to delete this ledger?')) {
-            return;
-        }
-    }
-    
-    // Confirm deletion
-    if (!confirm('⚠️ Are you sure you want to delete this ledger?\n\nThis action cannot be undone!')) {
-        return;
-    }
-    
-    const originalHtml = btnElement.innerHTML;
-    btnElement.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-    btnElement.disabled = true;
-    
-    try {
-        let success = false;
-        
-        if (typeof API.DeleteTransaction === 'function') {
-            success = await API.DeleteTransaction(`Masters/${LedgerApp.DbSheet}`, id);
-        } else {
-            const result = await API.Delete(`Masters/${LedgerApp.DbSheet}/${id}`);
-            success = result !== null && result !== undefined;
-        }
-        
-        if (!success) throw new Error("Delete operation failed.");
-        
-        const row = btnElement.closest('tr');
-        if (row) {
-            row.style.transition = 'all 0.3s ease';
-            row.style.opacity = '0';
-            setTimeout(() => row.remove(), 300);
-        }
-        
-        App.UI.Notify('Success', 'Ledger Deleted Successfully', 'success');
-        LedgerApp._masterCache = {};
-        setTimeout(() => LedgerApp.FetchAndRenderList(), 500);
-        
-    } catch (error) {
-        console.error("Delete Error:", error);
-        App.UI.Notify('Error', error.message || 'Delete failed', 'danger');
-        btnElement.innerHTML = originalHtml;
-        btnElement.disabled = false;
-    }
-},
+    },
 
     // --- 6. LIST DATA FETCHING ---
     async FetchAndRenderList() {
@@ -669,7 +662,6 @@ async DeleteRecord(id, btnElement) {
                 if (!record || typeof record !== 'object') return;
                 
                 const encoded = encodeURIComponent(JSON.stringify(record));
-                
                 const opBal = parseFloat(record.openingBalance || record.OpeningBalance || record.openingAmount || 0);
                 const ledgerNature = (record.ledgerNature || record.LedgerNature || record.nature || '').toLowerCase();
                 
@@ -679,36 +671,18 @@ async DeleteRecord(id, btnElement) {
                 
                 if (opBal !== 0) {
                     displayBalance = new Intl.NumberFormat('en-IN', { 
-                        style: 'currency', 
-                        currency: 'INR',
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 2
+                        style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 2
                     }).format(Math.abs(opBal));
                     
-                    if (ledgerNature === 'debit' || ledgerNature === 'dr' || ledgerNature === 'asset' || ledgerNature === 'expense') {
-                        if (opBal > 0) {
-                            balanceType = '(Dr)';
-                            color = 'text';
-                        } else {
-                            balanceType = '(Cr)';
-                            color = 'text';
-                        }
-                    } else if (ledgerNature === 'credit' || ledgerNature === 'cr' || ledgerNature === 'liability' || ledgerNature === 'income' || ledgerNature === 'equity') {
-                        if (opBal > 0) {
-                            balanceType = '(Cr)';
-                            color = 'text';
-                        } else {
-                            balanceType = '(Dr)';
-                            color = 'text';
-                        }
+                    if (['debit', 'dr', 'asset', 'expense'].includes(ledgerNature)) {
+                        balanceType = opBal > 0 ? '(Dr)' : '(Cr)';
+                        color = 'text';
+                    } else if (['credit', 'cr', 'liability', 'income', 'equity'].includes(ledgerNature)) {
+                        balanceType = opBal > 0 ? '(Cr)' : '(Dr)';
+                        color = 'text';
                     } else {
-                        if (opBal > 0) {
-                            balanceType = '(Credit)';
-                            color = 'text';
-                        } else {
-                            balanceType = '(Debit)';
-                            color = 'text';
-                        }
+                        balanceType = opBal > 0 ? '(Credit)' : '(Debit)';
+                        color = 'text';
                     }
                 }
 
@@ -723,13 +697,11 @@ async DeleteRecord(id, btnElement) {
                         </td>
                         <td class="text-end pe-4" style="white-space: nowrap;">
                             <button class="btn btn-sm btn-light text-primary border me-1" 
-                                    onclick="LedgerApp.ShowEditForm('${id}', '${encoded}')"
-                                    title="Edit Ledger">
+                                    onclick="LedgerApp.ShowEditForm('${id}', '${encoded}')" title="Edit Ledger">
                                 <i class="bi bi-pencil"></i>
                             </button>
                             <button class="btn btn-sm btn-light text-danger border" 
-                                    onclick="LedgerApp.DeleteRecord('${id}', this)"
-                                    title="Delete Ledger">
+                                    onclick="LedgerApp.DeleteRecord('${id}', this)" title="Delete Ledger">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </td>
@@ -738,15 +710,12 @@ async DeleteRecord(id, btnElement) {
             });
             
             const countEl = document.getElementById('ledgerCount');
-            if (countEl) {
-                countEl.innerText = `(${entries.length} records)`;
-            }
+            if (countEl) countEl.innerText = `(${entries.length} records)`;
             
         } catch (error) {
             console.error("Fetch Error:", error);
             tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-danger">
-                <i class="bi bi-exclamation-triangle fs-3 d-block mb-2"></i>
-                Error: ${error.message}
+                <i class="bi bi-exclamation-triangle fs-3 d-block mb-2"></i> Error: ${error.message}
             </td></tr>`;
         }
     },
@@ -762,49 +731,22 @@ async DeleteRecord(id, btnElement) {
             const comp = row.querySelector('.ledger-company')?.innerText?.toLowerCase() || '';
             const group = row.querySelector('.ledger-group')?.innerText?.toLowerCase() || '';
             
-            const match = code.includes(query) || name.includes(query) || 
-                         comp.includes(query) || group.includes(query);
+            const match = code.includes(query) || name.includes(query) || comp.includes(query) || group.includes(query);
             row.style.display = match ? '' : 'none';
         });
         
         const visible = document.querySelectorAll('#ledgerListBody tr.ledger-row:not([style*="display: none"])').length;
         const countEl = document.getElementById('ledgerVisibleCount');
-        if (countEl) {
-            countEl.innerText = `Showing ${visible} of ${document.querySelectorAll('#ledgerListBody tr.ledger-row').length}`;
-        }
+        if (countEl) countEl.innerText = `Showing ${visible} of ${rows.length}`;
     }
 };
 
-// --- FIX: Override UpdateTransaction to work with Masters path ---
-if (typeof API !== 'undefined' && API.UpdateTransaction) {
-    const originalUpdateTransaction = API.UpdateTransaction;
-    API.UpdateTransaction = async function(formId, key, updatedData) {
-        try {
-            if (formId.includes('Masters')) {
-                await this.DB.ref(`${App.State.userId}/${formId}/${key}`).update(updatedData);
-            } else {
-                await originalUpdateTransaction.call(this, formId, key, updatedData);
-            }
-            App.UI.Notify('Success', 'Record Updated Successfully', 'success');
-            return true;
-        } catch (e) {
-            console.error('Update Error:', e);
-            App.UI.Notify('Error', 'Update failed: ' + e.message, 'danger');
-            return false;
-        }
-    };
-}
-
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    if (document.getElementById('ledgerListBody')) {
-        LedgerApp.FetchAndRenderList();
-    }
+    if (document.getElementById('ledgerListBody')) LedgerApp.FetchAndRenderList();
 });
 
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    if (document.getElementById('ledgerListBody')) {
-        setTimeout(() => LedgerApp.FetchAndRenderList(), 50);
-    }
+    if (document.getElementById('ledgerListBody')) setTimeout(() => LedgerApp.FetchAndRenderList(), 50);
 }
 </script>
