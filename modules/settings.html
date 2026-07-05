@@ -8,27 +8,33 @@
        ========================================================= */
     .settings-wrapper {
         display: flex; 
-        height: 100vh ; 
-        background: var(--bg-light); /* Uses your Deepest Slate */
+        /* Changed from 100vh to 100% to inherit height directly from .content-viewport */
+         height: calc(100vh - 60px); 
+        width: 100%;
+        background: var(--bg-light); 
         font-family: 'Segoe UI', system-ui, sans-serif;
         color: var(--text-main);
+        position: relative;
+        overflow: hidden; /* Keeps scrolling contained inside main content */
     }
 
     /* --- SIDEBAR NAV --- */
     .settings-sidebar {
         width: 260px;  
         border-right: 1px solid var(--border-color);
-        background: var(--bg-surface); /* Uses your Lighter Slate for depth */
+        background: var(--bg-surface); 
         padding: 20px 0; 
         display: flex; 
         flex-direction: column;
+        z-index: 1000;
+        transition: transform 0.3s ease;
     }
 
     .settings-header { padding: 0 20px 20px 20px; border-bottom: 1px solid var(--border-color); margin-bottom: 10px; }
     .settings-header h3 { margin: 0; font-size: 16pt; color: var(--text-main); font-weight: 700; }
     .settings-header p { margin: 4px 0 0 0; font-size: 9pt; color: var(--text-muted); }
 
-    .settings-nav { list-style: none; padding: 0; margin: 0; }
+    .settings-nav { list-style: none; padding: 0; margin: 0; overflow-y: auto; }
     .settings-nav li {
         padding: 12px 20px; cursor: pointer; font-size: 10.5pt; font-weight: 500;
         color: var(--text-main); display: flex; align-items: center; gap: 12px;
@@ -38,12 +44,32 @@
     .settings-nav li.active { 
         background: var(--primary-bg-subtle); 
         color: var(--text-main); 
-        border-left: 3px solid #0d6efd; /* Standard bootstrap primary accent */
+        border-left: 3px solid #0d6efd; 
         font-weight: 600; 
     }
 
-    /* --- CONTENT AREA --- */
-    .settings-content { flex: 1; padding: 30px 40px; overflow-y: auto; background: var(--bg-light); }
+    /* --- CONTENT AREA & FORM --- */
+    .settings-content { 
+        flex: 1; 
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-light); 
+        height: 100%;
+        overflow: hidden; /* Hide overflow here, let form scroll */
+    }
+
+    #settingsForm {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow-y: auto; /* Scrollable area */
+    }
+    
+    .settings-scroll-area {
+        flex: 1 0 auto; /* Allows content to expand and push footer down */
+        padding: 30px 40px;
+    }
+
     .settings-section { display: none; animation: fadeIn 0.3s ease; }
     .settings-section.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -57,7 +83,6 @@
         border: 2px solid var(--border-color); 
         border-radius: 8px;
         padding: 25px; 
-        /* box-shadow: 0 4px 6px rgba(0,0,0,0.2);  */
         margin-bottom: 25px;
     }
     
@@ -68,7 +93,6 @@
     .card-enabler-header h4 { margin: 0; font-size: 13pt; color: var(--text-main); font-weight: 700; }
     .card-enabler-header p { margin: 4px 0 0 0; font-size: 9pt; color: var(--text-muted); }
 
-    /* Hidden fields until enabled */
     .collapsible-fields { display: none; margin-top: 20px; animation: fadeIn 0.3s ease; }
 
     .form-group { margin-bottom: 18px; }
@@ -76,8 +100,8 @@
     
     .form-control {
         width: 100%; padding: 10px 12px; font-size: 10pt; 
-        background: var(--bg-light); /* Dark input background */
-        color: var(--text-main);     /* White input text */
+        background: var(--bg-light); 
+        color: var(--text-main);     
         border: 1px solid var(--border-strong); 
         border-radius: 4px; box-sizing: border-box; 
         transition: border-color 0.15s ease-in-out;
@@ -93,23 +117,81 @@
     
     /* --- ACTION FOOTER --- */
     .settings-footer {
-        position: sticky; bottom: 0; 
+        position: sticky; 
+        bottom: 0; 
         background: var(--bg-surface); 
-        padding: 15px ; 
+        padding: 15px 40px; 
         border-top: 1px solid var(--border-color); 
         display: flex; justify-content: flex-end; gap: 15px;
         z-index: 10;
+        margin-top: auto; /* Guarantees bottom placement */
     }
     .btn { padding: 10px 24px; font-size: 10pt; font-weight: 600; border-radius: 4px; cursor: pointer; border: none; transition: background 0.2s, color 0.2s; }
     .btn-primary { background: #0d6efd; color: #ffffff; }
     .btn-primary:hover { background: #0b5ed7; }
     .btn-outline { background: transparent; border: 1px solid var(--border-strong); color: var(--text-main); }
-    /* .btn-outline:hover { background: var(--border-color); } */
+    
+    /* --- MOBILE RESPONSIVE STYLES --- */
+    .mobile-header {
+        display: none;
+        padding: 15px 20px;
+        background: var(--bg-surface);
+        border-bottom: 1px solid var(--border-color);
+        align-items: center;
+        gap: 15px;
+    }
+    .mobile-header h3 { margin: 0; font-size: 14pt; color: var(--text-main); font-weight: 700; }
+    
+    .hamburger-btn {
+        background: none;
+        border: none;
+        color: var(--text-main);
+        font-size: 18pt;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .sidebar-overlay {
+        display: none;
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+    }
+
+    @media (max-width: 768px) {
+        .mobile-header { display: flex; flex-shrink: 0; }
+        
+        .settings-sidebar {
+            position: absolute;
+            top: 0; bottom: 0; left: 0;
+            transform: translateX(-100%);
+        }
+        .settings-sidebar.show {
+            transform: translateX(0);
+        }
+        
+        .sidebar-overlay.show {
+            display: block;
+        }
+
+        .settings-scroll-area {
+            padding: 20px;
+        }
+        
+        .settings-footer {
+            padding: 15px 20px;
+        }
+
+        .form-row { flex-direction: column; gap: 0; }
+    }
 </style>
 
 <div class="settings-wrapper">
     
-    <aside class="settings-sidebar">
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSettingsSidebar()"></div>
+
+    <aside class="settings-sidebar" id="settingsSidebar">
         <div class="settings-header">
             <h3>ERP Settings</h3>
             <p>Manage system preferences</p>
@@ -123,116 +205,121 @@
     </aside>
 
     <main class="settings-content">
+        <div class="mobile-header">
+            <button class="hamburger-btn" onclick="toggleSettingsSidebar()">&#9776;</button>
+            <h3>Settings</h3>
+        </div>
+
         <form id="settingsForm">
-            
-            <div id="company-profile" class="settings-section active">
-                <h2 class="section-title">Company Profile</h2>
-                <p class="section-subtitle">Manage the primary business identity used in documents.</p>
-                
-                <div class="settings-card">
-                    <div class="card-enabler-header">
-                        <div>
-                            <h4>Company Information</h4>
-                            <p>Enable to override default company details on printed documents.</p>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input section-toggle" type="checkbox" name="enableCompanyInfo" data-target="companyFields" style="transform: scale(1.3); cursor: pointer;">
-                        </div>
-                    </div>
+            <div class="settings-scroll-area">
+                <div id="company-profile" class="settings-section active">
+                    <h2 class="section-title">Company Profile</h2>
+                    <p class="section-subtitle">Manage the primary business identity used in documents.</p>
                     
-                    <div id="companyFields" class="collapsible-fields">
-                        <div class="form-group">
-                            <label>Legal Company Name</label>
-                            <input type="text" class="form-control" name="companyName" placeholder="NEXUS LEDGER SOLUTIONS PVT LTD">
+                    <div class="settings-card">
+                        <div class="card-enabler-header">
+                            <div>
+                                <h4>Company Information</h4>
+                                <p>Enable to override default company details on printed documents.</p>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input section-toggle" type="checkbox" name="enableCompanyInfo" data-target="companyFields" style="transform: scale(1.3); cursor: pointer;">
+                            </div>
                         </div>
-                        <div class="form-row">
-                            <div class="form-group"><label>GSTIN</label><input type="text" class="form-control" name="companyGST" placeholder="22AAAAA0000A1Z5"></div>
-                            <div class="form-group"><label>PAN Number</label><input type="text" class="form-control" name="companyPAN" placeholder="ABCDE1234F"></div>
+                        
+                        <div id="companyFields" class="collapsible-fields">
+                            <div class="form-group">
+                                <label>Legal Company Name</label>
+                                <input type="text" class="form-control" name="companyName" placeholder="NEXUS LEDGER SOLUTIONS PVT LTD">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label>GSTIN</label><input type="text" class="form-control" name="companyGST" placeholder="22AAAAA0000A1Z5"></div>
+                                <div class="form-group"><label>PAN Number</label><input type="text" class="form-control" name="companyPAN" placeholder="ABCDE1234F"></div>
+                            </div>
+                            <div class="form-group"><label>Registered Address</label><textarea class="form-control" name="companyAddress" rows="2" placeholder="Suite 402..."></textarea></div>
                         </div>
-                        <div class="form-group"><label>Registered Address</label><textarea class="form-control" name="companyAddress" rows="2" placeholder="Suite 402..."></textarea></div>
                     </div>
                 </div>
-            </div>
 
-            <div id="banking-settings" class="settings-section">
-                <h2 class="section-title">Banking Details</h2>
-                <p class="section-subtitle">Configure the default receiving bank shown on Tax Invoices.</p>
-                
-                <div class="settings-card">
-                    <div class="card-enabler-header">
-                        <div>
-                            <h4>Default Bank Account</h4>
-                            <p>Enable to show these bank details to customers for payments.</p>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input section-toggle" type="checkbox" name="enableBankingInfo" data-target="bankingFields" style="transform: scale(1.3); cursor: pointer;">
-                        </div>
-                    </div>
+                <div id="banking-settings" class="settings-section">
+                    <h2 class="section-title">Banking Details</h2>
+                    <p class="section-subtitle">Configure the default receiving bank shown on Tax Invoices.</p>
                     
-                    <div id="bankingFields" class="collapsible-fields">
-                        <div class="form-row">
-                            <div class="form-group"><label>Bank Name</label><input type="text" class="form-control" name="bankName" placeholder="HDFC Bank Ltd"></div>
-                            <div class="form-group"><label>Branch Name</label><input type="text" class="form-control" name="bankBranch" placeholder="Cyber City Branch"></div>
+                    <div class="settings-card">
+                        <div class="card-enabler-header">
+                            <div>
+                                <h4>Default Bank Account</h4>
+                                <p>Enable to show these bank details to customers for payments.</p>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input section-toggle" type="checkbox" name="enableBankingInfo" data-target="bankingFields" style="transform: scale(1.3); cursor: pointer;">
+                            </div>
                         </div>
-                        <div class="form-group"><label>Account Name (Beneficiary)</label><input type="text" class="form-control" name="bankAccountName" placeholder="NEXUS LEDGER SOLUTIONS"></div>
-                        <div class="form-row">
-                            <div class="form-group"><label>Account Number</label><input type="text" class="form-control" name="bankAccountNumber" placeholder="50200012345678"></div>
-                            <div class="form-group"><label>IFSC Code</label><input type="text" class="form-control" name="bankIFSC" placeholder="HDFC0001234"></div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group"><label>UPI ID</label><input type="text" class="form-control" name="upiid" placeholder="abcdef@upi"></div>
-                           
+                        
+                        <div id="bankingFields" class="collapsible-fields">
+                            <div class="form-row">
+                                <div class="form-group"><label>Bank Name</label><input type="text" class="form-control" name="bankName" placeholder="HDFC Bank Ltd"></div>
+                                <div class="form-group"><label>Branch Name</label><input type="text" class="form-control" name="bankBranch" placeholder="Cyber City Branch"></div>
+                            </div>
+                            <div class="form-group"><label>Account Name (Beneficiary)</label><input type="text" class="form-control" name="bankAccountName" placeholder="NEXUS LEDGER SOLUTIONS"></div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Account Number</label><input type="text" class="form-control" name="bankAccountNumber" placeholder="50200012345678"></div>
+                                <div class="form-group"><label>IFSC Code</label><input type="text" class="form-control" name="bankIFSC" placeholder="HDFC0001234"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label>UPI ID</label><input type="text" class="form-control" name="upiid" placeholder="abcdef@upi"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div id="print-settings" class="settings-section">
-                <h2 class="section-title">Print Settings</h2>
-                <p class="section-subtitle">Customize automated features on your print templates.</p>
-                
-                <div class="settings-card">
-                    <div class="card-enabler-header">
-                        <div>
-                            <h4>Invoice Terms & Conditions</h4>
-                            <p>Enable to print standard Terms & Conditions on tax invoices.</p>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input section-toggle" type="checkbox" name="enableTerms" data-target="termsFields" style="transform: scale(1.3); cursor: pointer;">
-                        </div>
-                    </div>
+                <div id="print-settings" class="settings-section">
+                    <h2 class="section-title">Print Settings</h2>
+                    <p class="section-subtitle">Customize automated features on your print templates.</p>
                     
-                    <div id="termsFields" class="collapsible-fields">
-                        <div class="form-group">
-                            <textarea class="form-control" name="invoiceTerms" rows="3" placeholder="1. Goods once sold will not be taken back."></textarea>
+                    <div class="settings-card">
+                        <div class="card-enabler-header">
+                            <div>
+                                <h4>Invoice Terms & Conditions</h4>
+                                <p>Enable to print standard Terms & Conditions on tax invoices.</p>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input section-toggle" type="checkbox" name="enableTerms" data-target="termsFields" style="transform: scale(1.3); cursor: pointer;">
+                            </div>
+                        </div>
+                        
+                        <div id="termsFields" class="collapsible-fields">
+                            <div class="form-group">
+                                <textarea class="form-control" name="invoiceTerms" rows="3" placeholder="1. Goods once sold will not be taken back."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <div class="switch-wrapper" style="border-bottom: 1px solid #eee;">
+                            <div class="switch-info"><strong>Print Authorized Signatory</strong><small>Show a signature line on printed documents.</small></div>
+                            <div class="form-check form-switch"><input class="form-check-input" type="checkbox" name="showSignatory" style="transform: scale(1.3);"></div>
+                        </div>
+                        <div class="switch-wrapper">
+                            <div class="switch-info"><strong>Show Amount in Words</strong><small>Auto-convert grand totals to English words.</small></div>
+                            <div class="form-check form-switch"><input class="form-check-input" type="checkbox" name="showAmountInWords" style="transform: scale(1.3);"></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="settings-card">
-                    <div class="switch-wrapper" style="border-bottom: 1px solid #eee;">
-                        <div class="switch-info"><strong>Print Authorized Signatory</strong><small>Show a signature line on printed documents.</small></div>
-                        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" name="showSignatory" style="transform: scale(1.3);"></div>
-                    </div>
-                    <div class="switch-wrapper">
-                        <div class="switch-info"><strong>Show Amount in Words</strong><small>Auto-convert grand totals to English words.</small></div>
-                        <div class="form-check form-switch"><input class="form-check-input" type="checkbox" name="showAmountInWords" style="transform: scale(1.3);"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="system-prefs" class="settings-section">
-                <h2 class="section-title">System Preferences</h2>
-                <p class="section-subtitle">Local UI and behavior settings.</p>
-                
-                <div class="settings-card">
-                    <div class="switch-wrapper">
-                        <div class="switch-info">
-                            <strong>Dark Mode</strong>
-                            <small>Enable dark theme for the ERP dashboard.</small>
-                        </div>
-                        <div class="form-check form-switch pt-1">
-                            <input class="form-check-input" type="checkbox" id="darkModeToggleset" style="transform: scale(1.3); cursor: pointer;">
+                <div id="system-prefs" class="settings-section">
+                    <h2 class="section-title">System Preferences</h2>
+                    <p class="section-subtitle">Local UI and behavior settings.</p>
+                    
+                    <div class="settings-card">
+                        <div class="switch-wrapper">
+                            <div class="switch-info">
+                                <strong>Dark Mode</strong>
+                                <small>Enable dark theme for the ERP dashboard.</small>
+                            </div>
+                            <div class="form-check form-switch pt-1">
+                                <input class="form-check-input" type="checkbox" id="darkModeToggleset" style="transform: scale(1.3); cursor: pointer;">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -245,6 +332,27 @@
         </form>
     </main>
 </div>
+
+<script>
+    function toggleSettingsSidebar() {
+        const sidebar = document.getElementById('settingsSidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        
+        if (sidebar && overlay) {
+            sidebar.classList.toggle('show');
+            overlay.classList.toggle('show');
+        }
+    }
+
+    // Optional: Auto-close sidebar on mobile when a nav item is clicked
+    document.querySelectorAll('#settingsTabs li').forEach(item => {
+        item.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                toggleSettingsSidebar();
+            }
+        });
+    });
+</script>
 
 <script>
 (function() {

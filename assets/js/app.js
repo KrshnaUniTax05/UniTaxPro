@@ -134,41 +134,64 @@ const App = {
      * This ensures JS inside modules like sales-inv.html actually runs.
      */
     async Router(path) {
-        const viewport = document.getElementById('main-content');
-        const loader = document.getElementById('section-loader');
+    const viewport = document.getElementById('main-content');
+    const loader = document.getElementById('section-loader');
+    
+    if(loader) loader.style.display = 'block';
+    viewport.style.opacity = '0.5';
+
+    // 1. Separate the base module name from the URL parameters
+    const [basePath, queryString] = path.split('?');
+
+    try {
+        // Fetch using only the base path so the network request doesn't fail
+        const res = await fetch(`modules/${basePath}.html`);
+        if(!res.ok) throw new Error("Module not found");
+        const html = await res.text();
         
-        if(loader) loader.style.display = 'block';
-        viewport.style.opacity = '0.5';
+        // 2. Inject HTML content
+        viewport.innerHTML = html;
+        this.State.activeModule = basePath;
 
-        try {
-            const res = await fetch(`modules/${path}.html`);
-            if(!res.ok) throw new Error("Module not found");
-            const html = await res.text();
+        // 3. 🔥 THE SCRIPT FIX: Manually find and execute scripts in the injected HTML
+        const scripts = viewport.querySelectorAll("script");
+        scripts.forEach(oldScript => {
+            const newScript = document.createElement("script");
+            Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+            newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+            oldScript.parentNode.replaceChild(newScript, oldScript);
+        });
+
+        // 4. Initialize ERP Logic (Lookups, Uniqueness, etc.)
+        this.InitERPLogic(basePath);
+
+        // 5. 🔥 DEEP LINK HANDLER: If an ID was passed, open the document
+        if (queryString) {
+            const urlParams = new URLSearchParams(queryString);
+            const docId = urlParams.get('id');
             
-            // 1. Inject HTML content
-            viewport.innerHTML = html;
-            this.State.activeModule = path;
-
-            // 2. 🔥 THE SCRIPT FIX: Manually find and execute scripts in the injected HTML
-            const scripts = viewport.querySelectorAll("script");
-            scripts.forEach(oldScript => {
-                const newScript = document.createElement("script");
-                Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-                newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-                oldScript.parentNode.replaceChild(newScript, oldScript);
-            });
-
-            // 3. Initialize ERP Logic (Lookups, Uniqueness, etc.)
-            this.InitERPLogic(path);
-
-        } catch (e) {
-            console.error("Router Failure:", e);
-            viewport.innerHTML = `<div class="alert alert-danger m-3">Critical Error: Module [${path}] failed to load.</div>`;
-        } finally {
-            if(loader) loader.style.display = 'none';
-            viewport.style.opacity = '1';
+            if (docId) {
+                // Use a short timeout to ensure the module's scripts and Firebase have finished booting
+                setTimeout(() => {
+                    if (typeof window.loadApprovalDoc === 'function') {
+                        // Ensure the view switches to the document viewer
+                        const tabToggle = document.querySelector('[data-bs-target="#inbox-view"]');
+                        if (tabToggle) tabToggle.click();
+                        
+                        window.loadApprovalDoc(docId);
+                    }
+                }, 500); 
+            }
         }
-    },
+
+    } catch (e) {
+        console.error("Router Failure:", e);
+        viewport.innerHTML = `<div class="alert alert-danger m-3">Critical Error: Module [${basePath}] failed to load.</div>`;
+    } finally {
+        if(loader) loader.style.display = 'none';
+        viewport.style.opacity = '1';
+    }
+},
 
     /**
      * ERP MODULE INITIALIZER
@@ -515,8 +538,8 @@ window.renderTasks = function() {
         if (Object.keys(tasks).length === 0) {
     tbody.innerHTML = `
         <tr>
-            <td colspan="4" class="text-center py-4">
-                <div class="d-flex flex-column align-items-center justify-content-center text-muted">
+            <td colspan="4" class="text-center ">
+                <div class="d-flex flex-column align-items-start justify-content-center text-muted">
                     <i class="bi bi-check-circle-fill fs-2 text-success mb-2 opacity-75"></i>
                     <p class="mb-0 fw-bold">All caught up!</p>
                     <small class="small">No pending tasks found.</small>

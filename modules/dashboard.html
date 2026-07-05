@@ -1,189 +1,172 @@
-<!-- UniTax Pro: Dashboard Module -->
-<div class="animate-in m-2">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<!-- UniTax Pro: Professional Executive Workspace -->
+<head>
+    <!-- Chart.js Professional CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+
+
+<div class="dashboard-wrapper animate-in p-4">
+
+    <!-- 1. TOP BAR -->
+    <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-3">
         <div>
-            <h3 class="fw-bold mb-0">Financial Overview</h3>
-            <p class="text-muted small">Real-time performance metrics for your organization.</p>
+            <h1 class="fw-bold h3 mb-1" style="font-family: 'Sora', sans-serif;">Executive Workspace</h1>
+            <div class="small text-muted d-flex align-items-center gap-2">
+                <span class="p-1 bg-success rounded-circle" style="width:6px;height:6px;"></span>
+                <span id="dashSyncTime">Data synchronized just now</span>
+            </div>
         </div>
         <div class="d-flex gap-2">
-            <button class="btn btn-white border shadow-sm btn-sm" onclick="App.Router('dashboard')">
+            <button class="btn btn-outline-secondary btn-sm fw-bold border bg-white" onclick="DashboardApp.ExportCSV()">
+                <i class="bi bi-download me-1"></i> Export CSV
+            </button>
+            <button class="btn btn-primary btn-sm fw-bold px-3 shadow-sm" onclick="DashboardApp.Refresh()">
                 <i class="bi bi-arrow-clockwise me-1"></i> Refresh
             </button>
-            <button class="btn btn-primary shadow-sm btn-sm">
-                <i class="bi bi-file-earmark-pdf me-1"></i> Export Report
-            </button>
         </div>
     </div>
 
-    <!-- Metrics Row -->
+    <!-- 2. FILTER BAR -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-3">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-muted text-uppercase mb-1" style="font-size: 10px;">Period</label>
+                    <select id="dashPeriod" class="form-select form-select-sm fw-semibold" onchange="DashboardApp.UpdateUI()">
+                        <option value="this_month">This Month</option>
+                        <option value="this_quarter">This Quarter</option>
+                        <option value="this_year">Financial Year</option>
+                        <option value="all_time" selected>All Time</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-muted text-uppercase mb-1" style="font-size: 10px;">Quick Search</label>
+                    <input type="text" id="dashSearch" class="form-control form-control-sm" placeholder="Search Party or Doc No..." oninput="DashboardApp.UpdateUI()">
+                </div>
+                <div class="col-md-6 text-end align-self-end">
+                    <div class="btn-group btn-group-sm border rounded shadow-sm">
+                        <button class="btn btn-white border-0 py-2 px-3" onclick="DashboardApp.UpdateUI()">All Records</button>
+                        <button class="btn btn-white border-0 border-start py-2 px-3 text-danger fw-bold" onclick="DashboardApp.FilterOverdue()">Overdue Only</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. KPI GRID -->
     <div class="row g-3 mb-4">
         <div class="col-md-3">
-            <div class="card p-3 border-0 shadow-sm border-start border-primary border-4">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="text-muted small fw-bold text-uppercase mb-1">Total Revenue</p>
-                        <h3 class="fw-bold mb-0">₹ 12.45L</h3>
+            <div class="card border-0 shadow-sm border-start border-primary border-4">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <span class="small fw-bold text-muted text-uppercase">Sales Revenue</span>
+                        <span class="badge bg-success-subtle text-success" id="revChange">+0%</span>
                     </div>
-                    <div class="bg-primary bg-opacity-10 p-2 rounded text-primary">
-                        <i class="bi bi-graph-up-arrow fs-4"></i>
-                    </div>
-                </div>
-                <div class="mt-2 small text-success">
-                    <i class="bi bi-caret-up-fill"></i> 12% <span class="text-muted">vs last month</span>
+                    <h2 class="fw-bold my-2 font-monospace" id="dashMetricRev">₹0</h2>
+                    <div class="small text-muted" id="kRevSub">0 invoices in range</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card p-3 border-0 shadow-sm border-start border-warning border-4">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="text-muted small fw-bold text-uppercase mb-1">Outstanding</p>
-                        <h3 class="fw-bold mb-0">₹ 3.12L</h3>
+            <div class="card border-0 shadow-sm border-start border-warning border-4">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <span class="small fw-bold text-muted text-uppercase">Receivables</span>
+                        <span class="badge bg-warning-subtle text-warning" id="outChange">0 Overdue</span>
                     </div>
-                    <div class="bg-warning bg-opacity-10 p-2 rounded text-warning">
-                        <i class="bi bi-clock-history fs-4"></i>
-                    </div>
-                </div>
-                <div class="mt-2 small text-danger">
-                    <i class="bi bi-exclamation-triangle"></i> 5 Overdue <span class="text-muted">vouchers</span>
+                    <h2 class="fw-bold my-2 font-monospace" id="dashMetricOut">₹0</h2>
+                    <div class="small text-muted" id="kOutSub">Pending collection</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card p-3 border-0 shadow-sm border-start border-success border-4">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="text-muted small fw-bold text-uppercase mb-1">Net Cashflow</p>
-                        <h3 class="fw-bold mb-0">₹ 8.20L</h3>
+            <div class="card border-0 shadow-sm border-start border-success border-4">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <span class="small fw-bold text-muted text-uppercase">Net Cash Flow</span>
+                        <span class="badge bg-primary-subtle text-primary" id="cashChange">+₹0</span>
                     </div>
-                    <div class="bg-success bg-opacity-10 p-2 rounded text-success">
-                        <i class="bi bi-safe fs-4"></i>
-                    </div>
-                </div>
-                <div class="mt-2 small text-muted">
-                    Last sync: <span id="sync-time">Just now</span>
+                    <h2 class="fw-bold my-2 font-monospace" id="dashMetricCash">₹0</h2>
+                    <div class="small text-muted" id="kCashSub">vs Opening Balance</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card p-3 border-0 shadow-sm border-start border-info border-4">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="text-muted small fw-bold text-uppercase mb-1">Tax Liability</p>
-                        <h3 class="fw-bold mb-0">₹ 45.2K</h3>
+            <div class="card border-0 shadow-sm border-start border-info border-4">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <span class="small fw-bold text-muted text-uppercase">Tax Liability</span>
+                        <span class="badge bg-light text-dark border" id="dashMetricLedgers">0 Ledgers</span>
                     </div>
-                    <div class="bg-info bg-opacity-10 p-2 rounded text-info">
-                        <i class="bi bi-percent fs-4"></i>
-                    </div>
-                </div>
-                <div class="mt-2 small text-muted">
-                    Estimated for <span class="fw-bold">Q3 2024</span>
+                    <h2 class="fw-bold my-2 font-monospace" id="dashMetricTax">₹0</h2>
+                    <div class="small text-muted">Est. payable for period</div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- 4. ANALYTICS GRID -->
     <div class="row g-4">
-        <!-- Recent Transactions -->
+        <!-- Main Chart & Table -->
         <div class="col-lg-8">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold mb-0">Recent Vouchers</h6>
-                    <a href="#" data-module="reports/gl-statement" class="small text-decoration-none">View All</a>
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0">Financial Performance (Revenue vs. Expenses)</h6>
+                    <span class="small text-muted">Last 6 Months</span>
+                </div>
+                <div class="card-body">
+                    <div style="height: 300px;"><canvas id="revExpChart"></canvas></div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0">Live Transaction Feed</h6>
+                    <span class="small badge bg-light text-dark" id="txnCount">0 results</span>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0 small">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="ps-3">Date</th>
-                                <th>Ref No.</th>
-                                <th>Party Name</th>
-                                <th>Type</th>
-                                <th class="text-end pe-3">Amount</th>
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr class="small text-muted text-uppercase">
+                                <th class="ps-3 border-0">Date</th>
+                                <th class="border-0">Doc No.</th>
+                                <th class="border-0">Account</th>
+                                <th class="border-0">Type</th>
+                                <th class="border-0 text-end pe-3">Amount</th>
                             </tr>
                         </thead>
-                        <tbody id="recent-vouchers-list">
-                            <!-- Placeholder Data -->
-                            <tr>
-                                <td class="ps-3">22 Oct 2024</td>
-                                <td class="font-monospace fw-bold text-primary">SL/2024/771A</td>
-                                <td>Reliance Industries Ltd</td>
-                                <td><span class="badge bg-success-subtle text-success">SALES</span></td>
-                                <td class="text-end pe-3 fw-bold">₹ 52,000.00</td>
-                            </tr>
-                            <tr>
-                                <td class="ps-3">21 Oct 2024</td>
-                                <td class="font-monospace fw-bold text-primary">BP/2024/0921</td>
-                                <td>HDFC Bank Ltd</td>
-                                <td><span class="badge bg-primary-subtle text-primary">PAYMENT</span></td>
-                                <td class="text-end pe-3 fw-bold">₹ 1,20,000.00</td>
-                            </tr>
-                            <tr>
-                                <td class="ps-3">20 Oct 2024</td>
-                                <td class="font-monospace fw-bold text-primary">PR/2024/X92</td>
-                                <td>Amazon Web Services</td>
-                                <td><span class="badge bg-danger-subtle text-danger">PURCHASE</span></td>
-                                <td class="text-end pe-3 fw-bold">₹ 8,400.00</td>
-                            </tr>
+                        <tbody id="txnBody" class="small">
+                            <!-- JS Appends Rows Here -->
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- Quick Actions Grid -->
+        <!-- Sidebar Widgets -->
         <div class="col-lg-4">
+            
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white py-3">
-                    <h6 class="fw-bold mb-0">Quick Actions</h6>
-                </div>
+                <div class="card-header bg-white py-3 border-bottom"><h6 class="fw-bold mb-0">High-Value Stock</h6></div>
+                <table class="table table-sm mb-0">
+                    <tbody id="stockBody" class="small"></tbody>
+                </table>
+            </div>
+            <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body">
+                    <h6 class="fw-bold small text-uppercase text-muted mb-3">System Access</h6>
                     <div class="row g-2 text-center">
-                        <div class="col-6">
-                            <a href="#" data-module="transactions/sales-inv" class="text-decoration-none">
-                                <div class="p-3 border rounded hover-shadow transition">
-                                    <i class="bi bi-file-earmark-plus fs-3 text-primary"></i>
-                                    <div class="small mt-1 text-dark fw-medium">Sales Inv</div>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="col-6">
-                            <a href="#" data-module="transactions/receipt-pay" class="text-decoration-none">
-                                <div class="p-3 border rounded hover-shadow transition">
-                                    <i class="bi bi-cash-stack fs-3 text-success"></i>
-                                    <div class="small mt-1 text-dark fw-medium">Bank Entry</div>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="col-6">
-                            <a href="#" data-module="masters/ledger-cw" class="text-decoration-none">
-                                <div class="p-3 border rounded hover-shadow transition">
-                                    <i class="bi bi-person-gear fs-3 text-info"></i>
-                                    <div class="small mt-1 text-dark fw-medium">New Ledger</div>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="col-6">
-                            <a href="#" data-module="reports/gl-statement" class="text-decoration-none">
-                                <div class="p-3 border rounded hover-shadow transition">
-                                    <i class="bi bi-journal-text fs-3 text-warning"></i>
-                                    <div class="small mt-1 text-dark fw-medium">View GL</div>
-                                </div>
-                            </a>
-                        </div>
+                        <div class="col-6"><div class="quick-tile p-3 border rounded-3 bg-light" onclick="App.Router('transactions/sales-inv')"><i class="bi bi-file-earmark-plus text-primary fs-4"></i><span class="d-block small mt-1 fw-bold">New Sale</span></div></div>
+                        <div class="col-6"><div class="quick-tile p-3 border rounded-3 bg-light" onclick="App.Router('transactions/receipt-vch')"><i class="bi bi-cash-stack text-success fs-4"></i><span class="d-block small mt-1 fw-bold">Receipt</span></div></div>
                     </div>
                 </div>
             </div>
-
-            <!-- System Message -->
-            <div class="card bg-dark text-white border-0 shadow-sm">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center mb-2">
-                        <i class="bi bi-info-circle text-info me-2"></i>
-                        <span class="small fw-bold">Compliance Alert</span>
-                    </div>
-                    <p class="small opacity-75 mb-0">GSTR-1 filing for October is due in 3 days. Please reconcile all pending Sales Invoices.</p>
+            
+            <div class="card border-0 shadow-sm bg-dark text-white">
+                <div class="card-header bg-transparent border-bottom border-secondary py-3"><h6 class="fw-bold mb-0 text-white">Receivables Aging</h6></div>
+                <div class="card-body">
+                    <div style="height: 160px;"><canvas id="agingChart"></canvas></div>
+                    <div id="agingList" class="mt-3"></div>
                 </div>
             </div>
         </div>
@@ -191,22 +174,211 @@
 </div>
 
 <style>
-    .animate-in {
-        animation: slideUp 0.4s ease-out;
-    }
-    @keyframes slideUp {
-        from { transform: translateY(20px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-    }
-    .hover-shadow:hover {
-        background-color: #f8f9fa;
-        border-color: #0d6efd !important;
-        transform: translateY(-2px);
-    }
-    body.dark-mode .hover-shadow:hover{
-        color: #0d6efd !important;
-    }
-    .transition {
-        transition: all 0.2s ease-in-out;
-    }
+    .quick-tile { cursor: pointer; transition: all 0.2s; }
+    .quick-tile:hover { background: #fff !important; border-color: #0d6efd !important; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transform: translateY(-2px); }
+    .font-monospace { font-family: 'JetBrains Mono', monospace !important; }
+    .badge-xs { font-size: 10px; padding: 3px 8px; }
+    .bg-dark { background-color: #0B1220 !important; }
 </style>
+
+<script>
+/**
+ * UNITAX PRO — LIVE DASHBOARD ENGINE
+ */
+(function() {
+    let RAW_TRANSACTIONS = [];
+    let RAW_STOCK = [];
+    let LEDGER_MAP = {};
+    let mainChart = null, agingChart = null;
+
+    window.DashboardApp = {
+        async Refresh() {
+            const syncEl = document.getElementById('dashSyncTime');
+            if(syncEl) syncEl.innerHTML = '<i class="bi bi-arrow-repeat spinner-border spinner-border-sm me-1"></i> syncing...';
+
+            try {
+                // FETCH DATA
+                const [sales, purchase, receipt, payment, stock, ledgers] = await Promise.all([
+                    API.Fetch('Transactions/SalesInvoiceForm'),
+                    API.Fetch('Transactions/PurchaseInvoiceForm'),
+                    API.Fetch('Transactions/ReceiptVoucherForm'),
+                    API.Fetch('Transactions/PaymentVoucherForm'),
+                    API.Fetch('Masters/Stock'),
+                    API.Fetch('Masters/LedgerCreation')
+                ]);
+
+                // MAP LEDGERS
+                LEDGER_MAP = {};
+                if(ledgers) Object.values(ledgers).forEach(l => {
+                    LEDGER_MAP[(l.ledgerCode || l.name || "").toString().toLowerCase()] = l.name;
+                });
+
+                // PROCESS TRANSACTIONS
+                RAW_TRANSACTIONS = [];
+                const add = (data, type) => {
+                    if(!data) return;
+                    Object.values(data).forEach(vch => {
+                        const h = vch.header || {};
+                        const amt = parseFloat(h.grandTotal || h.total_amount || h.total || 0);
+                        RAW_TRANSACTIONS.push({
+                            date: h.date || h.voucher_date || new Date().toISOString(),
+                            no: h.doc_no || h.Invoice || "N/A",
+                            party: LEDGER_MAP[(h.entity || "").toString().toLowerCase()] || h.entity || "General",
+                            type: type,
+                            amt: amt,
+                            tax: parseFloat(h.taxTotal || 0),
+                            status: h.status || 'posted'
+                        });
+                    });
+                };
+
+                add(sales, 'SALES'); add(purchase, 'PURCH'); add(receipt, 'RECEIPT'); add(payment, 'PAYMENT');
+                
+                RAW_STOCK = stock ? Object.values(stock) : [];
+                
+                this.UpdateUI();
+
+                if(syncEl) syncEl.innerHTML = `<i class="bi bi-check-circle-fill text-success me-1"></i> Synced ${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`;
+            } catch (err) {
+                console.error("Dashboard Engine Fault:", err);
+                if(syncEl) syncEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill text-danger me-1"></i> Sync Error';
+            }
+        },
+
+        getFiltered() {
+            const period = document.getElementById('dashPeriod')?.value || 'all_time';
+            const search = document.getElementById('dashSearch')?.value?.toLowerCase() || '';
+
+            return RAW_TRANSACTIONS.filter(t => {
+                const d = new Date(t.date);
+                const n = new Date();
+                let match = true;
+                if (period === 'this_month') match = (d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear());
+                if (period === 'this_year') {
+                    const fy = n.getMonth() >= 3 ? n.getFullYear() : n.getFullYear() - 1;
+                    const dfy = d.getMonth() >= 3 ? d.getFullYear() : d.getFullYear() - 1;
+                    match = (fy === dfy);
+                }
+                const matchesSearch = t.party.toLowerCase().includes(search) || t.no.toLowerCase().includes(search);
+                return match && matchesSearch;
+            });
+        },
+
+        UpdateUI() {
+            const rows = this.getFiltered();
+            let metrics = { rev: 0, purch: 0, rec: 0, pay: 0, taxOut: 0, taxIn: 0, overdue: 0 };
+
+            rows.forEach(t => {
+                if(t.type === 'SALES') { metrics.rev += t.amt; metrics.taxOut += t.tax; }
+                if(t.type === 'PURCH') { metrics.purch += t.amt; metrics.taxIn += t.tax; }
+                if(t.type === 'RECEIPT') { metrics.rec += t.amt; }
+                if(t.type === 'PAYMENT') { metrics.pay += t.amt; }
+            });
+
+            // UPDATING KPIs
+            document.getElementById('dashMetricRev').textContent = Utils.FormatINR(metrics.rev);
+            document.getElementById('dashMetricOut').textContent = Utils.FormatINR(metrics.rev - metrics.rec);
+            document.getElementById('dashMetricCash').textContent = Utils.FormatINR(metrics.rec - metrics.pay);
+            document.getElementById('dashMetricTax').textContent = Utils.FormatINR(metrics.taxOut - metrics.taxIn);
+            document.getElementById('dashMetricLedgers').textContent = `${Object.keys(LEDGER_MAP).length} Ledgers`;
+            document.getElementById('kRevSub').textContent = `${rows.filter(t=>t.type==='SALES').length} invoices in range`;
+            document.getElementById('cashChange').textContent = (metrics.rec - metrics.pay >= 0 ? '+' : '-') + Utils.FormatINR(Math.abs(metrics.rec - metrics.pay));
+
+            // TRANSACTION TABLE
+            const latest = rows.sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 7);
+            document.getElementById('txnCount').textContent = `${rows.length} total`;
+            document.getElementById('txnBody').innerHTML = latest.map(t => {
+                const badge = { 'SALES': 'bg-primary-subtle text-primary', 'PURCH': 'bg-danger-subtle text-danger', 'RECEIPT': 'bg-success-subtle text-success', 'PAYMENT': 'bg-warning-subtle text-warning' }[t.type];
+                return `
+                    <tr>
+                        <td>${Utils.FormatDate(t.date)}</td>
+                        <td class="font-monospace fw-bold text-dark" style="font-size:11px">${t.no}</td>
+                        <td class="text-truncate" style="max-width:150px">${t.party}</td>
+                        <td><span class="badge badge-xs ${badge}">${t.type}</span></td>
+                        <td class="text-end fw-bold text-dark">${Utils.FormatINR(t.amt)}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            // STOCK LIST
+            const topStock = RAW_STOCK.sort((a,b) => (parseFloat(b.openingAmount)||0) - (parseFloat(a.openingAmount)||0)).slice(0, 5);
+            document.getElementById('stockBody').innerHTML = topStock.map(s => `
+                <tr class="border-bottom-0">
+                    <td class="ps-3"><div class="fw-bold text-dark">${s.itemName}</div><div class="text-muted" style="font-size:10px">${s.Stock_Code}</div></td>
+                    <td class="text-end pe-3 align-middle fw-bold text-success">${Utils.FormatINR(s.openingAmount || 0)}</td>
+                </tr>
+            `).join('');
+
+            this.RenderCharts(metrics.rev, metrics.purch, metrics.rec - metrics.pay);
+            this.RenderAging(rows);
+        },
+
+        RenderCharts(rev, exp, net) {
+            const ctx = document.getElementById('revExpChart').getContext('2d');
+            if(mainChart) mainChart.destroy();
+            mainChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Revenue', 'Direct Expenses', 'Net Balance'],
+                    datasets: [{
+                        data: [rev, exp, net],
+                        backgroundColor: ['#0052ea', '#ef4444', '#10b981'],
+                        borderRadius: 6, barThickness: 45
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { borderDash: [4, 4] } }, x: { grid: { display: false } } }
+                }
+            });
+        },
+
+        RenderAging(rows) {
+            const ctx = document.getElementById('agingChart').getContext('2d');
+            const now = new Date();
+            const buckets = { "0-30": 0, "31-60": 0, "60+": 0 };
+            rows.filter(t => t.type === 'SALES').forEach(t => {
+                const diff = Math.floor((now - new Date(t.date)) / 86400000);
+                if(diff <= 30) buckets["0-30"] += t.amt;
+                else if(diff <= 60) buckets["31-60"] += t.amt;
+                else buckets["60+"] += t.amt;
+            });
+
+            if(agingChart) agingChart.destroy();
+            agingChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(buckets),
+                    datasets: [{ data: Object.values(buckets), backgroundColor: ['#3b82f6', '#f59e0b', '#ef4444'], borderWidth: 0 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '78%',
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            const colors = ['#3b82f6', '#f59e0b', '#ef4444'];
+            document.getElementById('agingList').innerHTML = Object.entries(buckets).map(([k,v], i) => `
+                <div class="d-flex justify-content-between small mb-1 opacity-75">
+                    <span><i class="bi bi-circle-fill me-2" style="color:${colors[i]}; font-size:8px"></i>${k} Days</span>
+                    <span class="fw-bold">${Utils.FormatINR(v)}</span>
+                </div>
+            `).join('');
+        },
+
+        ExportCSV() {
+            let csv = "Date,DocNo,Party,Type,Amount\n";
+            this.getFiltered().forEach(t => csv += `${t.date},${t.no},${t.party},${t.type},${t.amt}\n`);
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `UniTax_Report_${new Date().toLocaleDateString()}.csv`);
+            a.click();
+        }
+    };
+
+    DashboardApp.Refresh();
+})();
+</script>

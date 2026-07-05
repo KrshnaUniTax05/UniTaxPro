@@ -86,6 +86,7 @@
                         <option value="transactions/payment-vch">Payment Voucher (Transaction)</option>
                         <option value="reports/gl-statement">General Ledger Statement</option>
                         <option value="reports/inventoryreturn">Inventory Statement</option>
+                        <option value="reports/approvalmanagementsystem">Approval Management System</option>
                     </datalist>
                 </div>
                 
@@ -150,6 +151,11 @@
                                 <i class="bi bi-gear me-2"></i> Settings
                             </a>
                         </li>
+                        <li>
+                            <a class="dropdown-item rounded py-2" href="#" onclick="App.Router('utilities/aboutus')">
+                                <i class="bi bi-building me-2"></i> About Us
+                            </a>
+                        </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <a class="dropdown-item rounded py-2 text-danger fw-bold" href="#" id="logoutButton">
@@ -180,11 +186,11 @@
             </div>
         </section>
 
+        <div class="d-flex justify-content-between align-items-center mb-2 taskheading">
+            <h6 class="fw-bold text-uppercase small text-muted mb-0">Notes & Tasks</h6>
+            <button class="btn btn-xs btn-outline-primary py-0 px-1" onclick="opentaskmodal()" style="font-size: 10px;" aria-label="Add new task">+ Add</button>
+        </div>
         <section id="taskSection" class="mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 class="fw-bold text-uppercase small text-muted mb-0">Notes & Tasks</h6>
-                <button class="btn btn-xs btn-outline-primary py-0 px-1" onclick="opentaskmodal()" style="font-size: 10px;" aria-label="Add new task">+ Add</button>
-            </div>
             <div class="card border p-0 overflow-hidden h-100">
                 <div class="table-responsive h-100">
                     <table class="table table-sm mb-0 small">

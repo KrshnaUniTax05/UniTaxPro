@@ -150,3 +150,5 @@ document.addEventListener('input', (e) => {
     if (e.target.classList.contains('proper-case')) e.target.value = Utils.ToProperCase(e.target.value);
     if (e.target.classList.contains('upper-case')) e.target.value = e.target.value.toUpperCase();
 });
+
+
