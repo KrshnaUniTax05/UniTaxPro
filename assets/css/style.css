@@ -17,6 +17,7 @@
     --bg-surface: #ffffff;
     
     --border-color: #e2e8f0;
+    --header: #EAEFEF;
     --border-strong: #cbd5e1;
     
     --text-main: #0f172a;
@@ -31,6 +32,20 @@
 /* 1. Global Resets & Typography */
 *, *::before, *::after { box-sizing: border-box; }
 
+
+
+.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+.dropdown-item:active {
+    background-color: var(--primary-color) !important;
+    color: var(--primary-bg-subtle) !important;
+}
+
+.btn-primary{
+    background-color: var(--primary-color) !important;
+
+}
 body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     /* font-family: 'Noto Sans'; */
@@ -138,6 +153,10 @@ body {
 #taskTableBody tbody{
     
     scrollbar-width: thin;
+}
+#taskTableBody td {
+    border-bottom: 1px var(--border-strong) solid ;
+    box-shadow: none;
 }
 #taskSection .card { 
     
@@ -268,9 +287,10 @@ body {
     position: sticky;
     top: 0;
     z-index: 10; 
-    background-color: var(--bg-surface, #ffffff); 
-    padding: 15px 20px;
-    border-bottom: 1px solid var(--border-color, #eaeaea);
+    /* background:  var(--text-muted) ; */
+    background-color: var(--header) !important; 
+    padding: 10px 20px !important;
+    border: 1px solid var(--border-color, #eaeaea);
     flex-shrink: 0;            /* Prevents header from shrinking */
 }
 
@@ -646,6 +666,11 @@ body.dark-mode .sticky-top { background-color: var(--bg-surface) !important; z-i
     overflow: hidden;         /* Clips content that breaks the box */
     text-overflow: ellipsis;  /* Adds '...' if text is too long */
     white-space: normal;      /* Allows wrapping while respecting bounds */
+}
+
+#notificationList{
+    overflow-y: scroll !important;
+    max-height:  250px;
 }
 
 @media (max-width: 767px) {
