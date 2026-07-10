@@ -4,10 +4,12 @@
  */
 // console.log('App.js initialized')
 const App = {
-    State: {
-        userId: localStorage.getItem('userloginid'),
+   State: {
+        userId: localStorage.getItem('workspaceId') || localStorage.getItem('userloginid'),
+        currentuserId: localStorage.getItem('userloginid'),
         userName: localStorage.getItem('userName'),
         userRole: localStorage.getItem('userrole'),
+        workspaceId: localStorage.getItem('workspaceId'),
         activeModule: null,
         isDarkMode: localStorage.getItem('darkMode') === 'enabled'
     },
@@ -69,11 +71,14 @@ const App = {
         // Safely check if elements exist before setting innerText
         const nameEl = document.getElementById('usernameDisplay');
         const roleEl = document.getElementById('main_role_show');
+        const designation = document.getElementById('main_role_show');
         const userIdEl = document.getElementById('main_userid_show');
+        const realuser = document.getElementById('realUser');
 
         if(nameEl) nameEl.innerText = this.State.userName || "User";
-        if(roleEl) roleEl.innerText = (this.State.userRole || "User").toUpperCase();
-        if(userIdEl) userIdEl.innerText = `ID: ${this.State.userId}`;
+        if(designation) designation.innerText = localStorage.getItem('designation')
+        if(realuser) realuser.innerText =`ID: ${this.State.currentuserId} `;
+        if(userIdEl) userIdEl.innerText = `ID: ${this.State.workspaceId} `;
 
         // 4. Handle Routing
         const pinnedModule = localStorage.getItem('pinnedModule');
@@ -133,65 +138,80 @@ const App = {
      * AJAX ROUTER (Force Script Execution)
      * This ensures JS inside modules like sales-inv.html actually runs.
      */
-    async Router(path) {
-    const viewport = document.getElementById('main-content');
-    const loader = document.getElementById('section-loader');
-    
-    if(loader) loader.style.display = 'block';
-    viewport.style.opacity = '0.5';
-
-    // 1. Separate the base module name from the URL parameters
-    const [basePath, queryString] = path.split('?');
-
-    try {
-        // Fetch using only the base path so the network request doesn't fail
-        const res = await fetch(`modules/${basePath}.html`);
-        if(!res.ok) throw new Error("Module not found");
-        const html = await res.text();
-        
-        // 2. Inject HTML content
-        viewport.innerHTML = html;
-        this.State.activeModule = basePath;
-
-        // 3. 🔥 THE SCRIPT FIX: Manually find and execute scripts in the injected HTML
-        const scripts = viewport.querySelectorAll("script");
-        scripts.forEach(oldScript => {
-            const newScript = document.createElement("script");
-            Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-            newScript.appendChild(document.createTextNode(oldScript.innerHTML));
-            oldScript.parentNode.replaceChild(newScript, oldScript);
-        });
-
-        // 4. Initialize ERP Logic (Lookups, Uniqueness, etc.)
-        this.InitERPLogic(basePath);
-
-        // 5. 🔥 DEEP LINK HANDLER: If an ID was passed, open the document
-        if (queryString) {
-            const urlParams = new URLSearchParams(queryString);
-            const docId = urlParams.get('id');
+async Router(path) {
+        // 1. 🔥 NEW: Save the currently active route to localStorage before navigating away
+        // It checks State first, falls back to the URL hash, or defaults to a safe string.
+        const currentRoute = (this.State && this.State.activeModule) 
+            || window.location.hash.replace('#', '') 
+            || 'dashboard';
             
-            if (docId) {
-                // Use a short timeout to ensure the module's scripts and Firebase have finished booting
-                setTimeout(() => {
-                    if (typeof window.loadApprovalDoc === 'function') {
-                        // Ensure the view switches to the document viewer
-                        const tabToggle = document.querySelector('[data-bs-target="#inbox-view"]');
-                        if (tabToggle) tabToggle.click();
-                        
-                        window.loadApprovalDoc(docId);
-                    }
-                }, 500); 
-            }
-        }
+        localStorage.setItem('PreviousPath', currentRoute);
 
-    } catch (e) {
-        console.error("Router Failure:", e);
-        viewport.innerHTML = `<div class="alert alert-danger m-3">Critical Error: Module [${basePath}] failed to load.</div>`;
-    } finally {
-        if(loader) loader.style.display = 'none';
-        viewport.style.opacity = '1';
-    }
-},
+        const viewport = document.getElementById('main-content');
+        const loader = document.getElementById('section-loader');
+        
+        if(loader) loader.style.display = 'block';
+        viewport.style.opacity = '0.5';
+
+        // 2. Separate the base module name from the URL parameters
+        const [basePath, queryString] = path.split('?');
+
+        try {
+            // Fetch using only the base path so the network request doesn't fail
+            const res = await fetch(`modules/${basePath}.html`);
+            if(!res.ok) throw new Error("Module not found");
+            const html = await res.text();
+            
+            // 3. Inject HTML content
+            viewport.innerHTML = html;
+            this.State.activeModule = basePath;
+
+            // 4. 🔥 THE SCRIPT FIX: Manually find and execute scripts in the injected HTML
+            const scripts = viewport.querySelectorAll("script");
+            scripts.forEach(oldScript => {
+                const newScript = document.createElement("script");
+                Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                oldScript.parentNode.replaceChild(newScript, oldScript);
+            });
+
+            // 5. Initialize ERP Logic (Lookups, Uniqueness, etc.)
+            this.InitERPLogic(basePath);
+
+            // 6. 🔥 DEEP LINK HANDLER: If an ID was passed, open the document
+            if (queryString) {
+                const urlParams = new URLSearchParams(queryString);
+                const docId = urlParams.get('id');
+                
+                if (docId) {
+                    // Use a short timeout to ensure the module's scripts and Firebase have finished booting
+                    setTimeout(() => {
+                        if (typeof window.loadApprovalDoc === 'function') {
+                            // Ensure the view switches to the document viewer
+                            const tabToggle = document.querySelector('[data-bs-target="#inbox-view"]');
+                            if (tabToggle) tabToggle.click();
+                            
+                            window.loadApprovalDoc(docId);
+                        }
+                    }, 500); 
+                }
+            }
+
+        } catch (e) {
+            console.error("Router Failure:", e);
+            viewport.innerHTML = `<div class="alert alert-danger m-3">Critical Error: Module [${basePath}] failed to load.</div>`;
+        } finally {
+            if(loader) loader.style.display = 'none';
+            viewport.style.opacity = '1';
+        }
+    },
+
+    async goBack() {
+        const previousPath = localStorage.getItem('PreviousPath') || 'dashboard';
+        if (typeof App !== 'undefined' && App.Router) {
+            App.Router(previousPath);
+        }
+    },
 
     /**
      * ERP MODULE INITIALIZER
@@ -519,66 +539,160 @@ window.saveTask = async function() {
     }
 };
 
-// 3. Render Tasks (Real-time listener from Firebase)
 window.renderTasks = function() {
-    const tbody = document.getElementById('taskTableBody');
+    const taskSection = document.getElementById('taskSection');
     const currentUserId = localStorage.getItem('userloginid');
 
-    if (!currentUserId || !tbody) return;
+    if (!currentUserId || !taskSection) return;
 
-    // Show loading skeleton initially
-    tbody.innerHTML = '<tr><td class="text-center text-muted py-3"><span class="spinner-border spinner-border-sm"></span> Syncing tasks...</td></tr>';
+    // Clear existing content
+    taskSection.innerHTML = '';
 
-    const db = firebase.database();
-    
-    // Listen ONLY for tasks assigned to the currently logged-in user
-    db.ref('Tasks').orderByChild('assignedTo').equalTo(currentUserId).on('value', (snapshot) => {
-        const tasks = snapshot.val() || {};
-        
-        if (Object.keys(tasks).length === 0) {
+    // Create table container
+    const tableContainer = document.createElement('div');
+    tableContainer.className = 'table-container';
+    tableContainer.style.cssText = `
+        max-height: 100%;
+        overflow-y: auto;
+        position: relative;
+        height: 100%;
+    `;
+
+    // Create table
+    const table = document.createElement('table');
+    table.className = 'table table-hover';
+    table.style.cssText = `
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 0;
+    `;
+
+    // Create thead with sticky positioning
+    const thead = document.createElement('thead');
+    thead.style.cssText = `
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: white;
+    `;
+    thead.innerHTML = `
+        <tr style="border-bottom: 2px solid rgba(0,0,0,0.08); background: white;">
+            <th style="width: 30px; padding: 8px 12px; font-size: 0.75rem; font-weight: 600; color: #6c757d; text-align: left;">#</th>
+            <th style="padding: 8px 12px; font-size: 0.75rem; font-weight: 600; color: #6c757d; text-align: left;">Task</th>
+            <th style="width: 50px; padding: 8px 12px; font-size: 0.75rem; font-weight: 600; color: #6c757d; text-align: right;">Action</th>
+        </tr>
+    `;
+
+    // Create tbody
+    const tbody = document.createElement('tbody');
+    tbody.id = 'taskTableBody';
+
+    // Append thead and tbody to table
+    table.appendChild(thead);
+    table.appendChild(tbody);
+
+    // Append table to container
+    tableContainer.appendChild(table);
+
+    // Append container to taskSection
+    taskSection.appendChild(tableContainer);
+
+    // Show loading skeleton
     tbody.innerHTML = `
         <tr>
-            <td colspan="4" class="text-center ">
-                <div class="d-flex flex-column align-items-start justify-content-center text-muted">
-                    <i class="bi bi-check-circle-fill fs-2 text-success mb-2 opacity-75"></i>
-                    <p class="mb-0 fw-bold">All caught up!</p>
-                    <small class="small">No pending tasks found.</small>
-                </div>
+            <td colspan="3" class="text-center text-muted py-3">
+                <span class="spinner-border spinner-border-sm"></span> Syncing tasks...
             </td>
         </tr>
     `;
-    return;
-}
 
-        // Sort tasks: Newest first
-        const sortedTasks = Object.entries(tasks).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+    // Firebase listener
+    const db = firebase.database();
+    
+    db.ref('Tasks').orderByChild('assignedTo').equalTo(currentUserId).on('value', (snapshot) => {
+        const tasks = snapshot.val() || {};
+        const taskEntries = Object.entries(tasks);
 
-        tbody.innerHTML = sortedTasks.map(([taskId, t]) => {
-            // Format Timestamp (e.g., "Oct 12, 10:30 AM")
-            const dateStr = t.timestamp ? new Date(t.timestamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Just now';
-            
-            // UI Logic: Check if it's assigned by a Manager or Self
+        if (taskEntries.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="3" class="text-center py-4">
+                        <div class="d-flex flex-column align-items-center text-muted">
+                            <i class="bi bi-check-circle-fill fs-3 text-success opacity-75"></i>
+                            <p class="mb-0 fw-bold mt-2">All caught up!</p>
+                            <small class="small">No pending tasks found.</small>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        const sorted = taskEntries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+
+        tbody.innerHTML = sorted.map(([taskId, t], index) => {
+            const srNo = index + 1;
+
+            const dateStr = t.timestamp
+                ? new Date(t.timestamp).toLocaleDateString('en-GB', {
+                    day: 'numeric',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })
+                : 'Just now';
+
             let metaHtml = '';
             if (t.assignedBy !== "Self") {
-                // Task from Manager: Show Blue Badge with Manager's Name
-                metaHtml = `<div class="text-primary mt-1" style="font-size: 0.7rem; font-weight: 600;">
-                                <i class="bi bi-person-workspace me-1"></i>Assigned by ${t.assignerName} • ${dateStr}
-                            </div>`;
+                metaHtml = `
+                    <div class="text-primary mt-1" style="font-size: 0.65rem; font-weight: 500;">
+                        <i class="bi bi-person-workspace me-1"></i>
+                        Assigned by ${t.assignerName || 'Manager'} • ${dateStr}
+                    </div>
+                `;
             } else {
-                // Personal Task: Show simple grey timestamp
-                metaHtml = `<div class="text-muted mt-1" style="font-size: 0.7rem;">
-                                <i class="bi bi-clock me-1"></i>Personal Task • ${dateStr}
-                            </div>`;
+                metaHtml = `
+                    <div class="text-muted mt-1" style="font-size: 0.65rem;">
+                        <i class="bi bi-clock me-1"></i>
+                        Personal • ${dateStr}
+                    </div>
+                `;
+            }
+
+            let priorityBadge = '';
+            if (t.priority) {
+                const priorityMap = {
+                    high: 'danger',
+                    medium: 'warning',
+                    low: 'success'
+                };
+                const color = priorityMap[t.priority.toLowerCase()] || 'secondary';
+                priorityBadge = `
+                    <span class="badge bg-${color} bg-opacity-10 text-${color} rounded-pill ms-2" style="font-size: 0.6rem; border: 1px solid rgba(0,0,0,0.05);">
+                        ${t.priority}
+                    </span>
+                `;
             }
 
             return `
-                <tr class="align-middle border-bottom">
-                    <td class="ps-3 py-3">
-                        <div class="fw-bold text-dark" style="font-size: 0.9rem;">${t.text}</div>
+                <tr class="task-row align-middle" style="border-bottom: 1px solid rgba(0,0,0,0.06);">
+                    <td class="ps-3 py-2 text-muted small fw-bold" style="width: 30px; font-size: 0.75rem;">
+                        ${srNo}
+                    </td>
+                    <td class="py-2 px-2">
+                        <div class="d-flex align-items-center">
+                            <span class="fw-bold text-dark" style="font-size: 0.9rem;">
+                                ${t.text}
+                            </span>
+                            ${priorityBadge}
+                        </div>
                         ${metaHtml}
                     </td>
-                    <td class="text-end pe-3" style="width: 60px;">
-                        <button class="btn btn-sm btn-outline-success py-1 px-2 shadow-sm" onclick="deleteTask('${taskId}')" title="Mark as Done">
+                    <td class="pe-3 py-2 text-end" style="width: 50px;">
+                        <button class="btn btn-sm btn-primary py-1 px-2" 
+                                style="border: 1px solid rgba(0,0,0,0.1); background: transparent;"
+                                onclick="deleteTask('${taskId}')" 
+                                title="Mark as Done">
                             <i class="bi bi-check2-all"></i>
                         </button>
                     </td>
@@ -587,7 +701,6 @@ window.renderTasks = function() {
         }).join('');
     });
 };
-
 // 4. Delete / Mark as Done Task
 window.deleteTask = async function(taskId) {
     try {
@@ -1039,7 +1152,7 @@ const NotificationEngine = {
         Object.entries(data)
             .sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0))
             .forEach(([id, notif]) => {
-                if (notif.target !== 'all' && notif.target !== this.userId) return;
+                if (notif.target !== 'all' && notif.target !== App.State.currentuserId) return;
 
                 const hasSeen = notif.ReadStatus?.[this.userId] === true;
                 if (!hasSeen) unreadCount++;
@@ -1048,7 +1161,7 @@ const NotificationEngine = {
 
                 list.innerHTML += `
                     <li>
-                        <div class="dropdown-item py-2 border-bottom ${!hasSeen ? 'bg-primary bg-opacity-10' : ''}" 
+                        <div class="dropdown-item rounded-2 py-2 border-bottom ${!hasSeen ? 'bg-secondary bg-opacity-10' : ''}" 
                              style="cursor: pointer;" 
                              onclick="NotificationEngine.MarkAsSeen('${id}', '${notif.link || ''}')">
                             <div class="d-flex align-items-center">
@@ -1179,6 +1292,7 @@ const UserProfileController = {
     RenderProfile() {
         const name = this.userData.name || this.userData.legalName || 'Unknown User';
         const email = this.userData.email || 'No Email Provided';
+        const designation = this.userData.designation || 'Designation not assigned';
         const role = this.userData.role || 'User';
         const status = this.userData.status || 'Active';
         
@@ -1187,8 +1301,9 @@ const UserProfileController = {
 
         // Format Account Creation Date
         let joinedDate = 'Unknown';
-        if (this.userData.created_at) {
-            const dateObj = new Date(this.userData.created_at);
+        if (this.userData.created_at || this.userData.createdAt) {
+            const timestamp = this.userData.created_at || this.userData.createdAt;
+            const dateObj = new Date(timestamp);
             joinedDate = dateObj.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
         }
 
@@ -1214,9 +1329,11 @@ const UserProfileController = {
         // Fill Form Inputs
         const inputName = document.getElementById('inputProfileName');
         const inputEmail = document.getElementById('inputProfileEmail');
+        const inputDesig = document.getElementById('inputProfiledesignation');
         
         if(inputName) inputName.value = name;
         if(inputEmail) inputEmail.value = email;
+        if(inputDesig) inputDesig.value = designation;
     },
 
     // 3. Save Personal Info (Name)
@@ -1338,6 +1455,25 @@ const UserProfileController = {
  * ========================================================================
  */
 
+
+const MasterEngine = {
+    /**
+     * Internal State Handler for Edit Contexts
+     */
+    State: {
+        Key: 'master_edit_context',
+        Load(formId) {
+            const raw = localStorage.getItem(this.Key);
+            if (!raw) return null;
+            const data = JSON.parse(raw);
+            return data.formId === formId ? data : null;
+        },
+        Clear() {
+            localStorage.removeItem(this.Key);
+        }
+    }
+};
+
 // Global Form Hydrator
 const FormObserver = new MutationObserver(() => {
     const masterForms = document.querySelectorAll('form[data-category="Masters"]:not([data-bound="true"])');
@@ -1412,7 +1548,7 @@ const FormObserver = new MutationObserver(() => {
                     alert(`${formId} Updated Successfully!`);
                 } else {
                     payload.createdAt = new Date().toISOString();
-                    await API.Create(`Masters/${sheetName}`, payload);
+                    await API.SaveMaster(`Masters/${sheetName}`, payload);
                     alert(`${formId} Created Successfully!`);
                 }
                 
@@ -1444,3 +1580,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 500);
 });
+

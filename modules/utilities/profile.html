@@ -1,7 +1,7 @@
-<div class="main-content-area w-100" style=" padding: 2rem 0;">
-    <div class="container-fluid" style="max-width: 1000px;">
+<div class="main-content-area w-100" style=" padding: 1rem 0;">
+    <div class="container-fluid" style="min-height: calc(100vh-60px);">
         
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center ">
             <div>
                 <h4 class="fw-bold text-dark mb-1">My Profile</h4>
                 <p class="text-muted small mb-0">Manage your account settings and security preferences.</p>
@@ -10,10 +10,10 @@
 
         <div class="row g-4">
             <div class="col-lg-4">
-                <div class="card shadow-sm border-0 h-100 text-center pb-4">
-                    <div class="card-body pt-5">
+                <div class="card shadow-sm border-0 h-100 text-center  pb-4">
+                    <div class="card-body d-flex  justify-content-center ">
                         <div class="position-relative d-inline-block mb-3">
-                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 100px; height: 100px;">
+                            <div class="bg-primary bg-opacity-10 text-white rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 100px; height: 100px;">
                                 <h1 class="display-4 fw-bold mb-0 p-2" id="profileInitials">--</h1>
                             </div>
                             <span class="position-absolute bottom-0 end-0 p-2 bg-success border border-white rounded-circle" title="Active Status"></span>
@@ -22,11 +22,11 @@
                         <h5 class="fw-bold text-dark mb-1" id="profileDisplayName">Loading...</h5>
                         <p class="text-muted small mb-3" id="profileDisplayEmail">--</p>
                         
-                        <div id="profileRoleBadge" class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 text-uppercase mb-4">
+                        <div id="profileRoleBadge" class="badge bg-primary bg-opacity-10 text-white px-3 py-2 text-uppercase mb-4">
                             ROLE
                         </div>
 
-                        <div class="d-flex justify-content-around text-center border-top pt-4 mt-2">
+                        <div class="d-flex justify-content-around align-items-center text-center border-top pt-4 mt-2">
                             <div>
                                 <h6 class="fw-bold text-dark mb-0" id="profileAccountCreated">--</h6>
                                 <span class="text-muted small">Joined</span>
@@ -45,12 +45,12 @@
                     <div class="card-header bg-white border-bottom pt-3 pb-0 px-4">
                         <ul class="nav nav-underline fs-6 fw-bold" id="profileTabs" role="tablist">
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link active text-dark pb-3" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal-info" type="button" role="tab">
+                                <button class="nav-link active text-dark p-3" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal-info" type="button" role="tab">
                                     <i class="bi bi-person-lines-fill me-2"></i> Personal Info
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link text-dark pb-3" id="security-tab" data-bs-toggle="tab" data-bs-target="#security-info" type="button" role="tab">
+                                <button class="nav-link text-dark p-3" id="security-tab" data-bs-toggle="tab" data-bs-target="#security-info" type="button" role="tab">
                                     <i class="bi bi-shield-lock-fill me-2"></i> Security
                                 </button>
                             </li>
@@ -70,6 +70,14 @@
                                         </div>
                                     </div>
                                     
+                                    <div class="col-md-12">
+                                        <label class="form-label small fw-bold text-muted">Designation</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light"><i class="bi bi-people text-muted"></i></span>
+                                            <input type="email" id="inputProfiledesignation" class="form-control bg-light" readonly disabled>
+                                        </div>
+                                        
+                                    </div>
                                     <div class="col-md-12">
                                         <label class="form-label small fw-bold text-muted">Email Address (Read-Only)</label>
                                         <div class="input-group">
@@ -241,6 +249,7 @@ body {
 
 .btn-primary:active:not(:disabled) {
     transform: translateY(1px);
+    padding: 0 80px;
 }
 
 /* --- 6. Tables & Lists --- */

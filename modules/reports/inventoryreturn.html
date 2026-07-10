@@ -22,11 +22,11 @@
                         <label class="small fw-bold text-muted mb-1">To Date</label>
                         <input type="date" id="stockToDate" class="form-control form-control-sm shadow-sm" onchange="generateStockSummary()">
                     </div>
-                    <button type="button" title="Refresh Data" class="btn btn-primary btn-sm shadow-sm fw-bold px-2 mb-0" onclick="generateStockSummary()">
-                        <i class="bi bi-arrow-clockwise"></i>
-                    </button>
                     <button type="button" title="Back to Summary" id="btnBackToSummary" class="btn btn-dark btn-sm shadow-sm fw-bold px-2 mb-0" style="display: none;" onclick="showSummaryView()">
                         <i class="bi bi-arrow-left"></i>
+                    </button>
+                    <button type="button" title="Refresh Data" class="btn btn-primary btn-sm shadow-sm fw-bold px-2 mb-0" onclick="generateStockSummary()">
+                        <i class="bi bi-arrow-clockwise"></i>
                     </button>
                 </div>
             </div>
@@ -40,15 +40,15 @@
                         <th rowspan="2"  width="5%">HSN</th>
                         <th rowspan="2" width="5%">Unit</th>
                         <th colspan="2" class="bg-secondary bg-opacity-25">Opening Balance</th>
-                        <th colspan="2" class="bg-primary bg-opacity-25">Inwards</th>
+                        <th colspan="2" class="bg-transparent bg-opacity-25">Inwards</th>
                         <th colspan="2" class="bg-danger bg-opacity-25">Outwards</th>
                         <th colspan="3" class="bg-success bg-opacity-25">Closing Balance</th>
                     </tr>
                     <tr class="text-center">
                         <th class="bg-secondary bg-opacity-25">Qty</th>
                         <th class="bg-secondary bg-opacity-25">Value</th>
-                        <th class="bg-primary bg-opacity-25">Qty</th>
-                        <th class="bg-primary bg-opacity-25">Value</th>
+                        <th class="bg-transparent bg-opacity-25">Qty</th>
+                        <th class="bg-transparent bg-opacity-25">Value</th>
                         <th class="bg-danger bg-opacity-25">Qty</th>
                         <th class="bg-danger bg-opacity-25">Value</th>
                         <th class="bg-success bg-opacity-25">Qty</th>
@@ -79,7 +79,7 @@
                         <th width="15%">Vch Type</th>
                         <th width="15%">Vch No.</th>
                         <th width="25%">Particulars (Party)</th>
-                        <th class="text-end text-primary" width="10%">Inward Qty</th>
+                        <th class="text-end text-secondary" width="10%">Inward Qty</th>
                         <th class="text-end text-danger" width="10%">Outward Qty</th>
                         <th class="text-end pe-3" width="15%">Balance Qty</th>
                     </tr>
@@ -521,8 +521,8 @@
                 <td class="text-muted small">${item.unit}</td>
                 <td class="text-end bg-secondary bg-opacity-10">${fmt(item.opQty, true)}</td>
                 <td class="text-end bg-secondary bg-opacity-10">${fmt(item.opVal)}</td>
-                <td class="text-end bg-primary bg-opacity-10 fw-medium">${fmt(item.inQty, true)}</td>
-                <td class="text-end bg-primary bg-opacity-10">${fmt(item.inVal)}</td>
+                <td class="text-end bg-transparent bg-opacity-10 fw-medium">${fmt(item.inQty, true)}</td>
+                <td class="text-end bg-transparent bg-opacity-10">${fmt(item.inVal)}</td>
                 <td class="text-end bg-danger bg-opacity-10 fw-medium">${fmt(item.outQty, true)}</td>
                 <td class="text-end bg-danger bg-opacity-10">${fmt(item.outVal)}</td>
                 <td class="text-end bg-success bg-opacity-10 fs-6 ${qtyClass}">${fmt(clQty, true)}</td>

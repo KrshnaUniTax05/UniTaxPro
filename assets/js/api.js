@@ -382,7 +382,8 @@ async PostVoucher(form) {
         },
         items: items,
         meta: { 
-            user: App.State.userId, 
+            orgnizationUser: App.State.userId, 
+            User: App.State.currentuserId, 
             form_id: formId,
             ...dynamicMetaData
         }

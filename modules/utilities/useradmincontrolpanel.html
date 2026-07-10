@@ -1,0 +1,599 @@
+<!-- Admin Guard Overlay -->
+<div id="admin-guard-overlay" class="position-fixed top-0 start-0 w-100 bg-white bg-opacity-95 d-flex flex-column align-items-center justify-content-center" style="display:none !important; min-height: calc(100vh - 60px); z-index: 9999;">
+    <div class="text-center animate-in" style="max-width: 450px;">
+        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-danger bg-opacity-10 mb-4" style="width: 100px; height: 100px;">
+            <i class="bi bi-shield-lock text-danger" style="font-size: 3.5rem;"></i>
+        </div>
+        <h2 class="fw-bold mb-3 text-dark">Access Restricted</h2>
+        <p class="text-muted mb-4 px-3">
+            <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>
+            Only authorized administrators can access the User Management Terminal.
+        </p>
+        <button class="btn btn-primary rounded-pill px-5 py-2 fw-semibold" onclick="App.Router('dashboard')">
+            <i class="bi bi-arrow-left me-2"></i>
+            Back to Dashboard
+        </button>
+    </div>
+</div>
+
+<!-- Admin Panel Wrapper -->
+<div id="admin-panel-wrapper" class="animate-in h-100 py-2 d-flex flex-column" style="display:block; min-height: calc(100vh - 60px) !important;">
+    <div class="card border-0 shadow-sm flex-grow-1 overflow-hidden d-flex flex-row m-0 rounded-0 bg-white">
+        
+        <!-- SIDEBAR NAVIGATION -->
+        <aside class="admin-sidebar bg-light border-end d-flex flex-column" style="width: 280px; flex-shrink: 0;">
+            <div class="p-4 border-bottom bg-white">
+                <h6 class="fw-bold text-primary small text-uppercase tracking-widest mb-0">Management</h6>
+            </div>
+            <div class="list-group list-group-flush p-2">
+                <button id="btn-tab-list" class="list-group-item list-group-item-action active rounded-3 mb-1 border-0" onclick="window.switchAdminTab('user-list')">
+                    <i class="bi bi-people-fill me-2"></i> User Directory
+                </button>
+                <button id="btn-tab-create" class="list-group-item list-group-item-action rounded-3 mb-1 border-0" onclick="window.switchAdminTab('user-create')">
+                    <i class="bi bi-person-plus-fill me-2"></i> Add Team Member
+                </button>
+            </div>
+            <div class="mt-auto p-4 border-top bg-white">
+                <div class="text-muted fw-bold" style="font-size: 10px; letter-spacing: 1px;">WORKSPACE ANCHOR</div>
+                <div class="font-monospace fw-bold text-primary small" id="admin-ws-id">#PENDING</div>
+            </div>
+        </aside>
+
+        <!-- MAIN INTERFACE -->
+        <main class="flex-grow-1 d-flex flex-column overflow-hidden">
+            
+            <!-- HEADER -->
+            <div class="d-flex justify-content-between align-items-center p-4 border-bottom bg-white">
+                <div>
+                    <h4 class="fw-bold mb-0 text-dark" id="admin-title">User Directory</h4>
+                    <span id="memberCount" class="badge bg-primary-subtle text-primary rounded-pill mt-1">0 Members</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-white btn-sm border shadow-sm fw-bold px-3" onclick="window.fetchWorkspaceUsers()">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Sync
+                    </button>
+                </div>
+            </div>
+
+            <!-- VIEW: USER LIST -->
+            <div id="tab-user-list" class="admin-tab-pane overflow-y-auto custom-scrollbar">
+                <div class="table-responsive border rounded-2 bg-white overflow-hidden">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr class="small text-uppercase fw-bold text-muted" style="font-size: 11px;">
+                                <th class="ps-4 py-3">User ID</th>
+                                <th>Member Details</th>
+                                <th>Login ID (Email)</th>
+                                <th>Security Role</th>
+                                <th>Status</th>
+                                <th class="text-end pe-4">Manage</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminUserTableBody">
+                            <!-- Data from Firebase -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VIEW: USER PROVISIONING -->
+            <div id="tab-user-create" class="admin-tab-pane overflow-y-auto d-none bg-surface">
+                <div class="py-0 m-0" id="provisioning-container">
+                    <div class="card border-0 rounded-2 overflow-hidden">
+                        <div class="card-body p-4  m-0">
+                            <div class="mb-4">
+                                <h5 class="fw-bold text-dark mb-1">Provision Access</h5>
+                                <p class="text-muted small">The new identity will be linked to your workspace instantly.</p>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Full Name</label>
+                                    <input type="text" id="adm_name" class="form-control form-control-sm proper-case" placeholder="e.g. Rahul Sharma">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Designation</label>
+                                    <input type="text" id="adm_designation" class="form-control form-control-sm proper-case" placeholder="e.g. Director" autocomplete="on">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Login Email</label>
+                                    <input type="email" id="adm_email" class="form-control form-control-sm" placeholder="name@company.com">
+                                </div>
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Primary Password</label>
+                                        <div class="input-group">
+                                            <input type="text" id="adm_pass" class="form-control form-control-sm font-monospace" value="UniTax@2026">
+                                            <button class="btn btn-outline-secondary btn-sm" type="button" onclick="AdminPanel.generatePassword()">
+                                                <i class="bi bi-shuffle"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Permission Role</label>
+                                        <select id="adm_role" class="form-select form-select-sm fw-bold text-primary">
+                                            <option value="Operator">Operator / Operator</option>
+                                            <option value="Manager">Manager</option>
+                                            <option value="Auditor">Auditor</option>
+                                            <option value="Administrator">Administrator</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button type="button" id="provisionBtn" class="btn btn-primary w-100 py-3 fw-bold rounded-3 transition-all" onclick="window.provisionUser()">
+                                    <i class="bi bi-person-check-fill me-2"></i> Finalize Identity Creation
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: EDIT USER (NEW) -->
+            <div id="tab-user-edit" class="admin-tab-pane overflow-y-auto d-none bg-surface">
+                <div class="max-w-600 mx-auto" style="max-height: calc(100vh - 60px); overflow-y: scroll;" id="edit-container">
+                    <div class="card border-0 rounded-2 overflow-hidden">
+                        <div class="card-body p-4 p-md-5">
+                            <div class="mb-4">
+                                <h5 class="fw-bold text-dark mb-1">Edit User Rights</h5>
+                                <p class="text-muted small">Modify user permissions and role assignments.</p>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">User ID</label>
+                                    <input type="text" id="edit_userId" class="form-control form-control-sm font-monospace" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Full Name</label>
+                                    <input type="text" id="edit_name" class="form-control form-control-sm proper-case">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Designation</label>
+                                    <input type="text" id="edit_designation" class="form-control form-control-sm proper-case">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Email Address</label>
+                                    <input type="email" id="edit_email" class="form-control form-control-sm" readonly>
+                                </div>
+                                <div class="mb-3 border-danger">
+                                    <label class="form-label small fw-bold">Reset Password</label>
+                                    <input type="password" id="edit_password" class="form-control form-control-sm proper-case">
+                                </div>
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Security Role</label>
+                                        <select id="edit_role" class="form-select form-select-sm fw-bold">
+                                            <option value="Operator">Operator / Operator</option>
+                                            <option value="Manager">Manager</option>
+                                            <option value="Auditor">Auditor</option>
+                                            <option value="Administrator">Administrator</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Account Status</label>
+                                        <select id="edit_status" class="form-select form-select-sm fw-bold">
+                                            <option value="active">Active</option>
+                                            <option value="inactive">Inactive</option>
+                                            <option value="suspended">Suspended</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="button" id="updateUserBtn" class="btn btn-primary w-50 py-2 fw-bold rounded-3" onclick="window.updateUser()">
+                                        <i class="bi bi-save me-2"></i> Update Rights
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary w-50 py-2 fw-bold rounded-3" onclick="window.switchAdminTab('user-list')">
+                                        <i class="bi bi-x-circle me-2"></i> Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+<script>
+(function() {
+    // =========================================================
+    // 1. SECURITY BLOCK & WORKSPACE MAPPING
+    // =========================================================
+    const userRole = App.State.userRole;
+    const currentAdminId = App.State.userId;
+    const currentAdminName = App.State.currentUser?.name || App.State.userName || 'ADMIN';
+
+    const wsLabel = document.getElementById('admin-ws-id');
+    if(wsLabel) wsLabel.innerText = `#WS-${currentAdminId.slice(-8).toUpperCase()}`;
+
+    // 🛡️ ENFORCED GUARD
+    if (userRole !== 'administrator') {
+        const wrapper = document.getElementById('admin-panel-wrapper');
+        if (wrapper) wrapper.style.display = 'none';
+        
+        const overlay = document.getElementById('admin-guard-overlay');
+        if (overlay) {
+            overlay.style.setProperty('display', 'flex', 'important');
+            overlay.innerHTML = `
+                <div class="m-4 text-center p-4 rounded-3 border border-danger border-opacity-25 bg-danger bg-opacity-10" role="alert">
+                    <i class="bi bi-shield-lock-fill fs-2 d-block mb-2 text-danger opacity-75"></i>
+                    <h5 class="fw-bold text-danger">Access Denied</h5>
+                    <p class="mb-0 small">You do not have authorization to view the Manager Task Panel.</p>
+                </div>
+            `;
+        }
+        
+        const content = document.getElementById('admin-main-content');
+        if (content) content.style.display = 'none';
+        return;
+    }
+
+    // =========================================================
+    // 2. UNIQUE USER ID GENERATOR
+    // =========================================================
+    function generateUniqueUserId(adminId, adminName) {
+        let adminInitials = '';
+        
+        if (adminName && adminName.length >= 2) {
+            adminInitials = adminName.substring(0, 2).toUpperCase().replace(/[^A-Z]/g, 'X');
+        } else {
+            adminInitials = adminId.replace(/[^A-Za-z0-9]/g, '').substring(0, 2).toUpperCase();
+        }
+        
+        while (adminInitials.length < 2) {
+            adminInitials += 'X';
+        }
+        
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let randomPart = '';
+        for (let i = 0; i < 8; i++) {
+            randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        
+        return (adminInitials + randomPart).toUpperCase();
+    }
+
+    // =========================================================
+    // 3. GLOBAL USERS DATABASE
+    // =========================================================
+    const usersRef = firebase.database().ref('Users');
+
+    /**
+     * FETCH TEAM
+     */
+    window.fetchWorkspaceUsers = async function() {
+        const tbody = document.getElementById('adminUserTableBody');
+        const countBadge = document.getElementById('memberCount');
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 opacity-50"><div class="spinner-border spinner-border-sm text-primary"></div></td></tr>`;
+
+        try {
+            const snapshot = await usersRef.once('value');
+            const allUsers = snapshot.val() || {};
+            
+            const myTeam = Object.entries(allUsers)
+                .filter(([key, user]) => user.workspaceId === currentAdminId)
+                .map(([key, user]) => ({ key, ...user }));
+
+            tbody.innerHTML = '';
+            countBadge.innerText = `${myTeam.length} Members`;
+
+            if (myTeam.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5">Your workspace is empty. Create your first user.</td></tr>`;
+                return;
+            }
+
+            myTeam.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="ps-4 py-3">
+                        <span class="font-monospace fw-bold text-primary">${u.userId || u.key}</span>
+                    </td>
+                    <td>
+                        <div class="fw-bold text-dark">${u.name || 'Unnamed'}</div>
+                    </td>
+                    <td class="font-monospace small">${u.email || u.key}</td>
+                    <td><span class="badge bg-primary-subtle text-primary border border-primary border-opacity-25">${u.role || 'Operator'}</span></td>
+                    <td><span class="badge ${u.status === 'active' ? 'bg-success' : 'bg-secondary'} text-white px-2 rounded-pill" style="font-size:9px">${u.status || 'Active'}</span></td>
+                    <td class="text-end pe-4">
+                        <button class="btn btn-outline-primary btn-sm border-0 me-1" onclick="window.editUser('${u.key}')" title="Edit Rights">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm border-0" onclick="window.terminateUser('${u.key}')" title="Revoke Access">
+                            <i class="bi bi-trash3"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (err) {
+            console.error("Fetch Error:", err);
+            if (typeof App.UI !== 'undefined' && App.UI.Notify) {
+                App.UI.Notify('Sync Error', 'Failed to retrieve team directory.', 'danger');
+            }
+        }
+    };
+
+    /**
+     * PROVISION USER
+     */
+    window.provisionUser = async function() {
+        const btn = document.getElementById('provisionBtn');
+        
+        const name = document.getElementById('adm_name').value.trim();
+        const email = document.getElementById('adm_email').value.trim();
+        const password = document.getElementById('adm_pass').value.trim();
+        const role = document.getElementById('adm_role').value;
+        const designation = document.getElementById('adm_designation').value;
+
+        if (!name || !email || !password) {
+            if (typeof App.UI !== 'undefined' && App.UI.Notify) {
+                App.UI.Notify('Validation', 'Please fill all mandatory fields.', 'warning');
+            } else {
+                alert('Please fill all mandatory fields.');
+            }
+            return;
+        }
+
+        const newUserId = generateUniqueUserId(currentAdminId, currentAdminName);
+        const safeKey = newUserId;
+
+        const existing = await usersRef.child(safeKey).once('value');
+        if (existing.exists()) {
+            if (typeof App.UI !== 'undefined' && App.UI.Notify) {
+                App.UI.Notify('Duplicate', 'A user with this ID already exists.', 'warning');
+            } else {
+                alert('A user with this ID already exists.');
+            }
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Provisioning...`;
+
+        const userData = {
+            userId: newUserId,
+            name,
+            email,
+            password,
+            designation,
+            role,
+            workspaceId: currentAdminId,
+            createdBy: currentAdminId,
+            status: 'active',
+            createdAt: firebase.database.ServerValue.TIMESTAMP
+        };
+
+        try {
+            await usersRef.child(safeKey).set(userData);
+            
+            if (typeof App.UI !== 'undefined' && App.UI.Notify) {
+                App.UI.Notify('Provisioned', `${name} onboarded with ID: ${newUserId}`, 'success');
+            }
+            
+            document.getElementById('adm_name').value = '';
+            document.getElementById('adm_email').value = '';
+            
+            window.switchAdminTab('user-list');
+            window.fetchWorkspaceUsers();
+        } catch (error) {
+            if (typeof App.UI !== 'undefined' && App.UI.Notify) {
+                App.UI.Notify('Error', error.message, 'danger');
+            } else {
+                alert('Error: ' + error.message);
+            }
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="bi bi-person-check-fill me-2"></i> Confirm & Onboard User`;
+        }
+    };
+
+    /**
+     * EDIT USER - Load user data into edit form
+     */
+    window.editUser = async function(dbKey) {
+        try {
+            const snapshot = await usersRef.child(dbKey).once('value');
+            const userData = snapshot.val();
+            
+            if (!userData) {
+                if (typeof App.UI !== 'undefined' && App.UI.Notify) {
+                    App.UI.Notify('Error', 'User not found.', 'danger');
+                }
+                return;
+            }
+
+            // Populate edit form
+            document.getElementById('edit_userId').value = userData.userId || dbKey;
+            document.getElementById('edit_name').value = userData.name || '';
+            document.getElementById('edit_designation').value = userData.designation || '';
+            document.getElementById('edit_email').value = userData.email || '';
+            document.getElementById('edit_role').value = userData.role || 'Operator';
+            document.getElementById('edit_status').value = userData.status || 'active';
+            
+            // Store the key for update
+            document.getElementById('edit_userId').dataset.dbKey = dbKey;
+            
+            // Switch to edit tab
+            window.switchAdminTab('user-edit');
+            
+        } catch (error) {
+            console.error("Edit Error:", error);
+            if (typeof App.UI !== 'undefined' && App.UI.Notify) {
+                App.UI.Notify('Error', 'Failed to load user data.', 'danger');
+            }
+        }
+    };
+
+    /**
+     * UPDATE USER - Save edited user data
+     */
+    window.updateUser = async function() {
+        const btn = document.getElementById('updateUserBtn');
+        const dbKey = document.getElementById('edit_userId').dataset.dbKey;
+        
+        const name = document.getElementById('edit_name').value.trim();
+        const designation = document.getElementById('edit_designation').value;
+        const password = document.getElementById('edit_password').value;
+        const role = document.getElementById('edit_role').value;
+        const status = document.getElementById('edit_status').value;
+
+        if (!name) {
+            if (typeof App.UI !== 'undefined' && App.UI.Notify) {
+                App.UI.Notify('Validation', 'Name is required.', 'warning');
+            }
+            return;
+        }
+
+        if (!dbKey) {
+            if (typeof App.UI !== 'undefined' && App.UI.Notify) {
+                App.UI.Notify('Error', 'No user selected for update.', 'danger');
+            }
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Updating...`;
+
+        try {
+            await usersRef.child(dbKey).update({
+                name: name,
+                role: role,
+                password: password,
+                designation:designation,
+                status: status,
+                updatedAt: firebase.database.ServerValue.TIMESTAMP,
+                updatedBy: currentAdminId
+            });
+            
+            if (typeof App.UI !== 'undefined' && App.UI.Notify) {
+                App.UI.Notify('Updated', `User rights updated successfully.`, 'success');
+            }
+            
+            window.switchAdminTab('user-list');
+            window.fetchWorkspaceUsers();
+            
+        } catch (error) {
+            console.error("Update Error:", error);
+            if (typeof App.UI !== 'undefined' && App.UI.Notify) {
+                App.UI.Notify('Error', error.message, 'danger');
+            }
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="bi bi-save me-2"></i> Update Rights`;
+        }
+    };
+
+    /**
+     * TERMINATE USER
+     */
+    window.terminateUser = async function(dbKey) {
+        if (confirm("TERMINATE ACCESS: This will permanently delete the user. Proceed?")) {
+            try {
+                await usersRef.child(dbKey).remove();
+                if (typeof App.UI !== 'undefined' && App.UI.Notify) {
+                    App.UI.Notify('Terminated', 'Access revoked.', 'warning');
+                }
+                window.fetchWorkspaceUsers();
+            } catch(e) { 
+                console.error(e); 
+            }
+        }
+    };
+
+    // =========================================================
+    // 4. UI CONTROLLER
+    // =========================================================
+    window.switchAdminTab = function(tab) {
+        document.querySelectorAll('.admin-tab-pane').forEach(p => p.classList.add('d-none'));
+        const targetPane = document.getElementById(`tab-${tab}`);
+        if (targetPane) {
+            targetPane.classList.remove('d-none');
+        }
+        
+        const listBtn = document.getElementById('btn-tab-list');
+        const createBtn = document.getElementById('btn-tab-create');
+        
+        if (listBtn) listBtn.classList.toggle('active', tab === 'user-list');
+        if (createBtn) createBtn.classList.toggle('active', tab === 'user-create');
+        
+        const title = document.getElementById('admin-title');
+        if (title) {
+            if (tab === 'user-list') title.innerText = 'User Directory';
+            else if (tab === 'user-create') title.innerText = 'Onboarding Console';
+            else if (tab === 'user-edit') title.innerText = 'Edit User Rights';
+        }
+    };
+
+    // =========================================================
+    // 5. PASSWORD GENERATOR
+    // =========================================================
+    window.AdminPanel = {
+        generatePassword() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*';
+            let pwd = '';
+            for (let i = 0; i < 12; i++) {
+                pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            document.getElementById('adm_pass').value = pwd;
+            document.getElementById('adm_pass').type = 'text';
+            setTimeout(() => {
+                document.getElementById('adm_pass').type = 'password';
+            }, 3000);
+        }
+    };
+
+    // Initial load
+    window.fetchWorkspaceUsers();
+
+})();
+</script>
+
+<style>
+    .max-w-600 { max-width: 600px; }
+    .bg-surface { background-color: #f8fafc; }
+    .admin-sidebar .list-group-item { 
+        font-size: 14px; 
+        border: none; 
+        padding: 14px 20px; 
+        font-weight: 500; 
+        transition: all 0.2s ease;
+    }
+    .admin-sidebar .list-group-item.active { 
+        background-color: var(--primary-color) !important; 
+        color: white !important; 
+        box-shadow: 0 4px 12px rgba(0, 82, 234, 0.15); 
+    }
+    .admin-sidebar .list-group-item:hover:not(.active) {
+        background-color: #f1f5f9;
+    }
+    .admin-tab-pane { 
+        height: calc(100% - 85px); 
+    }
+    .transition-all { 
+        transition: all 0.2s ease-in-out; 
+    }
+    .form-control-sm:focus, 
+    .form-select-sm:focus { 
+        border-color: var(--primary-color); 
+        box-shadow: 0 0 0 4px rgba(0, 82, 234, 0.1); 
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 3px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+    main{
+        overflow-y: scroll;
+        
+    }
+</style>

@@ -1,0 +1,468 @@
+<div class="unitax-reconcile-os ">
+    <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-light sticky-top z-10 unitax-header">
+                    <div>
+                        <h5 class="fw-bold mb-0 text-dark">Reconcilation</h5>
+                        <p class="text-muted small mb-0">Reconcilation window</p>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end justify-content-end gap-2 mt-3 mt-md-0">
+                        <button class="btn btn-sm btn-light border shadow-sm" onclick="ReconcileOS.ExportCSV()">
+                            <i class="bi bi-download" title="Download Excel"></i>
+                        </button>
+                        <button class="btn btn-sm btn-success px-3 shadow-sm" onclick="ReconcileOS.LoadData()">
+                            <i class="bi bi-check2" title="Execute"></i>
+                        </button>
+                    </div>
+                </div>  
+    <div class="reconcile-header p-3 bg-white border-bottom">
+        
+        <div class="row g-2 align-items-center">
+            <div class="col-md-2">
+                <label class="form-label text-muted small fw-bold mb-1">Document</label>
+                <select id="recDocType" class="form-select form-select-sm shadow-sm" onchange="ReconcileOS.LoadData()">
+                    <option value="SALES">Sales Invoices</option>
+                    <option value="PURCHASE">Purchase Invoices</option>
+                    <option value="RECEIPT">Receipt Vouchers</option>
+                    <option value="PAYMENT">Payment Vouchers</option>
+                    <option value="DEBIT_NOTE">Debit Notes</option>
+                    <option value="CREDIT_NOTE">Credit Notes</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label text-muted small fw-bold mb-1">Status</label>
+                <select id="recStatus" class="form-select form-select-sm shadow-sm" onchange="ReconcileOS.LoadData()">
+                    <option value="UNRECONCILED">Unreconciled Only</option>
+                    <option value="RECONCILED">Reconciled Only</option>
+                    <option value="BOTH">Show All</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label text-muted small fw-bold mb-1">Start Date</label>
+                <input type="date" id="recStart" class="form-control form-control-sm shadow-sm" onchange="ReconcileOS.LoadData()">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label text-muted small fw-bold mb-1">End Date</label>
+                <input type="date" id="recEnd" class="form-control form-control-sm shadow-sm" onchange="ReconcileOS.LoadData()">
+            </div>
+            
+        </div>
+    </div>
+
+    <div class="d-flex gap-4 px-3 py-2 bg-light border-bottom font-mono" style="font-size: 0.8rem;">
+        <div><span class="text-muted">Total Records:</span> <span id="statTotal" class="fw-bold">0</span></div>
+        <div><span class="text-success"><i class="bi bi-check-circle-fill"></i> Reconciled:</span> <span id="statReconciled" class="fw-bold">0</span></div>
+        <div><span class="text-danger"><i class="bi bi-exclamation-circle-fill"></i> Pending:</span> <span id="statUnreconciled" class="fw-bold">0</span></div>
+    </div>
+
+    <div class="table-scroll">
+        <table class="reconcile-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Doc No</th>
+                    <th>Entity Account</th>
+                    <th class="text-end">Base Amount</th>
+                    <th>Reco. Date</th>
+                    <th>Reco. Amount</th>
+                    <th>Remark / Notes</th>
+                    <th>Status</th>
+                    <th class="text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody id="tbl-reconcile">
+                <tr><td colspan="9" class="text-center py-5 text-muted">No data to show.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    /* Core Workspace Container */
+.unitax-reconcile-os {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin:10px 0px !important;
+    overflow: hidden;
+    font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Scrollable Table Area */
+.unitax-reconcile-os .table-scroll {
+    max-height: 65vh;
+    overflow-y: auto;
+    background: #f8fafc;
+}
+.unitax-reconcile-os .table-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.unitax-reconcile-os .table-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+/* Table Architecture */
+.reconcile-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    table-layout: auto;
+}
+.reconcile-table th {
+    background: #ffffff;
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.65rem;
+    letter-spacing: 0.04em;
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+.reconcile-table td {
+    padding: 0.5rem;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+
+/* Row States */
+.reconcile-table tr { transition: background-color 0.15s ease; background: #ffffff; }
+.reconcile-table tr:hover { background: #f8fafc; }
+.reconcile-table tr.row-reconciled { background: #f0fdf4; } /* Subtle green for completed */
+.reconcile-table tr.row-reconciled:hover { background: #dcfce7; }
+
+/* Input Adjustments */
+.reconcile-table .form-control-sm {
+    border-color: #cbd5e1;
+    font-size: 0.75rem;
+    box-shadow: none !important;
+}
+.reconcile-table .form-control-sm:disabled {
+    background-color: transparent;
+    border-color: transparent;
+    color: #0f172a;
+    font-weight: 500;
+    cursor: default;
+}
+
+/* Status Badges & Buttons */
+.status-badge {
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.status-badge-reconciled { background: #dcfce7; color: #166534; }
+.status-badge-unreconciled { background: #fef3c7; color: #92400e; }
+
+.btn-reconcile {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    font-weight: 500;
+    border: none;
+    transition: all 0.2s;
+}
+.btn-reconcile-submit { background: #0f172a; color: white; }
+.btn-reconcile-submit:hover { background: #334155; color: white; }
+.btn-reconcile-resubmit { background: transparent; color: #166534; border: 1px solid #166534; }
+.btn-reconcile-resubmit:hover { background: #166534; color: white; }
+
+.reconcile-empty-state { text-align: center; padding: 2rem 0; color: #64748b; }
+.font-mono { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
+</style>
+
+<script>
+
+
+
+function updatedateinputs(){
+    const now = new Date();
+    document.getElementById('recEnd').valueAsDate = now;
+    document.getElementById('recStart').valueAsDate = new Date(now.getFullYear(), now.getMonth(), 2);
+}
+updatedateinputs()
+
+</script>
+
+
+<script>
+window.ReconcileOS = {
+    formatINR: (num) => new Intl.NumberFormat('en-IN', { 
+        style: 'currency', 
+        currency: 'INR', 
+        maximumFractionDigits: 0 
+    }).format(num || 0),
+
+    // Centralized mapping for all document types
+    getFormName: (type) => {
+        const map = {
+            'SALES': 'SalesInvoiceForm',
+            'PURCHASE': 'PurchaseInvoiceForm',
+            'RECEIPT': 'ReceiptVoucherForm',
+            'PAYMENT': 'PaymentVoucherForm',
+            'DEBIT_NOTE': 'DebitNoteForm',
+            'CREDIT_NOTE': 'CreditNoteForm'
+        };
+        return map[type] || 'SalesInvoiceForm';
+    },
+
+    Data: [],
+
+    async LoadData() {
+        const type = document.getElementById('recDocType').value;
+        const statusFilter = document.getElementById('recStatus').value;
+        const startDate = document.getElementById('recStart').value;
+        const endDate = document.getElementById('recEnd').value;
+        
+        const formName = this.getFormName(type);
+        
+        // Show loading state
+        document.getElementById('tbl-reconcile').innerHTML = `
+            <tr>
+                <td colspan="9">
+                    <div class="reconcile-empty-state">
+                        <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
+                        <p class="mb-0">Fetching documents...</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+
+        const endpoint = `Transactions/${formName}`;
+        
+        try {
+            const data = await API.Fetch(endpoint);
+            console.log(`Fetched from ${endpoint}:`, data);
+            
+            this.Data = Object.entries(data || {}).map(([k, v]) => ({ 
+                key: k,
+                formId: v.formId || formName, // Ensure formId is attached for the double-click router
+                ...v.header, 
+                meta: v.header.meta || {} 
+            }));
+
+            // Apply Date Filter
+            let filtered = this.Data;
+            if (startDate) {
+                filtered = filtered.filter(i => i.date >= startDate);
+            }
+            if (endDate) {
+                filtered = filtered.filter(i => i.date <= endDate);
+            }
+
+            // Apply Status Filter
+            if (statusFilter === 'RECONCILED') {
+                filtered = filtered.filter(i => i.meta.ReconcilationStatus === "true");
+            } else if (statusFilter === 'UNRECONCILED') {
+                filtered = filtered.filter(i => i.meta.ReconcilationStatus !== "true");
+            }
+            
+            this.Render(filtered);
+            this.UpdateStats(filtered);
+            
+        } catch (error) {
+            console.error('Error loading reconciliation data:', error);
+            document.getElementById('tbl-reconcile').innerHTML = `
+                <tr>
+                    <td colspan="9">
+                        <div class="reconcile-empty-state text-danger">
+                            <i class="bi bi-exclamation-triangle fs-4 d-block mb-2"></i>
+                            <p class="mb-0">Error loading data. Please check your connection.</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+    },
+
+    Render(list) {
+        const tbody = document.getElementById('tbl-reconcile');
+        if (!tbody) return;
+
+        if (list.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9">
+                        <div class="reconcile-empty-state">
+                            <i class="bi bi-check-circle fs-4 d-block mb-2"></i>
+                            <p class="mb-0">No documents found for the selected filters.</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = list.map(item => {
+            const isRec = item.meta.ReconcilationStatus === "true";
+            const rowClass = isRec ? 'row-reconciled' : 'row-unreconciled';
+            const statusBadge = isRec 
+                ? '<span class="status-badge status-badge-reconciled"><i class="bi bi-check-circle-fill"></i> Reconciled</span>'
+                : '<span class="status-badge status-badge-unreconciled"><i class="bi bi-clock-fill"></i> Pending</span>';
+            
+            const btnClass = isRec ? 'btn-reconcile-resubmit' : 'btn-reconcile-submit';
+            const btnText = isRec ? '<i class="bi bi-pencil me-1"></i> Edit' : 'Reconcile';
+            const disabledAttr = isRec ? 'disabled' : '';
+            
+            return `
+           <tr id="row-${item.key}" 
+                class="${rowClass}" 
+                data-form-id="${item.formId}" 
+                data-key="${item.key}" 
+                ondblclick="window.editGoTransaction('${item.formId}', '${item.key}' , 'reports/reconcilation')" 
+                style="cursor: pointer;">
+                <td class="font-mono text-muted">${item.date || '---'}</td>
+                <td class="fw-bold text-dark">${item.doc_no || item.Invoice || item.voucher_no || '---'}</td>
+                <td class="text-truncate" style="max-width: 150px;">${item.entity || '---'}</td>
+                <td class="text-end font-mono fw-bold">${this.formatINR(item.grandTotal || 0)}</td>
+                <td onclick="event.stopPropagation();">
+                    <input type="date" 
+                        class="form-control form-control-sm" 
+                        id="date-${item.key}" 
+                        value="${item.meta.Recodate || new Date().toISOString().split('T')[0]}" 
+                        ${disabledAttr}>
+                </td>
+                <td onclick="event.stopPropagation();">
+                    <input type="number" class="form-control form-control-sm text-end font-mono" 
+                           id="amt-${item.key}" value="${item.meta.Recoamount || item.grandTotal || 0}" ${disabledAttr}>
+                </td>
+                <td onclick="event.stopPropagation();">
+                    <input type="text" class="form-control form-control-sm" 
+                           id="rem-${item.key}" value="${item.meta.Recoremark || ''}" placeholder="Notes..." ${disabledAttr}>
+                </td>
+                <td>${statusBadge}</td>
+                <td class="text-center" onclick="event.stopPropagation();">
+                    <button class="btn-reconcile ${btnClass}" onclick="ReconcileOS.Submit('${item.key}')">
+                        ${btnText}
+                    </button>
+                </td>
+            </tr>`;
+        }).join('');
+    },
+
+
+    
+    UpdateStats(list) {
+        const total = list.length;
+        const reconciled = list.filter(i => i.meta.ReconcilationStatus === "true").length;
+        const unreconciled = total - reconciled;
+        
+        const statTotal = document.getElementById('statTotal');
+        const statRec = document.getElementById('statReconciled');
+        const statUnrec = document.getElementById('statUnreconciled');
+
+        if(statTotal) statTotal.textContent = total;
+        if(statRec) statRec.textContent = reconciled;
+        if(statUnrec) statUnrec.textContent = unreconciled;
+    },
+
+    async Submit(key) {
+        const type = document.getElementById('recDocType').value;
+        const formName = this.getFormName(type);
+        const dateInput = document.getElementById(`date-${key}`);
+        const amtInput = document.getElementById(`amt-${key}`);
+        const remInput = document.getElementById(`rem-${key}`);
+        const btn = document.querySelector(`#row-${key} button`);
+        
+        // Unlock if currently disabled
+        if (dateInput.disabled) {
+            dateInput.disabled = false;
+            amtInput.disabled = false;
+            remInput.disabled = false;
+            btn.className = "btn-reconcile btn-reconcile-submit";
+            btn.innerHTML = "Save Update";
+            return;
+        }
+
+        if (!dateInput.value) {
+            if(window.App && App.UI) App.UI.Notify('Validation', 'Please select a reconciliation date.', 'warning');
+            else alert('Please select a reconciliation date.');
+            return;
+        }
+
+        const originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>...';
+
+        const payload = {
+            Recodate: dateInput.value,
+            Recoamount: parseFloat(amtInput.value),
+            Recoremark: remInput.value,
+            ReconEntryDate: new Date().toISOString(),
+            ReconcilationStatus: "true"
+        };
+
+        const path = `${App.State.userId}/Transactions/${formName}/${key}/header/meta`;
+        
+        try {
+            await firebase.database().ref(path).update(payload);
+            
+            if(window.App && App.UI) App.UI.Notify('Success', 'Document reconciled successfully.', 'success');
+            this.LoadData(); // Reload to refresh table states and stats
+            
+        } catch (e) {
+            console.error('Reconciliation error:', e);
+            btn.innerHTML = originalHTML;
+            btn.disabled = false;
+            if(window.App && App.UI) App.UI.Notify('Error', 'Failed to reconcile document.', 'danger');
+        }
+    },
+
+    ExportCSV() {
+        const type = document.getElementById('recDocType').value;
+        const rows = this.Data;
+        
+        if (rows.length === 0) return alert('No data to export.');
+        
+        let csv = '\uFEFFDate,Doc No,Account,Amount,Rec Date,Rec Amount,Remark,Status\n';
+        rows.forEach(item => {
+            const isRec = item.meta.ReconcilationStatus === "true" ? 'Reconciled' : 'Pending';
+            csv += `"${item.date || ''}","${item.doc_no || item.Invoice || item.voucher_no || ''}","${item.entity || ''}","${item.grandTotal || 0}","${item.meta.Recodate || ''}","${item.meta.Recoamount || ''}","${item.meta.Recoremark || ''}","${isRec}"\n`;
+        });
+        
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = `Reconciliation_${type}_${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+    }
+};
+
+
+
+// Initialize environment
+document.addEventListener("DOMContentLoaded", () => {
+    const now = new Date();
+    
+    // Auto-fill dates
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startStr = `${firstDay.getFullYear()}-${String(firstDay.getMonth() + 1).padStart(2, '0')}-01`;
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+    if(document.getElementById('recStart')) document.getElementById('recStart').value = startStr;
+    if(document.getElementById('recEnd')) document.getElementById('recEnd').value = todayStr;
+
+    ReconcileOS.LoadData();
+
+    // Event Delegation: Double Click to open transaction
+    const reconcileTable = document.getElementById('tbl-reconcile');
+    if (reconcileTable) {
+        reconcileTable.addEventListener('dblclick', (event) => {
+            // Ensure we aren't triggering edit when double-clicking inside an input box
+            if (['INPUT', 'BUTTON'].includes(event.target.tagName)) return;
+            
+            const targetRow = event.target.closest('tr');
+            if (!targetRow) return;
+
+            const formId = targetRow.getAttribute('data-form-id');
+            const uniqueKey = targetRow.getAttribute('data-key');
+
+            if (formId && uniqueKey) {
+                if (typeof window.editGoTransaction === 'function') {
+                    window.editGoTransaction(formId, uniqueKey);
+                }
+            }
+        });
+    }
+});
+</script>

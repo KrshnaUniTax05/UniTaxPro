@@ -301,7 +301,10 @@
                     localStorage.setItem('userloginid', userId);
                     localStorage.setItem('userName', userData.name);
                     localStorage.setItem('useremail_we', userData.email);
+                    localStorage.setItem('designation', userData.designation || "");
                     localStorage.setItem('userrole', userData.role);
+                    localStorage.setItem('workspaceId', userData.workspaceId || userId
+);
 
                     btn.innerHTML = `<i class="bi bi-check2-all me-2"></i> Success`;
                     btn.className = "btn-auth bg-success";

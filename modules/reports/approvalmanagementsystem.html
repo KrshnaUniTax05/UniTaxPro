@@ -19,6 +19,9 @@
                         <i class="bi bi-pen me-1"></i> Draft Request
                     </button>
                 </div>
+                <button class="btn btn-sm  btn-primary  btn-outline-sm  " onclick="App.goBack()">
+                    <i class="bi bi-arrow-left me-1"></i>
+                </button>
             </div>
         </div>
 
@@ -55,14 +58,14 @@
                         </div>
 
                         <div id="doc-viewer" class="d-none fade-in flex-grow-1 d-flex flex-column">
-                            <div class="p-4 p-md-5 flex-grow-1">
+                            <div class="p-4  flex-grow-1">
                                 <div class="d-flex justify-content-between align-items-start border-bottom pb-4 mb-4">
                                     <div>
                                         <div class="d-flex align-items-center gap-2 mb-2">
                                             <span class="badge rounded-pill px-3 py-2 fw-bold" id="v-status">Status</span>
-                                            <span class="text-muted small  bg-light px-2 py-1 rounded border" id="v-id">#ID</span>
+                                            <span class="text-muted small hidden bg-light px-2 py-1 rounded border" id="v-id">#ID</span>
                                         </div>
-                                        <h2 class="fw-bold mb-1 text-dark viewer-read-mode" id="v-title">Title</h2>
+                                        <h2 class="fw-bold mb-1 mt-5 text-dark viewer-read-mode" id="v-title">Title</h2>
                                         <input type="text" id="edit-title" class="form-control form-control-lg fw-bold mb-2 viewer-edit-mode d-none">
                                         <div class="small text-muted mt-2">
                                             Originator: <span id="v-requester" class="fw-bold text-dark"></span> • <span id="v-date"></span>
@@ -80,8 +83,8 @@
 
                                 <div class="row g-5">
                                     <div class="col-xl-7 col-lg-6">
-                                        <h6 class="section-title">Business Justification</h6>
-                                        <div class="p-3 bg-surface border rounded-3 text-dark mb-4">
+                                        <h6 class="section-title">Narration</h6>
+                                        <div class="p-3 bg-surface border rounded-3 text-dark ">
                                             <div class="viewer-read-mode" id="v-details" style="white-space: pre-wrap; line-height: 1.7;"></div>
                                             <textarea id="edit-details" class="form-control viewer-edit-mode d-none" rows="6"></textarea>
                                         </div>
@@ -427,12 +430,20 @@
 async function boot() {
     const statusEl = document.getElementById('connectionStatus');
     try {
+        // Get current user ID and workspace ID
+        const currentUserId = App.State?.userId || localStorage.getItem('userloginid') || localStorage.getItem('workspaceId');
+        const currentWorkspaceId = App.State?.workspaceId || localStorage.getItem('workspaceId');
+        
         // Fetch users from the Users table
         const userSnap = await get(ref(db, `Users`));
         if (userSnap.exists()) {
             const rawUsers = userSnap.val();
             Object.entries(rawUsers).forEach(([userId, userData]) => {
-                systemUsers[userId] = userData;
+                // Only add users where workspaceId matches current user's workspaceId
+                // or userId matches current user's userId
+                if (userData.workspaceId === currentWorkspaceId || userId === currentUserId) {
+                    systemUsers[userId] = userData;
+                }
             });
         }
         
@@ -471,6 +482,7 @@ async function boot() {
         }
     }
 }
+
     function listenToRequests() {
         onValue(ref(db, `Requests`), (snapshot) => {
             allRequests = [];
@@ -650,7 +662,7 @@ async function boot() {
                 await sendSystemNotification(
                     currentDoc.requesterId, 
                     "Application Approved!", 
-                    `Success: Your request "${currentDoc.title}" has been verified and fully approved.`, 
+                    `Your request "${currentDoc.title}" has been verified and fully approved.`, 
                     `inbox-view?id=${currentDoc.id}`,
                     "success" // <-- dynamically attaches the request ID
                 );
@@ -691,12 +703,12 @@ async function boot() {
         const count = cont.children.length + 1;
         let opts = `<option value="">-- Assign Identity --</option>`;
         Object.entries(systemUsers).forEach(([id, u]) => {
-             opts += `<option value="${id}">${u.name || 'No Name'} (${id})</option>`;
+             opts += `<option value="${id}">${u.name || 'No Name'} - ${u.designation || "Employee"} (${id})</option>`;
         });
 
         const div = document.createElement('div');
-        div.className = "p-1 border rounded-3 bg-white d-flex align-items-center gap-3 fade-in shadow-sm";
-        div.innerHTML = `<span class="fw-bold opacity-25">L${count}</span><select name="approver[]" class="form-select border-0 fw-bold">${opts}</select>${count > 1 ? `<i class="bi bi-trash text-danger" style="cursor:pointer;" onclick="this.closest('.d-flex').remove()"></i>` : ''}`;
+        div.className = "p-1 border rounded-3 bg-white d-flex align-items-center col-sm-6 gap-3 fade-in shadow-sm";
+        div.innerHTML = `<span class="fw-bold opacity-25">L${count}</span><select name="approver[]" class="form-select border-0 fw-bold" style="font-size:14px">${opts}</select>${count > 1 ? `<i class="bi bi-trash text-danger" style="cursor:pointer;" onclick="this.closest('.d-flex').remove()"></i>` : ''}`;
         cont.appendChild(div);
     };
 
@@ -717,7 +729,7 @@ async function boot() {
                 requesterId: currentUserId,
                 state: 'PENDING', currentLevelIndex: 0, hierarchy,
                 createdAt: Date.now(), updatedAt: Date.now(),
-                auditTrail: [{ action: 'SUBMITTED', actorId: currentUserId, timestamp: Date.now(), comment: 'New Request Initiated', levelIndex: -1 }]
+                auditTrail: [{ action: 'SUBMITTED', actorId: currentUserId,  timestamp: Date.now(), comment: 'New Request Initiated', levelIndex: -1 }]
             };
 
             await push(ref(db, 'Requests'), payload);
@@ -742,7 +754,7 @@ async function sendSystemNotification(targetUserId, title, message, link, typeof
         const notificationPayload = {
             title: title,
             message: message,
-            link: link, // e.g., "inbox-view" or target document link
+            link: "reports/approvalmanagementsystem", // e.g., "inbox-view" or target document link
             sender: currentUserId,
             target: targetUserId, // "all" or specific user ID
             timestamp: Date.now(),

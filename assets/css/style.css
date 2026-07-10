@@ -96,7 +96,7 @@ body {
     max-width: 350px;
     background: var(--bg-surface);
     border-right: 1px solid var(--border-color);
-    overflow-y: auto;
+    overflow-y: hidden;
     transition: var(--transition);
 }
 
@@ -143,26 +143,6 @@ body {
     overflow-x: hidden !important;
 }
 
-#taskSection:not(.taskheading) { 
-    /* max-height: 150px; */
-    min-height: 30%;
-    max-height: 30%;
-    overflow-y: scroll;
-    /* border: none !important; */
-}
-#taskTableBody tbody{
-    
-    scrollbar-width: thin;
-}
-#taskTableBody td {
-    border-bottom: 1px var(--border-strong) solid ;
-    box-shadow: none;
-}
-#taskSection .card { 
-    
-    border: none !important;
-    outline: none !important;
-}
 
 .gstr-master-table td{
         color: var(--text-muted) !important;
@@ -331,6 +311,54 @@ body {
 .dropdown-menu.show-custom {
     display: block !important;
 }
+
+#taskSection{
+    min-height:30%;
+    max-height:30%;
+    overflow-y:auto;
+}
+
+/* Chrome, Edge, Safari */
+#taskSection::-webkit-scrollbar{
+    width:8px;
+}
+
+#taskSection::-webkit-scrollbar-track{
+    background:transparent;
+}
+
+#taskSection::-webkit-scrollbar-thumb{
+    background:transparent;
+    border-radius:20px;
+}
+
+#taskSection:hover::-webkit-scrollbar-thumb{
+    background:rgba(0,0,0,.25);
+}
+
+#taskSection::-webkit-scrollbar-thumb:hover{
+    background:rgba(0,0,0,.45);
+}
+
+/* Firefox */
+#taskSection{
+    scrollbar-width:thin;
+    scrollbar-color:transparent transparent;
+}
+
+#taskSection:hover{
+    scrollbar-color:rgba(0,0,0,.25) transparent;
+}
+
+#taskTableBody td{
+    border-bottom:1px solid var(--border-strong);
+}
+
+#taskSection .card{
+    border:none!important;
+    box-shadow:none;
+}
+
 
 
 i{display: flex; align-items: center ; justify-content: center;}
@@ -666,11 +694,24 @@ body.dark-mode .sticky-top { background-color: var(--bg-surface) !important; z-i
     overflow: hidden;         /* Clips content that breaks the box */
     text-overflow: ellipsis;  /* Adds '...' if text is too long */
     white-space: normal;      /* Allows wrapping while respecting bounds */
+    /* background-color: #10b981; */
+    
+}
+
+#realUser{
+    font-size: 9px !important;
 }
 
 #notificationList{
+    margin: 5px 0;
+    padding: 0px 5px;
     overflow-y: scroll !important;
+    min-height:  250px;
     max-height:  250px;
+}
+
+.brand{
+    line-height: 1;
 }
 
 @media (max-width: 767px) {

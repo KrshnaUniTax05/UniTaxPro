@@ -118,8 +118,10 @@ window.goBackAndRefresh = function() {
     // Module Mapping
     const formRegistry = { 
         "SalesInvoiceForm": "sales-inv", 
+        "SALES": "sales-inv", 
         "ReceiptPaymentForm" : "receipt-pay", 
         "PurchaseInvoiceForm": "purchase-inv", 
+        "PURCHASE": "purchase-inv", 
         "ReceiptVoucherForm":"receipt-vch", 
         "PaymentVoucherForm": "payment-vch" 
     };
@@ -134,7 +136,8 @@ window.goBackAndRefresh = function() {
     try {
         // 1. FETCH REMOTE DATA
         originalData = await API.Fetch(`Transactions/${type}/${key}`);
-        if (!originalData) throw new Error("Transaction record missing on server.");
+        console.log(`Transaction record missing on server. ${type}/${key} \n ${originalData}`)
+        if (!originalData) throw new Error(`Transaction record missing on server. ${type}/${key} \n ${originalData}`);
 
         // 2. LOAD MODULE TEMPLATE
         const formBaseName = formRegistry[type] || type.replace('Form', '').toLowerCase();
@@ -217,7 +220,7 @@ const lockUI = () => {
             <div class="card bg-white border-0 shadow-sm mb-3" style="border-radius: 8px;">
                 <div class="d-flex justify-content-between p-2" style="min-height: 52px;">
                     <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <span class="badge bg-primary bg-opacity-10 text-primary border-0 px-3 py-1" style="font-weight: 500; font-size: 0.7rem; letter-spacing: 0.3px;">
+                        <span class="badge  bg-opacity-10 text-primary border-0 px-3 py-1" style="font-weight: 500; font-size: 0.7rem; letter-spacing: 0.3px;">
                             <i class="bi bi-eye me-1"></i> VIEW
                         </span>
                         <span class="fw-semibold text-dark" style="font-size: 0.9rem;">

@@ -383,7 +383,7 @@ window.ProjectFormObserver = new MutationObserver((mutations) => {
                         if (App?.UI?.Notify) App.UI.Notify("Success", "Project Updated Successfully", "success");
                     } else {
                         payload.created_at = payload.updated_at;
-                        await API.Create(`${window.ProjectManager.DbSheet}`, payload);
+                        await API.SaveMaster(`${window.ProjectManager.DbSheet}`, payload);
                         if (App?.UI?.Notify) App.UI.Notify("Success", "Project Created Successfully", "success");
                     }
 

@@ -1,53 +1,67 @@
-<div class="main-content-area" style=" margin: 10px 0; ">
-    <div class="container-fluid">
+<div class="main-content-area" style="margin: 10px 0; height: calc(100vh - 80px); display: flex; flex-direction: column;">
+    <div class="container-fluid d-flex flex-column m-0">
         
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center m-0 flex-shrink-0 unitax-header">
             <div>
                 <h4 class="fw-bold text-dark mb-1">Notifications</h4>
                 <p class="text-muted small mb-0">Stay updated with your latest alerts and tasks.</p>
             </div>
-            <button class="btn btn-outline-secondary btn-sm" onclick="App.Router('dashboard')">
-                <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+            <button class="btn btn-outline-secondary btn-sm " onclick="App.goBack()">
+                <i class="bi bi-arrow-left me-1"></i>
             </button>
         </div>
 
-        <div class="card shadow-sm border-0 mb-3">
-            <div class="card-body p-2 d-flex justify-content-between align-items-center">
-                <div class="btn-group">
-                    <button class="btn btn-sm btn-primary active">All</button>
-                    <button class="btn btn-sm btn-outline-secondary">Unread</button>
-                    <button class="btn btn-sm btn-outline-secondary">Tasks</button>
+        <!-- Notifications Card -->
+        <div class="card shadow-sm border-0 m-0 p-0 flex-grow-1 d-flex flex-column overflow-hidden">
+            
+            <!-- Fixed Card Header -->
+            <div class="card-header bg-white border-bottom p-0 flex-shrink-0">
+                <!-- Filter Bar -->
+                <div class="p-3 d-flex justify-content-between align-items-center">
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-primary active rounded-start-3">All</button>
+                        <button class="btn btn-sm btn-outline-secondary">Unread</button>
+                        <button class="btn btn-sm btn-outline-secondary rounded-end-3">Tasks</button>
+                    </div>
+                    <button class="btn btn-link btn-sm text-decoration-none text-muted">Mark all as read</button>
                 </div>
-                <button class="btn btn-link btn-sm text-decoration-none">Mark all as read</button>
-            </div>
-        </div>
-
-        <div class="card shadow-sm border-0">
-            <div id="fullNotificationList" class="list-group list-group-flush">
                 
-                <div class="list-group-item list-group-item-action p-3 border-bottom">
+                <!-- List Header Row -->
+                <div class="d-flex bg-light border-bottom px-3 py-2 small text-muted fw-bold text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">
+                    <div class="flex-grow-1 ps-5">Notification</div>
+                    <div class="text-end" style="width: 100px;">Status</div>
+                </div>
+            </div>
+
+            <!-- Scrollable List Body -->
+            <div id="fullNotificationList" class="list-group list-group-flush flex-grow-1" style="overflow-y: scroll; height: 430px;">
+                
+                <!-- Notification 1 - Unread -->
+                <div class="list-group-item list-group-item-action p-3 border-bottom bg-primary bg-opacity-10">
                     <div class="d-flex w-100 justify-content-between align-items-start">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 me-3">
+                        <div class="d-flex align-items-center flex-grow-1">
+                            <div class="bg-primary bg-opacity-25 text-primary rounded-circle p-2 me-3 flex-shrink-0">
                                 <i class="bi bi-briefcase"></i>
                             </div>
-                            <div>
+                            <div class="flex-grow-1">
                                 <h6 class="mb-1 fw-bold">New Task Assigned</h6>
                                 <p class="mb-1 text-muted small">Krishna Mishra assigned you: "Prepare GST Audit Report"</p>
                                 <small class="text-primary fw-bold">2 hours ago</small>
                             </div>
                         </div>
-                        <span class="badge bg-primary rounded-pill">New</span>
+                        <span class="badge bg-primary rounded-pill flex-shrink-0 ms-2">New</span>
                     </div>
                 </div>
 
+                <!-- Notification 2 -->
                 <div class="list-group-item list-group-item-action p-3 border-bottom">
                     <div class="d-flex w-100 justify-content-between align-items-start">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-success bg-opacity-10 text-success rounded-circle p-2 me-3">
+                        <div class="d-flex align-items-center flex-grow-1">
+                            <div class="bg-success bg-opacity-10 text-success rounded-circle p-2 me-3 flex-shrink-0">
                                 <i class="bi bi-check-circle"></i>
                             </div>
-                            <div>
+                            <div class="flex-grow-1">
                                 <h6 class="mb-1 fw-bold">Task Completed</h6>
                                 <p class="mb-1 text-muted small">Your submission for "Q3 Tax Filing" was approved.</p>
                                 <small class="text-muted">Yesterday</small>
@@ -56,16 +70,99 @@
                     </div>
                 </div>
 
-                <div class="list-group-item list-group-item-action p-3 border-bottom">
+                <!-- Notification 3 - Urgent -->
+                <div class="list-group-item list-group-item-action p-3 border-bottom bg-warning bg-opacity-10">
                     <div class="d-flex w-100 justify-content-between align-items-start">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-warning bg-opacity-10 text-warning rounded-circle p-2 me-3">
+                        <div class="d-flex align-items-center flex-grow-1">
+                            <div class="bg-warning bg-opacity-25 text-warning rounded-circle p-2 me-3 flex-shrink-0">
                                 <i class="bi bi-exclamation-triangle"></i>
                             </div>
-                            <div>
+                            <div class="flex-grow-1">
                                 <h6 class="mb-1 fw-bold">Deadline Approaching</h6>
                                 <p class="mb-1 text-muted small">The deadline for TDS Filing is in 2 days.</p>
-                                <small class="text-muted">June 5, 2026</small>
+                                <small class="text-danger fw-semibold">Due: June 5, 2026</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-warning text-dark rounded-pill flex-shrink-0 ms-2">Urgent</span>
+                    </div>
+                </div>
+
+                <!-- Notification 4 -->
+                <div class="list-group-item list-group-item-action p-3 border-bottom">
+                    <div class="d-flex w-100 justify-content-between align-items-start">
+                        <div class="d-flex align-items-center flex-grow-1">
+                            <div class="bg-info bg-opacity-10 text-info rounded-circle p-2 me-3 flex-shrink-0">
+                                <i class="bi bi-info-circle"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 fw-bold">System Update</h6>
+                                <p class="mb-1 text-muted small">UniTax Pro v2.4 scheduled for Saturday, 2 AM IST.</p>
+                                <small class="text-muted">3 days ago</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notification 5 - Unread -->
+                <div class="list-group-item list-group-item-action p-3 border-bottom bg-primary bg-opacity-10">
+                    <div class="d-flex w-100 justify-content-between align-items-start">
+                        <div class="d-flex align-items-center flex-grow-1">
+                            <div class="bg-primary bg-opacity-25 text-primary rounded-circle p-2 me-3 flex-shrink-0">
+                                <i class="bi bi-chat-dots"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 fw-bold">New Comment</h6>
+                                <p class="mb-1 text-muted small">Ananya Sharma commented on Invoice #INV-2026-089.</p>
+                                <small class="text-primary fw-bold">5 hours ago</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-primary rounded-pill flex-shrink-0 ms-2">New</span>
+                    </div>
+                </div>
+
+                <!-- Notification 6 -->
+                <div class="list-group-item list-group-item-action p-3 border-bottom">
+                    <div class="d-flex w-100 justify-content-between align-items-start">
+                        <div class="d-flex align-items-center flex-grow-1">
+                            <div class="bg-secondary bg-opacity-10 text-secondary rounded-circle p-2 me-3 flex-shrink-0">
+                                <i class="bi bi-file-earmark-check"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 fw-bold">Approval Pending</h6>
+                                <p class="mb-1 text-muted small">Purchase Order PO-2026-452 requires your approval.</p>
+                                <small class="text-muted">1 week ago</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notification 7 -->
+                <div class="list-group-item list-group-item-action p-3 border-bottom">
+                    <div class="d-flex w-100 justify-content-between align-items-start">
+                        <div class="d-flex align-items-center flex-grow-1">
+                            <div class="bg-success bg-opacity-10 text-success rounded-circle p-2 me-3 flex-shrink-0">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 fw-bold">Payment Received</h6>
+                                <p class="mb-1 text-muted small">Payment of ₹45,000 received from Acme Corp.</p>
+                                <small class="text-muted">2 weeks ago</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notification 8 -->
+                <div class="list-group-item list-group-item-action p-3">
+                    <div class="d-flex w-100 justify-content-between align-items-start">
+                        <div class="d-flex align-items-center flex-grow-1">
+                            <div class="bg-danger bg-opacity-10 text-danger rounded-circle p-2 me-3 flex-shrink-0">
+                                <i class="bi bi-x-circle"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 fw-bold">Invoice Rejected</h6>
+                                <p class="mb-1 text-muted small">Invoice #INV-2026-067 was rejected due to mismatch.</p>
+                                <small class="text-muted">June 1, 2026</small>
                             </div>
                         </div>
                     </div>
@@ -74,14 +171,8 @@
             </div>
         </div>
 
-        <!-- <div class="text-center mt-4">
-            <button class="btn btn-outline-primary btn-sm px-4">Load Older Notifications</button>
-        </div> -->
-
     </div>
 </div>
-
-
 <script>
 window.NotificationPageController = {
     notifications: [],
@@ -300,7 +391,7 @@ window.NotificationPageController = {
                 const iconConfig = this.GetIcon(n.type, n.title);
                 
                 // VISUAL STYLING FOR HISTORY LOG
-                const bgClass = isUnread ? 'bg-primary bg-opacity-10' : (isCompleted ? 'bg-light border-opacity-50' : '');
+                const bgClass = isUnread ? 'bg-secondary bg-opacity-10' : (isCompleted ? 'bg-light border-opacity-50' : '');
                 const titleStyle = isCompleted ? 'text-muted text-decoration-line-through opacity-75' : (!isUnread ? 'text-secondary' : 'text-dark');
                 const textStyle = isCompleted ? 'text-muted opacity-75' : 'text-muted';
                 const opacityWrapper = isCompleted ? 'opacity: 0.85;' : '';
@@ -383,13 +474,13 @@ window.NotificationPageController = {
 
         const map = {
             info: { bg: 'bg-info bg-opacity-10 text-info', icon: 'bi-info-circle' },
-            task: { bg: 'bg-primary bg-opacity-10 text-primary', icon: 'bi-briefcase' },
+            task: { bg: 'bg-secondary bg-opacity-10 text-primary', icon: 'bi-briefcase' },
             success: { bg: 'bg-success bg-opacity-10 text-success', icon: 'bi-check-circle' },
             warning: { bg: 'bg-warning bg-opacity-10 text-warning', icon: 'bi-exclamation-triangle' },
             error: { bg: 'bg-danger bg-opacity-10 text-danger', icon: 'bi-x-circle' },
             payment: { bg: 'bg-success bg-opacity-10 text-success', icon: 'bi-wallet2' },
             system: { bg: 'bg-secondary bg-opacity-10 text-secondary', icon: 'bi-gear' },
-            document: { bg: 'bg-primary bg-opacity-10 text-primary', icon: 'bi-file-earmark-text' },
+            document: { bg: 'bg-secondary bg-opacity-10 text-primary', icon: 'bi-file-earmark-text' },
             meeting: { bg: 'bg-info bg-opacity-10 text-info', icon: 'bi-calendar-event' }
         };
         return map[safeType] || { bg: 'bg-secondary bg-opacity-10 text-secondary', icon: 'bi-bell' };

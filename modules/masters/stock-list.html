@@ -407,7 +407,7 @@ window.StockFormObserver = new MutationObserver((mutations) => {
                         if (App?.UI?.Notify) App.UI.Notify("Success", "Stock Item Updated Successfully", "success");
                     } else {
                         payload.created_at = payload.updated_at;
-                        await API.Create(`${window.StockManager.DbSheet}`, payload);
+                        await API.SaveMaster(`${window.StockManager.DbSheet}`, payload);
                         if (App?.UI?.Notify) App.UI.Notify("Success", "Stock Item Created Successfully", "success");
                     }
 

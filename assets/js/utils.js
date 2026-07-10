@@ -152,3 +152,7 @@ document.addEventListener('input', (e) => {
 });
 
 
+window.editGoTransaction = function(formId, key, path) {
+        localStorage.setItem('editContext', JSON.stringify({ type: formId, key: key, returnRoute:path }));
+        if (typeof App !== 'undefined' && App.Router) App.Router('transactions/edit'); 
+    };
