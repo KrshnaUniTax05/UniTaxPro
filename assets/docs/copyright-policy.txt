@@ -1,0 +1,34 @@
+COPYRIGHT AND INTELLECTUAL PROPERTY POLICY
+Copyright © 2026 UniTax Pro. All Rights Reserved.
+
+1. OWNERSHIP OF INTELLECTUAL PROPERTY
+The UniTax Pro web application, located at https://krshnaunitax05.github.io/UniTaxPro/, along with all its underlying technology, core architecture, structural components, and front-end interface assets, is the exclusive intellectual property of UniTax Pro and its primary developers.
+
+Protected assets include, but are not limited to:
+- Source Code: All client-side JavaScript execution scripts (including custom Reconciliation OS engines, ShortCut OS managers, and local real-time caching systems), HTML5/Bootstrap layouts, custom CSS modules, and database structure routing logic.
+- Interface & Design Layouts: The minimalist enterprise user interface (UI), dual-pane Offcanvas internal communication modules, and automated financial KPI tracking displays.
+- Branding: The name "UniTax Pro", associated logos, operational headers, and unique system nomenclature.
+
+2. LIMITED USER LICENSE
+Subject to compliance with terms of service and active subscription access (where applicable), UniTax Pro grants users a limited, non-exclusive, non-transferable, revocable license to access and use the ERP software via a secure web browser solely for internal business operations, bookkeeping, and tax auditing purposes.
+
+3. PROHIBITED USES
+You are strictly prohibited from engaging in any of the following activities without express, advance written authorization from the copyright owner:
+- Reverse-engineering, decompiling, or attempting to extract the underlying source code, JS routing handlers, or proprietary JSON parsing schemas of the platform.
+- Mirroring, scraping, copying, or duplicating the design language, Bootstrap utility configurations, or architectural visual frames to create a competing product or white-label variant.
+- Modifying, distributing, or creating derivative software products based upon the codebase hosted on the UniTax Pro GitHub Pages deployment.
+- Bypassing, disabling, or altering the security gatekeeper code blocks (such as role-based access tokens for administrative control panels).
+
+4. OWNERSHIP OF USER UPLOADED CONTENT (TENANT DATA)
+UniTax Pro claims no ownership over the raw financial records, transactions, vouchers, ledger inputs, or communications uploaded or created by users in the course of operating the software. All intellectual property rights concerning business accounting data remain solely with the user/tenant organization.
+
+5. COPYRIGHT INFRINGEMENT AND REMEDIES
+Unauthorized use or replication of this application's code, structure, or interface configurations constitutes a direct violation of international copyright laws and intellectual property regulations. 
+
+We actively monitor deployment instances. In the event of a breach or unauthorized deployment of the UniTax Pro codebase:
+- A formal Digital Millennium Copyright Act (DMCA) takedown notice will be filed immediately against the hosting service provider or platform repository.
+- We reserve the right to permanently terminate database access keys for the offending accounts without prior notice or refund liability.
+- Legal remedies, including statutory damages and injunctive relief, will be pursued for commercial copyright infringement.
+
+6. CONTACT AND PERMISSIONS
+To request permissions regarding custom integrations, custom API forks, or deployment licenses, please document your request via the official administration channel or code repository workspace.

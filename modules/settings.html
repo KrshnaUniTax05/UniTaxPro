@@ -18,6 +18,12 @@
         overflow: hidden; /* Keeps scrolling contained inside main content */
     }
 
+    #updates .card{
+        max-height: 70vh !important ;
+        margin: 0;
+        padding: 0;
+    }
+
     /* --- SIDEBAR NAV --- */
     .settings-sidebar {
         width: 260px;  
@@ -201,6 +207,7 @@
             <li data-target="banking-settings"><i class="bi bi-bank"></i> Banking Details</li>
             <li data-target="print-settings"><i class="bi bi-printer"></i> Print & Vouchers</li>
             <li data-target="system-prefs"><i class="bi bi-gear"></i> System Preferences</li>
+            <li data-target="updates"><i class="bi bi-megaphone"></i> Updates</li>
         </ul>
     </aside>
 
@@ -323,6 +330,25 @@
                         </div>
                     </div>
                 </div>
+                <div id="updates" class="settings-section">
+                   <!-- Table with updates container -->
+                    <div class="card m-0" >
+                        <div class="card-body">
+                        <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Title</th>
+                                <th class="text-end pe-4">Posted</th>
+                            </tr>
+                        </thead>
+                        <tbody id="updatesContainer">
+                            <!-- Updates will be rendered here -->
+                        </tbody>
+                    </table>
+                    </div>
+                    </div>
+                </div>
+
             </div>
 
             <div class="settings-footer">
@@ -539,4 +565,290 @@
         });
     }
 })();
+
+
+// =============================================================
+// UPDATES ENGINE - User Side Collapsible Updates
+// =============================================================
+
+
+// =============================================================
+// UPDATES ENGINE - Table Row Collapsible
+// =============================================================
+// =============================================================
+// UPDATES ENGINE - Table Row with Manual Toggle (NO Bootstrap Collapse)
+// =============================================================
+
+const UpdatesEngine = {
+    // =========================================================
+    // CONFIG
+    // =========================================================
+    config: {
+        updatesRef: null,
+        containerId: 'updatesContainer',
+        limit: 50
+    },
+
+    // =========================================================
+    // STATE
+    // =========================================================
+    state: {
+        updates: [],
+        isInitialized: false,
+        openRow: null
+    },
+
+    // =========================================================
+    // DOM REFERENCES
+    // =========================================================
+    dom: {
+        container: null
+    },
+
+    // =========================================================
+    // INITIALIZE
+    // =========================================================
+    Init: function() {
+        if (this.state.isInitialized) return;
+        
+        this.config.updatesRef = firebase.database().ref('Utilities/Updates');
+        this.dom.container = document.getElementById(this.config.containerId);
+        
+        if (!this.dom.container) {
+            console.error('Updates container not found');
+            return;
+        }
+
+        this.showLoading();
+        this.listenForUpdates();
+        this.state.isInitialized = true;
+        console.log('UpdatesEngine initialized');
+    },
+
+    // =========================================================
+    // LISTEN FOR UPDATES
+    // =========================================================
+    listenForUpdates: function() {
+        this.config.updatesRef
+            .orderByChild('timestamp')
+            .limitToLast(this.config.limit)
+            .on('value', (snapshot) => {
+                const data = snapshot.val() || {};
+                this.state.updates = [];
+                
+                Object.entries(data).forEach(([id, update]) => {
+                    this.state.updates.push({
+                        id: id,
+                        ...update
+                    });
+                });
+                
+                this.state.updates.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                this.render();
+            });
+    },
+
+    // =========================================================
+    // RENDER UPDATES AS TABLE ROWS (Manual Toggle)
+    // =========================================================
+    render: function() {
+        const container = this.dom.container;
+        
+        if (this.state.updates.length === 0) {
+            container.innerHTML = `
+                <tr>
+                    <td colspan="2" class="text-center py-4 text-muted">
+                        <i class="bi bi-megaphone fs-3 d-block mb-2 opacity-25"></i>
+                        <p class="small mb-0">No updates available</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        let html = '';
+        
+        this.state.updates.forEach((update, index) => {
+            const dateStr = update.timestamp ? new Date(update.timestamp).toLocaleDateString('en-IN', { 
+                day: 'numeric', 
+                month: 'short', 
+                year: 'numeric' 
+            }) : 'Unknown';
+            
+            const timeStr = update.timestamp ? new Date(update.timestamp).toLocaleTimeString('en-IN', {
+                hour: '2-digit',
+                minute: '2-digit'
+            }) : '';
+            
+            const effectiveDate = update.effectiveDate ? new Date(update.effectiveDate).toLocaleDateString('en-IN', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            }) : null;
+            
+            const category = update.category || 'General';
+            const categoryColor = this.getCategoryColor(category);
+            const rowId = `updateRow_${update.id || index}`;
+            const detailId = `updateDetail_${update.id || index}`;
+            
+            html += `
+                <!-- Main Row -->
+                <tr class="update-main-row col-9" id="${rowId}" style="cursor: pointer;">
+                    <td class="ps-4">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-chevron-down" id="icon_${rowId}"></i>
+                            <span class="fw-bold text-dark">${update.title || 'Untitled'}</span>
+                            
+                        </div>
+                    </td>
+                    <td class="text-end  col-3">
+                        <div class="small text-muted">${dateStr}</div>
+                        <div class="small text-muted" style="font-size: 9px;">${timeStr}</div>
+                    </td>
+                </tr>
+                
+                <!-- Detail Row -->
+                <tr class="update-detail-row" id="${detailId}" style="display: none;">
+    <td colspan="2" class="p-0 border-0">
+        <!-- Inner container with light background and subtle inset shadow for depth -->
+        <div class="p-4 bg-light border-bottom" style="box-shadow: inset 0 4px 6px -6px rgba(0,0,0,0.05);">
+            <div class="d-flex flex-column">
+                
+                <!-- Title -->
+                <h6 class="fw-bold text-dark mb-3" style="letter-spacing: 0.01em;">
+                    ${update.title || 'Untitled'}
+                </h6>
+                
+                <!-- Narration / Description -->
+                <div class="text-secondary text-justify mb-4" style="font-size: 1rem; line-height: 1.6; max-width: 900px; overflow-y: scroll;">
+                    ${update.narration || 'No description provided.'}
+                </div>
+
+                <!-- Footer area: Metadata and Action Button -->
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 pt-3 border-top" style="border-color: #e2e8f0 !important;">
+                    
+                    <!-- Metadata (Organized with subtle borders instead of bullets) -->
+                    <div class="d-flex align-items-center text-muted font-mono" style="font-size: 0.7rem;">
+                        <span class="pe-3">
+                            <i class="bi bi-clock me-1"></i> Posted: ${dateStr} at ${timeStr}
+                        </span>
+                        ${update.updatedBy ? `
+                            <span class="px-3 border-start">
+                                <i class="bi bi-person me-1"></i> ${update.updatedBy}
+                            </span>
+                        ` : ''}
+                        ${update.effectiveDate ? `
+                            <span class="ps-3 border-start">
+                                <i class="bi bi-calendar-check me-1"></i> Effective: <span class="fw-bold text-dark">${effectiveDate}</span>
+                            </span>
+                        ` : ''}
+                    </div>
+
+                    <!-- Action Link -->
+                    ${update.link ? `
+                        <div>
+                            <a href="${update.link}" target="_blank" class="btn btn-sm btn-dark px-3 py-1 shadow-sm" style="font-size: 0.75rem;">
+                                Learn More <i class="bi bi-arrow-up-right ms-1" style="font-size: 0.65rem;"></i>
+                            </a>
+                        </div>
+                    ` : ''}
+                    
+                </div>
+            </div>
+        </div>
+    </td>
+</tr>
+            `;
+        });
+
+        container.innerHTML = html;
+        
+        // Attach click events to each row
+        this.attachClickEvents();
+    },
+
+    // =========================================================
+    // ATTACH CLICK EVENTS
+    // =========================================================
+    attachClickEvents: function() {
+        const rows = this.dom.container.querySelectorAll('.update-main-row');
+        
+        rows.forEach(row => {
+            row.addEventListener('click', function() {
+                const rowId = this.id;
+                const detailId = rowId.replace('updateRow', 'updateDetail');
+                const detailRow = document.getElementById(detailId);
+                const icon = document.getElementById('icon_' + rowId);
+                
+                if (!detailRow) return;
+                
+                // Close previously opened row
+                if (UpdatesEngine.state.openRow && UpdatesEngine.state.openRow !== detailId) {
+                    const prevDetail = document.getElementById(UpdatesEngine.state.openRow);
+                    if (prevDetail) {
+                        prevDetail.style.display = 'none';
+                        const prevRowId = UpdatesEngine.state.openRow.replace('updateDetail', 'updateRow');
+                        const prevIcon = document.getElementById('icon_' + prevRowId);
+                        if (prevIcon) {
+                            prevIcon.style.transform = 'rotate(0deg)';
+                            prevIcon.style.transition = 'transform 0.3s';
+                        }
+                    }
+                }
+                
+                // Toggle current row
+                if (detailRow.style.display === 'none' || detailRow.style.display === '') {
+                    detailRow.style.display = 'table-row';
+                    icon.style.transform = 'rotate(180deg)';
+                    icon.style.transition = 'transform 0.3s';
+                    UpdatesEngine.state.openRow = detailId;
+                } else {
+                    detailRow.style.display = 'none';
+                    icon.style.transform = 'rotate(0deg)';
+                    icon.style.transition = 'transform 0.3s';
+                    UpdatesEngine.state.openRow = null;
+                }
+            });
+        });
+    },
+
+    // =========================================================
+    // HELPERS
+    // =========================================================
+    getCategoryColor: function(category) {
+        const colors = {
+            'GST': 'bg-primary',
+            'Income Tax': 'bg-success',
+            'Corporate Law': 'bg-info',
+            'Customs': 'bg-warning',
+            'State Tax': 'bg-danger',
+            'Other': 'bg-secondary'
+        };
+        return colors[category] || 'bg-secondary';
+    },
+
+    showLoading: function() {
+        this.dom.container.innerHTML = `
+            <tr>
+                <td colspan="2" class="text-center py-4">
+                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <span class="text-muted small">Loading updates...</span>
+                </td>
+            </tr>
+        `;
+    },
+
+    Destroy: function() {
+        if (this.config.updatesRef) {
+            this.config.updatesRef.off();
+        }
+        this.state.isInitialized = false;
+        console.log('UpdatesEngine destroyed');
+    }
+};
+
+
+UpdatesEngine.Init()
 </script>

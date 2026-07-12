@@ -138,7 +138,7 @@
         
         <div class="bento-card d-flex flex-row span-4 align-items-center justify-content-between py-1 px-2">
             <div class="px-3">
-                <h1 class="mb-0 fw-bold fs-4  tracking-tight " >Dashboard</h1>
+                <h1 class="mb-0 fw-bold fs-4 text-primary  tracking-tight " >Dashboard</h1>
                 <small class="text-muted d-flex align-items-center gap-2" id="dashSyncTime">
                     <span class="status-dot bg-warning"></span> Connecting...
                 </small>
@@ -151,8 +151,8 @@
                     <option value="this_year">Financial Year</option>
                 </select>
                 <div class="gap-2 d-flex btn-sm">
-                    <button class="btn btn-sm btn-outline-secondary" onclick="ExecutiveOS.ExportCSV()"><i class="bi bi-download"></i></button>
-                    <button class="btn btn-sm btn-dark p" onclick="ExecutiveOS.Refresh()"><i class="bi bi-arrow-repeat"></i> </button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="ExecutiveOS.ExportCSV()"><i class="bi bi-download"></i></button>
+                    <button class="btn btn-sm btn-primary p" onclick="ExecutiveOS.Refresh()"><i class="bi bi-arrow-repeat"></i> </button>
                 </div>
             </div>
         </div>
@@ -191,11 +191,11 @@
             <div class="chart-container"><canvas id="flowChart"></canvas></div>
         </div>
 
-        <div class="bento-card span-2 row-span-2">
+        <div class="bento-card span-2 row-span-2 scroll-x">
             <div class="card-label">Live Transaction Feed <span class="badge bg-light text-dark border" id="txnCount">0</span></div>
             <div class="table-scroll">
                 <table class="bento-table">
-                    <thead><tr><th>Date</th><th>Doc No</th><th>Account Entity</th><th>Type</th><th class="text-end">Amount</th></tr></thead>
+                    <thead><tr><th>Date</th><th>Doc No</th><th>Account Entity</th><th>Type</th><th>Status</th><th class="text-end" >Amount</th></tr></thead>
                     <tbody id="tbl-txns"><tr><td colspan="5" class="text-center text-muted py-4">Loading array...</td></tr></tbody>
                 </table>
             </div>
@@ -211,7 +211,7 @@
             </div>
         </div>
 
-        <div class="bento-card span-1 row-span-2">
+        <div class="bento-card span-1 row-span-1">
             <div class="card-label">Aging Distribution Profile</div>
             <div class="chart-container mb-2" style="min-height: 160px;"><canvas id="agingChart"></canvas></div>
             <div id="agingLegend"></div>
@@ -239,8 +239,21 @@
                 </table>
             </div>
         </div>
+        <div class="bento-card span-2 row-span-1">
+            <div class="card-label">Inventory reorder window</div>
+            <div id="stock-r">
+                <div class="table-scroll" style="height: 50vh !important;">
+                <table class="bento-table">
+                    <thead><tr><th>Client Account Entity</th><th>Invoice Date</th>
+                        <th>Terms Threshold</th>
+                        <th>Document Number</th>
+                        <th class="text-end">Amount Due</th></tr></thead>
+                    <tbody id="stock-reorder"><tr><td colspan="4" class="text-center text-muted py-4">Loading dues...</td></tr></tbody>
+                </table>
+            </div>
+            </div>
+        </div>
         <div class="bento-card span-2 row-span-1"></div>
-        <div class="bento-card span-1 row-span-1"></div>
 
     </div>
 </div>
@@ -285,7 +298,6 @@ const parseSystemDate = (dateStr) => {
             if(syncEl) syncEl.innerHTML = '<span class="status-dot bg-warning"></span> Syncing with Server...';
 
             try {
-                // 1. ASYNC CONCURRENT FETCH FROM CORE DATABASE PIPELINE
                 const [sales, purchase, receipt, payment, stock, ledgers] = await Promise.all([
                     API.Fetch('Transactions/SalesInvoiceForm').catch(() => ({})),
                     API.Fetch('Transactions/PurchaseInvoiceForm').catch(() => ({})),
@@ -295,10 +307,8 @@ const parseSystemDate = (dateStr) => {
                     API.Fetch('Masters/LedgerCreation').catch(() => ({}))
                 ]);
 
-                // 2. ISOLATED DEDICATED FETCH FOR SERVER GOVERNANCE TRACKS
                 const requests = await this.FetchGlobalRequests();
 
-                // 3. NORMALIZE RELATIONAL SCHEMAS
                 LEDGER_MAP = {};
                 if(ledgers) {
                     Object.entries(ledgers).forEach(([key, l]) => {
@@ -312,7 +322,6 @@ const parseSystemDate = (dateStr) => {
                     });
                 }
 
-                // 4. PARSE TRANSACTIONS WITH DYNAMIC formId FROM SERVER
                 RAW_TRANSACTIONS = [];
                 const compileFeed = (dataObj, typeName, formPath) => {
                     if(!dataObj) return;
@@ -325,7 +334,6 @@ const parseSystemDate = (dateStr) => {
                         const entityCreditDays = targetLedger ? targetLedger.creditDays : 0;
                         const postingDateStr = h.date || h.voucher_date || h.postingDate || new Date().toISOString();
                         
-                        // 🔥 DYNAMIC formId: vch.formId -> h.formId -> formPath -> typeName
                         const exactFormId = vch.formId || h.formId || formPath || typeName;
                         
                         RAW_TRANSACTIONS.push({
@@ -338,12 +346,17 @@ const parseSystemDate = (dateStr) => {
                             creditDays: entityCreditDays,
                             type: typeName,
                             amt: amt,
-                            status: h.status || vch.status || 'PENDING'
+                            status: h.status || vch.status || 'PENDING',
+                            // 🔥 STORE THE FULL HEADER WITH META
+                            _raw: {
+                                header: h,  // Contains meta.ReconcilationStatus
+                                voucher: vch,
+                                fullData: vch
+                            }
                         });
                     });
                 };
 
-                // Pass the exact form path from API for dynamic formId resolution
                 compileFeed(sales, 'SALES', 'SalesInvoiceForm'); 
                 compileFeed(purchase, 'PURCHASE', 'PurchaseInvoiceForm'); 
                 compileFeed(receipt, 'RECEIPT', 'ReceiptVoucherForm'); 
@@ -351,7 +364,6 @@ const parseSystemDate = (dateStr) => {
 
                 RAW_STOCK = stock ? Object.values(stock) : [];
                 
-                // Requests keep their own formId from server
                 RAW_REQUESTS = requests ? Object.entries(requests).map(([k, v]) => ({
                     key: k, 
                     formId: v.formId || 'Requests', 
@@ -399,134 +411,223 @@ const parseSystemDate = (dateStr) => {
             });
         },
 
-        UpdateUI() {
-            const rows = this.getFiltered();
-            const now = new Date().getTime();
-            const msPerDay = 86400000;
-            const currentUserId = App.State?.currentuserId || App.State?.workspaceId;
+UpdateUI() {
+    const rows = this.getFiltered();
+    const now = new Date().getTime();
+    const msPerDay = 86400000;
+    const currentUserId = App.State?.currentuserId || App.State?.workspaceId;
+    
+    let metrics = { rev: 0, purch: 0, rec: 0, pay: 0, totalOverdue: 0 };
+    const monthlyFlow = {};
+    const agingBuckets = { "Not Due": 0, "1-30 Days Overdue": 0, "31-60 Days Overdue": 0, "60+ Days Overdue": 0 };
+    const pendingDuesList = [];
+
+    rows.forEach(t => {
+        if(t.type === 'SALES') { 
+            metrics.rev += t.amt; 
             
-            let metrics = { rev: 0, purch: 0, rec: 0, pay: 0, totalOverdue: 0 };
-            const monthlyFlow = {};
-            const agingBuckets = { "Not Due": 0, "1-30 Days Overdue": 0, "31-60 Days Overdue": 0, "60+ Days Overdue": 0 };
-            const pendingDuesList = [];
+            const parsedInvDate = parseSystemDate(t.date);
+            const invTime = parsedInvDate.getTime();
+            const dueDate = invTime + (t.creditDays * msPerDay);
+            const daysOverdue = Math.floor((now - dueDate) / msPerDay);
 
-            rows.forEach(t => {
-                if(t.type === 'SALES') { 
-                    metrics.rev += t.amt; 
-                    
-                    const parsedInvDate = parseSystemDate(t.date);
-                    const invTime = parsedInvDate.getTime();
-                    const dueDate = invTime + (t.creditDays * msPerDay);
-                    const daysOverdue = Math.floor((now - dueDate) / msPerDay);
-
-                    if (daysOverdue > 0) {
-                        pendingDuesList.push({ ...t, dueDateObj: dueDate, daysOverdue: daysOverdue });
-                        metrics.totalOverdue += t.amt;
-                    }
-
-                    if(daysOverdue <= 0) agingBuckets["Not Due"] += t.amt;
-                    else if (daysOverdue <= 30) agingBuckets["1-30 Days Overdue"] += t.amt;
-                    else if (daysOverdue <= 60) agingBuckets["31-60 Days Overdue"] += t.amt;
-                    else agingBuckets["60+ Days Overdue"] += t.amt;
-                }
-                if(t.type === 'PURCHASE') metrics.purch += t.amt;
-                if(t.type === 'RECEIPT') metrics.rec += t.amt;
-                if(t.type === 'PAYMENT') metrics.pay += t.amt;
-
-                if(t.type === 'RECEIPT' || t.type === 'PAYMENT') {
-                    const d = parseSystemDate(t.date);
-                    const k = `${d.toLocaleString('default', {month:'short'})} ${d.getFullYear().toString().substr(2)}`;
-                    if(!monthlyFlow[k]) monthlyFlow[k] = { in: 0, out: 0 };
-                    if(t.type === 'RECEIPT') monthlyFlow[k].in += t.amt;
-                    if(t.type === 'PAYMENT') monthlyFlow[k].out += t.amt;
-                }
-            });
-
-            const userPendingRequests = RAW_REQUESTS.filter(req => {
-                const isCreator = req.requesterId === currentUserId;
-                return (req.state === 'PENDING' && req.hierarchy && req.hierarchy[req.currentLevelIndex]?.userId === currentUserId) ||
-                       (req.state === 'RETURNED_TO_CREATOR' && isCreator);
-            });
-
-            // KPIs
-            document.getElementById('kpi-rev').textContent = formatINR(metrics.rev);
-            document.getElementById('kpi-out').textContent = formatINR(metrics.totalOverdue);
-            document.getElementById('kpi-cash').textContent = formatINR(metrics.rec - metrics.pay);
-            document.getElementById('kpi-appr').textContent = userPendingRequests.length;
-            document.getElementById('kpi-rev-sub').textContent = `${rows.filter(t=>t.type==='SALES').length} Slates mapped`;
-            document.getElementById('txnCount').textContent = rows.length;
-
-            // TABLE 1: TRANSACTIONS PIPELINE
-            const tblTxns = document.getElementById('tbl-txns');
-            tblTxns.innerHTML = rows.length ? rows.slice(0, 30).map(t => {
-                const badge = t.type === 'SALES' ? 'bg-primary-subtle text-primary' : t.type === 'RECEIPT' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning';
-                const sign = (t.type === 'SALES' || t.type === 'RECEIPT') ? '+' : '-';
-                return `
-                <tr data-form-id="${t.formId}" data-key="${t.key}" ondblclick="window.editGoTransaction('${t.formId}', '${t.key}', 'dashboard')" style="cursor: pointer;">
-                    <td class="text-muted font-mono">${formatDate(t.date)}</td>
-                    <td class="font-mono fw-bold">${t.doc}</td>
-                    <td class="fw-medium text-truncate" style="max-width:160px;">${t.entityName}</td>
-                    <td><span class="badge ${badge} border rounded-pill">${t.type}</span></td>
-                    <td class="text-end fw-bold font-mono">${sign} ${formatINR(t.amt)}</td>
-                </tr>`;
-            }).join('') : `<tr><td colspan="5" class="text-center text-muted py-4">Empty ledger feed array context.</td></tr>`;
-
-            // TABLE 2: ACTION QUEUES (Requests)
-            const tblAppr = document.getElementById('tbl-approvals');
-            if(userPendingRequests.length === 0) {
-                tblAppr.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">Clear system track. No actions pending.</td></tr>`;
-            } else {
-                tblAppr.innerHTML = userPendingRequests.map(req => {
-                    let badge = `<span class="badge bg-light text-dark border">L${(req.currentLevelIndex || 0)+1} Pending</span>`;
-                    if (req.state === 'RETURNED_TO_CREATOR') badge = `<span class="badge bg-danger text-white">Returned</span>`;
-                    else badge = `<span class="badge bg-warning text-white shadow-sm Pulse">Action Required</span>`;
-
-                    return `
-                    <tr data-form-id="${req.formId}" data-key="${req.key}" style="cursor: pointer;">
-                        <td class="font-mono text-muted">#${req.key.slice(-5).toUpperCase()}</td>
-                        <td class="fw-bold text-truncate" style="max-width:170px;">${req.title || req.subject || 'Standard Request'}</td>
-                        <td class="font-mono fw-bold">${formatINR(parseFloat(req.amount || 0))}</td>
-                        <td>${badge}</td>
-                        <td class="text-end">
-                            <button class="btn btn-sm btn-primary border text-success shadow-sm" onclick="App.Router('reports/approvalmanagementsystem')"><i class="bi bi-eye text-light"></i></button>
-                        </td>
-                    </tr>`;
-                }).join('');
+            if (daysOverdue > 0) {
+                pendingDuesList.push({ ...t, dueDateObj: dueDate, daysOverdue: daysOverdue });
+                metrics.totalOverdue += t.amt;
             }
 
-            // TABLE 3: OUTSTANDING DUES
-            pendingDuesList.sort((a, b) => b.daysOverdue - a.daysOverdue);
-            const tblDues = document.getElementById('tbl-dues');
-            tblDues.innerHTML = pendingDuesList.length ? pendingDuesList.map(d => {
-                let badgeClass = d.daysOverdue > 30 ? "bg-danger-soft" : "bg-warning-soft";
-                let badgeText = `${d.daysOverdue}d Overdue`;
+            if(daysOverdue <= 0) agingBuckets["Not Due"] += t.amt;
+            else if (daysOverdue <= 30) agingBuckets["1-30 Days Overdue"] += t.amt;
+            else if (daysOverdue <= 60) agingBuckets["31-60 Days Overdue"] += t.amt;
+            else agingBuckets["60+ Days Overdue"] += t.amt;
+        }
+        if(t.type === 'PURCHASE') metrics.purch += t.amt;
+        if(t.type === 'RECEIPT') metrics.rec += t.amt;
+        if(t.type === 'PAYMENT') metrics.pay += t.amt;
+
+        if(t.type === 'RECEIPT' || t.type === 'PAYMENT') {
+            const d = parseSystemDate(t.date);
+            const k = `${d.toLocaleString('default', {month:'short'})} ${d.getFullYear().toString().substr(2)}`;
+            if(!monthlyFlow[k]) monthlyFlow[k] = { in: 0, out: 0 };
+            if(t.type === 'RECEIPT') monthlyFlow[k].in += t.amt;
+            if(t.type === 'PAYMENT') monthlyFlow[k].out += t.amt;
+        }
+    });
+
+    const userPendingRequests = RAW_REQUESTS.filter(req => {
+        const isCreator = req.requesterId === currentUserId;
+        return (req.state === 'PENDING' && req.hierarchy && req.hierarchy[req.currentLevelIndex]?.userId === currentUserId) ||
+               (req.state === 'RETURNED_TO_CREATOR' && isCreator);
+    });
+
+    // KPIs
+    document.getElementById('kpi-rev').textContent = formatINR(metrics.rev);
+    document.getElementById('kpi-out').textContent = formatINR(metrics.totalOverdue);
+    document.getElementById('kpi-cash').textContent = formatINR(metrics.rec - metrics.pay);
+    document.getElementById('kpi-appr').textContent = userPendingRequests.length;
+    document.getElementById('kpi-rev-sub').textContent = `${rows.filter(t=>t.type==='SALES').length} Slates mapped`;
+    document.getElementById('txnCount').textContent = rows.length;
+
+    // =========================================================
+    // TABLE 1: TRANSACTIONS PIPELINE (WITH RECONCILIATION BADGE)
+    // =========================================================
+    const tblTxns = document.getElementById('tbl-txns');
+    tblTxns.innerHTML = rows.length ? rows.slice(0, 30).map(t => {
+        const badge = t.type === 'SALES' ? 'text-muted' : 
+                      t.type === 'RECEIPT' ? 'text-muted' : 
+                      'text-muted';
+        const sign = (t.type === 'SALES' || t.type === 'RECEIPT') ? '+' : '-';
+        
+        // 🔥 ACCESS ReconcilationStatus FROM meta OBJECT IN header
+        const rawHeader = t?._raw?.header || {};
+        const meta = rawHeader?.meta || {};
+        const isReconciled = meta.ReconcilationStatus === "true";
+        
+        console.log('Transaction:', t.doc, 'Reconciled:', isReconciled, 'Meta:', meta);
+        
+        const reconBadge = isReconciled 
+            ? `<span class="badge bg-success text-white border rounded-pill border-success">
+                Reconciled
+               </span>` 
+            : `<span class="badge bg-warning text-white border rounded-pill border-warning ms-1">
+                Pending
+               </span>`;
+        
+        return `
+        <tr data-form-id="${t.formId}" data-key="${t.key}" ondblclick="window.editGoTransaction('${t.formId}', '${t.key}', 'dashboard')" style="cursor: pointer;">
+            <td class="text-muted font-mono">${formatDate(t.date)}</td>
+            <td class="font-mono fw-bold">${t.doc}</td>
+            <td class="fw-medium text-truncate" style="max-width:160px;">${t.entityName}</td>
+            <td>
+                <span class="badge ${badge} border rounded-pill">${t.type}</span>
+            </td>
+            <td>
+                <span>${reconBadge}</span>
+            </td>
+            <td class="text-end fw-bold font-mono">${sign} ${formatINR(t.amt)}</td>
+        </tr>`;
+    }).join('') : `<tr><td colspan="6" class="text-center text-muted py-4">Empty ledger feed array context.</td></tr>`;
+
+    // TABLE 2: ACTION QUEUES (Requests)
+    const tblAppr = document.getElementById('tbl-approvals');
+    if(userPendingRequests.length === 0) {
+        tblAppr.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">Clear system track. No actions pending.</td></tr>`;
+    } else {
+        tblAppr.innerHTML = userPendingRequests.map(req => {
+            let badge = `<span class="badge bg-light text-dark border">L${(req.currentLevelIndex || 0)+1} Pending</span>`;
+            if (req.state === 'RETURNED_TO_CREATOR') badge = `<span class="badge bg-danger text-white">Returned</span>`;
+            else badge = `<span class="badge bg-warning text-white shadow-sm Pulse">Action Required</span>`;
+
+            return `
+            <tr data-form-id="${req.formId}" data-key="${req.key}" style="cursor: pointer;">
+                <td class="font-mono text-muted">#${req.key.slice(-5).toUpperCase()}</td>
+                <td class="fw-bold text-truncate" style="max-width:170px;">${req.title || req.subject || 'Standard Request'}</td>
+                <td class="font-mono fw-bold">${formatINR(parseFloat(req.amount || 0))}</td>
+                <td>${badge}</td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-primary border text-success shadow-sm" onclick="App.Router('reports/approvalmanagementsystem')"><i class="bi bi-eye text-light"></i></button>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    // TABLE 3: OUTSTANDING DUES
+    pendingDuesList.sort((a, b) => b.daysOverdue - a.daysOverdue);
+    const tblDues = document.getElementById('tbl-dues');
+    tblDues.innerHTML = pendingDuesList.length ? pendingDuesList.map(d => {
+        let badgeClass = d.daysOverdue > 30 ? "bg-danger-soft" : "bg-warning-soft";
+        let badgeText = `${d.daysOverdue}d Overdue`;
+
+        return `
+        <tr data-form-id="${d.formId}" data-key="${d.key}" style="cursor: pointer;" ondblclick="window.editGoTransaction('${d.formId}', '${d.key}', 'dashboard')">
+            <td class="fw-bold text-truncate" style="max-width:150px;">
+                ${d.entityName} 
+                <span class="d-block fw-normal text-muted" style="font-size:9px">Terms: ${d.creditDays}d</span>
+            </td>
+            <td class="text-muted font-mono">${formatDate(d.date)}</td>
+            <td><span class="badge-soft ${badgeClass}">${badgeText}</span></td>
+            <td><span class="font-mono text-muted">${d.doc}</span></td>
+            <td class="text-end fw-bold text-danger font-mono">${formatINR(d.amt)}</td>
+        </tr>`;
+    }).join('') : `<tr><td colspan="5" class="text-center text-muted py-4">No invoices have exceeded their allowed credit tracking threshold.</td></tr>`;
+    
+    // =========================================================
+    // TABLE 4: STOCK DEPLOYMENT
+    // =========================================================
+    const tblStock = document.getElementById('tbl-stock');
+    const sortedStock = RAW_STOCK.sort((a,b) => parseFloat(b.openingAmount||0) - parseFloat(a.openingAmount||0)).slice(0, 10);
+    tblStock.innerHTML = sortedStock.length ? sortedStock.map(s => `
+        <tr data-form-id="Masters/Stock" data-key="${s.Stock_Code || 'N/A'}" style="cursor: pointer;">
+            <td><div class="fw-bold">${s.itemName || 'Asset'}</div><div class="text-muted font-mono" style="font-size:10px">${s.Stock_Code || '-'}</div></td>
+            <td class="text-end fw-bold text-primary font-mono align-middle">${formatINR(parseFloat(s.openingAmount||0))}</td>
+        </tr>
+    `).join('') : `<tr><td colspan="2" class="text-center text-muted">Empty storage catalog profiles.</td></tr>`;
+
+    // =========================================================
+    // TABLE 5: STOCK RE-ORDER (Low Stock Alert)
+    // =========================================================
+    const tblReorder = document.getElementById('stock-reorder');
+    if (tblReorder) {
+        // Filter stocks where current quantity is less than minLevel
+        const reorderStocks = RAW_STOCK.filter(s => {
+            const currentQty = parseFloat(s.openingQuantity) || 0;
+            const minLevel = parseFloat(s.minLevel) || parseFloat(s.minimumLevel) || 0;
+            return minLevel > 0 && currentQty < minLevel;
+        });
+
+        if (reorderStocks.length === 0) {
+            tblReorder.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No item required to order.</td></tr>`;
+        } else {
+            // Sort by urgency (lowest stock first)
+            reorderStocks.sort((a, b) => {
+                const aQty = parseFloat(a.openingQuantity) || 0;
+                const bQty = parseFloat(b.openingQuantity) || 0;
+                const aMin = parseFloat(a.minLevel) || parseFloat(a.minimumLevel) || 0;
+                const bMin = parseFloat(b.minLevel) || parseFloat(b.minimumLevel) || 0;
+                return (aQty / aMin) - (bQty / bMin);
+            });
+
+            tblReorder.innerHTML = reorderStocks.map(s => {
+                const currentQty = parseFloat(s.openingQuantity) || 0;
+                const minLevel = parseFloat(s.minLevel) || parseFloat(s.minimumLevel) || 0;
+                const reorderQty = parseFloat(s.reorderLevel) || parseFloat(s.reorderQuantity) || minLevel * 2;
+                const deficit = Math.max(0, minLevel - currentQty);
+                
+                // Determine urgency level
+                let urgencyBadge = '';
+                const ratio = currentQty / minLevel;
+                if (ratio <= 0.2) {
+                    urgencyBadge = `<span class="badge bg-danger text-white">⚠️ CRITICAL</span>`;
+                } else if (ratio <= 0.5) {
+                    urgencyBadge = `<span class="badge bg-warning text-dark">⚡ Low</span>`;
+                } else if (ratio < 1) {
+                    urgencyBadge = `<span class="badge bg-info text-white">📉 Below Min</span>`;
+                }
 
                 return `
-                <tr data-form-id="${d.formId}" data-key="${d.key}" style="cursor: pointer;" ondblclick="window.editGoTransaction('${d.formId}', '${d.key}', 'dashboard')">
-                    <td class="fw-bold text-truncate" style="max-width:150px;">
-                        ${d.entityName} 
-                        <span class="d-block fw-normal text-muted" style="font-size:9px">Terms: ${d.creditDays}d</span>
-                    </td>
-                    <td class="text-muted font-mono">${formatDate(d.date)}</td>
-                    <td><span class="badge-soft ${badgeClass}">${badgeText}</span></td>
-                    <td><span class="font-mono text-muted">${d.doc}</span></td>
-                    <td class="text-end fw-bold text-danger font-mono">${formatINR(d.amt)}</td>
-                </tr>`;
-            }).join('') : `<tr><td colspan="5" class="text-center text-muted py-4">No invoices have exceeded their allowed credit tracking threshold.</td></tr>`;
-            
-            // TABLE 4: STOCK DEPLOYMENT
-            const tblStock = document.getElementById('tbl-stock');
-            const sortedStock = RAW_STOCK.sort((a,b) => parseFloat(b.openingAmount||0) - parseFloat(a.openingAmount||0)).slice(0, 10);
-            tblStock.innerHTML = sortedStock.length ? sortedStock.map(s => `
                 <tr data-form-id="Masters/Stock" data-key="${s.Stock_Code || 'N/A'}" style="cursor: pointer;">
-                    <td><div class="fw-bold">${s.itemName || 'Asset'}</div><div class="text-muted font-mono" style="font-size:10px">${s.Stock_Code || '-'}</div></td>
-                    <td class="text-end fw-bold text-primary font-mono align-middle">${formatINR(parseFloat(s.openingAmount||0))}</td>
-                </tr>
-            `).join('') : `<tr><td colspan="2" class="text-center text-muted">Empty storage catalog profiles.</td></tr>`;
+                    <td>
+                        <div class="fw-bold">${s.itemName || 'Unnamed'}</div>
+                        <div class="text-muted font-mono" style="font-size:9px">${s.Stock_Code || '-'}</div>
+                    </td>
+                    <td class="text-center">
+                        <span class="fw-bold">${currentQty.toFixed(0)}</span>
+                        <span class="text-muted" style="font-size:9px">/ ${minLevel.toFixed(0)} min</span>
+                    </td>
+                    <td>
+                        ${urgencyBadge}
+                        <span class="small text-muted d-block" style="font-size:9px;">Need ${deficit.toFixed(0)} more</span>
+                    </td>
+                    <td class="text-end">
+                        <span class="font-mono fw-bold text-primary">${formatINR(parseFloat(s.openingAmount || 0))}</span>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+    }
 
-            this.RenderCharts(metrics.rev, metrics.purch + metrics.pay, metrics.rec - metrics.pay, monthlyFlow, agingBuckets);
-        },
-
+    this.RenderCharts(metrics.rev, metrics.purch + metrics.pay, metrics.rec - metrics.pay, monthlyFlow, agingBuckets);
+},
         RenderCharts(revenue, expenses, netBalance, flowMap, agingBuckets) {
             if (typeof Chart === 'undefined') {
                 setTimeout(() => this.RenderCharts(revenue, expenses, netBalance, flowMap, agingBuckets), 150);
@@ -615,7 +716,6 @@ const parseSystemDate = (dateStr) => {
 
     // Initialize
 })();
-
 
 ExecutiveOS.Refresh();
 </script>

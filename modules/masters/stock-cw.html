@@ -1,5 +1,5 @@
 <div class="animate-in">
-    <form id="Stock" data-category="Masters" autocomplete="off">
+    <form id="Stock" data-listattribute="stock" data-category="Masters" autocomplete="off">
         <div class="card border-0 shadow-sm overflow-hidden">
             <div class="card-body p-0">
                 <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-light unitax-header">
@@ -19,7 +19,7 @@
                                 <div class="col-md-4">
                                     <label class="form-label small fw-bold">Stock Code (SKU)</label>
                                     <input type="text" name="Stock_Code" class="form-control form-control-sm  upper-case fw-bold" 
-                                           data-check-unique="true" data-sheet_name="Stock" data-column_name="Stock_Code" required>
+                                           data-check-unique="true" data-sheet_name="Stock" data-column_name="Stock_Code" minlength="5" maxlength="5" required>
                                 </div>
                                 <div class="col-md-8">
                                     <label class="form-label small fw-bold">Item Display Name</label>
@@ -36,7 +36,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label small fw-bold">HSN/SAC Code</label>
-                                    <input type="text" name="itemHSN" class="form-control form-control-sm " required>
+                                    <input type="text" name="itemHSN" class="form-control form-control-sm " minlength="4" maxlength="8" required>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label small fw-bold">Stock Type</label>

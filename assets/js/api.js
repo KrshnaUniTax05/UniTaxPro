@@ -219,7 +219,10 @@ const API = {
 // 2. UPDATED POST VOUCHER (Calculates Subtotal, Taxes & Dynamic Meta)
 async PostVoucher(form) {
     console.log("post voucher worked", form);
-    
+    if (form.classList.contains('nosubmit')) {
+        
+        return ;
+    }
     // =============================================================
     // 🔒 CHECK FOR HIDDEN UpdateStatus FIELD
     // =============================================================

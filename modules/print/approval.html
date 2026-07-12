@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Audit Trail - #{{doc_id}}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #0f172a;
+            background: #fff;
+            margin: 0;
+            padding: 30px;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        
+        .header {
+            border-bottom: 2px solid #0f172a;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+        
+        .header h2 { margin: 0; font-size: 24px; letter-spacing: -0.5px; }
+        .header p { margin: 4px 0 0; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+        
+        .grid { display: flex; gap: 20px; margin-bottom: 25px; }
+        .col { flex: 1; }
+        .label { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600; margin-bottom: 4px; letter-spacing: 0.05em; }
+        .value { font-size: 15px; font-weight: 600; }
+        
+        /* Flex container for side-by-side Narration and Ledger info */
+        .details-wrapper {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            align-items: stretch;
+        }
+
+        .narration-box {
+            flex: 2;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+            width: 50%;
+            font-size: 13px;
+            /* line-height: 1.6; */
+            /* white-space: pre-wrap; */
+        }
+
+        .ledger-box {
+            flex: 2;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+            font-size: 0.8rem;
+        }
+
+        .ledger-box table { width: 100%; margin: 0; border: none; }
+        .ledger-box td { padding: 4px 0; border: none; }
+        .ledger-box td.td-label { color: #64748b; width: 45%; }
+        .ledger-box td.td-val { font-weight: 600; text-align: right; }
+
+        /* Main Data Table */
+        .audit-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 13px; }
+        .audit-table th {
+            background-color: #f8fafc; color: #475569; font-size: 11px; text-transform: uppercase;
+            text-align: left; padding: 12px 10px; border-bottom: 2px solid #cbd5e1; letter-spacing: 0.05em;
+        }
+        .audit-table td {
+            padding: 12px 10px; border-bottom: 1px solid #e2e8f0;
+        }
+
+        .footer {
+            border-top: 1px solid #e2e8f0; padding-top: 15px; text-align: center; font-size: 11px; color: #64748b;
+        }
+        
+        .watermark {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 100px; font-weight: 800; color: rgba(0, 0, 0, 0.03); z-index: -1; pointer-events: none;
+        }
+
+        @media print {
+            @page { margin: 15mm; size: A4 portrait; }
+            body { padding: 10mm; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="watermark">AUDIT TRAIL</div>
+    
+    <div class="header">
+        <div>
+            <h2>UniTax Pro</h2>
+            <p>Enterprise Resource Planning</p>
+        </div>
+        <div style="text-align: right;">
+            <h2>APPROVAL MATRIX</h2>
+            <p style="color:#0f172a; margin-top: 8px;">DOC REF: <strong>#{{doc_id}}</strong><br>PRINTED: {{print_date}}</p>
+        </div>
+    </div>
+
+    <!-- Top Summary Grid -->
+    <div class="grid">
+        <div class="col" style="flex: 2;">
+            <div class="label">Request Title</div>
+            <div class="value">{{req_title}}</div>
+        </div>
+        <div class="col">
+            <div class="label">Total Value</div>
+            <div class="value">₹{{req_amount}}</div>
+        </div>
+        <div class="col">
+            <div class="label">Originator</div>
+            <div class="value">{{requester_name}}</div>
+        </div>
+        <div class="col" style="text-align:right;">
+            <div class="label">Final Status</div>
+            <div style="margin-top: 4px;">{{final_status}}</div>
+        </div>
+    </div>
+
+    <!-- Details Section (Narration + Ledger Side-by-Side) -->
+    <div class="details-wrapper">
+        
+        <div class="ledger-box p-1">
+            <div class="label" style="margin-bottom: 8px;">Fields</div>
+            <table class="table table-bordered m-0 p-0">
+    <tbody>
+       
+        {{dynamic_fields}}
+    </tbody>
+</table>
+        </div>
+        <div class="narration-box">
+            <div class="label" style="margin-bottom: 8px;">Contextual Justification / Narration</div>
+            {{narration}}
+        </div>
+    </div>
+
+    <!-- Audit Trail -->
+    <div class="label" style="margin-bottom:10px;">Routing & Authorization Trail</div>
+    <table class="audit-table">
+        <thead>
+            <tr>
+                <th style="width: 5%; text-align:center;">Step</th>
+                <th style="width: 25%;">Authority / Role</th>
+                <th style="width: 15%;">Action</th>
+                <th style="width: 35%;">Remarks & Comments</th>
+                <th style="width: 20%;">Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{audit_rows}}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p style="margin:0 0 5px;">This is a system-generated secure audit trail. Digital signatures correspond to immutable cryptographic logs within the database.</p>
+        <p style="margin:0; font-family: monospace;">Initiated: {{req_date}} • System Hash: AUTH-{{doc_id}}</p>
+    </div>
+
+</body>
+</html>

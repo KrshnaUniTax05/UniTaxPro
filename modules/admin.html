@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UniTax Pro - Admin Panel</title>
-    <link rel="shortcut icon" href="../assets/img/_A_highly_minimalistic_and_smooth_202606042307.jpeg" type="image/x-icon">
+    <link rel="shortcut icon" href="../assets/img/logo-circle.png" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     
@@ -68,8 +68,18 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="switchAdminView('view-workspace', this)">
+                        <i class="bi bi-person-workspace"></i> Workspaces
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="#" class="nav-link" onclick="switchAdminView('view-broadcasts', this)">
                         <i class="bi bi-mic"></i> Broadcast
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="switchAdminView('view-updates', this)">
+                        <i class="bi bi-megaphone"></i> Updates
                     </a>
                 </li>
             </ul>
@@ -98,7 +108,7 @@
                         <li>
                             <a class="dropdown-item py-2 text-danger fw-bold" 
                             href="javascript:void(0)" 
-                            onclick="window.location.replace('../login.html')">
+                            onclick="adminLogout()">
                                 <i class="bi bi-box-arrow-left me-2"></i>Exit Panel
                             </a>
                         </li>
@@ -303,6 +313,267 @@
                         </table>
                     </div>
                 </div>
+            </div>
+           <!-- ========================================================= -->
+<!-- WORKSPACE MANAGEMENT TABLE                                -->
+<!-- ========================================================= -->
+
+<div id="view-workspace" class="tab-view">
+    <div class="p-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-building me-2 text-primary"></i>Workspace Management
+                </h5>
+                <p class="text-muted small mb-0">Manage user workspaces and assignments</p>
+            </div>
+            <button class="btn btn-primary btn-sm px-4" onclick="openAddWorkspaceModal()">
+                <i class="bi bi-plus-lg me-1"></i> Add Workspace
+            </button>
+        </div>
+
+        <!-- Table -->
+        <div class="card border-0 shadow-sm rounded-3">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                                <tr class="small text-uppercase fw-bold text-muted" style="font-size: 10px;">
+                                    <th class="ps-4 py-3" style="width: 18%;">User</th>
+                                    <th style="width: 12%;">User ID</th>
+                                    <th style="width: 22%;">Workspace ID</th>
+                                    <th style="width: 12%;">Status</th>
+                                    <th style="width: 12%;">Role</th>
+                                    <th style="width: 12%;" class="text-center">Edit</th>
+                                    <th style="width: 12%;" class="text-end pe-4">Actions</th>
+                                </tr>
+                            </thead>
+                        <tbody id="workspaceTableBody">
+                            <!-- Data from Firebase -->
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    <i class="bi bi-inbox fs-3 d-block mb-2 opacity-25"></i>
+                                    No workspace assignments found.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Edit Workspace Modal -->
+<div class="modal fade" id="editWorkspaceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white border-0">
+                <h5 class="modal-title fw-bold" id="editWorkspaceModalLabel">
+                    <i class="bi bi-pencil me-2"></i>Edit Workspace
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">Workspace Status</label>
+                    <select id="editWorkspaceStatus" class="form-select form-select-sm">
+                        <option value="active">🟢 Active</option>
+                        <option value="suspended">🟡 Suspended</option>
+                        <option value="deleted">🔴 Deleted</option>
+                    </select>
+                    <small class="text-muted">Change the workspace status for this user.</small>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveWorkspaceStatusBtn" onclick="WorkspaceManager.saveStatusUpdate()">
+                    <i class="bi bi-save me-1"></i> Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- ADD WORKSPACE MODAL                                      -->
+<!-- ========================================================= -->
+<div class="modal fade" id="addWorkspaceModal" tabindex="-1" aria-labelledby="addWorkspaceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white border-0">
+                <h5 class="modal-title fw-bold" id="addWorkspaceModalLabel">
+                    <i class="bi bi-plus-circle me-2"></i>Add Workspace
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted small">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Enter the User ID of an <strong>Administrator</strong> to create a workspace.
+                </p>
+                <div class="mb-3">
+                    <label for="workspaceUserId" class="form-label fw-bold small">User ID <span class="text-danger">*</span></label>
+                    <input type="text" id="workspaceUserId" class="form-control form-control-sm font-monospace" 
+                           placeholder="Enter User ID (e.g., AB12CD34EF)" maxlength="10">
+                    <small class="text-muted mt-4">User must have Administrator role to create a workspace.</small>
+                </div>
+                <div id="workspaceModalError" class="alert alert-danger d-none py-2 small"></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="createWorkspaceBtn" onclick="createWorkspace()">
+                    <i class="bi bi-check2 me-1"></i> Create Workspace
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- CONFIRM DELETE MODAL                                     -->
+<!-- ========================================================= -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white border-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <i class="bi bi-building fs-1 d-block mb-3 text-danger opacity-50"></i>
+                <p class="fw-bold mb-1">Delete Workspace?</p>
+                <p class="small text-muted" id="deleteWorkspaceInfo">User: <span id="deleteUserName"></span></p>
+                <p class="small text-muted">This will mark the workspace as <strong>deleted</strong>.</p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger px-4" id="confirmDeleteBtn" onclick="confirmDeleteWorkspace()">
+                    <i class="bi bi-trash me-1"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+            <div id="view-updates" class="tab-view">
+                <!-- Updates Management Panel -->
+<div class="container-fluid p-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0">
+                <i class="bi bi-megaphone-fill text-primary me-2"></i>Tax & Law Updates
+            </h4>
+            <p class="text-muted small mb-0">Manage regulatory updates and announcements</p>
+        </div>
+        <button class="btn btn-primary rounded-pill px-4" onclick="AdminSystem.OpenCreateUpdateModal()">
+            <i class="bi bi-plus-lg me-2"></i>New Update
+        </button>
+    </div>
+
+    <!-- Updates List -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr class="small text-uppercase fw-bold text-muted" style="font-size: 10px;">
+                            <th class="ps-4 py-3" style="width: 30%;">Title</th>
+                            <th style="width: 40%;">Description / Narration</th>
+                            <th style="width: 15%;">Posted On</th>
+                            <th style="width: 15%;" class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="updatesTableBody">
+                        <!-- Data from Firebase -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- CREATE/EDIT UPDATE MODAL -->
+<!-- ========================================================= -->
+<div class="modal fade" id="updateModal" tabindex="-1" aria-labelledby="updateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0 bg-primary text-white">
+                <h5 class="modal-title fw-bold" id="updateModalLabel">
+                    <i class="bi bi-pencil-square me-2"></i>
+                    <span id="updateModalTitle">Create New Update</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="updateForm">
+                <div class="modal-body p-4">
+                    <input type="hidden" id="updateId" value="">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Update Title <span class="text-danger">*</span></label>
+                        <input type="text" id="updateTitle" class="form-control" placeholder="e.g., GST Rate Changes Effective July 2024" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Narration / Description <span class="text-danger">*</span></label>
+                        <textarea id="updateNarration" class="form-control" rows="5" placeholder="Provide detailed description of the update..." required></textarea>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Effective Date</label>
+                            <input type="date" id="updateEffectiveDate" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small">Category</label>
+                            <select id="updateCategory" class="form-select">
+                                <option value="GST">GST</option>
+                                <option value="Income Tax">Income Tax</option>
+                                <option value="Corporate Law">Corporate Law</option>
+                                <option value="Customs">Customs</option>
+                                <option value="State Tax">State Tax</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4" id="updateSubmitBtn">
+                        <i class="bi bi-save me-2"></i>Save Update
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- VIEW UPDATE MODAL -->
+<!-- ========================================================= -->
+<div class="modal fade" id="viewUpdateModal" tabindex="-1" aria-labelledby="viewUpdateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0 bg-info text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-eye me-2"></i>Update Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4" id="viewUpdateContent">
+                <!-- Dynamically populated -->
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
             </div>
 
         </div>
@@ -526,6 +797,113 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const db = firebase.database();
+
+
+
+// =========================================================
+// ADMIN PAGE SECURITY CHECK
+// =========================================================
+
+function checkAdminAccess() {
+    // Check if user is logged in
+    const userId = localStorage.getItem('userloginid');
+    const userName = localStorage.getItem('userName');
+    const masterControl = localStorage.getItem('masterControl');
+    
+    // If no user is logged in, redirect to login
+    if (!userId || !userName) {
+        window.location.href = '../login.html';
+        return false;
+    }
+    
+    // If masterControl is not 'administration', redirect to login
+    if (masterControl !== 'administration') {
+        // Show alert before redirect
+        window.location.href = '../login.html';
+        console.log('Access Denied: You do not have administrator privileges.');
+        // alert('Access Denied: You do not have administrator privileges.');
+        return false;
+    }
+    
+    // User is authorized
+    return true;
+}
+
+// =========================================================
+// ADMIN PAGE LOAD CHECK (Call this on page load)
+// =========================================================
+document.addEventListener('DOMContentLoaded', function() {
+    // Check admin access on page load
+    const isAuthorized = checkAdminAccess();
+    
+    if (!isAuthorized) {
+        // Stop further execution if not authorized
+        return;
+    }
+    
+    // If authorized, show admin content
+    console.log('✅ Admin access granted for:', localStorage.getItem('userName'));
+    
+    // Initialize admin page components here
+    // Example: loadAdminDashboard();
+});
+
+// =========================================================
+// ADMIN ACCESS GUARD (For protected functions)
+// =========================================================
+function guardAdminAction(actionName) {
+    const masterControl = localStorage.getItem('masterControl');
+    
+    if (masterControl !== 'administration') {
+        console.warn(`⛔ Unauthorized access attempt to: ${actionName}`);
+        alert('Access Denied: You do not have permission to perform this action.');
+        return false;
+    }
+    
+    return true;
+}
+
+// =========================================================
+// LOGOUT FUNCTION (Clear session and redirect)
+// =========================================================
+function adminLogout() {
+    // Clear all session data
+    localStorage.removeItem('userloginid');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('useremail_we');
+    localStorage.removeItem('designation');
+    localStorage.removeItem('userrole');
+    localStorage.removeItem('workspaceId');
+    localStorage.removeItem('masterControl');
+    
+    // Redirect to login
+    window.location.href = '../login.html';
+}
+
+// =========================================================
+// SESSION TIMEOUT CHECK (Optional)
+// =========================================================
+function checkAdminSession() {
+    const masterControl = localStorage.getItem('masterControl');
+    const userId = localStorage.getItem('userloginid');
+    
+    // If session expires or is invalid, redirect
+    if (!userId || masterControl !== 'administration') {
+        window.location.href = '../login.html';
+        return false;
+    }
+    
+    return true;
+}
+
+// =========================================================
+// RUN SESSION CHECK EVERY 5 MINUTES
+// =========================================================
+setInterval(function() {
+    checkAdminSession();
+}, 300000); // 5 minutes
+
+
 
 // ==========================================
 // 2. STANDALONE UI UTILITIES
@@ -807,7 +1185,7 @@ const AdminSystem = {
             };
 
             try {
-                await db.ref('Notifications').push(payload);
+                await db.ref('Utilities/Notifications').push(payload);
                 UIUtils.Notify('Success', 'Broadcast dispatched successfully.', 'success');
                 form.reset();
                 this.LoadNotifications(); 
@@ -838,61 +1216,73 @@ const AdminSystem = {
         return typeMap[type] || typeMap['info'];
     },
 
-    async LoadNotifications() {
-        const tableBody = document.getElementById('notificationTableBody');
-        if (!tableBody) return;
-        tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading history...</span></td></tr>';
+async LoadNotifications() {
+    const tableBody = document.getElementById('notificationTableBody');
+    if (!tableBody) return;
+    tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading history...</span></td></tr>';
 
-        try {
-            const snap = await db.ref('Notifications').orderByChild('timestamp').limitToLast(100).once('value');
-            const notifs = snap.val() || {};
-            
-            tableBody.innerHTML = '';
+    try {
+        const snap = await db.ref('Utilities/Notifications').orderByChild('timestamp').limitToLast(100).once('value');
+        const notifs = snap.val() || {};
+        
+        tableBody.innerHTML = '';
 
-            if (Object.keys(notifs).length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No broadcast history found.</td></tr>';
-                return;
+        // Filter out notifications that have 'belonging' key (skip them)
+        const filteredNotifs = {};
+        Object.keys(notifs).forEach((id) => {
+            const notif = notifs[id];
+            // Only include if 'belonging' key does NOT exist
+            if (!('belonging' in notif)) {
+                filteredNotifs[id] = notif;
             }
+        });
 
-            const sortedNotifs = Object.entries(notifs).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
-
-            sortedNotifs.forEach(([id, notif]) => {
-                const dateStr = notif.timestamp ? new Date(notif.timestamp).toLocaleString('en-IN') : 'Unknown';
-                const targetLabel = notif.target === 'all' ? '<span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle badge-xs">All Profiles</span>' : '<span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle badge-xs">Specific User</span>';
-                
-                const safeTitle = (notif.title || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                const safeMsg = (notif.message || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                const safeLink = (notif.link || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                const safeType = (notif.type || "info").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-
-                const typeBadge = this.getTypeBadge(notif.type);
-
-                tableBody.innerHTML += `
-                    <tr>
-                        <td class="ps-4">
-                            <div class="fw-bold text-dark text-truncate" style="max-width: 220px;">${notif.title}</div>
-                            <div class="small text-muted text-truncate" style="max-width: 280px;" title="${safeMsg}">${notif.message}</div>
-                        </td>
-                        <td>${typeBadge}</td>
-                        <td>${targetLabel}</td>
-                        <td class="small text-muted font-monospace" style="font-size:8pt;">${dateStr}</td>
-                        <td class="text-end pe-4">
-                            <button class="btn btn-sm btn-outline-primary py-0 px-2 me-1" onclick="AdminSystem.OpenEditNotifModal('${id}', '${safeTitle}', '${safeMsg}', '${safeLink}', '${safeType}')">
-                                <i class="bi bi-pencil-square"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="AdminSystem.DeleteNotification('${id}')">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-        } catch (err) {
-            tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger">Error loading data.</td></tr>';
+        if (Object.keys(filteredNotifs).length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No broadcast history found.</td></tr>';
+            return;
         }
-    },
 
-    OpenEditNotifModal(id, title, msg, link, type) {
+        const sortedNotifs = Object.entries(filteredNotifs).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+
+        sortedNotifs.forEach(([id, notif]) => {
+            const dateStr = notif.timestamp ? new Date(notif.timestamp).toLocaleString('en-IN') : 'Unknown';
+            const targetLabel = notif.target === 'all' ? '<span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle badge-xs">All Profiles</span>' : '<span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle badge-xs">Specific User</span>';
+            
+            const safeTitle = (notif.title || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const safeMsg = (notif.message || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const safeLink = (notif.link || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const safeType = (notif.type || "info").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+            const typeBadge = this.getTypeBadge(notif.type);
+
+            tableBody.innerHTML += `
+                <tr>
+                    <td class="ps-4">
+                        <div class="fw-bold text-dark text-truncate" style="max-width: 220px;">${notif.title}</div>
+                        <div class="small text-muted text-truncate" style="max-width: 280px;" title="${safeMsg}">${notif.message}</div>
+                    </td>
+                    <td>${typeBadge}</td>
+                    <td>${targetLabel}</td>
+                    <td class="small text-muted font-monospace" style="font-size:8pt;">${dateStr}</td>
+                    <td class="text-end pe-4">
+                        <button class="btn btn-sm btn-outline-primary py-0 px-2 me-1" onclick="AdminSystem.OpenEditNotifModal('${id}', '${safeTitle}', '${safeMsg}', '${safeLink}', '${safeType}')">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="AdminSystem.DeleteNotification('${id}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger">Error loading data.</td></tr>';
+    }
+},
+
+
+
+OpenEditNotifModal(id, title, msg, link, type) {
         this.currentEditNotifId = id;
         document.getElementById('editNotifTitle').value = title || '';
         document.getElementById('editNotifMessage').value = msg || '';
@@ -940,7 +1330,7 @@ const AdminSystem = {
         };
 
         try {
-            await db.ref(`Notifications/${this.currentEditNotifId}`).update(updateData);
+            await db.ref(`Utilities/Notifications/${this.currentEditNotifId}`).update(updateData);
             UIUtils.Notify('Success', 'Notification updated successfully.', 'success');
             
             const modal = bootstrap.Modal.getInstance(document.getElementById('editNotificationModal'));
@@ -956,7 +1346,7 @@ const AdminSystem = {
     async DeleteNotification(id) {
         if (confirm('Recall this notification? It will be removed from users screens.')) {
             try {
-                await db.ref(`Notifications/${id}`).remove();
+                await db.ref(`Utilities/Notifications/${id}`).remove();
                 UIUtils.Notify('Recalled', 'Broadcast payload recalled successfully.', 'warning');
                 this.LoadNotifications();
             } catch (err) {
@@ -1004,7 +1394,7 @@ const BroadcastManager = {
         body.innerHTML = '<tr><td colspan="5" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading broadcasts...</span></td></tr>';
 
         try {
-            const snap = await firebase.database().ref('Broadcast-Services').orderByChild('timestamp').once('value');
+            const snap = await firebase.database().ref('Utilities/Broadcast-Services').orderByChild('timestamp').once('value');
             const broadcasts = snap.val() || {};
             
             body.innerHTML = '';
@@ -1059,7 +1449,7 @@ const BroadcastManager = {
     },
 
     async ShowAnalytics(id) {
-        const snap = await firebase.database().ref(`Broadcast-Services/${id}`).once('value');
+        const snap = await firebase.database().ref(`Utilities/Broadcast-Services/${id}`).once('value');
         const n = snap.val();
         const body = document.getElementById('analyticsModalBody');
         
@@ -1158,7 +1548,7 @@ const BroadcastManager = {
         }
 
         try {
-            await firebase.database().ref(`Broadcast-Services/${this.currentEditBroadcastId}`).update(updateData);
+            await firebase.database().ref(`Utilities/Broadcast-Services/${this.currentEditBroadcastId}`).update(updateData);
             UIUtils.Notify('Success', 'Broadcast updated successfully.', 'success');
             
             const modal = bootstrap.Modal.getInstance(document.getElementById('editBroadcastModal'));
@@ -1174,7 +1564,7 @@ const BroadcastManager = {
     async Delete(id) {
         if(confirm('Delete this broadcast? This action is permanent.')) {
             try {
-                await firebase.database().ref(`Broadcast-Services/${id}`).remove();
+                await firebase.database().ref(`Utilities/Broadcast-Services/${id}`).remove();
                 UIUtils.Notify('Deleted', 'Broadcast removed successfully.', 'warning');
                 this.LoadHistory();
             } catch (err) {
@@ -1185,9 +1575,9 @@ const BroadcastManager = {
 
     async Save(payload, id) {
         if(id) {
-            await firebase.database().ref(`Broadcast-Services/${id}`).update(payload);
+            await firebase.database().ref(`Utilities/Broadcast-Services/${id}`).update(payload);
         } else {
-            await firebase.database().ref('Broadcast-Services').push(payload);
+            await firebase.database().ref('Utilities/Broadcast-Services').push(payload);
         }
         this.LoadHistory();
     }
@@ -1233,15 +1623,770 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// =========================================================
+// UPDATES MANAGEMENT MODULE
+// =========================================================
+const UpdatesManager = {
+    // ------------------------------------------
+    // STATE
+    // ------------------------------------------
+    currentEditUpdateId: null,
+    dbRef: null,
+
+    // ------------------------------------------
+    // INITIALIZATION
+    // ------------------------------------------
+    Init() {
+        this.dbRef = firebase.database().ref('Utilities/Updates');
+        this.LoadUpdates();
+        this.BindForm();
+    },
+
+    // ------------------------------------------
+    // LOAD UPDATES
+    // ------------------------------------------
+    async LoadUpdates() {
+        const tableBody = document.getElementById('updatesTableBody');
+        if (!tableBody) return;
+        
+        tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading updates...</span></td></tr>';
+
+        try {
+            const snap = await this.dbRef.orderByChild('timestamp').limitToLast(50).once('value');
+            const updates = snap.val() || {};
+            
+            tableBody.innerHTML = '';
+
+            if (Object.keys(updates).length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">No updates published yet.</td></tr>';
+                return;
+            }
+
+            const sortedUpdates = Object.entries(updates).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+
+            sortedUpdates.forEach(([id, update]) => {
+                const dateStr = update.timestamp ? new Date(update.timestamp).toLocaleString('en-IN') : 'Unknown';
+                const effectiveDate = update.effectiveDate ? new Date(update.effectiveDate).toLocaleDateString('en-IN') : 'N/A';
+                
+                const safeTitle = (update.title || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                const safeNarration = (update.narration || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+                tableBody.innerHTML += `
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark text-truncate" style="max-width: 300px;" title="${update.title}">${update.title}</div>
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary border" style="font-size: 7pt;">${update.category || 'General'}</span>
+                            ${update.effectiveDate ? `<span class="badge bg-success bg-opacity-10 text-success border ms-1" style="font-size: 7pt;">Effective: ${effectiveDate}</span>` : ''}
+                        </td>
+                        <td>
+                            <div class="small text-muted text-truncate" style="max-width: 400px;" title="${safeNarration}">${update.narration}</div>
+                        </td>
+                        <td class="small text-muted font-monospace" style="font-size: 8pt;">${dateStr}</td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-sm btn-outline-info py-0 px-2 me-1" onclick="UpdatesManager.ViewUpdate('${id}')" title="View">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary py-0 px-2 me-1" onclick="UpdatesManager.OpenEditModal('${id}')" title="Edit">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="UpdatesManager.DeleteUpdate('${id}')" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        } catch (err) {
+            console.error('Load Updates Error:', err);
+            tableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">Error loading updates.</td></tr>';
+        }
+    },
+
+    // ------------------------------------------
+    // CREATE / EDIT MODAL
+    // ------------------------------------------
+    OpenCreateModal() {
+        this.currentEditUpdateId = null;
+        document.getElementById('updateModalTitle').textContent = 'Create New Update';
+        document.getElementById('updateId').value = '';
+        document.getElementById('updateForm').reset();
+        document.getElementById('updateEffectiveDate').value = '';
+        document.getElementById('updateCategory').value = 'GST';
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('updateModal')).show();
+    },
+
+    OpenEditModal(id) {
+        this.currentEditUpdateId = id;
+        document.getElementById('updateModalTitle').textContent = 'Edit Update';
+        
+        this.dbRef.child(id).once('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                document.getElementById('updateId').value = id;
+                document.getElementById('updateTitle').value = data.title || '';
+                document.getElementById('updateNarration').value = data.narration || '';
+                document.getElementById('updateEffectiveDate').value = data.effectiveDate || '';
+                document.getElementById('updateCategory').value = data.category || 'GST';
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('updateModal')).show();
+            }
+        });
+    },
+
+    // ------------------------------------------
+    // VIEW UPDATE
+    // ------------------------------------------
+    ViewUpdate(id) {
+        this.dbRef.child(id).once('value', (snapshot) => {
+            const data = snapshot.val();
+            if (!data) return;
+
+            const dateStr = data.timestamp ? new Date(data.timestamp).toLocaleString('en-IN') : 'Unknown';
+            const effectiveDate = data.effectiveDate ? new Date(data.effectiveDate).toLocaleDateString('en-IN') : 'Not specified';
+
+            document.getElementById('viewUpdateContent').innerHTML = `
+                <div class="mb-3">
+                    <h5 class="fw-bold text-primary">${data.title}</h5>
+                    <div class="d-flex gap-2 mt-1 flex-wrap">
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary border">${data.category || 'General'}</span>
+                        ${data.effectiveDate ? `<span class="badge bg-success bg-opacity-10 text-success border">Effective: ${effectiveDate}</span>` : ''}
+                    </div>
+                </div>
+                <hr>
+                <div class="mb-3">
+                    <label class="fw-bold small text-muted">Narration</label>
+                    <p class="mt-2" style="white-space: pre-wrap; line-height: 1.8;">${data.narration || 'No description provided.'}</p>
+                </div>
+                <hr>
+                <div class="small text-muted">
+                    <i class="bi bi-clock me-1"></i>Posted: ${dateStr}
+                </div>
+            `;
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('viewUpdateModal')).show();
+        });
+    },
+
+    // ------------------------------------------
+    // SAVE UPDATE
+    // ------------------------------------------
+    async SaveUpdate() {
+        const form = document.getElementById('updateForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        const btn = document.getElementById('updateSubmitBtn');
+        const origHtml = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+        btn.disabled = true;
+
+        const updateId = document.getElementById('updateId').value;
+        const currentUser = "Administrator"
+        
+        const updateData = {
+            title: document.getElementById('updateTitle').value.trim(),
+            narration: document.getElementById('updateNarration').value.trim(),
+            effectiveDate: document.getElementById('updateEffectiveDate').value,
+            category: document.getElementById('updateCategory').value,
+            updatedBy: currentUser,
+            updatedAt: firebase.database.ServerValue.TIMESTAMP
+        };
+
+        try {
+            if (updateId) {
+                // Update existing
+                await this.dbRef.child(updateId).update(updateData);
+                this.ShowNotification('Success', 'Update modified successfully.', 'success');
+            } else {
+                // Create new - saves under Utilities/Updates with auto-generated ID
+                updateData.timestamp = firebase.database.ServerValue.TIMESTAMP;
+                updateData.createdBy = currentUser;
+                await this.dbRef.push(updateData);
+                this.ShowNotification('Success', 'New update published.', 'success');
+            }
+
+            bootstrap.Modal.getInstance(document.getElementById('updateModal')).hide();
+            this.LoadUpdates();
+        } catch (err) {
+            console.error('Save Update Error:', err);
+            this.ShowNotification('Error', 'Failed to save update.', 'danger');
+        } finally {
+            btn.innerHTML = origHtml;
+            btn.disabled = false;
+        }
+    },
+
+    // ------------------------------------------
+    // DELETE UPDATE
+    // ------------------------------------------
+    async DeleteUpdate(id) {
+        if (!confirm('Delete this update permanently?')) return;
+        
+        try {
+            await this.dbRef.child(id).remove();
+            this.ShowNotification('Deleted', 'Update removed successfully.', 'warning');
+            this.LoadUpdates();
+        } catch (err) {
+            console.error('Delete Error:', err);
+            this.ShowNotification('Error', 'Failed to delete update.', 'danger');
+        }
+    },
+
+    // ------------------------------------------
+    // FORM BINDING
+    // ------------------------------------------
+    BindForm() {
+        const form = document.getElementById('updateForm');
+        if (form) {
+            // Remove any existing listener to avoid duplicates
+            form.removeEventListener('submit', this._submitHandler);
+            this._submitHandler = (e) => {
+                e.preventDefault();
+                this.SaveUpdate();
+            };
+            form.addEventListener('submit', this._submitHandler);
+        }
+
+        // Bind Create button
+        const createBtn = document.querySelector('[onclick*="OpenCreateUpdateModal"]');
+        if (createBtn) {
+            createBtn.onclick = () => this.OpenCreateModal();
+        }
+    },
+
+    // ------------------------------------------
+    // NOTIFICATION HELPER
+    // ------------------------------------------
+    ShowNotification(title, message, type = 'info') {
+        if (typeof UIUtils !== 'undefined' && UIUtils.Notify) {
+            UIUtils.Notify(title, message, type);
+        } else if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+            App.UI.Notify(title, message, type);
+        } else {
+            console.log(`[${type.toUpperCase()}] ${title}: ${message}`);
+        }
+    },
+
+    // ------------------------------------------
+    // DESTROY / CLEANUP
+    // ------------------------------------------
+    Destroy() {
+        const form = document.getElementById('updateForm');
+        if (form && this._submitHandler) {
+            form.removeEventListener('submit', this._submitHandler);
+            this._submitHandler = null;
+        }
+        console.log('UpdatesManager destroyed');
+    }
+};
+
+
+
+// =========================================================
+// WORKSPACE MANAGEMENT MODULE - Isolated with const
+// =========================================================
+
+const WorkspaceManager = {
+    // =========================================================
+    // CONFIGURATION
+    // =========================================================
+    config: {
+        dbRef: null,
+        usersRef: null,
+        workspaceIdLength: 10,
+        workspacePrefix: 'WS-'
+    },
+
+    // =========================================================
+    // STATE
+    // =========================================================
+    state: {
+        selectedWorkspaceUser: null,
+        isInitialized: false,
+        editingUserId: null
+    },
+
+    // =========================================================
+    // DOM REFERENCES
+    // =========================================================
+    dom: {
+        tableBody: null,
+        userIdInput: null,
+        errorEl: null,
+        createBtn: null,
+        deleteConfirmBtn: null,
+        deleteUserName: null,
+        editStatusSelect: null,
+        editModal: null,
+        editUserName: null
+    },
+
+    // =========================================================
+    // INITIALIZATION
+    // =========================================================
+    init: function() {
+        if (this.state.isInitialized) return;
+        
+        if (typeof firebase !== 'undefined') {
+            this.config.dbRef = firebase.database();
+            this.config.usersRef = this.config.dbRef.ref('Users');
+        } else {
+            console.warn('WorkspaceManager: Firebase not found');
+            return;
+        }
+
+        this.dom.tableBody = document.getElementById('workspaceTableBody');
+        this.dom.userIdInput = document.getElementById('workspaceUserId');
+        this.dom.errorEl = document.getElementById('workspaceModalError');
+        this.dom.createBtn = document.getElementById('createWorkspaceBtn');
+        this.dom.deleteConfirmBtn = document.getElementById('confirmDeleteBtn');
+        this.dom.deleteUserName = document.getElementById('deleteUserName');
+        this.dom.editStatusSelect = document.getElementById('editWorkspaceStatus');
+        this.dom.editModal = document.getElementById('editWorkspaceModal');
+        this.dom.editUserName = document.getElementById('editWorkspaceUserName');
+
+        this.loadTable();
+        this.state.isInitialized = true;
+        console.log('WorkspaceManager initialized');
+    },
+
+    // =========================================================
+    // SHOW/HIDE MODAL HELPERS
+    // =========================================================
+    showModal: function(modalId) {
+        const modalEl = document.getElementById(modalId);
+        if (!modalEl) return;
+        if (typeof bootstrap !== 'undefined') {
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+            return modal;
+        }
+        modalEl.style.display = 'block';
+        modalEl.classList.add('show');
+        modalEl.style.background = 'rgba(0,0,0,0.5)';
+        document.body.classList.add('modal-open');
+    },
+
+    hideModal: function(modalId) {
+        const modalEl = document.getElementById(modalId);
+        if (!modalEl) return;
+        if (typeof bootstrap !== 'undefined') {
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+            return;
+        }
+        modalEl.style.display = 'none';
+        modalEl.classList.remove('show');
+        modalEl.style.background = '';
+        document.body.classList.remove('modal-open');
+    },
+
+    // =========================================================
+    // OPEN ADD MODAL
+    // =========================================================
+    openAddModal: function() {
+        if (this.dom.userIdInput) this.dom.userIdInput.value = '';
+        if (this.dom.errorEl) {
+            this.dom.errorEl.classList.add('d-none');
+            this.dom.errorEl.innerText = '';
+        }
+        if (this.dom.createBtn) {
+            this.dom.createBtn.disabled = false;
+            this.dom.createBtn.innerHTML = '<i class="bi bi-check2 me-1"></i> Create Workspace';
+        }
+        this.showModal('addWorkspaceModal');
+        setTimeout(() => {
+            if (this.dom.userIdInput) this.dom.userIdInput.focus();
+        }, 500);
+    },
+
+    // =========================================================
+    // GENERATE WORKSPACE ID
+    // =========================================================
+    generateWorkspaceId: function() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let result = this.config.workspacePrefix;
+        for (let i = 0; i < this.config.workspaceIdLength; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+    },
+
+    // =========================================================
+    // CREATE WORKSPACE
+    // =========================================================
+    createWorkspace: async function() {
+        if (!this.dom.userIdInput || !this.dom.errorEl || !this.dom.createBtn) return;
+
+        const userId = this.dom.userIdInput.value.trim().toUpperCase();
+        const errorEl = this.dom.errorEl;
+        const createBtn = this.dom.createBtn;
+        const originalText = createBtn.innerHTML;
+
+        if (!userId) {
+            errorEl.classList.remove('d-none');
+            errorEl.innerText = 'Please enter a User ID.';
+            return;
+        }
+
+        if (userId.length !== 10) {
+            errorEl.classList.remove('d-none');
+            errorEl.innerText = 'User ID must be exactly 10 characters.';
+            return;
+        }
+
+        createBtn.disabled = true;
+        createBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Checking...';
+
+        try {
+            const userSnap = await this.config.usersRef.child(userId).once('value');
+            const userData = userSnap.val();
+
+            if (!userData) {
+                errorEl.classList.remove('d-none');
+                errorEl.innerText = 'User not found. Please check the User ID.';
+                createBtn.disabled = false;
+                createBtn.innerHTML = originalText;
+                return;
+            }
+
+            if (userData.role !== 'administrator') {
+                errorEl.classList.remove('d-none');
+                errorEl.innerText = 'User must have Administrator role to create a workspace.';
+                createBtn.disabled = false;
+                createBtn.innerHTML = originalText;
+                return;
+            }
+
+            if (userData.workspaceId) {
+                errorEl.classList.remove('d-none');
+                errorEl.innerText = `User already has a workspace: ${userData.workspaceId}`;
+                createBtn.disabled = false;
+                createBtn.innerHTML = originalText;
+                return;
+            }
+
+            const workspaceId = this.generateWorkspaceId();
+
+            await this.config.usersRef.child(userId).update({
+                workspaceId: workspaceId,
+                workspaceStatus: 'active',
+                mainAdmin: "true",
+                workspaceCreated: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            this.hideModal('addWorkspaceModal');
+
+            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+                App.UI.Notify('Success', `Workspace ${workspaceId} created for ${userData.name}`, 'success');
+            }
+
+            this.loadTable();
+
+        } catch (error) {
+            console.error('Create workspace error:', error);
+            errorEl.classList.remove('d-none');
+            errorEl.innerText = error.message || 'Failed to create workspace. Please try again.';
+        } finally {
+            createBtn.disabled = false;
+            createBtn.innerHTML = originalText;
+        }
+    },
+
+    // =========================================================
+    // OPEN DELETE MODAL
+    // =========================================================
+    openDeleteModal: function(userId, userName) {
+        this.state.selectedWorkspaceUser = userId;
+        if (this.dom.deleteUserName) {
+            this.dom.deleteUserName.textContent = userName || 'Unknown';
+        }
+        if (this.dom.deleteConfirmBtn) {
+            this.dom.deleteConfirmBtn.disabled = false;
+            this.dom.deleteConfirmBtn.innerHTML = '<i class="bi bi-trash me-1"></i> Delete';
+        }
+        this.showModal('confirmDeleteModal');
+    },
+
+    // =========================================================
+    // CONFIRM DELETE
+    // =========================================================
+    confirmDelete: async function() {
+        const userId = this.state.selectedWorkspaceUser;
+        if (!userId) return;
+
+        const deleteBtn = this.dom.deleteConfirmBtn;
+        const originalText = deleteBtn ? deleteBtn.innerHTML : 'Delete';
+
+        if (deleteBtn) {
+            deleteBtn.disabled = true;
+            deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Deleting...';
+        }
+
+        try {
+            await this.config.usersRef.child(userId).update({
+                workspaceStatus: 'deleted',
+                workspaceDeleted: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            this.hideModal('confirmDeleteModal');
+
+            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+                App.UI.Notify('Deleted', 'Workspace marked as deleted.', 'warning');
+            }
+
+            this.loadTable();
+
+        } catch (error) {
+            console.error('Delete workspace error:', error);
+            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+                App.UI.Notify('Error', 'Failed to delete workspace.', 'danger');
+            }
+        } finally {
+            if (deleteBtn) {
+                deleteBtn.disabled = false;
+                deleteBtn.innerHTML = originalText;
+            }
+            this.state.selectedWorkspaceUser = null;
+        }
+    },
+
+    // =========================================================
+    // 🔥 OPEN EDIT MODAL (Always available, even for deleted)
+    // =========================================================
+    openEditModal: function(userId, userName, currentStatus) {
+        this.state.editingUserId = userId;
+        if (this.dom.editStatusSelect) {
+            this.dom.editStatusSelect.value = currentStatus || 'active';
+        }
+        if (this.dom.editUserName) {
+            this.dom.editUserName.textContent = userName || 'User';
+        }
+        // Update modal title
+        const modalTitle = document.getElementById('editWorkspaceModalLabel');
+        if (modalTitle) {
+            modalTitle.textContent = 'Edit Workspace Status';
+        }
+        this.showModal('editWorkspaceModal');
+    },
+
+    // =========================================================
+    // 🔥 SAVE STATUS UPDATE (Works for any status including deleted)
+    // =========================================================
+    saveStatusUpdate: async function() {
+        const userId = this.state.editingUserId;
+        if (!userId) {
+            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+                App.UI.Notify('Error', 'No user selected.', 'danger');
+            }
+            return;
+        }
+
+        const newStatus = this.dom.editStatusSelect ? this.dom.editStatusSelect.value : 'active';
+        const saveBtn = document.getElementById('saveWorkspaceStatusBtn');
+        const originalText = saveBtn ? saveBtn.innerHTML : 'Save';
+
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Saving...';
+        }
+
+        try {
+            // Update even if status is 'deleted' - allows reactivation
+            await this.config.usersRef.child(userId).update({
+                workspaceStatus: newStatus,
+                workspaceUpdated: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            this.hideModal('editWorkspaceModal');
+
+            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+                const statusLabel = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+                App.UI.Notify('Success', `Workspace status updated to ${statusLabel}.`, 'success');
+            }
+
+            this.loadTable();
+            this.state.editingUserId = null;
+
+        } catch (error) {
+            console.error('Update workspace status error:', error);
+            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+                App.UI.Notify('Error', 'Failed to update workspace status.', 'danger');
+            }
+        } finally {
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalText;
+            }
+        }
+    },
+
+    // =========================================================
+    // LOAD TABLE
+    // =========================================================
+    loadTable: async function() {
+        const tbody = this.dom.tableBody;
+        if (!tbody) return;
+
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4">
+            <div class="spinner-border spinner-border-sm text-primary me-2"></div>Loading...
+        </td></tr>`;
+
+        try {
+            const snap = await this.config.usersRef.orderByChild('workspaceId').once('value');
+            const users = snap.val() || {};
+            
+            const workspaceUsers = Object.entries(users)
+                .filter(([id, data]) => data.workspaceId && data.role === 'administrator')
+                .map(([id, data]) => ({ id, ...data }));
+
+            if (workspaceUsers.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox fs-3 d-block mb-2 opacity-25"></i>
+                            No administrators with workspace assignments found.
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            workspaceUsers.forEach(user => {
+                // Status badge
+                const statusBadge = user.workspaceStatus === 'active' 
+                    ? '<span class="badge bg-success">Active</span>'
+                    : user.workspaceStatus === 'suspended'
+                    ? '<span class="badge bg-warning text-dark">Suspended</span>'
+                    : user.workspaceStatus === 'deleted'
+                    ? '<span class="badge bg-danger">Deleted</span>'
+                    : '<span class="badge bg-secondary">Unknown</span>';
+
+                const roleBadge = '<span class="badge bg-primary bg-opacity-10 text-primary border border-primary">Administrator</span>';
+
+                // 🔥 EDIT BUTTON ALWAYS VISIBLE - even for deleted
+                const editBtnHtml = `
+                    <button class="btn btn-sm btn-outline-primary py-0 px-2 me-1" 
+                            onclick="WorkspaceManager.openEditModal('${user.id}', '${user.name || 'Unknown'}', '${user.workspaceStatus || 'active'}')" 
+                            title="Edit Workspace Status">
+                        <i class="bi bi-pencil"></i>
+                    </button>`;
+
+                // Delete button - hidden for already deleted
+                const canDelete = user.workspaceStatus !== 'deleted';
+                const deleteBtnHtml = canDelete
+                    ? `<button class="btn btn-sm btn-outline-danger py-0 px-2" 
+                            onclick="WorkspaceManager.openDeleteModal('${user.id}', '${user.name || 'Unknown'}')" 
+                            title="Delete Workspace">
+                        <i class="bi bi-trash"></i>
+                    </button>`
+                    : `<span class="text-muted small">-</span>`;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark">${user.name || 'Unknown'}</div>
+                            <div class="small text-muted">${user.email || 'No email'}</div>
+                        </td>
+                        <td class="font-monospace small">${user.id}</td>
+                        <td>
+                            <span class="font-monospace fw-bold text-primary small">${user.workspaceId}</span>
+                            ${user.workspaceCreated ? `<div class="small text-muted" style="font-size: 8px;">${new Date(user.workspaceCreated).toLocaleDateString()}</div>` : ''}
+                        </td>
+                        <td>${statusBadge}</td>
+                        <td>${roleBadge}</td>
+                        <td class="text-center">
+                            ${editBtnHtml}
+                        </td>
+                        <td class="text-end pe-4">
+                            ${deleteBtnHtml}
+                        </td>
+                    </tr>
+                `;
+            });
+
+        } catch (error) {
+            console.error('Load workspace error:', error);
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center py-4 text-danger">
+                        <i class="bi bi-exclamation-triangle me-1"></i> Failed to load workspace data.
+                    </td>
+                </tr>`;
+        }
+    },
+
+    // =========================================================
+    // DESTROY
+    // =========================================================
+    destroy: function() {
+        this.state.isInitialized = false;
+        this.state.selectedWorkspaceUser = null;
+        this.state.editingUserId = null;
+        console.log('WorkspaceManager destroyed');
+    }
+};
+
+
+// =========================================================
+// BIND HTML BUTTONS TO WORKSPACE MANAGER
+// =========================================================
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize
+    WorkspaceManager.init();
+
+    // Bind HTML buttons (if not using onclick attributes)
+    const addBtn = document.querySelector('[onclick="openAddWorkspaceModal()"]');
+    if (addBtn) {
+        addBtn.onclick = function() {
+            WorkspaceManager.openAddModal();
+        };
+    }
+
+    const createBtn = document.getElementById('createWorkspaceBtn');
+    if (createBtn) {
+        createBtn.onclick = function() {
+            WorkspaceManager.createWorkspace();
+        };
+    }
+
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.onclick = function() {
+            WorkspaceManager.confirmDelete();
+        };
+    }
+
+    // Enter key support for modal input
+    const userIdInput = document.getElementById('workspaceUserId');
+    if (userIdInput) {
+        userIdInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+            }
+        });
+    }
+});
+
+// =========================================================
+// EXPOSE TO WINDOW (Optional - for inline onclick)
+// =========================================================
+// window.WorkspaceManager = WorkspaceManager;
+
 // ==========================================
 // 6. INITIALIZE APP ON DOM LOAD
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         BroadcastManager.LoadHistory();
+        WorkspaceManager.createWorkspace();
         AdminSystem.Init();
+        UpdatesManager.Init()
     }, 100);
 });
+
+
+
 
 </script>
 </body>

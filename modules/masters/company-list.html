@@ -52,7 +52,7 @@ window.CompanyManager = {
         const tbody = document.getElementById('companyListBody');
         if (!tbody) {
             if (typeof App !== 'undefined' && App.Router) App.Router('masters/company-list');
-            else window.location.href = '#masters/company-list';
+            // else window.location.href = '#masters/company-list';
             return;
         }
         
@@ -393,7 +393,7 @@ window.CompanyFormObserver = new MutationObserver((mutations) => {
                         if (App?.UI?.Notify) App.UI.Notify("Success", "Company Updated Successfully", "success");
                     } else {
                         payload.created_at = payload.updated_at;
-                        await API.Create(`${window.CompanyManager.DbSheet}`, payload);
+                        await API.SaveMaster(`${window.CompanyManager.DbSheet}`, payload);
                         if (App?.UI?.Notify) App.UI.Notify("Success", "Company Created Successfully", "success");
                     }
 

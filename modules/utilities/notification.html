@@ -263,10 +263,10 @@ window.NotificationPageController = {
         try {
             // 1. Fetch Explicit Data for this User to avoid missing old items due to limitToLast
             const [notifAllSnap, notifMeSnap, taskToMeSnap, taskByMeSnap] = await Promise.all([
-                db.ref('Notifications').orderByChild('target').equalTo('all').once('value'),
-                db.ref('Notifications').orderByChild('target').equalTo(this.userId).once('value'),
-                db.ref('Tasks').orderByChild('assignedTo').equalTo(this.userId).once('value'),
-                db.ref('Tasks').orderByChild('assignedBy').equalTo(this.userId).once('value')
+                db.ref('Utilities/Notifications').orderByChild('target').equalTo('all').once('value'),
+                db.ref('Utilities/Notifications').orderByChild('target').equalTo(this.userId).once('value'),
+                db.ref('Utilities/Tasks').orderByChild('assignedTo').equalTo(this.userId).once('value'),
+                db.ref('Utilities/Tasks').orderByChild('assignedBy').equalTo(this.userId).once('value')
             ]);
 
             // Deduplicate lists using a Map
@@ -274,10 +274,10 @@ window.NotificationPageController = {
 
             // Process Notifications
             if (notifAllSnap.exists()) {
-                Object.entries(notifAllSnap.val()).forEach(([id, n]) => rawMap.set(id, { ...n, id, _dbNode: 'Notifications' }));
+                Object.entries(notifAllSnap.val()).forEach(([id, n]) => rawMap.set(id, { ...n, id, _dbNode: 'Utilties/Notifications' }));
             }
             if (notifMeSnap.exists()) {
-                Object.entries(notifMeSnap.val()).forEach(([id, n]) => rawMap.set(id, { ...n, id, _dbNode: 'Notifications' }));
+                Object.entries(notifMeSnap.val()).forEach(([id, n]) => rawMap.set(id, { ...n, id, _dbNode: 'Utilties/Notifications' }));
             }
 
             // Process Tasks (Assigned TO User or BY User)
@@ -331,9 +331,9 @@ window.NotificationPageController = {
     MarkTaskComplete: async function(id, dbNode) {
         try {
             if (dbNode === 'Tasks') {
-                await firebase.database().ref(`Tasks/${id}`).update({ done: true });
+                await firebase.database().ref(`Utilities/Tasks/${id}`).update({ done: true });
             } else {
-                await firebase.database().ref(`Notifications/${id}`).update({ status: 'completed' });
+                await firebase.database().ref(`Utilities/Notifications/${id}`).update({ status: 'completed' });
             }
             
             if (window.UIUtils) window.UIUtils.Notify('Success', 'Task marked as completed!', 'success');

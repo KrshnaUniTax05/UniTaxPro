@@ -38,7 +38,7 @@
     background-color: var(--primary-color) !important;
 }
 .dropdown-item:active {
-    background-color: var(--primary-color) !important;
+    background-color: var(--bg-surface) !important;
     color: var(--primary-bg-subtle) !important;
 }
 
@@ -696,6 +696,10 @@ body.dark-mode .sticky-top { background-color: var(--bg-surface) !important; z-i
     white-space: normal;      /* Allows wrapping while respecting bounds */
     /* background-color: #10b981; */
     
+}
+.notification-items{
+    padding: 1px 0;
+    /* min-height: 90px */
 }
 
 #realUser{

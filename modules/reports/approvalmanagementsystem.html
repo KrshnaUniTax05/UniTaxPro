@@ -19,9 +19,17 @@
                         <i class="bi bi-pen me-1"></i> Draft Request
                     </button>
                 </div>
-                <button class="btn btn-sm  btn-primary  btn-outline-sm  " onclick="App.goBack()">
-                    <i class="bi bi-arrow-left me-1"></i>
-                </button>
+                <div>
+                    <button class="btn btn-sm  btn-primary  btn-outline-sm  " onclick="App.goBack()">
+                        <i class="bi bi-arrow-left "></i>
+                    </button>
+                    <button class="btn btn-sm  btn-primary  btn-outline-sm  " onclick="window.printApprovalDoc()">
+                        <i class="bi bi-printer "></i>
+                    </button>
+                    <button class="btn btn-sm  btn-danger  btn-outline-sm  " onclick="window.deleteRequest()">
+                        <i class="bi bi-trash "></i>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -88,6 +96,19 @@
                                             <div class="viewer-read-mode" id="v-details" style="white-space: pre-wrap; line-height: 1.7;"></div>
                                             <textarea id="edit-details" class="form-control viewer-edit-mode d-none" rows="6"></textarea>
                                         </div>
+                                        <!-- <h6 class="section-title">Narration</h6> -->
+                                        <h6 class="section-title mt-4">additional Details</h6>
+                                        <div class=" bg-surface border rounded-3 text-dark ">
+                                            <div class="viewer-read-mode" id="v-details" style="white-space: pre-wrap; line-height: 1.7;"></div>
+                                            <div class="table-responsive rounded-3 ">
+    <table class="table  table-bordered  mb-0" style="font-size: .8rem;">
+        <tbody id="dynamicFieldsLoad">
+            
+            <!-- Dynamic fields will be injected here by JS -->
+        </tbody>
+    </table>
+</div>
+                                        </div>
                                     </div>
                                     <div class="col-xl-5 col-lg-6">
                                         <h6 class="section-title mb-4">Audit Trail & Chain of Custody</h6>
@@ -114,13 +135,13 @@
             <div class="col-md-5">
                 <div class="d-flex gap-2" id="action-buttons-container">
                     <button class="btn btn-outline-danger btn-sm px-3 fw-semibold flex-grow-1" id="btn-reject" onclick="window.processAction('RETURNED')" style="border-radius: 6px; font-size: 0.75rem; letter-spacing: 0.04em; border-width: 1.5px; padding: 0.5rem 0.75rem;">
-                        <i class="bi bi-x-lg me-1"></i> Reject
+                         Reject
                     </button>
                     <button class="btn btn-outline-success btn-sm px-3 fw-semibold flex-grow-1" id="btn-approve" onclick="window.processAction('APPROVED')" style="border-radius: 6px; font-size: 0.75rem; letter-spacing: 0.04em; border-width: 1.5px; padding: 0.5rem 0.75rem;">
-                        <i class="bi bi-check-lg me-1"></i> Approve
+                         Approve
                     </button>
                     <button class="btn btn-primary btn-sm px-3 fw-semibold d-none" id="btn-resubmit" onclick="window.processAction('RESUBMITTED')" style="border-radius: 6px; font-size: 0.75rem; letter-spacing: 0.04em; padding: 0.5rem 0.75rem;">
-                        <i class="bi bi-arrow-repeat me-1"></i> Resubmit
+                         Resubmit
                     </button>
                 </div>
             </div>
@@ -135,7 +156,7 @@
             <!-- CREATE VIEW -->
             <div class="tab-pane fade h-100 p-4 bg-light overflow-y-auto" id="create-view">
     <div class="mx-auto" >
-        <form id="newRequestForm" class="bg-white p-4 p-md-5 border rounded shadow-sm">
+        <form id="newRequestForm" class="nosubmit bg-white p-4 p-md-5 border rounded shadow-sm">
             
             <!-- Form Header -->
             <div class="d-flex justify-content-between align-items-end border-bottom pb-3 mb-4">
@@ -162,12 +183,31 @@
                 </div>
             </div>
 
+
             <!-- Divider -->
+            <hr class="text-muted opacity-25 mb-4">
+
+             <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-semibold text-primary mb-0">2. Approval Fields</h6>
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.addNewFields()">
+                    <i class="bi bi-plus-lg me-1"></i> Add Level
+                </button>
+            </div>
+            
+            <div class="bg-light border rounded p-2 mb-4">
+                <div id="fieldsContainer" class="vstack gap-2">
+                    <!-- Dynamic ranks will be injected here by JS -->
+                </div>
+                <div class="text-muted small mt-2" id="emptyRankState">
+                    <i class="bi bi-info-circle me-1"></i> Add approval fields in the approval.
+                </div>
+            </div>
+
             <hr class="text-muted opacity-25 mb-4">
 
             <!-- Section 2: Hierarchy -->
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="fw-semibold text-primary mb-0">2. Governance Hierarchy</h6>
+                <h6 class="fw-semibold text-primary mb-0">3. Governance Hierarchy</h6>
                 <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.addNewRank()">
                     <i class="bi bi-plus-lg me-1"></i> Add Level
                 </button>
@@ -361,11 +401,7 @@
     }
 
     /* 7. Animations & Micro-interactions */
-    @keyframes pulse-primary {
-        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
-        70% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(37, 99, 235, 0); }
-        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
-    }
+    
 
     .premium-workflow-app .Pulse {
         animation: pulse-primary 2s infinite;
@@ -407,7 +443,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, get, push, set, onValue, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, get, push, set, onValue, update, remove, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyB2iNWYkj_lIWwOtLNmZjBtfKgTYKrjAQU",
@@ -418,7 +454,7 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const currentUserId = localStorage.getItem('userloginid') || "MPMZUE32CZ"; // Fallback for dev
+    const currentUserId = (typeof App !== 'undefined' && App.State && App.State.currentUserId) ? App.State.userId : localStorage.getItem('userloginid');
 
     let systemUsers = {}; 
     let allRequests = [];
@@ -427,64 +463,54 @@
     // =========================================================
     // BOOTSTRAP: Load Users FIRST, then Requests
     // =========================================================
-async function boot() {
-    const statusEl = document.getElementById('connectionStatus');
-    try {
-        // Get current user ID and workspace ID
-        const currentUserId = App.State?.userId || localStorage.getItem('userloginid') || localStorage.getItem('workspaceId');
-        const currentWorkspaceId = App.State?.workspaceId || localStorage.getItem('workspaceId');
-        
-        // Fetch users from the Users table
-        const userSnap = await get(ref(db, `Users`));
-        if (userSnap.exists()) {
-            const rawUsers = userSnap.val();
-            Object.entries(rawUsers).forEach(([userId, userData]) => {
-                // Only add users where workspaceId matches current user's workspaceId
-                // or userId matches current user's userId
-                if (userData.workspaceId === currentWorkspaceId || userId === currentUserId) {
-                    systemUsers[userId] = userData;
-                }
-            });
-        }
-        
-        if (statusEl) {
-            statusEl.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Synced';
-        }
-        
-        window.addNewRank();
-        listenToRequests();
+    async function boot() {
+        const statusEl = document.getElementById('connectionStatus');
+        try {
+            const currentWorkspaceId = (typeof App !== 'undefined' && App.State && App.State.workspaceId) ? App.State.workspaceId : localStorage.getItem('workspaceId');
+            
+            // Fetch users from the Users table
+            const userSnap = await get(ref(db, `Users`));
+            if (userSnap.exists()) {
+                const rawUsers = userSnap.val();
+                Object.entries(rawUsers).forEach(([userId, userData]) => {
+                    if (userData.workspaceId === currentWorkspaceId || userId === currentUserId) {
+                        systemUsers[userId] = userData;
+                    }
+                });
+            }
+            
+            if (statusEl) {
+                statusEl.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Synced';
+            }
+            
+            window.addNewRank();
+            listenToRequests();
 
-        // =========================================================
-        // DEEP LINKING ROUTER EXTENSION
-        // =========================================================
-        const urlParams = new URLSearchParams(window.location.search);
-        const autoLoadId = urlParams.get('id');
-        
-        if (autoLoadId) {
-            // Give the Realtime listener a tiny moment to complete its initial sync loop
-            setTimeout(() => {
-                const targetReq = allRequests.find(r => r.id === autoLoadId);
-                if (targetReq) {
-                    // 1. Simulate standard UI tab change back to inbox/approval panel
-                    const tabToggle = document.querySelector('[data-bs-target="#inbox-view"]');
-                    if (tabToggle) tabToggle.click();
-                    
-                    // 2. Open the requested document view
-                    window.loadApprovalDoc(autoLoadId);
-                }
-            }, 600);
-        }
+            // Deep Linking Router Extension
+            const urlParams = new URLSearchParams(window.location.search);
+            const autoLoadId = urlParams.get('id');
+            
+            if (autoLoadId) {
+                setTimeout(() => {
+                    const targetReq = allRequests.find(r => r.id === autoLoadId);
+                    if (targetReq) {
+                        const tabToggle = document.querySelector('[data-bs-target="#inbox-view"]');
+                        if (tabToggle) tabToggle.click();
+                        window.loadApprovalDoc(autoLoadId);
+                    }
+                }, 600);
+            }
 
-    } catch (e) {
-        console.error("Boot Error:", e);
-        if (statusEl) {
-            statusEl.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i> Offline Mode';
+        } catch (e) {
+            console.error("Boot Error:", e);
+            if (statusEl) {
+                statusEl.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i> Offline Mode';
+            }
         }
     }
-}
 
     function listenToRequests() {
-        onValue(ref(db, `Requests`), (snapshot) => {
+        onValue(ref(db, `Utilities/Requests`), (snapshot) => {
             allRequests = [];
             snapshot.forEach((child) => {
                 allRequests.push({ id: child.key, ...child.val() });
@@ -509,7 +535,7 @@ async function boot() {
 
         let filtered = allRequests.filter(req => {
             const isCreator = req.requesterId === currentUserId;
-            const isApprover = req.hierarchy ? req.hierarchy.some(h => h.userId === currentUserId) : false;
+            const isApprover = req.hierarchy ? req.hierarchy.some(h => h.userId === currentUserId ) : false;
             const isMyTurn = (req.state === 'PENDING' && req.hierarchy && req.hierarchy[req.currentLevelIndex]?.userId === currentUserId) ||
                              (req.state === 'RETURNED_TO_CREATOR' && isCreator);
 
@@ -542,7 +568,7 @@ async function boot() {
             div.onclick = () => window.loadApprovalDoc(req.id);
             div.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="small  text-muted opacity-50">#${req.id ? req.id.slice(-5).toUpperCase() : '---'}</span>
+                    <span class="small text-muted" style="font-size: .6rem;">#${req.id || '---'}</span>
                     ${statusBadge}
                 </div>
                 <h6 class="fw-bold mb-1 text-truncate">${req.title || 'Untitled'}</h6>
@@ -555,55 +581,379 @@ async function boot() {
         });
     };
 
-    window.loadApprovalDoc = (id) => {
-        const req = allRequests.find(r => r.id === id);
-        if(!req) return;
-        currentDoc = req;
+    // =========================================================
+// ADD NEW APPROVAL FIELD - Dynamic Field Generator
+// =========================================================
 
-        const emptyState = document.getElementById('empty-state');
-        if (emptyState) emptyState.classList.add('d-none');
+window.addNewFields = function() {
+    const container = document.getElementById('fieldsContainer');
+    const emptyState = document.getElementById('emptyRankState');
+    
+    if (emptyState) emptyState.style.display = 'none';
+    
+    const count = container.children.length + 1;
+    const fieldId = `field_${Date.now()}_${count}`;
+    
+    // Create field row
+    const div = document.createElement('div');
+    div.className = 'p-2 border rounded-3 bg-white shadow-sm field-row';
+    div.id = fieldId;
+    div.innerHTML = `
+        <div class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <select class="form-select form-select-sm field-type" onchange="window.changeFieldType(this)">
+                    <option value="text">Text</option>
+                    <option value="number">Number</option>
+                    <option value="date">Date</option>
+                    <option value="email">Email</option>
+                    <option value="textarea">Textarea</option>
+                    <option value="select">Select</option>
+                    <option value="checkbox">Checkbox</option>
+                    <option value="radio">Radio</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <input type="text" class="form-control form-control-sm field-title" 
+                       placeholder="Field Title" 
+                       name="field_title[]"
+                       id="field_title_${fieldId}">
+            </div>
+            <div class="col-md-4">
+                <div class="field-value-container">
+                    <input type="text" class="form-control form-control-sm field-value" 
+                           placeholder="Default Value" 
+                           name="field_value[]"
+                           id="field_value_${fieldId}">
+                </div>
+                <div class="field-options-container d-none">
+                    <input type="text" class="form-control form-control-sm field-options" 
+                           placeholder="Option1, Option2, Option3" 
+                           name="field_options[]"
+                           id="field_options_${fieldId}">
+                    <small class="text-muted" style="font-size: 8px;">Separate options with commas</small>
+                </div>
+            </div>
+            <div class="col-md-2 text-end">
+                <button type="button" class="btn btn-sm btn-outline-danger" 
+                        onclick="window.removeField('${fieldId}')">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+        <input type="hidden" name="field_id[]" value="${fieldId}">
+    `;
+    
+    container.appendChild(div);
+    
+    // Auto-focus the title input
+    setTimeout(() => {
+        const titleInput = document.getElementById(`field_title_${fieldId}`);
+        if (titleInput) titleInput.focus();
+    }, 100);
+};
+
+// =========================================================
+// CHANGE FIELD TYPE - Update value input based on type
+// =========================================================
+window.changeFieldType = function(select) {
+    const row = select.closest('.field-row');
+    const valueContainer = row.querySelector('.field-value-container');
+    const optionsContainer = row.querySelector('.field-options-container');
+    const currentValue = row.querySelector('.field-value');
+    const fieldId = row.id;
+    
+    const type = select.value;
+    
+    // Reset value container
+    let newInput = '';
+    
+    switch(type) {
+        case 'textarea':
+            newInput = `<textarea class="form-control form-control-sm field-value" 
+                                   placeholder="Enter text..." 
+                                   name="field_value[]"
+                                   id="field_value_${fieldId}" 
+                                   rows="2"></textarea>`;
+            optionsContainer.classList.add('d-none');
+            break;
+            
+        case 'select':
+            newInput = `<select class="form-select form-select-sm field-value" 
+                                name="field_value[]"
+                                id="field_value_${fieldId}">
+                            <option value="">Select an option...</option>
+                        </select>`;
+            optionsContainer.classList.remove('d-none');
+            break;
+            
+        case 'checkbox':
+            newInput = `<div class="form-check">
+                            <input type="checkbox" class="form-check-input field-value" 
+                                   name="field_value[]"
+                                   id="field_value_${fieldId}">
+                            <label class="form-check-label small" for="field_value_${fieldId}">Checked</label>
+                        </div>`;
+            optionsContainer.classList.add('d-none');
+            break;
+            
+        case 'radio':
+            newInput = `<div class="form-check">
+                            <input type="radio" class="form-check-input field-value" 
+                                   name="field_value[]"
+                                   id="field_value_${fieldId}">
+                            <label class="form-check-label small" for="field_value_${fieldId}">Selected</label>
+                        </div>`;
+            optionsContainer.classList.add('d-none');
+            break;
+            
+        case 'number':
+            newInput = `<input type="number" class="form-control form-control-sm field-value" 
+                               placeholder="0" 
+                               name="field_value[]"
+                               id="field_value_${fieldId}">`;
+            optionsContainer.classList.add('d-none');
+            break;
+            
+        case 'date':
+            newInput = `<input type="date" class="form-control form-control-sm field-value" 
+                               name="field_value[]"
+                               id="field_value_${fieldId}">`;
+            optionsContainer.classList.add('d-none');
+            break;
+            
+        case 'email':
+            newInput = `<input type="email" class="form-control form-control-sm field-value" 
+                               placeholder="example@email.com" 
+                               name="field_value[]"
+                               id="field_value_${fieldId}">`;
+            optionsContainer.classList.add('d-none');
+            break;
+            
+        default: // text
+            newInput = `<input type="text" class="form-control form-control-sm field-value" 
+                               placeholder="Enter value..." 
+                               name="field_value[]"
+                               id="field_value_${fieldId}">`;
+            optionsContainer.classList.add('d-none');
+            break;
+    }
+    
+    valueContainer.innerHTML = newInput;
+};
+
+// =========================================================
+// REMOVE FIELD
+// =========================================================
+window.removeField = function(fieldId) {
+    const row = document.getElementById(fieldId);
+    if (row) {
+        row.remove();
+        // Show empty state if no fields left
+        const container = document.getElementById('fieldsContainer');
+        const emptyState = document.getElementById('emptyRankState');
+        if (container && container.children.length === 0) {
+            if (emptyState) emptyState.style.display = 'block';
+        }
+    }
+};
+
+// =========================================================
+// GET ALL FIELD DATA (For form submission)
+// =========================================================
+window.getFieldsData = function() {
+    const fields = [];
+    const rows = document.querySelectorAll('#fieldsContainer .field-row');
+    
+    rows.forEach(row => {
+        const type = row.querySelector('.field-type')?.value || 'text';
+        const title = row.querySelector('.field-title')?.value.trim() || '';
+        const valueEl = row.querySelector('.field-value');
+        let value = '';
         
-        const viewer = document.getElementById('doc-viewer');
-        if (viewer) viewer.classList.remove('d-none');
-
-        const isCreatorTurn = (req.state === 'RETURNED_TO_CREATOR' && req.requesterId === currentUserId);
-        const isApproverTurn = (req.state === 'PENDING' && req.hierarchy && req.hierarchy[req.currentLevelIndex]?.userId === currentUserId);
-
-        // UI View Modes
-        document.querySelectorAll('.viewer-read-mode').forEach(el => el.classList.toggle('d-none', isCreatorTurn));
-        document.querySelectorAll('.viewer-edit-mode').forEach(el => el.classList.toggle('d-none', !isCreatorTurn));
-
-        if (isCreatorTurn) {
-            if(document.getElementById('edit-title')) document.getElementById('edit-title').value = req.title || '';
-            if(document.getElementById('edit-amount')) document.getElementById('edit-amount').value = req.amount || 0;
-            if(document.getElementById('edit-details')) document.getElementById('edit-details').value = req.details || '';
+        if (valueEl) {
+            if (valueEl.type === 'checkbox') {
+                value = valueEl.checked ? 'true' : 'false';
+            } else if (valueEl.tagName === 'SELECT') {
+                value = valueEl.value;
+            } else if (valueEl.tagName === 'TEXTAREA') {
+                value = valueEl.value;
+            } else {
+                value = valueEl.value;
+            }
         }
-
-        if(document.getElementById('v-title')) document.getElementById('v-title').innerText = req.title || 'Untitled';
-        if(document.getElementById('v-id')) document.getElementById('v-id').innerText = req.id || '';
-        if(document.getElementById('v-amount')) document.getElementById('v-amount').innerText = `₹${req.amount ? req.amount.toLocaleString('en-IN') : '0'}`;
-        if(document.getElementById('v-details')) document.getElementById('v-details').innerText = req.details || '';
-        if(document.getElementById('v-requester')) document.getElementById('v-requester').innerText = systemUsers[req.requesterId]?.name || "Staff";
-        if(document.getElementById('v-date')) document.getElementById('v-date').innerText = req.createdAt ? new Date(req.createdAt).toLocaleString() : '';
-
-        const statusBadge = document.getElementById('v-status');
-        if (statusBadge) {
-            statusBadge.className = 'badge rounded-pill px-3 py-2';
-            if (req.state === 'APPROVED') { statusBadge.innerText = "VERIFIED & APPROVED"; statusBadge.classList.add('bg-success'); }
-            else if (req.state === 'RETURNED_TO_CREATOR') { statusBadge.innerText = "REQUIRES RE-SUBMISSION"; statusBadge.classList.add('bg-danger'); }
-            else { statusBadge.innerText = "AUTHORIZATION IN PROGRESS"; statusBadge.classList.add('bg-primary'); }
+        
+        const options = row.querySelector('.field-options')?.value || '';
+        
+        if (title) {
+            fields.push({
+                type: type,
+                title: title,
+                value: value || '',
+                options: options
+            });
         }
+    });
+    
+    return fields;
+};
 
-        // Action Panel
-        const panel = document.getElementById('action-panel');
-        if (panel) panel.classList.toggle('d-none', !(isCreatorTurn || isApproverTurn));
-        if (document.getElementById('btn-resubmit')) document.getElementById('btn-resubmit').classList.toggle('d-none', !isCreatorTurn);
-        if (document.getElementById('btn-approve')) document.getElementById('btn-approve').classList.toggle('d-none', isCreatorTurn);
-        if (document.getElementById('btn-reject')) document.getElementById('btn-reject').classList.toggle('d-none', isCreatorTurn);
+// =========================================================
+// UPDATE FIELDS FROM EXISTING DATA (For editing)
+// =========================================================
+window.loadFieldsData = function(fieldsData) {
+    // Clear existing fields
+    const container = document.getElementById('fieldsContainer');
+    if (container) container.innerHTML = '';
+    
+    if (!fieldsData || fieldsData.length === 0) {
+        const emptyState = document.getElementById('emptyRankState');
+        if (emptyState) emptyState.style.display = 'block';
+        return;
+    }
+    
+    // Add each field
+    fieldsData.forEach(field => {
+        window.addNewFields();
+        const rows = document.querySelectorAll('#fieldsContainer .field-row');
+        const lastRow = rows[rows.length - 1];
+        
+        if (lastRow) {
+            const typeSelect = lastRow.querySelector('.field-type');
+            const titleInput = lastRow.querySelector('.field-title');
+            
+            if (typeSelect) typeSelect.value = field.type || 'text';
+            if (titleInput) titleInput.value = field.title || '';
+            
+            // Trigger change to set correct value input type
+            if (typeSelect) {
+                window.changeFieldType(typeSelect);
+                
+                // Set value
+                const valueEl = lastRow.querySelector('.field-value');
+                if (valueEl) {
+                    if (valueEl.type === 'checkbox') {
+                        valueEl.checked = field.value === 'true' || field.value === true;
+                    } else {
+                        valueEl.value = field.value || '';
+                    }
+                }
+                
+                // Set options
+                const optionsEl = lastRow.querySelector('.field-options');
+                if (optionsEl) {
+                    optionsEl.value = field.options || '';
+                }
+            }
+        }
+    });
+};
 
-        renderAuditTrail(req);
-    };
+window.loadApprovalDoc = (id) => {
+    const req = allRequests.find(r => r.id === id);
+    if(!req) return;
+    currentDoc = req;
 
+    const emptyState = document.getElementById('empty-state');
+    if (emptyState) emptyState.classList.add('d-none');
+    
+    const viewer = document.getElementById('doc-viewer');
+    if (viewer) viewer.classList.remove('d-none');
+
+    const isCreatorTurn = (req.state === 'RETURNED_TO_CREATOR' && req.requesterId === currentUserId);
+    const isApproverTurn = (req.state === 'PENDING' && req.hierarchy && req.hierarchy[req.currentLevelIndex]?.userId === currentUserId);
+    const isCreator = req.requesterId === currentUserId;
+
+    // UI View Modes
+    document.querySelectorAll('.viewer-read-mode').forEach(el => el.classList.toggle('d-none', isCreatorTurn));
+    document.querySelectorAll('.viewer-edit-mode').forEach(el => el.classList.toggle('d-none', !isCreatorTurn));
+
+    if (isCreatorTurn) {
+        if(document.getElementById('edit-title')) document.getElementById('edit-title').value = req.title || '';
+        if(document.getElementById('edit-amount')) document.getElementById('edit-amount').value = req.amount || 0;
+        if(document.getElementById('edit-details')) document.getElementById('edit-details').value = req.details || '';
+    }
+
+    if(document.getElementById('v-title')) document.getElementById('v-title').innerText = req.title || 'Untitled';
+    if(document.getElementById('v-id')) document.getElementById('v-id').innerText = `#${req.id || ''}`;
+    if(document.getElementById('v-amount')) document.getElementById('v-amount').innerText = `₹${req.amount ? req.amount.toLocaleString('en-IN') : '0'}`;
+    if(document.getElementById('v-details')) document.getElementById('v-details').innerText = req.details || '';
+    if(document.getElementById('v-requester')) document.getElementById('v-requester').innerText = systemUsers[req.requesterId]?.name || "Staff";
+    if(document.getElementById('v-date')) document.getElementById('v-date').innerText = req.createdAt ? new Date(req.createdAt).toLocaleString() : '';
+
+    const statusBadge = document.getElementById('v-status');
+    if (statusBadge) {
+        statusBadge.className = 'badge rounded-pill px-3 py-2';
+        if (req.state === 'APPROVED') { statusBadge.innerText = "VERIFIED & APPROVED"; statusBadge.classList.add('bg-success'); }
+        else if (req.state === 'RETURNED_TO_CREATOR') { statusBadge.innerText = "REQUIRES RE-SUBMISSION"; statusBadge.classList.add('bg-danger'); }
+        else { statusBadge.innerText = "AUTHORIZATION IN PROGRESS"; statusBadge.classList.add('bg-warning'); }
+    }
+
+    // =========================================================
+    // RENDER DYNAMIC FIELDS
+    // =========================================================
+// =========================================================
+// RENDER DYNAMIC FIELDS IN TABLE
+// =========================================================
+const dynamicFieldsContainer = document.getElementById('dynamicFieldsLoad');
+if (dynamicFieldsContainer) {
+    dynamicFieldsContainer.innerHTML = '';
+    
+    if (req.dynamicFields && req.dynamicFields.length > 0) {
+        req.dynamicFields.forEach(field => {
+            const tr = document.createElement('tr');
+            tr.className = 'table-bordered p-1';
+            tr.innerHTML = `
+                <td class="py-2 pe-3 fw-semibold text-dark" style="width: 33.33%; white-space: nowrap; border-color: #dee2e6 !important;">
+                    ${field.title || 'Untitled'}
+                    
+                </td>
+                <td class="py-2 ps-3 text-muted" style="width: 66.67%; word-wrap: break-word; white-space: normal; border-color: #dee2e6 !important;">
+                    ${field.value || 'N/A'}
+                </td>
+            `;
+            dynamicFieldsContainer.appendChild(tr);
+        });
+    } else {
+        dynamicFieldsContainer.innerHTML = `
+            <tr>
+                <td colspan="2" class="text-center text-muted py-3 small" style="border-color: #dee2e6 !important;">
+                    <i class="bi bi-info-circle me-1"></i> No additional fields configured.
+                </td>
+            </tr>
+        `;
+    }
+}
+    // Action Panel & Button Visibility
+    const panel = document.getElementById('action-panel');
+    if (panel) panel.classList.toggle('d-none', !(isCreator || isApproverTurn));
+
+    if (document.getElementById('btn-resubmit')) document.getElementById('btn-resubmit').classList.toggle('d-none', !isCreatorTurn);
+    if (document.getElementById('btn-approve')) document.getElementById('btn-approve').classList.toggle('d-none', !isApproverTurn);
+    if (document.getElementById('btn-reject')) document.getElementById('btn-reject').classList.toggle('d-none', !isApproverTurn);
+    if (document.getElementById('decisionComment')) {
+         document.getElementById('decisionComment').parentElement.parentElement.classList.toggle('d-none', !(isApproverTurn || isCreatorTurn));
+    }
+
+    // Dynamic Delete Button Injection
+    let deleteBtn = document.getElementById('btn-delete-request');
+    if (!deleteBtn) {
+        const btnContainer = document.getElementById('action-buttons-container');
+        if (btnContainer) {
+            deleteBtn = document.createElement('button');
+            deleteBtn.id = 'btn-delete-request';
+            deleteBtn.className = 'btn btn-outline-danger btn-sm px-3 fw-semibold';
+            deleteBtn.innerHTML = ' Delete';
+            deleteBtn.onclick = () => window.deleteRequest();
+            btnContainer.appendChild(deleteBtn);
+        }
+    }
+    
+    if (deleteBtn) {
+        deleteBtn.classList.toggle('d-none', !(isCreator && req.state !== 'APPROVED'));
+    }
+
+    renderAuditTrail(req);
+};
     function renderAuditTrail(req) {
         const trail = document.getElementById('auditTrail');
         if (!trail) return;
@@ -612,6 +962,7 @@ async function boot() {
 
         req.auditTrail.forEach(log => {
             const name = systemUsers[log.actorId]?.name || "System";
+            const designation = systemUsers[log.actorId]?.designation || "System";
             let typeCls = 'node-pending';
             if(log.action === 'SUBMITTED') typeCls = 'node-create';
             if(log.action === 'APPROVED') typeCls = 'node-approve';
@@ -621,7 +972,7 @@ async function boot() {
             trail.innerHTML += `
                 <div class="audit-node ${typeCls}">
                     <div class="node-title">${log.action}</div>
-                    <div class="node-meta">${name} • ${log.timestamp ? new Date(log.timestamp).toLocaleString() : ''}</div>
+                    <div class="node-meta">${name} • ${designation} • ${log.timestamp ? new Date(log.timestamp).toLocaleString() : ''}</div>
                     ${log.comment ? `<div class="node-comment">${log.comment}</div>` : ''}
                 </div>
             `;
@@ -629,11 +980,224 @@ async function boot() {
 
         if(req.state === 'PENDING' && req.hierarchy && req.hierarchy[req.currentLevelIndex]) {
             const nextUser = systemUsers[req.hierarchy[req.currentLevelIndex].userId]?.name || "Approver";
+            console.log(systemUsers[req.hierarchy[req.currentLevelIndex].userId])
             trail.innerHTML += `<div class="audit-node node-pending opacity-50"><div class="node-title">Next: Level ${req.currentLevelIndex+1}</div><div class="node-meta">Awaiting ${nextUser}</div></div>`;
         }
     }
 
-    // Exposed to the window layout scope for HTML action buttons
+    // =========================================================
+// TEMPLATE-DRIVEN PRINT ENGINE (Hidden Iframe)
+// =========================================================
+window.printApprovalDoc = async () => {
+    if (!currentDoc) {
+        if(typeof App !== 'undefined' && App.UI) App.UI.Notify('System', 'No document selected to print.', 'warning');
+        else alert("No document selected.");
+        return;
+    }
+
+    const printBtn = document.getElementById('btn-print');
+    if (printBtn) {
+        printBtn.dataset.originalText = printBtn.innerHTML;
+        printBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating...';
+        printBtn.disabled = true;
+    }
+
+    try {
+        const response = await fetch('modules/print/approval.html');
+        if (!response.ok) throw new Error(`Failed to load template. Status: ${response.status}`);
+        let templateHtml = await response.text();
+
+        const req = currentDoc;
+        const requesterName = systemUsers[req.requesterId]?.name || "Staff";
+        const reqAmount = req.amount ? req.amount.toLocaleString('en-IN') : '0.00';
+        const docId = req.id || 'N/A';
+        const printDate = new Date().toLocaleString('en-IN');
+        const reqDate = req.createdAt ? new Date(req.createdAt).toLocaleString('en-IN') : 'N/A';
+
+        // Format Final Status Badge
+        let finalStatusHtml = `<span style="font-weight: 700; color: #475569;">PENDING</span>`;
+        if (req.state === 'APPROVED') finalStatusHtml = `<span style="font-weight: 700; color: #166534;">APPROVED</span>`;
+        else if (req.state === 'RETURNED_TO_CREATOR') finalStatusHtml = `<span style="font-weight: 700; color: #991b1b;">RETURNED</span>`;
+
+        // Generate Audit Trail Rows
+        let auditRows = '';
+        if (req.auditTrail && req.auditTrail.length > 0) {
+            req.auditTrail.forEach((log, index) => {
+                const actorName = systemUsers[log.actorId]?.name || "System";
+                const actorRole = systemUsers[log.actorId]?.designation || systemUsers[log.actorId]?.role || "Authorized Signatory";
+                const timeStr = log.timestamp ? new Date(log.timestamp).toLocaleString('en-IN') : '---';
+                
+                let actionColor = '#475569';
+                if(log.action === 'SUBMITTED' || log.action === 'RESUBMITTED') actionColor = '#0d6efd';
+                else if(log.action === 'APPROVED') actionColor = '#198754';
+                else if(log.action === 'RETURNED') actionColor = '#dc3545';
+
+                auditRows += `
+                    <tr>
+                        <td style="text-align: center; padding: 8px 12px; border: 1px solid #dee2e6;">${index + 1}</td>
+                        <td style="padding: 8px 12px; border: 1px solid #dee2e6;">
+                            <strong>${actorName}</strong><br>
+                            <span style="font-size:0.75rem; color:#64748b;">${actorRole}</span>
+                        </td>
+                        <td style="padding: 8px 12px; border: 1px solid #dee2e6;">
+                            <span style="color: ${actionColor}; font-weight:bold;">${log.action}</span>
+                        </td>
+                        <td style="padding: 8px 12px; border: 1px solid #dee2e6; font-size:0.85rem;">${log.comment || '---'}</td>
+                        <td style="padding: 8px 12px; border: 1px solid #dee2e6; font-size:0.8rem; color:#64748b; font-family: monospace;">${timeStr}</td>
+                    </tr>`;
+            });
+        }
+
+        // ==========================================
+        // 🔥 DYNAMIC FIELDS GENERATOR - UPDATED
+        // ==========================================
+        let dynamicFieldsHtml = '';
+        
+        // Check if req has dynamicFields array
+        if (req.dynamicFields && req.dynamicFields.length > 0) {
+            req.dynamicFields.forEach(field => {
+                const label = field.title || field.label || 'Untitled';
+                const value = field.value || 'N/A';
+                const type = field.type || 'text';
+                
+                // Format label for display (capitalize, replace underscores)
+                const formattedLabel = label.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                
+                dynamicFieldsHtml += `
+                    <tr>
+                        <td style="width: 40%; font-weight: 600; padding: 4px 8px; ">
+                            ${formattedLabel}
+                            
+                        </td>
+                        <td style="padding: 4px 8px; word-wrap: break-word; white-space: normal;">
+                            ${value}
+                        </td>
+                    </tr>`;
+            });
+        } else {
+            // Check if req has extraFields (legacy support)
+            if (req.extraFields) {
+                Object.entries(req.extraFields).forEach(([key, value]) => {
+                    const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    dynamicFieldsHtml += `
+                        <tr>
+                            <td style="width: 33%; font-weight: 600; padding: 8px 12px; border: 1px solid #dee2e6;">${formattedKey}</td>
+                            <td style="padding: 8px 12px; border: 1px solid #dee2e6; word-wrap: break-word; white-space: normal;">${value}</td>
+                        </tr>`;
+                });
+            }
+        }
+
+        // If no dynamic fields found, show placeholder
+        if (!dynamicFieldsHtml) {
+            dynamicFieldsHtml = `
+                <tr>
+                    <td colspan="2" style="padding: 12px; border: 1px solid #dee2e6; text-align: center; color: #8c8fa7; font-size: 0.9rem;">
+                        No additional fields configured.
+                    </td>
+                </tr>`;
+        }
+
+        // ==========================================
+        // HIERARCHY TABLE GENERATOR
+        // ==========================================
+        let hierarchyHtml = '';
+        if (req.hierarchy && req.hierarchy.length > 0) {
+            req.hierarchy.forEach((level, index) => {
+                const approverName = systemUsers[level.userId]?.name || level.name || "Unknown";
+                const approverRole = systemUsers[level.userId]?.role || level.role || "Approver";
+                
+                // Check if this level is approved
+                const isApproved = req.auditTrail?.some(log => log.action === 'APPROVED' && log.levelIndex === index);
+                const isReturned = req.auditTrail?.some(log => log.action === 'RETURNED' && log.levelIndex === index);
+                const isPending = !isApproved && !isReturned && index === req.currentLevelIndex && req.state === 'PENDING';
+                
+                let statusText = '⏳ Waiting';
+                let statusColor = '#8c8fa7';
+                if (isApproved) { statusText = '✅ Approved'; statusColor = '#198754'; }
+                else if (isReturned) { statusText = '↩️ Returned'; statusColor = '#dc3545'; }
+                else if (isPending) { statusText = '⏳ Pending'; statusColor = '#ffc107'; }
+                
+                hierarchyHtml += `
+                    <tr>
+                        <td style="padding: 8px 12px; border: 1px solid #dee2e6; text-align: center; font-weight: 600;">${index + 1}</td>
+                        <td style="padding: 8px 12px; border: 1px solid #dee2e6;">
+                            <div style="font-weight: 600;">${approverName}</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">${approverRole}</div>
+                        </td>
+                        <td style="padding: 8px 12px; border: 1px solid #dee2e6; color: ${statusColor}; font-weight: 600;">${statusText}</td>
+                    </tr>`;
+            });
+        }
+
+        const dataMap = {
+            'doc_id': docId,
+            'print_date': printDate,
+            'req_title': req.title || 'Untitled',
+            'req_amount': reqAmount,
+            'requester_name': requesterName,
+            'final_status': finalStatusHtml,
+            'narration': req.details || 'No narration provided.',
+            'audit_rows': auditRows,
+            'req_date': reqDate,
+            'dynamic_fields': dynamicFieldsHtml,
+            'hierarchy_rows': hierarchyHtml
+        };
+
+        const compiledHtml = templateHtml.replace(/\{\{\s*([\w]+)\s*\}\}/g, (match, key) => {
+            return dataMap[key] !== undefined ? dataMap[key] : match;
+        });
+
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position:fixed; right:0; bottom:0; width:0; height:0; border:0;';
+        document.body.appendChild(iframe);
+
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(compiledHtml);
+        doc.close();
+
+        setTimeout(() => {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            setTimeout(() => { document.body.removeChild(iframe); }, 1000);
+        }, 250);
+
+    } catch (error) {
+        console.error("Print Engine Error:", error);
+        if (typeof App !== 'undefined' && App.UI) {
+            App.UI.Notify('Error', 'Failed to load print template.', 'danger');
+        } else {
+            alert("Failed to load the print template.");
+        }
+    } finally {
+        if (printBtn) {
+            printBtn.innerHTML = printBtn.dataset.originalText || '<i class="bi bi-printer"></i>';
+            printBtn.disabled = false;
+        }
+    }
+};
+// =========================================================
+    // ACTIONS & TRANSACTIONS
+    // =========================================================
+
+    // Deletes the active request safely
+    window.deleteRequest = async () => {
+        if (!currentDoc) return;
+        if (currentDoc.requesterId !== currentUserId) return alert("Only the document originator can delete this request.");
+        if (currentDoc.state === 'APPROVED') return alert("Approved documents cannot be deleted.");
+
+        if (confirm(`Are you sure you want to delete request #${currentDoc.id}?`)) {
+            await remove(ref(db, `Utilities/Requests/${currentDoc.id}`));
+            
+            document.getElementById('doc-viewer').classList.add('d-none');
+            document.getElementById('empty-state').classList.remove('d-none');
+            currentDoc = null;
+            
+            if (window.App && window.App.UI) App.UI.Notify('System', 'Document purged successfully.', 'warning');
+        }
+    };
+
     window.processAction = async (action) => {
         const commentEl = document.getElementById('decisionComment');
         const comment = commentEl ? commentEl.value.trim() : '';
@@ -658,13 +1222,12 @@ async function boot() {
             if (isLast) {
                 updates['state'] = 'APPROVED';
                 
-                // Notification: Fully Approved
                 await sendSystemNotification(
                     currentDoc.requesterId, 
                     "Application Approved!", 
                     `Your request "${currentDoc.title}" has been verified and fully approved.`, 
                     `inbox-view?id=${currentDoc.id}`,
-                    "success" // <-- dynamically attaches the request ID
+                    "success"
                 );
             } else {
                 const nextLevelIndex = currentDoc.currentLevelIndex + 1;
@@ -672,13 +1235,12 @@ async function boot() {
                 
                 const nextApproverId = currentDoc.hierarchy[nextLevelIndex]?.userId;
                 if (nextApproverId) {
-                    // Notification: Next Approver in Line
                     await sendSystemNotification(
                         nextApproverId, 
                         "Action Required.", 
                         `A workflow for "${currentDoc.title}" is awaiting your authorization.`, 
                         `inbox-view?id=${currentDoc.id}`,
-                        "error" // <-- dynamically attaches the request ID
+                        "task" 
                     );
                 }
             }} else if (action === 'RESUBMITTED') {
@@ -689,13 +1251,15 @@ async function boot() {
             updates['currentLevelIndex'] = 0; // Restart workflow
         }
 
-        await update(ref(db, `Requests/${currentDoc.id}`), updates);
+        await update(ref(db, `Utilities/Requests/${currentDoc.id}`), updates);
         if (commentEl) commentEl.value = "";
         
         if (window.App && window.App.UI && typeof window.App.UI.Notify === 'function') {
             window.App.UI.Notify('Governance', 'Workflow updated successfully', 'success');
         }
     };
+
+
 
     window.addNewRank = () => {
         const cont = document.getElementById('rankContainer');
@@ -712,61 +1276,173 @@ async function boot() {
         cont.appendChild(div);
     };
 
+    // Sequential 5-Digit Generator using Firebase Transactions
+    async function getSequentialDocId() {
+        const sequenceRef = ref(db, 'System/Counters/GlobalRequestSequence');
+        let newId = 10001; // Start sequence at 10001 if empty
+
+        try {
+            const result = await runTransaction(sequenceRef, (currentData) => {
+                if (currentData === null) {
+                    return 10001; 
+                }
+                return currentData + 1;
+            });
+            
+            if (result.committed) {
+                newId = result.snapshot.val();
+            }
+        } catch (error) {
+            console.error("Failed to generate sequential ID, falling back to random 5-digit", error);
+            newId = Math.floor(10000 + Math.random() * 90000); 
+        }
+
+        return String(newId).padStart(5, '0');
+    }
+
+    
+
     const requestForm = document.getElementById('newRequestForm');
-    if (requestForm) {
-        requestForm.onsubmit = async (e) => {
-            e.preventDefault();
-            const hierarchy = Array.from(document.querySelectorAll('select[name="approver[]"]')).map((s, i) => ({
-                level: i+1, userId: s.value
-            }));
-
-            if(hierarchy.some(h => !h.userId)) return alert("Please assign all hierarchy levels.");
-
-            const payload = {
-                title: document.getElementById('reqTitle').value,
-                amount: parseFloat(document.getElementById('reqAmount').value),
-                details: document.getElementById('reqDetails').value,
-                requesterId: currentUserId,
-                state: 'PENDING', currentLevelIndex: 0, hierarchy,
-                createdAt: Date.now(), updatedAt: Date.now(),
-                auditTrail: [{ action: 'SUBMITTED', actorId: currentUserId,  timestamp: Date.now(), comment: 'New Request Initiated', levelIndex: -1 }]
-            };
-
-            await push(ref(db, 'Requests'), payload);
-            
-            if (window.App && window.App.UI && typeof window.App.UI.Notify === 'function') {
-                window.App.UI.Notify('System', 'Workflow Provisioned', 'success');
-            }
-            e.target.reset();
-            window.renderInboxList();
-            
-            const tabToggle = document.querySelector('[data-bs-target="#inbox-view"]');
-            if (tabToggle) tabToggle.click();
-        };
-    }
-
-    boot();
-
-
-    // Additional Helper Function to push notifications to Firebase
-async function sendSystemNotification(targetUserId, title, message, link, typeoft) {
-    try {
-        const notificationPayload = {
-            title: title,
-            message: message,
-            link: "reports/approvalmanagementsystem", // e.g., "inbox-view" or target document link
-            sender: currentUserId,
-            target: targetUserId, // "all" or specific user ID
-            timestamp: Date.now(),
-            type: typeoft,
-            ReadStatus: {
-                [currentUserId]: "read" // Initial status structure tracker if required
-            }
-        };
+if (requestForm) {
+    requestForm.onsubmit = async (e) => {
+        e.preventDefault();
         
-        await push(ref(db, 'Notifications'), notificationPayload);
-    } catch (error) {
-        console.error("Failed to route notification ledger:", error);
-    }
+        const hierarchy = Array.from(document.querySelectorAll('select[name="approver[]"]')).map((s, i) => ({
+            level: i+1, userId: s.value
+        }));
+
+        if(hierarchy.some(h => !h.userId)) return alert("Please assign all hierarchy levels.");
+
+        const submitBtn = document.getElementById('submitRequestBtn');
+        if(submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = 'Initiating...'; }
+
+        // Generate strict 5-digit sequential ID
+        const seqId = await getSequentialDocId();
+
+        // =========================================================
+        // COLLECT DYNAMIC FIELDS DATA
+        // =========================================================
+        const dynamicFields = [];
+        const fieldRows = document.querySelectorAll('#fieldsContainer .field-row');
+        
+        fieldRows.forEach(row => {
+            const type = row.querySelector('.field-type')?.value || 'text';
+            const title = row.querySelector('.field-title')?.value.trim() || '';
+            const valueEl = row.querySelector('.field-value');
+            
+            let value = '';
+            if (valueEl) {
+                if (valueEl.type === 'checkbox') {
+                    value = valueEl.checked ? 'true' : 'false';
+                } else if (valueEl.tagName === 'SELECT') {
+                    value = valueEl.value;
+                } else if (valueEl.tagName === 'TEXTAREA') {
+                    value = valueEl.value;
+                } else {
+                    value = valueEl.value;
+                }
+            }
+            
+            const options = row.querySelector('.field-options')?.value || '';
+            
+            if (title) {
+                dynamicFields.push({
+                    type: type,
+                    title: title,
+                    value: value || '',
+                    options: options
+                });
+            }
+        });
+
+        // =========================================================
+        // BUILD PAYLOAD WITH DYNAMIC FIELDS
+        // =========================================================
+        const payload = {
+            title: document.getElementById('reqTitle').value,
+            amount: parseFloat(document.getElementById('reqAmount').value),
+            details: document.getElementById('reqDetails').value,
+            requesterId: currentUserId,
+            requesterName: systemUsers[currentUserId]?.name || currentUserId,
+            state: 'PENDING',
+            currentLevelIndex: 0,
+            hierarchy: hierarchy,
+            dynamicFields: dynamicFields, // 🔥 ADD DYNAMIC FIELDS TO PAYLOAD
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            ApprovalCode: seqId,
+            auditTrail: [{ 
+                action: 'SUBMITTED', 
+                actorId: currentUserId, 
+                timestamp: Date.now(), 
+                comment: 'New Request Initiated', 
+                levelIndex: -1 
+            }]
+        };
+
+        // Save under Utilities/Requests with the new sequential ID
+        await set(ref(db, `Utilities/Requests/${seqId}`), payload);
+        
+        // Notify the First Approver
+        const firstApproverId = hierarchy[0].userId;
+        await sendSystemNotification(
+            firstApproverId, 
+            "An approval Assigned to you.", 
+            `You have been requested to approve "${payload.title}".`, 
+            `inbox-view?id=${seqId}`,
+            'task'
+        );
+        
+        if (window.App && window.App.UI && typeof window.App.UI.Notify === 'function') {
+            window.App.UI.Notify('System', `Workflow Provisioned (#${seqId})`, 'success');
+        }
+        
+        // Reset form
+        e.target.reset();
+        
+        // Clear dynamic fields container
+        const fieldsContainer = document.getElementById('fieldsContainer');
+        if (fieldsContainer) {
+            fieldsContainer.innerHTML = '';
+        }
+        const emptyState = document.getElementById('emptyRankState');
+        if (emptyState) emptyState.style.display = 'block';
+        
+        if(submitBtn) { 
+            submitBtn.disabled = false; 
+            submitBtn.innerHTML = 'Initiate Workflow'; 
+        }
+        
+        window.renderInboxList();
+        
+        const tabToggle = document.querySelector('[data-bs-target="#inbox-view"]');
+        if (tabToggle) {
+            const bsTab = new bootstrap.Tab(tabToggle);
+            bsTab.show();
+        }
+    };
 }
+    boot();
+    
+    async function sendSystemNotification(targetUserId, title, message, link, typeoft) {
+        try {
+            const notificationPayload = {
+                title: title,
+                belonging: "Approval Notification",
+                message: message,
+                link: "reports/approvalmanagementsystem",
+                sender: currentUserId,
+                target: targetUserId,
+                timestamp: Date.now(),
+                type: typeoft,
+                ReadStatus: {
+                    [currentUserId]: "read" 
+                }
+            };
+            
+            await push(ref(db, 'Utilities/Notifications'), notificationPayload);
+        } catch (error) {
+            console.error("Failed to route notification ledger:", error);
+        }
+    }
 </script>

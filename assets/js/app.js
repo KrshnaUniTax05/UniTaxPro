@@ -43,6 +43,9 @@ const App = {
 },
 
 
+
+
+
     async Init() {
     try {
         // 1. Auth Guard
@@ -56,6 +59,8 @@ const App = {
         this.UI.InitTheme();
         this.UI.StartClock();
         this.BindGlobalEvents();
+        BrowserNotificationEngine.Init()
+        // AccessTracker.Init()
 
         // 🎯 FIX: Wrap notification engines in a safe block 
         // We don't necessarily need to 'await' these unless they perform critical DB syncs,
@@ -78,12 +83,12 @@ const App = {
         if(nameEl) nameEl.innerText = this.State.userName || "User";
         if(designation) designation.innerText = localStorage.getItem('designation')
         if(realuser) realuser.innerText =`ID: ${this.State.currentuserId} `;
-        if(userIdEl) userIdEl.innerText = `ID: ${this.State.workspaceId} `;
-
+        // if(userIdEl) userIdEl.innerText = `ID: ${this.State.workspaceId} `;
+        App.displayWrokspaceName()
         // 4. Handle Routing
         const pinnedModule = localStorage.getItem('pinnedModule');
         if (pinnedModule) {
-            console.log(`📡 [App] Loading pinned module: ${pinnedModule}`);
+            // console.log(`📡 [App] Loading pinned module: ${pinnedModule}`);
             await this.Router(pinnedModule);
         } else {
             await this.Router('dashboard');
@@ -97,6 +102,9 @@ const App = {
         if(loader) loader.style.display = 'none';
     }
 },
+
+
+
     Search: {
         Registry: {
             "dash": "dashboard",
@@ -314,6 +322,19 @@ async Router(path) {
         this.Log(`Module Ready: ${path}`);
     },
 
+    displayWrokspaceName: function(elId = 'main_userid_show') {
+        const el = document.getElementById(elId);
+        if (!el) return;
+        const userId = localStorage.getItem('userloginid');
+        const wsId = localStorage.getItem('workspaceId') || userId || 'Unknown';
+        
+        if (!userId) { el.innerText = 'Guest'; return; }
+        
+       const path = (wsId && wsId !== 'Unknown') ? `${wsId}/WorkspaceSetting/workspaceName` : `Users/${userId}/workspaceName`;
+    firebase.database().ref(path).once('value')
+        .then(s => el.innerText = s.val() || `ID: ${wsId}`)
+        .catch(() => el.innerText = `ID: ${wsId}`);
+    },
     BindGlobalEvents() {
         const searchInput = document.getElementById('globalSearch');
 
@@ -527,7 +548,7 @@ window.saveTask = async function() {
 
     try {
         const db = firebase.database();
-        await db.ref('Tasks').push(taskData);
+        await db.ref('Utilities/Tasks').push(taskData);
         
         input.value = '';
         bootstrap.Modal.getInstance(document.getElementById('taskModal')).hide();
@@ -609,7 +630,7 @@ window.renderTasks = function() {
     // Firebase listener
     const db = firebase.database();
     
-    db.ref('Tasks').orderByChild('assignedTo').equalTo(currentUserId).on('value', (snapshot) => {
+    db.ref('Utilities/Tasks').orderByChild('assignedTo').equalTo(currentUserId).on('value', (snapshot) => {
         const tasks = snapshot.val() || {};
         const taskEntries = Object.entries(tasks);
 
@@ -706,7 +727,7 @@ window.deleteTask = async function(taskId) {
     try {
         const db = firebase.database();
         // Remove the task from Firebase
-        await db.ref(`Tasks/${taskId}`).remove();
+        await db.ref(`Utilities/Tasks/${taskId}`).remove();
         
         // Optional: Trigger your UI Notification if you have it loaded
         if (typeof App !== 'undefined' && App.UI) {
@@ -1134,52 +1155,80 @@ const NotificationEngine = {
     },
 
     ListenToDatabase() {
-        firebase.database().ref('Notifications').orderByChild('timestamp').limitToLast(50).on('value', (snapshot) => {
+        firebase.database().ref('Utilities/Notifications').orderByChild('timestamp').limitToLast(50).on('value', (snapshot) => {
             this.ProcessAndRender(snapshot.val());
         });
     },
 
     ProcessAndRender(data) {
-        const list = document.getElementById('notificationList');
-        const dot = document.getElementById('notificationDot');
-        const countBadge = document.getElementById('notificationCount');
-        if (!list) return;
-        list.innerHTML = '';
+    const list = document.getElementById('notificationList');
+    const dot = document.getElementById('notificationDot');
+    const countBadge = document.getElementById('notificationCount');
+    if (!list) return;
+    list.innerHTML = '';
 
-        if (!data) { list.innerHTML = `<li class="p-3 text-muted small text-center">No notifications</li>`; return; }
+    if (!data) { 
+        list.innerHTML = `<li class="p-3 text-muted small text-center">No notifications</li>`; 
+        return; 
+    }
 
-        let unreadCount = 0;
-        Object.entries(data)
-            .sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0))
-            .forEach(([id, notif]) => {
-                if (notif.target !== 'all' && notif.target !== App.State.currentuserId) return;
+    let unreadCount = 0;
+    Object.entries(data)
+        .sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0))
+        .forEach(([id, notif]) => {
+            if (notif.target !== 'all' && notif.target !== App.State.currentuserId) return;
 
-                const hasSeen = notif.ReadStatus?.[this.userId] === true;
-                if (!hasSeen) unreadCount++;
+            const hasSeen = notif.ReadStatus?.[this.userId] === true;
+            if (!hasSeen) unreadCount++;
 
-                const icon = UIUtils.GetIcon(notif.type);
+            const icon = UIUtils.GetIcon(notif.type);
+            
+            // Format timestamp
+            let timeAgo = '';
+            if (notif.timestamp) {
+                const date = new Date(notif.timestamp);
+                const now = new Date();
+                const diffMs = now - date;
+                const diffMins = Math.floor(diffMs / 60000);
+                const diffHours = Math.floor(diffMs / 3600000);
+                const diffDays = Math.floor(diffMs / 86400000);
+                
+                if (diffMins < 1) {
+                    timeAgo = 'Just now';
+                } else if (diffMins < 60) {
+                    timeAgo = `${diffMins}m ago`;
+                } else if (diffHours < 24) {
+                    timeAgo = `${diffHours}h ago`;
+                } else if (diffDays < 7) {
+                    timeAgo = `${diffDays}d ago`;
+                } else {
+                    timeAgo = date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+                }
+            }
 
-                list.innerHTML += `
-                    <li>
-                        <div class="dropdown-item rounded-2 py-2 border-bottom ${!hasSeen ? 'bg-secondary bg-opacity-10' : ''}" 
-                             style="cursor: pointer;" 
-                             onclick="NotificationEngine.MarkAsSeen('${id}', '${notif.link || ''}')">
-                            <div class="d-flex align-items-center">
-                                <i class="bi ${icon.icon} ${icon.bg.split(' ')[2]} me-2"></i>
-                                <span class="fw-bold small text-truncate">${notif.title}</span>
-                            </div>
-                            <div class="text-muted small ms-4 ps-1">${notif.message}</div>
+            list.innerHTML += `
+                <li class="notification-items ">
+                    <div class="dropdown-item rounded-2 p-2 h-100 border-bottom ${!hasSeen ? 'bg-secondary bg-opacity-10' : ''}" 
+                         style="cursor: pointer;" 
+                         onclick="NotificationEngine.MarkAsSeen('${id}', '${notif.link || ''}')">
+                        <div class="d-flex align-items-center">
+                            <i class="bi ${icon.icon} ${icon.bg.split(' ')[2]} me-2"></i>
+                            <span class="fw-bold small text-truncate">${notif.title}</span>
+                            <span class="ms-auto small text-muted" style="font-size: 9px; white-space: nowrap;">${timeAgo}</span>
                         </div>
-                    </li>
-                `;
-            });
+                        <div class="text-muted small ms-4 ps-1">${notif.message}</div>
+                        
+                    </div>
+                </li>
+            `;
+        });
 
-        if (countBadge) countBadge.innerText = unreadCount;
-        if (dot) dot.style.display = unreadCount > 0 ? 'inline-block' : 'none';
-    },
+    if (countBadge) countBadge.innerText = unreadCount;
+    if (dot) dot.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+},
 
     async MarkAsSeen(id, link) {
-        await firebase.database().ref(`Notifications/${id}/ReadStatus/${this.userId}`).set(true);
+        await firebase.database().ref(`Utilities/Notifications/${id}/ReadStatus/${this.userId}`).set(true);
         if (link && typeof App !== 'undefined') App.Router(link);
     }
 };
@@ -1187,59 +1236,163 @@ const NotificationEngine = {
 const BrowserNotificationEngine = {
     userId: localStorage.getItem('userloginid'),
     shownTimeouts: new Set(),
+    hasAskedPermission: false,
 
     Init() {
-        if (!("Notification" in window)) return;
-        if (Notification.permission === "default") Notification.requestPermission();
-        
-        // 🎯 POINT TO Broadcast-Services, not Notifications
-        firebase.database().ref('Broadcast-Services').on('child_added', (snapshot) => {
+        // Check if browser supports notifications
+        if (!("Notification" in window)) {
+            console.log('Browser does not support notifications');
+            return;
+        }
+
+        // Listen for new broadcasts
+        firebase.database().ref('Utilities/Broadcast-Services').on('child_added', (snapshot) => {
             const notif = snapshot.val();
             const id = snapshot.key;
 
-            // 🎯 Check if targeted to ALL or if this userId is in the target array
+            // Check if targeted to ALL or if this userId is in the target array
             const isForMe = notif.target === 'all' || (Array.isArray(notif.target) && notif.target.includes(this.userId));
             if (!isForMe) return;
             
-            // Check status: ReadStatus is stored under this specific broadcast ID
+            // Check if already seen
             const hasSeen = notif.ReadStatus?.[this.userId] === true;
             
             if (!hasSeen && !this.shownTimeouts.has(id)) {
-                this.shownTimeouts.add(id);
-                // Trigger 30s timer
-                setTimeout(() => this.Show(id, notif), 30000);
+                // Check permission status
+                if (Notification.permission === "granted") {
+                    // Permission already granted - show after 30s
+                    this.shownTimeouts.add(id);
+                    setTimeout(() => this.Show(id, notif), 30000);
+                } else if (Notification.permission === "default" && !this.hasAskedPermission) {
+                    // Permission not yet asked - request now
+                    this.hasAskedPermission = true;
+                    this.RequestPermission(id, notif);
+                } else if (Notification.permission === "denied") {
+                    console.log('Notifications blocked by user');
+                    // Still mark as seen to prevent repeated attempts
+                    firebase.database().ref(`Utilities/Broadcast-Services/${id}/ReadStatus/${this.userId}`).set(true);
+                }
             }
         });
     },
 
-    async Show(id, notif) {
-    // 1. Double-check status in DB before showing
-    const snap = await firebase.database().ref(`Broadcast-Services/${id}/ReadStatus/${this.userId}`).once('value');
-    if (snap.val() === true) return;
+    RequestPermission(id, notif) {
+        // Show a friendly prompt before requesting
+        if (confirm('🔔 Enable notifications to receive real-time alerts for approvals and updates?')) {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    console.log('Notification permission granted');
+                    // Show the notification after permission is granted
+                    this.shownTimeouts.add(id);
+                    setTimeout(() => this.Show(id, notif), 1000);
+                } else {
+                    console.log('Notification permission denied');
+                    // Mark as seen so we don't ask again for this notification
+                    firebase.database().ref(`Utilities/Broadcast-Services/${id}/ReadStatus/${this.userId}`).set(true);
+                }
+            });
+        } else {
+            // User declined - mark as seen
+            firebase.database().ref(`Utilities/Broadcast-Services/${id}/ReadStatus/${this.userId}`).set(true);
+        }
+    },
 
-    if (Notification.permission === "granted") {
-        const icon = UIUtils.GetIcon(notif.type);
+    async Show(id, notif) {
+        // Double-check status in DB before showing
+        const snap = await firebase.database().ref(`Utilities/Broadcast-Services/${id}/ReadStatus/${this.userId}`).once('value');
+        if (snap.val() === true) return;
+
+        // Check permission again
+        if (Notification.permission !== "granted") {
+            console.log('Notification permission not granted');
+            return;
+        }
+
+        const icon = UIUtils?.GetIcon ? UIUtils.GetIcon(notif.type) : { emoji: '🔔' };
         const n = new Notification(`${icon.emoji} ${notif.title}`, { 
             body: notif.message, 
-            icon: '/favicon.ico' 
+            icon: 'assets/img/logo.png',
+            badge: '/favicon.ico',
+            vibrate: [200, 100, 200],
+            silent: false,
+            tag: id, // Prevents duplicate notifications
+            renotify: true
         });
 
-        // 🎯 INSTANT MARK AS SEEN:
-        // As soon as the notification appears on the screen, 
-        // we mark it as 'true' so no other browser tab shows it.
-        firebase.database().ref(`Broadcast-Services/${id}/ReadStatus/${this.userId}`).set(true);
+        // Mark as seen immediately when notification appears
+        firebase.database().ref(`Utilities/Broadcast-Services/${id}/ReadStatus/${this.userId}`).set(true);
 
+        // Handle click event
         n.onclick = () => {
             window.focus();
-            // Redirect logic
-            if (notif.link && typeof App !== 'undefined') {
-                App.Router(notif.link);
-            }
             n.close();
+            // Redirect logic
+            if (notif.link) {
+                if (typeof App !== 'undefined' && App.Router) {
+                    App.Router(notif.link);
+                } else if (notif.link.startsWith('http')) {
+                    window.open(notif.link, '_blank');
+                } else {
+                    // Handle internal routing
+                    const targetEl = document.querySelector(`[data-bs-target="${notif.link}"]`);
+                    if (targetEl) {
+                        targetEl.click();
+                    } else {
+                        window.location.hash = notif.link;
+                    }
+                }
+            }
         };
+
+        // Auto-close after 10 seconds
+        setTimeout(() => {
+            n.close();
+        }, 10000);
+    },
+
+    // Helper function to check if notifications are enabled
+    IsEnabled() {
+        return "Notification" in window && Notification.permission === "granted";
+    },
+
+    // Helper function to get permission status
+    GetPermissionStatus() {
+        if (!("Notification" in window)) return 'unsupported';
+        return Notification.permission;
+    },
+
+    // Helper function to request permission manually
+    RequestManualPermission() {
+        if (!("Notification" in window)) return Promise.reject('Not supported');
+        if (Notification.permission === "granted") return Promise.resolve('granted');
+        if (Notification.permission === "denied") return Promise.reject('denied');
+        
+        return new Promise((resolve, reject) => {
+            if (confirm('🔔 Enable notifications to receive real-time alerts?')) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        resolve('granted');
+                    } else {
+                        reject('denied');
+                    }
+                });
+            } else {
+                reject('declined');
+            }
+        });
     }
-}
 };
+
+// Auto-initialize when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait a moment before initializing
+    setTimeout(() => {
+        if (BrowserNotificationEngine.userId) {
+            BrowserNotificationEngine.Init();
+            console.log('BrowserNotificationEngine initialized');
+        }
+    }, 2000);
+});
 
 
 
@@ -1549,10 +1702,11 @@ const FormObserver = new MutationObserver(() => {
                 } else {
                     payload.createdAt = new Date().toISOString();
                     await API.SaveMaster(`Masters/${sheetName}`, payload);
-                    alert(`${formId} Created Successfully!`);
+                    // alert(`${formId} Created Successfully!`);
                 }
                 
-                const listRoute = `masters/${formId.toLowerCase()}-list`;
+                var listRoute = `masters/${formId.toLowerCase()}-list`;
+                listRoute= `masters/${form.getAttribute("data-listattribute")}-list`
                 if (typeof App !== 'undefined' && App.Router) App.Router(listRoute); 
                 
             } catch (error) {

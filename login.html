@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UniTax Pro | Enterprise Access</title>
-    <link rel="icon" type="image/png" href="./assets/img/_A_highly_minimalistic_and_smooth_202606042307.jpeg">
+    <link rel="icon" type="image/png" href="assets/img/logo-circle.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -68,8 +68,9 @@
 
     /* Form Side */
     .auth-side-form { 
-        width: 55%; 
-        padding: 48px 60px; 
+        width: 55%;
+        height: auto; 
+        padding: 30px 60px; 
         position: relative; 
         overflow-y: auto;
         scrollbar-width: thin;
@@ -198,6 +199,43 @@
         </div>
     </div>
 
+
+    <!-- Admin 2FA Verification Modal -->
+<div class="modal fade" id="admin2FAModal" tabindex="-1" aria-labelledby="admin2FAModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white border-0">
+                <h5 class="modal-title fw-bold" id="admin2FAModalLabel">
+                    <i class="bi bi-shield-lock me-2"></i>Admin Verification
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- <p class="text-muted small">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Enter the verification code sent to your registered email.
+                </p> -->
+                <div class="mb-3">
+                    <label for="admin2FACode" class="form-label fw-bold small">Verification Code</label>
+                    <input type="text" id="admin2FACode" class="form-control form-control-sm text-center font-monospace" 
+                           placeholder="Enter 11-digit code" maxlength="" autofocus>
+                    <small class="text-muted">Enter the admin verification code.</small>
+                </div>
+                <div id="admin2FAError" class="alert alert-danger d-none py-2 small"></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="resendAdmin2FA()">
+                    <i class="bi bi-envelope me-1"></i> Resend
+                </button>
+                <button type="button" class="btn btn-sm btn-primary" id="admin2FAVerifyBtn" onclick="verifyAdmin2FA()">
+                    <i class="bi bi-check2 me-1"></i> Verify & Login
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -244,109 +282,296 @@
         }
 
         // Authentication Handler (Firebase Version)
-        async function handleAuth(event, action) {
-            event.preventDefault();
-            const btn = event.submitter;
-            const alertBox = document.getElementById('error-alert');
-            const originalText = btn.innerText;
+    // =========================================================
+// SAFE MODAL HANDLER (No Bootstrap dependency)
+// =========================================================
+function showAdmin2FAModal() {
+    const modal = document.getElementById('admin2FAModal');
+    if (!modal) {
+        console.error('Admin 2FA Modal not found');
+        return;
+    }
 
-            const formData = new FormData(event.target);
-            const data = Object.fromEntries(formData.entries());
-            const email = data.email.trim().toLowerCase();
-            const password = data.password;
+    // Try Bootstrap first
+    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+        return;
+    }
 
-            btn.disabled = true;
-            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Synchronizing...`;
-            alertBox.classList.add('hidden');
+    // Fallback: Manual show
+    modal.style.display = 'block';
+    modal.classList.add('show');
+    modal.style.background = 'rgba(0,0,0,0.5)';
+    document.body.classList.add('modal-open');
+}
 
-            try {
-                if (action === 'login') {
-                    // --- 1. SPECIAL ADMIN OVERRIDE ---
-                    if (email === ADMIN_EMAIL.toLowerCase() && password === ADMIN_PASS) {
-                        localStorage.setItem('userloginid', 'ADMIN_MASTER');
-                        localStorage.setItem('userName', 'System Administrator');
-                        localStorage.setItem('useremail_we', email);
-                        btn.innerHTML = `<i class="bi bi-shield-lock me-2"></i> Admin Access Granted`;
-                        btn.className = "btn-auth bg-success";
-                        setTimeout(() => window.location.href = './modules/admin.html', 800);
-                        return; // Stop execution here
-                    }
+function hideAdmin2FAModal() {
+    const modal = document.getElementById('admin2FAModal');
+    if (!modal) return;
 
-                    // --- 2. STANDARD FIREBASE LOGIN ---
-                    const snap = await db.ref('Users').orderByChild('email').equalTo(email).once('value');
-                    
-                    if (!snap.exists()) {
-                        throw new Error("This email is not registered with UniTax Pro.");
-                    }
+    // Try Bootstrap first
+    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        const bsModal = bootstrap.Modal.getInstance(modal);
+        if (bsModal) {
+            bsModal.hide();
+            return;
+        }
+    }
 
-                    // Extract user data
-                    let userData = null;
-                    let userId = null;
-                    snap.forEach(child => {
-                        userData = child.val();
-                        userId = child.key;
-                    });
+    // Fallback: Manual hide
+    modal.style.display = 'none';
+    modal.classList.remove('show');
+    modal.style.background = '';
+    document.body.classList.remove('modal-open');
+}
 
-                    // Check Password Match
-                    if (userData.password !== password) {
-                        throw new Error("The password you entered is incorrect.");
-                    }
+// =========================================================
+// UPDATED handleAuth FUNCTION
+// =========================================================
+async function handleAuth(event, action) {
+    event.preventDefault();
+    const btn = event.submitter;
+    const alertBox = document.getElementById('error-alert');
+    const originalText = btn.innerText;
 
-                    // Check Authorization State
-                    if (userData.status === "inactive") {
-                        throw new Error("Access Denied: Your account has been suspended by the administrator.");
-                    }
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData.entries());
+    const email = data.email.trim().toLowerCase();
+    const password = data.password;
 
-                    // Success - Set strictly required LocalStorage keys
-                    localStorage.setItem('userloginid', userId);
-                    localStorage.setItem('userName', userData.name);
-                    localStorage.setItem('useremail_we', userData.email);
-                    localStorage.setItem('designation', userData.designation || "");
-                    localStorage.setItem('userrole', userData.role);
-                    localStorage.setItem('workspaceId', userData.workspaceId || userId
-);
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Synchronizing...`;
+    alertBox.classList.add('hidden');
 
-                    btn.innerHTML = `<i class="bi bi-check2-all me-2"></i> Success`;
-                    btn.className = "btn-auth bg-success";
-                    setTimeout(() => window.location.href = 'index.html', 800);
+    try {
+        if (action === 'login') {
+            // --- 1. STANDARD FIREBASE LOGIN ---
+            const snap = await db.ref('Users').orderByChild('email').equalTo(email).once('value');
+            
+            if (!snap.exists()) {
+                throw new Error("This email is not registered with UniTax Pro.");
+            }
 
-                } else {
-                    // --- 3. FIREBASE SIGNUP ---
-                    if (password !== document.getElementById('regConfirm').value) {
-                        throw new Error("Passwords do not match.");
-                    }
+            // Extract user data
+            let userData = null;
+            let userId = null;
+            snap.forEach(child => {
+                userData = child.val();
+                userId = child.key;
+            });
 
-                    // Check if email already exists
-                    const existingSnap = await db.ref('Users').orderByChild('email').equalTo(email).once('value');
-                    if (existingSnap.exists()) {
-                        throw new Error("This email is already registered. Please sign in instead.");
-                    }
+            // Check Password Match
+            if (userData.password !== password) {
+                throw new Error("The password you entered is incorrect.");
+            }
 
-                    // Create new user payload
-                    const newUserId = generateUserId(10);
-                    const newUserData = {
-                        name: data.name.trim(),
-                        email: email,
-                        password: password,
-                        role: "user",
-                        status: "active",
-                        created_at: firebase.database.ServerValue.TIMESTAMP
-                    };
+            // Check Authorization State
+            if (userData.status === "inactive") {
+                throw new Error("Access Denied: Your account has been suspended by the administrator.");
+            }
 
-                    // Save to Firebase using specific generated ID
-                    await db.ref(`Users/${newUserId}`).set(newUserData);
-
-                    alert("Account provisioned successfully! Please sign in.");
-                    location.reload(); // Refresh to clear form and show login tab
-                }
-
-            } catch (err) {
-                alertBox.innerText = err.message || "An unexpected network error occurred.";
-                alertBox.classList.remove('hidden');
+            // =========================================================
+            // 🔥 CHECK FOR ADMIN 2FA
+            // =========================================================
+            const isAdmin = userData.masterControl === 'administration';
+            
+            if (isAdmin) {
+                // Store user data temporarily for 2FA
+                window._tempAdminData = { userId, userData };
+                
+                // Show 2FA Modal (safe method)
+                showAdmin2FAModal();
+                
+                // Reset button state
                 btn.disabled = false;
                 btn.innerText = originalText;
+                
+                // Return - wait for 2FA verification
+                return;
             }
+
+            // --- 2. SUCCESS - Regular User Login ---
+            await completeLogin(userId, userData, btn);
+
+        } else {
+            // --- 3. FIREBASE SIGNUP ---
+            if (password !== document.getElementById('regConfirm').value) {
+                throw new Error("Passwords do not match.");
+            }
+
+            // Check if email already exists
+            const existingSnap = await db.ref('Users').orderByChild('email').equalTo(email).once('value');
+            if (existingSnap.exists()) {
+                throw new Error("This email is already registered. Please sign in instead.");
+            }
+
+            // Create new user payload
+            const newUserId = generateUserId(10);
+            const newUserData = {
+                name: data.name.trim(),
+                email: email,
+                password: password,
+                role: "user",
+                status: "active",
+                masterControl: "user", // Default for new users
+                created_at: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            // Save to Firebase using specific generated ID
+            await db.ref(`Users/${newUserId}`).set(newUserData);
+
+            alert("Account provisioned successfully! Please sign in.");
+            location.reload();
         }
+
+    } catch (err) {
+        alertBox.innerText = err.message || "An unexpected network error occurred.";
+        alertBox.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerText = originalText;
+    }
+}
+
+// =========================================================
+// COMPLETE LOGIN FUNCTION
+// =========================================================
+async function completeLogin(userId, userData, btn) {
+    localStorage.setItem('userloginid', userId);
+    localStorage.setItem('userName', userData.name);
+    localStorage.setItem('useremail_we', userData.email);
+    localStorage.setItem('designation', userData.designation || "");
+    localStorage.setItem('userrole', userData.role);
+    localStorage.setItem('workspaceId', userData.workspaceId || userId);
+    localStorage.setItem('masterControl', userData.masterControl);
+
+    btn.innerHTML = `<i class="bi bi-check2-all me-2"></i> Success`;
+    btn.className = "btn-auth bg-success";
+    
+    // 🔥 Check if user is admin (regular admin login without 2FA if masterControl is not 'administration')
+    if (userData.masterControl === 'administration') {
+        setTimeout(() => window.location.href = 'modules/admin.html', 800);
+    } else {
+        setTimeout(() => window.location.href = 'index.html', 800);
+    }
+}
+// =========================================================
+// ADMIN 2FA VERIFICATION
+// =========================================================
+// =========================================================
+// ADMIN 2FA VERIFICATION - With Hardcoded ADMIN_PASS
+// =========================================================
+
+// const ADMIN_PASS = "20130059976";
+
+async function verifyAdmin2FA() {
+    const codeInput = document.getElementById('admin2FACode');
+    const code = codeInput.value.trim();
+    const errorEl = document.getElementById('admin2FAError');
+    const verifyBtn = document.getElementById('admin2FAVerifyBtn');
+    const originalText = verifyBtn.innerText;
+
+    // Get the temporarily stored admin data
+    const tempData = window._tempAdminData;
+    if (!tempData) {
+        alert('Session expired. Please login again.');
+        hideAdmin2FAModal();
+        return;
+    }
+
+    const { userId, userData } = tempData;
+
+    // 🔥 CHECK AGAINST HARDCODED ADMIN_PASS
+    const enteredCode = String(code).trim();
+    const storedCode = String(ADMIN_PASS).trim();
+
+    console.log('Verifying - Entered:', enteredCode, 'Expected:', storedCode);
+
+    if (enteredCode !== storedCode) {
+        errorEl.classList.remove('d-none');
+        errorEl.innerText = 'Invalid verification code. Please try again.';
+        return;
+    }
+
+    // Hide error
+    errorEl.classList.add('d-none');
+
+    // Show loading
+    verifyBtn.disabled = true;
+    verifyBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Verifying...';
+
+    try {
+        // 🔥 ADMIN LOGIN - Redirect to admin.html
+        localStorage.setItem('userloginid', userId);
+        localStorage.setItem('userName', userData.name);
+        localStorage.setItem('useremail_we', userData.email);
+        localStorage.setItem('designation', userData.designation || "");
+        localStorage.setItem('userrole', userData.role);
+        localStorage.setItem('workspaceId', userData.workspaceId || userId);
+        localStorage.setItem('masterControl', userData.masterControl || 'user');
+        
+        // 🔥 REDIRECT TO ADMIN PANEL
+        hideAdmin2FAModal();
+        delete window._tempAdminData;
+        
+        window.location.href = 'modules/admin.html';
+        
+    } catch (error) {
+        errorEl.classList.remove('d-none');
+        errorEl.innerText = error.message || 'Verification failed. Please try again.';
+    } finally {
+        verifyBtn.disabled = false;
+        verifyBtn.innerText = originalText;
+    }
+}
+// =========================================================
+// RESEND 2FA CODE (Optional - with hardcoded pass)
+// =========================================================
+function resendAdmin2FA() {
+    // In a real implementation, you would send an email/SMS
+    // For now, just show the code in a notification or alert
+    if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+        App.UI.Notify('Info', `Your verification code is: ${ADMIN_PASS}`, 'info');
+    } else {
+        alert(`Your verification code is: ${ADMIN_PASS}`);
+    }
+}
+// =========================================================
+// GENERATE USER ID (Helper)
+// =========================================================
+function generateUserId(length = 10) {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+}
+
+// =========================================================
+// CLOSE MODAL ON BACKDROP CLICK (Manual Fallback)
+// =========================================================
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('admin2FAModal');
+    if (modal) {
+        // Close on backdrop click
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideAdmin2FAModal();
+            }
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal.classList.contains('show')) {
+                hideAdmin2FAModal();
+            }
+        });
+    }
+});
+    
+    
+    
     </script>
 </body>
 </html>

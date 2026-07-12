@@ -156,3 +156,51 @@ window.editGoTransaction = function(formId, key, path) {
         localStorage.setItem('editContext', JSON.stringify({ type: formId, key: key, returnRoute:path }));
         if (typeof App !== 'undefined' && App.Router) App.Router('transactions/edit'); 
     };
+
+
+// =============================================================
+// ACCESS TRACKER - Save Location on Every Load
+// =============================================================
+
+// const AccessTracker = {
+//     Init: function() {
+//         // Skip if in development mode
+//         if (localStorage.getItem('Dev_testing') === 'true') {
+//             console.log('🔧 Dev mode - Access tracking disabled');
+//             return;
+//         }
+
+//         // Check if already tracked in this session
+//         if (sessionStorage.getItem('access_tracked')) return;
+        
+//         this.saveAccess();
+//         sessionStorage.setItem('access_tracked', 'true');
+//     },
+
+    
+//     pushToFirebase: function(locationData) {
+//         const payload = {
+//             userId: localStorage.getItem('userloginid') || 'anonymous',
+//             timestamp: firebase.database.ServerValue.TIMESTAMP,
+//             page: window.location.pathname,
+//             referrer: document.referrer || 'direct',
+//             userAgent: navigator.userAgent.substring(0, 100),
+//             screen: `${window.screen.width}x${window.screen.height}`,
+//             ...locationData
+//         };
+
+//         firebase.database().ref('Utilities/Access').push(payload)
+//             .then(() => console.log('📍 Access logged'))
+//             .catch(err => console.log('Access log error:', err));
+//     }
+// };
+
+function openSettingsTab(index) {
+    const navItems = document.querySelectorAll('#settings-nav li');
+    if (navItems[index]) {
+        navItems[index].click();
+        console.log(`✅ Opened settings tab at index ${index}`);
+    } else {
+        console.warn(`⚠️ No settings tab found at index ${index}`);
+    }
+}

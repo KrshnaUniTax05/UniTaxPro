@@ -26,19 +26,17 @@
 </div>
 <script>
 // STOP EVERYTHING FOR NON-MANAGERS
-if ((App?.State?.userRole || '').toLowerCase() !== 'manager') {
+if ((App?.State?.userRole || '').toLowerCase() !== 'manager' && (App?.State?.userRole || '').toLowerCase() !== 'administrator') {
 
     const viewport = document.querySelector(".main-task-manager");
 
     if (viewport) {
     viewport.innerHTML = `
-        <div class="m-4 text-center p-4 rounded-3 border border-danger border-opacity-25 bg-danger bg-opacity-10 shadow-sm" role="alert">
-            <i class="bi bi-shield-lock-fill fs-2 d-block mb-2 text-danger opacity-75"></i>
-            <h5 class="fw-bold text-danger">Access Denied</h5>
-            <p class="mb-0 small">
-                You do not have authorization to view the Manager Task Panel.
-            </p>
-        </div>
+       <div class="d-flex flex-column  align-items-center justify-content-center text-center p-4 rounded-3 border border-danger border-opacity-25 bg-danger bg-opacity-10" role="alert" style="width: 100%; min-height: calc(100vh - 80px);">
+                <i class="bi bi-shield-lock-fill fs-2 d-block mb-2 text-danger opacity-75"></i>
+                <h5 class="fw-bold text-danger">Access Denied</h5>
+                <p class="mb-0 small">You do not have authorization to view this module.</p>
+            </div>
     `;
 }
 
