@@ -5,7 +5,7 @@
 // console.log('App.js initialized')
 const App = {
    State: {
-        userId: localStorage.getItem('workspaceId') || localStorage.getItem('userloginid'),
+        userId: localStorage.getItem('workspaceUserId') || localStorage.getItem('userloginid'),
         currentuserId: localStorage.getItem('userloginid'),
         userName: localStorage.getItem('userName'),
         userRole: localStorage.getItem('userrole'),
@@ -287,7 +287,7 @@ async Router(path) {
         const originalBtnHtml = btn.innerHTML;
         
         btn.disabled = true;
-        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Processing...`;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>`;
 
         // Detect if we are in "Edit Mode"
         const urlParams = new URLSearchParams(window.location.search);
@@ -325,16 +325,17 @@ async Router(path) {
     displayWrokspaceName: function(elId = 'main_userid_show') {
         const el = document.getElementById(elId);
         if (!el) return;
-        const userId = localStorage.getItem('userloginid');
-        const wsId = localStorage.getItem('workspaceId') || userId || 'Unknown';
-        
+        const userId = App.State.userId ;
         if (!userId) { el.innerText = 'Guest'; return; }
         
-       const path = (wsId && wsId !== 'Unknown') ? `${wsId}/WorkspaceSetting/workspaceName` : `Users/${userId}/workspaceName`;
-    firebase.database().ref(path).once('value')
-        .then(s => el.innerText = s.val() || `ID: ${wsId}`)
-        .catch(() => el.innerText = `ID: ${wsId}`);
+        firebase.database().ref(`Users/${userId}/workspace/WorkspaceSettings/workspaceName`).once('value')
+            .then(s => {
+                const name = s.val();
+                el.innerText = name || `ID: ${userId}`;
+            })
+            .catch(() => el.innerText = `ID: ${userId}`);
     },
+
     BindGlobalEvents() {
         const searchInput = document.getElementById('globalSearch');
 
@@ -397,11 +398,11 @@ async Router(path) {
                 if (pinned === current) {
                     // Remove Pin
                     localStorage.removeItem('pinnedModule');
-                    this.UI.Notify('System', `Module '${current}' unpinned.`, 'warning');
+                    this.UI.Notify('System', `Module unpinned.`, 'warning');
                 } else {
                     // Set Pin
                     localStorage.setItem('pinnedModule', current);
-                    this.UI.Notify('System', `Module '${current}' fixed. It will load on startup.`, 'success');
+                    this.UI.Notify('System', `Module Pinned.`, 'success');
                 }
             }
         })
@@ -1216,7 +1217,7 @@ const NotificationEngine = {
                             <span class="fw-bold small text-truncate">${notif.title}</span>
                             <span class="ms-auto small text-muted" style="font-size: 9px; white-space: nowrap;">${timeAgo}</span>
                         </div>
-                        <div class="text-muted small ms-4 ps-1">${notif.message}</div>
+                        <div class="text-muted small text-truncate ms-4 ps-1">${notif.message}</div>
                         
                     </div>
                 </li>
@@ -1399,6 +1400,8 @@ document.addEventListener('DOMContentLoaded', function() {
 const UserProfileController = {
     userId: localStorage.getItem('userloginid'),
     userData: null,
+    userSource: null, // 'users' or 'workspace_member'
+    workspaceOwnerId: null,
 
     Init() {
         if (!this.userId) {
@@ -1410,7 +1413,6 @@ const UserProfileController = {
     },
 
     Notify(title, message, type) {
-        // Safe fallback notification system
         if (window.App && window.App.UI && window.App.UI.Notify) {
             window.App.UI.Notify(title, message, type);
         } else if (window.UIUtils && window.UIUtils.Notify) {
@@ -1420,19 +1422,65 @@ const UserProfileController = {
         }
     },
 
-    // 1. Fetch data from Firebase
+    // =========================================================
+    // 1. FETCH USER DATA FROM BOTH LOCATIONS
+    // =========================================================
     async LoadUserData() {
         try {
             const db = firebase.database();
-            const snap = await db.ref(`Users/${this.userId}`).once('value');
             
-            if (!snap.exists()) {
+            // 🔥 FIRST: Check if user exists in Users node
+            const userSnap = await db.ref(`Users/${this.userId}`).once('value');
+            
+            if (userSnap.exists()) {
+                this.userData = userSnap.val();
+                this.userSource = 'users';
+                this.workspaceOwnerId = null;
+                console.log('✅ User found in Users node');
+                this.RenderProfile();
+                return;
+            }
+
+            // 🔥 SECOND: Search in all workspace/Members nodes
+            console.log('⏳ User not in Users node, searching in workspace/Members...');
+            
+            const allUsersSnap = await db.ref('Users').once('value');
+            const allUsers = allUsersSnap.val() || {};
+            
+            let found = false;
+            for (const [ownerId, ownerData] of Object.entries(allUsers)) {
+                const members = ownerData?.workspace?.Members || {};
+                
+                for (const [memberId, memberData] of Object.entries(members)) {
+                    if (memberId === this.userId || memberData.userId === this.userId) {
+                        // 🔥 Found user as workspace member
+                        this.userData = {
+                            ...memberData,
+                            // Merge with workspace owner data for context
+                            workspaceId: ownerData?.workspaceId || ownerId,
+                            workspaceStatus: ownerData?.workspace?.WorkspaceSettings?.workspaceStatus || ownerData?.workspaceStatus || 'active',
+                            workspaceOwnerId: ownerId,
+                            workspaceOwnerName: ownerData?.name || 'Unknown',
+                            isWorkspaceMember: true,
+                            // Use member's status if available, else owner's status
+                            status: memberData.status || ownerData?.status || 'active'
+                        };
+                        this.userSource = 'workspace_member';
+                        this.workspaceOwnerId = ownerId;
+                        found = true;
+                        console.log('✅ User found in workspace/Members of:', ownerId);
+                        break;
+                    }
+                }
+                if (found) break;
+            }
+
+            if (!found) {
                 this.Notify("Error", "User profile not found in database.", "danger");
                 window.location.replace("./login.html");
                 return;
             }
 
-            this.userData = snap.val();
             this.RenderProfile();
 
         } catch (err) {
@@ -1441,32 +1489,36 @@ const UserProfileController = {
         }
     },
 
-    // 2. Populate all UI and Form Fields
+    // =========================================================
+    // 2. POPULATE UI AND FORM FIELDS
+    // =========================================================
     RenderProfile() {
         const name = this.userData.name || this.userData.legalName || 'Unknown User';
         const email = this.userData.email || 'No Email Provided';
-        const designation = this.userData.designation || 'Designation not assigned';
+        const designation = this.userData.designation || this.userData.role || 'Designation not assigned';
         const role = this.userData.role || 'User';
         const status = this.userData.status || 'Active';
         
-        // Generate Initials (e.g., "Krishna Mishra" -> "KM")
+        // Generate Initials
         const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'U';
 
         // Format Account Creation Date
         let joinedDate = 'Unknown';
-        if (this.userData.created_at || this.userData.createdAt) {
-            const timestamp = this.userData.created_at || this.userData.createdAt;
-            const dateObj = new Date(timestamp);
+        const createdAt = this.userData.created_at || this.userData.createdAt || this.userData.joinedAt;
+        if (createdAt) {
+            const dateObj = new Date(createdAt);
             joinedDate = dateObj.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
         }
 
-        // Fill Summary Card Elements (Safely checking if they exist)
+        // Fill Summary Card Elements
         const elInitials = document.getElementById('profileInitials');
         const elName = document.getElementById('profileDisplayName');
         const elEmail = document.getElementById('profileDisplayEmail');
         const elRole = document.getElementById('profileRoleBadge');
         const elJoined = document.getElementById('profileAccountCreated');
         const elStatus = document.getElementById('profileStatusText');
+        const elUserSource = document.getElementById('profileUserSource');
+        const elWorkspaceOwner = document.getElementById('profileWorkspaceOwner');
 
         if(elInitials) elInitials.innerText = initials;
         if(elName) elName.innerText = name;
@@ -1479,18 +1531,65 @@ const UserProfileController = {
             elStatus.className = status === 'active' ? 'fw-bold text-success mb-0' : 'fw-bold text-danger mb-0';
         }
 
+        // Show user source
+        if(elUserSource) {
+            const sourceLabel = this.userSource === 'workspace_member' ? 'Workspace Member' : 'Primary User';
+            elUserSource.innerText = sourceLabel;
+            elUserSource.className = this.userSource === 'workspace_member' ? 'badge bg-info' : 'badge bg-primary';
+        }
+
+        // Show workspace owner info (if member)
+        if(elWorkspaceOwner) {
+            if (this.userSource === 'workspace_member' && this.workspaceOwnerId) {
+                elWorkspaceOwner.innerHTML = `
+                    <div class="small text-muted">
+                        <i class="bi bi-person-workspace me-1"></i>
+                        Workspace Owner: <strong>${this.userData.workspaceOwnerName || 'Unknown'}</strong>
+                    </div>
+                `;
+            } else {
+                elWorkspaceOwner.innerHTML = '';
+            }
+        }
+
         // Fill Form Inputs
         const inputName = document.getElementById('inputProfileName');
         const inputEmail = document.getElementById('inputProfileEmail');
         const inputDesig = document.getElementById('inputProfiledesignation');
+        const inputRole = document.getElementById('inputProfileRole');
+        const inputStatus = document.getElementById('inputProfileStatus');
         
         if(inputName) inputName.value = name;
         if(inputEmail) inputEmail.value = email;
         if(inputDesig) inputDesig.value = designation;
+        if(inputRole) inputRole.value = role;
+        if(inputStatus) inputStatus.value = status;
+
+        // 🔥 Disable fields for workspace members (read-only)
+        const isMember = this.userSource === 'workspace_member';
+        if(inputName) inputName.disabled = isMember;
+        if(inputEmail) inputEmail.disabled = isMember;
+        if(inputDesig) inputDesig.disabled = isMember;
+        if(inputRole) inputRole.disabled = isMember;
+        if(inputStatus) inputStatus.disabled = isMember;
+
+        // Show/hide save button for members
+        const saveBtn = document.getElementById('btnSaveProfile');
+        if(saveBtn) {
+            saveBtn.style.display = isMember ? 'none' : 'block';
+        }
     },
 
-    // 3. Save Personal Info (Name)
+    // =========================================================
+    // 3. SAVE PROFILE (Only for Users node users)
+    // =========================================================
     async UpdateProfile() {
+        // 🔥 Prevent workspace members from updating profile
+        if (this.userSource === 'workspace_member') {
+            this.Notify("Access Denied", "Workspace members cannot update their profile. Contact workspace owner.", "danger");
+            return;
+        }
+
         const nameInput = document.getElementById('inputProfileName');
         if (!nameInput) return;
 
@@ -1518,11 +1617,8 @@ const UserProfileController = {
                 updated_at: firebase.database.ServerValue.TIMESTAMP
             });
 
-            // Update local memory and re-render UI live
             this.userData.name = newName;
             this.RenderProfile();
-            
-            // Sync with local storage for app-wide consistency
             localStorage.setItem('userName', newName);
 
             this.Notify("Success", "Profile updated successfully.", "success");
@@ -1537,8 +1633,16 @@ const UserProfileController = {
         }
     },
 
-    // 4. Validate and Update Password
+    // =========================================================
+    // 4. UPDATE PASSWORD (Only for Users node users)
+    // =========================================================
     async UpdatePassword() {
+        // 🔥 Prevent workspace members from changing password
+        if (this.userSource === 'workspace_member') {
+            this.Notify("Access Denied", "Workspace members cannot change password. Contact workspace owner.", "danger");
+            return;
+        }
+
         const currentPassInput = document.getElementById('inputCurrentPassword');
         const newPassInput = document.getElementById('inputNewPassword');
         const confirmPassInput = document.getElementById('inputConfirmPassword');
@@ -1550,7 +1654,6 @@ const UserProfileController = {
         const newPass = newPassInput.value;
         const confirmPass = confirmPassInput.value;
 
-        // Security Validations
         if (!currentPass || !newPass || !confirmPass) {
             this.Notify("Validation", "Please fill out all password fields.", "warning");
             return;
@@ -1563,7 +1666,6 @@ const UserProfileController = {
             this.Notify("Validation", "Password must be at least 6 characters long.", "warning");
             return;
         }
-        // Validate against the exact password stored in Firebase
         if (currentPass !== this.userData.password) {
             this.Notify("Security", "Current password is incorrect.", "danger");
             return;
@@ -1580,10 +1682,8 @@ const UserProfileController = {
                 updated_at: firebase.database.ServerValue.TIMESTAMP
             });
 
-            // Keep local memory synced so user can change it again if needed without refreshing
             this.userData.password = newPass;
 
-            // Clear the password form fields securely
             const form = document.getElementById('passwordUpdateForm');
             if (form) form.reset();
 
@@ -1598,9 +1698,32 @@ const UserProfileController = {
                 btn.innerHTML = '<i class="bi bi-shield-check me-1"></i> Update Password';
             }
         }
+    },
+
+    // =========================================================
+    // 5. GET USER TYPE (Helper)
+    // =========================================================
+    getUserType() {
+        if (this.userSource === 'workspace_member') {
+            return 'workspace_member';
+        }
+        return 'primary_user';
+    },
+
+    isWorkspaceMember() {
+        return this.userSource === 'workspace_member';
+    },
+
+    getWorkspaceOwner() {
+        if (this.isWorkspaceMember()) {
+            return {
+                id: this.workspaceOwnerId,
+                name: this.userData.workspaceOwnerName || 'Unknown'
+            };
+        }
+        return null;
     }
 };
-
 
 /**
  * ========================================================================
@@ -1701,7 +1824,7 @@ const FormObserver = new MutationObserver(() => {
                     alert(`${formId} Updated Successfully!`);
                 } else {
                     payload.createdAt = new Date().toISOString();
-                    await API.SaveMaster(`Masters/${sheetName}`, payload);
+                    await API.SaveMaster(`${sheetName}`, payload);
                     // alert(`${formId} Created Successfully!`);
                 }
                 

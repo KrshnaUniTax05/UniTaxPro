@@ -105,13 +105,19 @@ body {
     flex-grow: 1;
     overflow-y: auto !important;
     scrollbar-width: none;
-    height: auto;
-    padding: 0px .5rem !important;
-    background-color: var(--bg-light);
-    /* background-color: #0b5ed7; */
-    /* display: flex; */
-    /* align-items: center; */
-    justify-content: center;
+    background-color: var(--bg-light, #f8fafc);
+    height: 100%;
+    margin: 0;
+    padding: 0 .5rem !important;
+    overflow-y: scroll;
+}
+
+.content-viewport #main-content {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    /* overflow-y: auto; */
+    /* background-color: red; */
 }
 
 /* 2. ZERO OUT VIEWPORT PADDING if it contains the Settings Module */
@@ -267,6 +273,8 @@ body {
     position: sticky;
     top: 0;
     z-index: 10; 
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
     /* background:  var(--text-muted) ; */
     background-color: var(--header) !important; 
     padding: 10px 20px !important;
@@ -427,6 +435,10 @@ body.dark-mode {
 /* Forcing Backgrounds on Cards (Fixes the white 'Tasks' box and Quick Actions) */
 body.dark-mode .card,
 body.dark-mode .navbar,
+body.dark-mode .bento-grid,
+body.dark-mode .unitax-exec-os,
+body.dark-mode .bento-card,
+body.dark-mode .tbl-reconcile ,
 body.dark-mode .left-info-bar,
 body.dark-mode .modal-content,
 body.dark-mode .list-group-item {
@@ -445,6 +457,17 @@ body.dark-mode .card h6,
 body.dark-mode .card .display-4,
 body.dark-mode .card .display-5 {
     color: var(--text-main) !important;
+}
+body.dark-mode .bento-card , 
+body.dark-mode .bento-card .card-label, 
+body.dark-mode .bento-card ,
+body.dark-mode .bento-card .text-muted {
+    
+    border-color: var(--border-color) !important;
+    color: var(--text-muted) !important;
+}
+body.dark-mode .bento-card .kpi-value {
+    color: #f2f2f2;
 }
 
 body.dark-mode .text-muted,

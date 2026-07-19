@@ -328,7 +328,7 @@
                 </h5>
                 <p class="text-muted small mb-0">Manage user workspaces and assignments</p>
             </div>
-            <button class="btn btn-primary btn-sm px-4" onclick="openAddWorkspaceModal()">
+            <button class="btn btn-primary btn-sm px-4" onclick="WorkspaceManager.openAddModal()">
                 <i class="bi bi-plus-lg me-1"></i> Add Workspace
             </button>
         </div>
@@ -412,19 +412,27 @@
             <div class="modal-body p-4">
                 <p class="text-muted small">
                     <i class="bi bi-info-circle me-1"></i>
-                    Enter the User ID of an <strong>Administrator</strong> to create a workspace.
+                    Enter the User ID of a <strong>standalone user</strong> to create a workspace.
                 </p>
                 <div class="mb-3">
                     <label for="workspaceUserId" class="form-label fw-bold small">User ID <span class="text-danger">*</span></label>
                     <input type="text" id="workspaceUserId" class="form-control form-control-sm font-monospace" 
                            placeholder="Enter User ID (e.g., AB12CD34EF)" maxlength="10">
-                    <small class="text-muted mt-4">User must have Administrator role to create a workspace.</small>
+                    <small class="text-muted">User will become <strong>Workspace Owner</strong> with full admin rights.</small>
                 </div>
                 <div id="workspaceModalError" class="alert alert-danger d-none py-2 small"></div>
+                
+                <!-- 🔥 Workspace Name Field -->
+                <div class="mb-3">
+                    <label for="workspaceNameInput" class="form-label fw-bold small">Workspace Name</label>
+                    <input type="text" id="workspaceNameInput" class="form-control form-control-sm" 
+                           placeholder="e.g., Rahul's Workspace" value="">
+                    <small class="text-muted">Leave blank to auto-generate from user's name.</small>
+                </div>
             </div>
             <div class="modal-footer border-0">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="createWorkspaceBtn" onclick="createWorkspace()">
+                <button type="button" class="btn btn-primary" id="createWorkspaceBtn" onclick="WorkspaceManager.createWorkspace()">
                     <i class="bi bi-check2 me-1"></i> Create Workspace
                 </button>
             </div>
@@ -432,6 +440,66 @@
     </div>
 </div>
 
+<!-- Confirm Delete Modal -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white border-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <i class="bi bi-building fs-1 d-block mb-3 text-danger opacity-50"></i>
+                <p class="fw-bold mb-1">Delete Workspace?</p>
+                <p class="small text-muted" id="deleteWorkspaceInfo">User: <span id="deleteUserName"></span></p>
+                <p class="small text-muted">This will mark the workspace as <strong>deleted</strong>.</p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger px-4" id="confirmDeleteBtn" onclick="WorkspaceManager.confirmDelete()">
+                    <i class="bi bi-trash me-1"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Workspace Modal -->
+<div class="modal fade" id="editWorkspaceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white border-0">
+                <h5 class="modal-title fw-bold" id="editWorkspaceModalLabel">
+                    <i class="bi bi-pencil me-2"></i>Edit Workspace Status
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted small mb-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    User: <strong id="editWorkspaceUserName">Unknown</strong>
+                </p>
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">Workspace Status</label>
+                    <select id="editWorkspaceStatus" class="form-select form-select-sm">
+                        <option value="active">🟢 Active</option>
+                        <option value="suspended">🟡 Suspended</option>
+                        <option value="deleted">🔴 Deleted</option>
+                    </select>
+                    <small class="text-muted">Change the workspace status. Even if deleted, you can reactivate.</small>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveWorkspaceStatusBtn" onclick="WorkspaceManager.saveStatusUpdate()">
+                    <i class="bi bi-save me-1"></i> Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- ========================================================= -->
 <!-- CONFIRM DELETE MODAL                                     -->
 <!-- ========================================================= -->
@@ -1894,7 +1962,8 @@ const WorkspaceManager = {
         dbRef: null,
         usersRef: null,
         workspaceIdLength: 10,
-        workspacePrefix: 'WS-'
+        workspacePrefix: 'WS-',
+        superAdminId: null
     },
 
     // =========================================================
@@ -1926,14 +1995,15 @@ const WorkspaceManager = {
     // =========================================================
     init: function() {
         if (this.state.isInitialized) return;
-        
-        if (typeof firebase !== 'undefined') {
-            this.config.dbRef = firebase.database();
-            this.config.usersRef = this.config.dbRef.ref('Users');
-        } else {
-            console.warn('WorkspaceManager: Firebase not found');
+
+        if (typeof firebase === 'undefined') {
+            console.error('WorkspaceManager: Firebase not found');
             return;
         }
+
+        this.config.dbRef = firebase.database();
+        this.config.usersRef = this.config.dbRef.ref('Users');
+        this.config.superAdminId = localStorage.getItem('userloginid') || 'SaaS_OPERATOR';
 
         this.dom.tableBody = document.getElementById('workspaceTableBody');
         this.dom.userIdInput = document.getElementById('workspaceUserId');
@@ -1947,7 +2017,7 @@ const WorkspaceManager = {
 
         this.loadTable();
         this.state.isInitialized = true;
-        console.log('WorkspaceManager initialized');
+        console.log('✅ WorkspaceManager initialized');
     },
 
     // =========================================================
@@ -1985,18 +2055,26 @@ const WorkspaceManager = {
     // OPEN ADD MODAL
     // =========================================================
     openAddModal: function() {
-        if (this.dom.userIdInput) this.dom.userIdInput.value = '';
-        if (this.dom.errorEl) {
-            this.dom.errorEl.classList.add('d-none');
-            this.dom.errorEl.innerText = '';
+        if (!this.state.isInitialized) {
+            this.init();
         }
-        if (this.dom.createBtn) {
-            this.dom.createBtn.disabled = false;
-            this.dom.createBtn.innerHTML = '<i class="bi bi-check2 me-1"></i> Create Workspace';
+
+        const userIdInput = document.getElementById('workspaceUserId');
+        const errorEl = document.getElementById('workspaceModalError');
+        const createBtn = document.getElementById('createWorkspaceBtn');
+        
+        if (userIdInput) userIdInput.value = '';
+        if (errorEl) {
+            errorEl.classList.add('d-none');
+            errorEl.innerText = '';
+        }
+        if (createBtn) {
+            createBtn.disabled = false;
+            createBtn.innerHTML = '<i class="bi bi-check2 me-1"></i> Create Workspace';
         }
         this.showModal('addWorkspaceModal');
         setTimeout(() => {
-            if (this.dom.userIdInput) this.dom.userIdInput.focus();
+            if (userIdInput) userIdInput.focus();
         }, 500);
     },
 
@@ -2013,15 +2091,35 @@ const WorkspaceManager = {
     },
 
     // =========================================================
-    // CREATE WORKSPACE
+    // CREATE WORKSPACE - CORRECTED STRUCTURE
     // =========================================================
     createWorkspace: async function() {
-        if (!this.dom.userIdInput || !this.dom.errorEl || !this.dom.createBtn) return;
+        if (!this.state.isInitialized) {
+            this.init();
+        }
 
-        const userId = this.dom.userIdInput.value.trim().toUpperCase();
-        const errorEl = this.dom.errorEl;
-        const createBtn = this.dom.createBtn;
+        if (!this.config.usersRef) {
+            console.error('WorkspaceManager: Firebase not initialized');
+            alert('System not ready. Please refresh the page.');
+            return;
+        }
+
+        const userIdInput = document.getElementById('workspaceUserId');
+        const workspaceNameInput = document.getElementById('workspaceNameInput');
+        const errorEl = document.getElementById('workspaceModalError');
+        const createBtn = document.getElementById('createWorkspaceBtn');
+
+        if (!userIdInput || !errorEl || !createBtn) {
+            console.error('Required DOM elements not found');
+            return;
+        }
+
+        const userId = userIdInput.value.trim().toUpperCase();
+        const workspaceName = workspaceNameInput ? workspaceNameInput.value.trim() : '';
         const originalText = createBtn.innerHTML;
+
+        errorEl.classList.add('d-none');
+        errorEl.innerText = '';
 
         if (!userId) {
             errorEl.classList.remove('d-none');
@@ -2050,14 +2148,7 @@ const WorkspaceManager = {
                 return;
             }
 
-            if (userData.role !== 'administrator') {
-                errorEl.classList.remove('d-none');
-                errorEl.innerText = 'User must have Administrator role to create a workspace.';
-                createBtn.disabled = false;
-                createBtn.innerHTML = originalText;
-                return;
-            }
-
+            // Check if user already has a workspace
             if (userData.workspaceId) {
                 errorEl.classList.remove('d-none');
                 errorEl.innerText = `User already has a workspace: ${userData.workspaceId}`;
@@ -2067,18 +2158,76 @@ const WorkspaceManager = {
             }
 
             const workspaceId = this.generateWorkspaceId();
+            const finalWorkspaceName = workspaceName || (userData.name || 'User') + "'s Workspace";
 
-            await this.config.usersRef.child(userId).update({
+            console.log('Creating workspace under user:', userId, workspaceId);
+
+            // =========================================================
+            // 🔥 CORRECT STRUCTURE:
+            // Users/{userId}/workspace/WorkspaceSettings
+            // Users/{userId}/workspace/Members
+            // =========================================================
+            const workspaceSettings = {
                 workspaceId: workspaceId,
+                workspaceName: finalWorkspaceName,
                 workspaceStatus: 'active',
+                createdAt: firebase.database.ServerValue.TIMESTAMP,
+                updatedAt: firebase.database.ServerValue.TIMESTAMP,
+                createdBy: this.config.superAdminId
+            };
+
+            const members = {
+                [userId]: {
+                    userId: userId,
+                    name: userData.name || 'Unknown',
+                    email: userData.email || 'N/A',
+                    role: 'WorkspaceOwner',
+                    status: 'active',
+                    isOwner: true,
+                    joinedAt: firebase.database.ServerValue.TIMESTAMP
+                }
+            };
+
+            // =========================================================
+            // UPDATE USER WITH WORKSPACE DATA
+            // =========================================================
+            const updateData = {
+                // Top-level fields for quick access/queries
+                workspaceId: workspaceId,
+                workspaceName: finalWorkspaceName,
+                workspaceCreator: true,
+                workspaceMasterAdmin: true,
+                workspaceStatus: 'active',
+                workspaceCreated: firebase.database.ServerValue.TIMESTAMP,
                 mainAdmin: "true",
-                workspaceCreated: firebase.database.ServerValue.TIMESTAMP
+                userType: 'subscribed',
+                role: 'WorkspaceOwner',
+                admin_role: 'WorkspaceOwner',
+                
+                // Nested workspace data
+                workspace: {
+                    WorkspaceSettings: workspaceSettings,
+                    Members: members
+                }
+            };
+
+            await this.config.usersRef.child(userId).update(updateData);
+
+            
+            // Optional: Add to SaaS Control
+            await this.config.dbRef.ref(`SaaS_Control/allUsers/${userId}`).set({
+                workspaceId: workspaceId,
+                role: 'WorkspaceOwner',
+                status: 'active',
+                addedAt: firebase.database.ServerValue.TIMESTAMP
             });
 
             this.hideModal('addWorkspaceModal');
 
             if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                App.UI.Notify('Success', `Workspace ${workspaceId} created for ${userData.name}`, 'success');
+                App.UI.Notify('Success', `✅ Workspace "${finalWorkspaceName}" created for ${userData.name}`, 'success');
+            } else {
+                alert(`✅ Workspace "${finalWorkspaceName}" created successfully!`);
             }
 
             this.loadTable();
@@ -2094,135 +2243,7 @@ const WorkspaceManager = {
     },
 
     // =========================================================
-    // OPEN DELETE MODAL
-    // =========================================================
-    openDeleteModal: function(userId, userName) {
-        this.state.selectedWorkspaceUser = userId;
-        if (this.dom.deleteUserName) {
-            this.dom.deleteUserName.textContent = userName || 'Unknown';
-        }
-        if (this.dom.deleteConfirmBtn) {
-            this.dom.deleteConfirmBtn.disabled = false;
-            this.dom.deleteConfirmBtn.innerHTML = '<i class="bi bi-trash me-1"></i> Delete';
-        }
-        this.showModal('confirmDeleteModal');
-    },
-
-    // =========================================================
-    // CONFIRM DELETE
-    // =========================================================
-    confirmDelete: async function() {
-        const userId = this.state.selectedWorkspaceUser;
-        if (!userId) return;
-
-        const deleteBtn = this.dom.deleteConfirmBtn;
-        const originalText = deleteBtn ? deleteBtn.innerHTML : 'Delete';
-
-        if (deleteBtn) {
-            deleteBtn.disabled = true;
-            deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Deleting...';
-        }
-
-        try {
-            await this.config.usersRef.child(userId).update({
-                workspaceStatus: 'deleted',
-                workspaceDeleted: firebase.database.ServerValue.TIMESTAMP
-            });
-
-            this.hideModal('confirmDeleteModal');
-
-            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                App.UI.Notify('Deleted', 'Workspace marked as deleted.', 'warning');
-            }
-
-            this.loadTable();
-
-        } catch (error) {
-            console.error('Delete workspace error:', error);
-            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                App.UI.Notify('Error', 'Failed to delete workspace.', 'danger');
-            }
-        } finally {
-            if (deleteBtn) {
-                deleteBtn.disabled = false;
-                deleteBtn.innerHTML = originalText;
-            }
-            this.state.selectedWorkspaceUser = null;
-        }
-    },
-
-    // =========================================================
-    // 🔥 OPEN EDIT MODAL (Always available, even for deleted)
-    // =========================================================
-    openEditModal: function(userId, userName, currentStatus) {
-        this.state.editingUserId = userId;
-        if (this.dom.editStatusSelect) {
-            this.dom.editStatusSelect.value = currentStatus || 'active';
-        }
-        if (this.dom.editUserName) {
-            this.dom.editUserName.textContent = userName || 'User';
-        }
-        // Update modal title
-        const modalTitle = document.getElementById('editWorkspaceModalLabel');
-        if (modalTitle) {
-            modalTitle.textContent = 'Edit Workspace Status';
-        }
-        this.showModal('editWorkspaceModal');
-    },
-
-    // =========================================================
-    // 🔥 SAVE STATUS UPDATE (Works for any status including deleted)
-    // =========================================================
-    saveStatusUpdate: async function() {
-        const userId = this.state.editingUserId;
-        if (!userId) {
-            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                App.UI.Notify('Error', 'No user selected.', 'danger');
-            }
-            return;
-        }
-
-        const newStatus = this.dom.editStatusSelect ? this.dom.editStatusSelect.value : 'active';
-        const saveBtn = document.getElementById('saveWorkspaceStatusBtn');
-        const originalText = saveBtn ? saveBtn.innerHTML : 'Save';
-
-        if (saveBtn) {
-            saveBtn.disabled = true;
-            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Saving...';
-        }
-
-        try {
-            // Update even if status is 'deleted' - allows reactivation
-            await this.config.usersRef.child(userId).update({
-                workspaceStatus: newStatus,
-                workspaceUpdated: firebase.database.ServerValue.TIMESTAMP
-            });
-
-            this.hideModal('editWorkspaceModal');
-
-            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                const statusLabel = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
-                App.UI.Notify('Success', `Workspace status updated to ${statusLabel}.`, 'success');
-            }
-
-            this.loadTable();
-            this.state.editingUserId = null;
-
-        } catch (error) {
-            console.error('Update workspace status error:', error);
-            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                App.UI.Notify('Error', 'Failed to update workspace status.', 'danger');
-            }
-        } finally {
-            if (saveBtn) {
-                saveBtn.disabled = false;
-                saveBtn.innerHTML = originalText;
-            }
-        }
-    },
-
-    // =========================================================
-    // LOAD TABLE
+    // LOAD TABLE - SHOW USERS WITH WORKSPACE
     // =========================================================
     loadTable: async function() {
         const tbody = this.dom.tableBody;
@@ -2233,11 +2254,20 @@ const WorkspaceManager = {
         </td></tr>`;
 
         try {
+            if (!this.config.usersRef) {
+                this.init();
+                if (!this.config.usersRef) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-danger">Firebase not initialized</td></tr>`;
+                    return;
+                }
+            }
+
             const snap = await this.config.usersRef.orderByChild('workspaceId').once('value');
             const users = snap.val() || {};
             
+            // Filter users who have workspaceId (top-level flag)
             const workspaceUsers = Object.entries(users)
-                .filter(([id, data]) => data.workspaceId && data.role === 'administrator')
+                .filter(([id, data]) => data.workspaceId)
                 .map(([id, data]) => ({ id, ...data }));
 
             if (workspaceUsers.length === 0) {
@@ -2245,7 +2275,7 @@ const WorkspaceManager = {
                     <tr>
                         <td colspan="7" class="text-center py-4 text-muted">
                             <i class="bi bi-inbox fs-3 d-block mb-2 opacity-25"></i>
-                            No administrators with workspace assignments found.
+                            No workspaces have been created yet.
                         </td>
                     </tr>`;
                 return;
@@ -2253,27 +2283,31 @@ const WorkspaceManager = {
 
             tbody.innerHTML = '';
             workspaceUsers.forEach(user => {
-                // Status badge
-                const statusBadge = user.workspaceStatus === 'active' 
+                const wsSettings = user.workspace?.WorkspaceSettings || {};
+                const wsId = wsSettings.workspaceId || user.workspaceId || 'N/A';
+                const wsName = wsSettings.workspaceName || user.workspaceName || 'Unnamed';
+                const wsStatus = wsSettings.workspaceStatus || user.workspaceStatus || 'active';
+
+                const statusBadge = wsStatus === 'active' 
                     ? '<span class="badge bg-success">Active</span>'
-                    : user.workspaceStatus === 'suspended'
+                    : wsStatus === 'suspended'
                     ? '<span class="badge bg-warning text-dark">Suspended</span>'
-                    : user.workspaceStatus === 'deleted'
+                    : wsStatus === 'deleted'
                     ? '<span class="badge bg-danger">Deleted</span>'
                     : '<span class="badge bg-secondary">Unknown</span>';
 
-                const roleBadge = '<span class="badge bg-primary bg-opacity-10 text-primary border border-primary">Administrator</span>';
+                const roleBadge = user.role === 'WorkspaceOwner' || user.role === 'Administrator'
+                    ? '<span class="badge bg-primary bg-opacity-10 text-primary border border-primary">Workspace Owner</span>'
+                    : `<span class="badge bg-secondary bg-opacity-10 text-secondary border">${user.role || 'User'}</span>`;
 
-                // 🔥 EDIT BUTTON ALWAYS VISIBLE - even for deleted
                 const editBtnHtml = `
                     <button class="btn btn-sm btn-outline-primary py-0 px-2 me-1" 
-                            onclick="WorkspaceManager.openEditModal('${user.id}', '${user.name || 'Unknown'}', '${user.workspaceStatus || 'active'}')" 
+                            onclick="WorkspaceManager.openEditModal('${user.id}', '${user.name || 'Unknown'}', '${wsStatus}')" 
                             title="Edit Workspace Status">
                         <i class="bi bi-pencil"></i>
                     </button>`;
 
-                // Delete button - hidden for already deleted
-                const canDelete = user.workspaceStatus !== 'deleted';
+                const canDelete = wsStatus !== 'deleted';
                 const deleteBtnHtml = canDelete
                     ? `<button class="btn btn-sm btn-outline-danger py-0 px-2" 
                             onclick="WorkspaceManager.openDeleteModal('${user.id}', '${user.name || 'Unknown'}')" 
@@ -2290,8 +2324,8 @@ const WorkspaceManager = {
                         </td>
                         <td class="font-monospace small">${user.id}</td>
                         <td>
-                            <span class="font-monospace fw-bold text-primary small">${user.workspaceId}</span>
-                            ${user.workspaceCreated ? `<div class="small text-muted" style="font-size: 8px;">${new Date(user.workspaceCreated).toLocaleDateString()}</div>` : ''}
+                            <span class="font-monospace fw-bold text-primary small">${wsId}</span>
+                            <div class="small text-muted" style="font-size: 8px;">${wsName}</div>
                         </td>
                         <td>${statusBadge}</td>
                         <td>${roleBadge}</td>
@@ -2317,8 +2351,187 @@ const WorkspaceManager = {
     },
 
     // =========================================================
-    // DESTROY
+    // OPEN DELETE MODAL
     // =========================================================
+    openDeleteModal: function(userId, userName) {
+        this.state.selectedWorkspaceUser = userId;
+        const deleteUserName = document.getElementById('deleteUserName');
+        if (deleteUserName) {
+            deleteUserName.textContent = userName || 'Unknown';
+        }
+        const deleteBtn = document.getElementById('confirmDeleteBtn');
+        if (deleteBtn) {
+            deleteBtn.disabled = false;
+            deleteBtn.innerHTML = '<i class="bi bi-trash me-1"></i> Delete';
+        }
+        this.showModal('confirmDeleteModal');
+    },
+
+    // =========================================================
+    // CONFIRM DELETE
+    // =========================================================
+confirmDelete: async function() {
+    const userId = this.state.selectedWorkspaceUser;
+    if (!userId) return;
+
+    const deleteBtn = document.getElementById('confirmDeleteBtn');
+    const originalText = deleteBtn ? deleteBtn.innerHTML : 'Delete';
+
+    if (deleteBtn) {
+        deleteBtn.disabled = true;
+        deleteBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Deleting...';
+    }
+
+    try {
+        // 🔥 FIRST: Get the user data before deletion
+        const userSnap = await this.config.usersRef.child(userId).once('value');
+        const userData = userSnap.val();
+
+        if (!userData) {
+            throw new Error('User not found');
+        }
+
+        // 🔥 SECOND: Get workspaceId before removing
+        const workspaceId = userData.workspaceId;
+
+        // =========================================================
+        // 🔥 DELETE ALL WORKSPACE DATA
+        // =========================================================
+
+        // 1. Remove workspace node from global Workspaces
+        if (workspaceId) {
+            await this.config.dbRef.ref(`Workspaces/${workspaceId}`).remove();
+            console.log('✅ Removed from Workspaces node');
+        }
+
+        // 2. Remove from SaaS Control
+        await this.config.dbRef.ref(`SaaS_Control/allUsers/${userId}`).remove();
+        console.log('✅ Removed from SaaS Control');
+
+        // 3. Remove nested workspace data from user
+        await this.config.usersRef.child(userId).update({
+            // Remove workspaceId top-level field
+            workspaceId: null,
+            workspaceName: null,
+            workspaceCreator: null,
+            workspaceMasterAdmin: null,
+            workspaceStatus: null,
+            workspaceCreated: null,
+            workspaceUpdated: null,
+            workspaceDeleted: null,
+            mainAdmin: null,
+            userType: 'standalone', // 🔥 Revert back to standalone
+            role: 'user', // 🔥 Revert back to default role
+            admin_role: 'user', // 🔥 Revert back to default role
+            
+            // 🔥 IMPORTANT: Remove the entire workspace object
+            workspace: null
+        });
+
+        // 4. Also remove any workspaceId from workspace object if exists
+        await this.config.usersRef.child(userId).update({
+            'workspace': null
+        });
+
+        console.log('✅ Workspace data removed from user:', userId);
+
+        this.hideModal('confirmDeleteModal');
+
+        if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+            App.UI.Notify('Deleted', 'Workspace permanently deleted. User reverted to standalone.', 'warning');
+        }
+
+        // Refresh the table
+        this.loadTable();
+
+    } catch (error) {
+        console.error('Delete workspace error:', error);
+        if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+            App.UI.Notify('Error', 'Failed to delete workspace: ' + error.message, 'danger');
+        }
+    } finally {
+        if (deleteBtn) {
+            deleteBtn.disabled = false;
+            deleteBtn.innerHTML = originalText;
+        }
+        this.state.selectedWorkspaceUser = null;
+    }
+},
+    // =========================================================
+    // OPEN EDIT MODAL
+    // =========================================================
+    openEditModal: function(userId, userName, currentStatus) {
+        this.state.editingUserId = userId;
+        const statusSelect = document.getElementById('editWorkspaceStatus');
+        const userNameDisplay = document.getElementById('editWorkspaceUserName');
+        
+        if (statusSelect) {
+            statusSelect.value = currentStatus || 'active';
+        }
+        if (userNameDisplay) {
+            userNameDisplay.textContent = userName || 'User';
+        }
+        
+        const modalTitle = document.getElementById('editWorkspaceModalLabel');
+        if (modalTitle) {
+            modalTitle.textContent = 'Edit Workspace Status';
+        }
+        this.showModal('editWorkspaceModal');
+    },
+
+    // =========================================================
+    // SAVE STATUS UPDATE
+    // =========================================================
+    saveStatusUpdate: async function() {
+        const userId = this.state.editingUserId;
+        if (!userId) {
+            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+                App.UI.Notify('Error', 'No user selected.', 'danger');
+            }
+            return;
+        }
+
+        const statusSelect = document.getElementById('editWorkspaceStatus');
+        const newStatus = statusSelect ? statusSelect.value : 'active';
+        const saveBtn = document.getElementById('saveWorkspaceStatusBtn');
+        const originalText = saveBtn ? saveBtn.innerHTML : 'Save';
+
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Saving...';
+        }
+
+        try {
+            // Update both top-level and nested
+            await this.config.usersRef.child(userId).update({
+                workspaceStatus: newStatus,
+                'workspace/WorkspaceSettings/workspaceStatus': newStatus,
+                'workspace/WorkspaceSettings/updatedAt': firebase.database.ServerValue.TIMESTAMP
+            });
+
+            this.hideModal('editWorkspaceModal');
+
+            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+                const statusLabel = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+                App.UI.Notify('Success', `Workspace status updated to ${statusLabel}.`, 'success');
+            }
+
+            this.loadTable();
+            this.state.editingUserId = null;
+
+        } catch (error) {
+            console.error('Update workspace status error:', error);
+            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+                App.UI.Notify('Error', 'Failed to update workspace status.', 'danger');
+            }
+        } finally {
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalText;
+            }
+        }
+    },
+
     destroy: function() {
         this.state.isInitialized = false;
         this.state.selectedWorkspaceUser = null;
@@ -2327,51 +2540,16 @@ const WorkspaceManager = {
     }
 };
 
-
 // =========================================================
-// BIND HTML BUTTONS TO WORKSPACE MANAGER
+// AUTO-INITIALIZE
 // =========================================================
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize
-    WorkspaceManager.init();
-
-    // Bind HTML buttons (if not using onclick attributes)
-    const addBtn = document.querySelector('[onclick="openAddWorkspaceModal()"]');
-    if (addBtn) {
-        addBtn.onclick = function() {
-            WorkspaceManager.openAddModal();
-        };
-    }
-
-    const createBtn = document.getElementById('createWorkspaceBtn');
-    if (createBtn) {
-        createBtn.onclick = function() {
-            WorkspaceManager.createWorkspace();
-        };
-    }
-
-    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-    if (confirmDeleteBtn) {
-        confirmDeleteBtn.onclick = function() {
-            WorkspaceManager.confirmDelete();
-        };
-    }
-
-    // Enter key support for modal input
-    const userIdInput = document.getElementById('workspaceUserId');
-    if (userIdInput) {
-        userIdInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-            }
-        });
-    }
+    setTimeout(function() {
+        WorkspaceManager.init();
+    }, 500);
 });
 
-// =========================================================
-// EXPOSE TO WINDOW (Optional - for inline onclick)
-// =========================================================
-// window.WorkspaceManager = WorkspaceManager;
+window.WorkspaceManager = WorkspaceManager;
 
 // ==========================================
 // 6. INITIALIZE APP ON DOM LOAD
@@ -2379,7 +2557,7 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         BroadcastManager.LoadHistory();
-        WorkspaceManager.createWorkspace();
+        // WorkspaceManager.createWorkspace();
         AdminSystem.Init();
         UpdatesManager.Init()
     }, 100);

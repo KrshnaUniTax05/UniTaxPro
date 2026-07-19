@@ -244,10 +244,10 @@
             <div id="stock-r">
                 <div class="table-scroll" style="height: 50vh !important;">
                 <table class="bento-table">
-                    <thead><tr><th>Client Account Entity</th><th>Invoice Date</th>
-                        <th>Terms Threshold</th>
-                        <th>Document Number</th>
-                        <th class="text-end">Amount Due</th></tr></thead>
+                    <thead><tr><th>Item Name</th><th>Item Quantity</th>
+                        <th>Action</th>
+                        <th>Opening Amount</th>
+                        <!-- <th class="text-end">Amount Due</th></tr></thead> -->
                     <tbody id="stock-reorder"><tr><td colspan="4" class="text-center text-muted py-4">Loading dues...</td></tr></tbody>
                 </table>
             </div>
@@ -259,7 +259,9 @@
 </div>
 
 <script>
-// Global System Workspace Formatting Frameworks
+// =========================================================
+// GLOBAL SYSTEM WORKSPACE FORMATTING FRAMEWORKS
+// =========================================================
 const formatINR = (num) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num || 0);
 const formatDate = (dateStr) => {
     if (!dateStr) return 'N/A';
@@ -270,14 +272,12 @@ const formatDate = (dateStr) => {
     }
 };
 
-// Robust Date Parser to handle standard formats and DD-MM-YYYY variations safely
+// Robust Date Parser
 const parseSystemDate = (dateStr) => {
     if (!dateStr) return new Date();
-    // If format is DD-MM-YYYY or DD/MM/YYYY
     if (typeof dateStr === 'string' && (dateStr.includes('-') || dateStr.includes('/'))) {
         const parts = dateStr.split(/[-/]/);
         if (parts[0].length <= 2 && parts[2] && parts[2].length === 4) {
-            // Reconstruct as YYYY-MM-DD
             return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
         }
     }
@@ -285,14 +285,37 @@ const parseSystemDate = (dateStr) => {
 };
 
 (function() {
+    "use strict";
+
+    // =========================================================
+    // 1. GLOBAL STATE
+    // =========================================================
     let RAW_TRANSACTIONS = [];
     let RAW_STOCK = [];
     let RAW_REQUESTS = [];
     let LEDGER_MAP = {};
-    
     let pChart = null, fChart = null, aChart = null;
 
+    // =========================================================
+    // 2. GET CURRENT USER ID (Safely)
+    // =========================================================
+    const getCurrentUserId = () => {
+        return App.State?.userId || 
+               App.State?.currentuserId || 
+               localStorage.getItem('userloginid') || 
+               localStorage.getItem('workspaceUserId') || 
+               null;
+    };
+
+    const currentUserId = getCurrentUserId();
+
+    // =========================================================
+    // 3. EXECUTIVE OS ENGINE
+    // =========================================================
     window.ExecutiveOS = {
+        // =========================================================
+        // REFRESH - Fetch all data
+        // =========================================================
         async Refresh() {
             const syncEl = document.getElementById('dashSyncTime');
             if(syncEl) syncEl.innerHTML = '<span class="status-dot bg-warning"></span> Syncing with Server...';
@@ -309,6 +332,7 @@ const parseSystemDate = (dateStr) => {
 
                 const requests = await this.FetchGlobalRequests();
 
+                // Build Ledger Map
                 LEDGER_MAP = {};
                 if(ledgers) {
                     Object.entries(ledgers).forEach(([key, l]) => {
@@ -322,6 +346,7 @@ const parseSystemDate = (dateStr) => {
                     });
                 }
 
+                // Compile Transactions
                 RAW_TRANSACTIONS = [];
                 const compileFeed = (dataObj, typeName, formPath) => {
                     if(!dataObj) return;
@@ -347,9 +372,8 @@ const parseSystemDate = (dateStr) => {
                             type: typeName,
                             amt: amt,
                             status: h.status || vch.status || 'PENDING',
-                            // 🔥 STORE THE FULL HEADER WITH META
                             _raw: {
-                                header: h,  // Contains meta.ReconcilationStatus
+                                header: h,
                                 voucher: vch,
                                 fullData: vch
                             }
@@ -380,18 +404,24 @@ const parseSystemDate = (dateStr) => {
             }
         },
 
+        // =========================================================
+        // FETCH GLOBAL REQUESTS
+        // =========================================================
         async FetchGlobalRequests() {
             try {
                 if (typeof firebase !== 'undefined') {
-                    const snapshot = await firebase.database().ref('Requests').once('value');
+                    const snapshot = await firebase.database().ref('Utilities/Requests').once('value');
                     return snapshot.val() || {};
                 }
-                return await API.Fetch('Requests').catch(() => ({}));
+                return await API.Fetch('Utilities/Requests').catch(() => ({}));
             } catch (e) {
                 return {};
             }
         },
 
+        // =========================================================
+        // GET FILTERED TRANSACTIONS
+        // =========================================================
         getFiltered() {
             const period = document.getElementById('dashPeriod')?.value || 'all_time';
             const search = document.getElementById('dashSearch')?.value?.toLowerCase() || '';
@@ -411,223 +441,251 @@ const parseSystemDate = (dateStr) => {
             });
         },
 
-UpdateUI() {
-    const rows = this.getFiltered();
-    const now = new Date().getTime();
-    const msPerDay = 86400000;
-    const currentUserId = App.State?.currentuserId || App.State?.workspaceId;
-    
-    let metrics = { rev: 0, purch: 0, rec: 0, pay: 0, totalOverdue: 0 };
-    const monthlyFlow = {};
-    const agingBuckets = { "Not Due": 0, "1-30 Days Overdue": 0, "31-60 Days Overdue": 0, "60+ Days Overdue": 0 };
-    const pendingDuesList = [];
-
-    rows.forEach(t => {
-        if(t.type === 'SALES') { 
-            metrics.rev += t.amt; 
+        // =========================================================
+        // UPDATE UI
+        // =========================================================
+        UpdateUI() {
+            const rows = this.getFiltered();
+            const now = new Date().getTime();
+            const msPerDay = 86400000;
             
-            const parsedInvDate = parseSystemDate(t.date);
-            const invTime = parsedInvDate.getTime();
-            const dueDate = invTime + (t.creditDays * msPerDay);
-            const daysOverdue = Math.floor((now - dueDate) / msPerDay);
+            let metrics = { rev: 0, purch: 0, rec: 0, pay: 0, totalOverdue: 0 };
+            const monthlyFlow = {};
+            const agingBuckets = { "Not Due": 0, "1-30 Days Overdue": 0, "31-60 Days Overdue": 0, "60+ Days Overdue": 0 };
+            const pendingDuesList = [];
 
-            if (daysOverdue > 0) {
-                pendingDuesList.push({ ...t, dueDateObj: dueDate, daysOverdue: daysOverdue });
-                metrics.totalOverdue += t.amt;
-            }
+            rows.forEach(t => {
+                if(t.type === 'SALES') { 
+                    metrics.rev += t.amt; 
+                    
+                    const parsedInvDate = parseSystemDate(t.date);
+                    const invTime = parsedInvDate.getTime();
+                    const dueDate = invTime + (t.creditDays * msPerDay);
+                    const daysOverdue = Math.floor((now - dueDate) / msPerDay);
 
-            if(daysOverdue <= 0) agingBuckets["Not Due"] += t.amt;
-            else if (daysOverdue <= 30) agingBuckets["1-30 Days Overdue"] += t.amt;
-            else if (daysOverdue <= 60) agingBuckets["31-60 Days Overdue"] += t.amt;
-            else agingBuckets["60+ Days Overdue"] += t.amt;
-        }
-        if(t.type === 'PURCHASE') metrics.purch += t.amt;
-        if(t.type === 'RECEIPT') metrics.rec += t.amt;
-        if(t.type === 'PAYMENT') metrics.pay += t.amt;
+                    if (daysOverdue > 0) {
+                        pendingDuesList.push({ ...t, dueDateObj: dueDate, daysOverdue: daysOverdue });
+                        metrics.totalOverdue += t.amt;
+                    }
 
-        if(t.type === 'RECEIPT' || t.type === 'PAYMENT') {
-            const d = parseSystemDate(t.date);
-            const k = `${d.toLocaleString('default', {month:'short'})} ${d.getFullYear().toString().substr(2)}`;
-            if(!monthlyFlow[k]) monthlyFlow[k] = { in: 0, out: 0 };
-            if(t.type === 'RECEIPT') monthlyFlow[k].in += t.amt;
-            if(t.type === 'PAYMENT') monthlyFlow[k].out += t.amt;
-        }
-    });
+                    if(daysOverdue <= 0) agingBuckets["Not Due"] += t.amt;
+                    else if (daysOverdue <= 30) agingBuckets["1-30 Days Overdue"] += t.amt;
+                    else if (daysOverdue <= 60) agingBuckets["31-60 Days Overdue"] += t.amt;
+                    else agingBuckets["60+ Days Overdue"] += t.amt;
+                }
+                if(t.type === 'PURCHASE') metrics.purch += t.amt;
+                if(t.type === 'RECEIPT') metrics.rec += t.amt;
+                if(t.type === 'PAYMENT') metrics.pay += t.amt;
 
-    const userPendingRequests = RAW_REQUESTS.filter(req => {
-        const isCreator = req.requesterId === currentUserId;
-        return (req.state === 'PENDING' && req.hierarchy && req.hierarchy[req.currentLevelIndex]?.userId === currentUserId) ||
-               (req.state === 'RETURNED_TO_CREATOR' && isCreator);
-    });
-
-    // KPIs
-    document.getElementById('kpi-rev').textContent = formatINR(metrics.rev);
-    document.getElementById('kpi-out').textContent = formatINR(metrics.totalOverdue);
-    document.getElementById('kpi-cash').textContent = formatINR(metrics.rec - metrics.pay);
-    document.getElementById('kpi-appr').textContent = userPendingRequests.length;
-    document.getElementById('kpi-rev-sub').textContent = `${rows.filter(t=>t.type==='SALES').length} Slates mapped`;
-    document.getElementById('txnCount').textContent = rows.length;
-
-    // =========================================================
-    // TABLE 1: TRANSACTIONS PIPELINE (WITH RECONCILIATION BADGE)
-    // =========================================================
-    const tblTxns = document.getElementById('tbl-txns');
-    tblTxns.innerHTML = rows.length ? rows.slice(0, 30).map(t => {
-        const badge = t.type === 'SALES' ? 'text-muted' : 
-                      t.type === 'RECEIPT' ? 'text-muted' : 
-                      'text-muted';
-        const sign = (t.type === 'SALES' || t.type === 'RECEIPT') ? '+' : '-';
-        
-        // 🔥 ACCESS ReconcilationStatus FROM meta OBJECT IN header
-        const rawHeader = t?._raw?.header || {};
-        const meta = rawHeader?.meta || {};
-        const isReconciled = meta.ReconcilationStatus === "true";
-        
-        console.log('Transaction:', t.doc, 'Reconciled:', isReconciled, 'Meta:', meta);
-        
-        const reconBadge = isReconciled 
-            ? `<span class="badge bg-success text-white border rounded-pill border-success">
-                Reconciled
-               </span>` 
-            : `<span class="badge bg-warning text-white border rounded-pill border-warning ms-1">
-                Pending
-               </span>`;
-        
-        return `
-        <tr data-form-id="${t.formId}" data-key="${t.key}" ondblclick="window.editGoTransaction('${t.formId}', '${t.key}', 'dashboard')" style="cursor: pointer;">
-            <td class="text-muted font-mono">${formatDate(t.date)}</td>
-            <td class="font-mono fw-bold">${t.doc}</td>
-            <td class="fw-medium text-truncate" style="max-width:160px;">${t.entityName}</td>
-            <td>
-                <span class="badge ${badge} border rounded-pill">${t.type}</span>
-            </td>
-            <td>
-                <span>${reconBadge}</span>
-            </td>
-            <td class="text-end fw-bold font-mono">${sign} ${formatINR(t.amt)}</td>
-        </tr>`;
-    }).join('') : `<tr><td colspan="6" class="text-center text-muted py-4">Empty ledger feed array context.</td></tr>`;
-
-    // TABLE 2: ACTION QUEUES (Requests)
-    const tblAppr = document.getElementById('tbl-approvals');
-    if(userPendingRequests.length === 0) {
-        tblAppr.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">Clear system track. No actions pending.</td></tr>`;
-    } else {
-        tblAppr.innerHTML = userPendingRequests.map(req => {
-            let badge = `<span class="badge bg-light text-dark border">L${(req.currentLevelIndex || 0)+1} Pending</span>`;
-            if (req.state === 'RETURNED_TO_CREATOR') badge = `<span class="badge bg-danger text-white">Returned</span>`;
-            else badge = `<span class="badge bg-warning text-white shadow-sm Pulse">Action Required</span>`;
-
-            return `
-            <tr data-form-id="${req.formId}" data-key="${req.key}" style="cursor: pointer;">
-                <td class="font-mono text-muted">#${req.key.slice(-5).toUpperCase()}</td>
-                <td class="fw-bold text-truncate" style="max-width:170px;">${req.title || req.subject || 'Standard Request'}</td>
-                <td class="font-mono fw-bold">${formatINR(parseFloat(req.amount || 0))}</td>
-                <td>${badge}</td>
-                <td class="text-end">
-                    <button class="btn btn-sm btn-primary border text-success shadow-sm" onclick="App.Router('reports/approvalmanagementsystem')"><i class="bi bi-eye text-light"></i></button>
-                </td>
-            </tr>`;
-        }).join('');
-    }
-
-    // TABLE 3: OUTSTANDING DUES
-    pendingDuesList.sort((a, b) => b.daysOverdue - a.daysOverdue);
-    const tblDues = document.getElementById('tbl-dues');
-    tblDues.innerHTML = pendingDuesList.length ? pendingDuesList.map(d => {
-        let badgeClass = d.daysOverdue > 30 ? "bg-danger-soft" : "bg-warning-soft";
-        let badgeText = `${d.daysOverdue}d Overdue`;
-
-        return `
-        <tr data-form-id="${d.formId}" data-key="${d.key}" style="cursor: pointer;" ondblclick="window.editGoTransaction('${d.formId}', '${d.key}', 'dashboard')">
-            <td class="fw-bold text-truncate" style="max-width:150px;">
-                ${d.entityName} 
-                <span class="d-block fw-normal text-muted" style="font-size:9px">Terms: ${d.creditDays}d</span>
-            </td>
-            <td class="text-muted font-mono">${formatDate(d.date)}</td>
-            <td><span class="badge-soft ${badgeClass}">${badgeText}</span></td>
-            <td><span class="font-mono text-muted">${d.doc}</span></td>
-            <td class="text-end fw-bold text-danger font-mono">${formatINR(d.amt)}</td>
-        </tr>`;
-    }).join('') : `<tr><td colspan="5" class="text-center text-muted py-4">No invoices have exceeded their allowed credit tracking threshold.</td></tr>`;
-    
-    // =========================================================
-    // TABLE 4: STOCK DEPLOYMENT
-    // =========================================================
-    const tblStock = document.getElementById('tbl-stock');
-    const sortedStock = RAW_STOCK.sort((a,b) => parseFloat(b.openingAmount||0) - parseFloat(a.openingAmount||0)).slice(0, 10);
-    tblStock.innerHTML = sortedStock.length ? sortedStock.map(s => `
-        <tr data-form-id="Masters/Stock" data-key="${s.Stock_Code || 'N/A'}" style="cursor: pointer;">
-            <td><div class="fw-bold">${s.itemName || 'Asset'}</div><div class="text-muted font-mono" style="font-size:10px">${s.Stock_Code || '-'}</div></td>
-            <td class="text-end fw-bold text-primary font-mono align-middle">${formatINR(parseFloat(s.openingAmount||0))}</td>
-        </tr>
-    `).join('') : `<tr><td colspan="2" class="text-center text-muted">Empty storage catalog profiles.</td></tr>`;
-
-    // =========================================================
-    // TABLE 5: STOCK RE-ORDER (Low Stock Alert)
-    // =========================================================
-    const tblReorder = document.getElementById('stock-reorder');
-    if (tblReorder) {
-        // Filter stocks where current quantity is less than minLevel
-        const reorderStocks = RAW_STOCK.filter(s => {
-            const currentQty = parseFloat(s.openingQuantity) || 0;
-            const minLevel = parseFloat(s.minLevel) || parseFloat(s.minimumLevel) || 0;
-            return minLevel > 0 && currentQty < minLevel;
-        });
-
-        if (reorderStocks.length === 0) {
-            tblReorder.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No item required to order.</td></tr>`;
-        } else {
-            // Sort by urgency (lowest stock first)
-            reorderStocks.sort((a, b) => {
-                const aQty = parseFloat(a.openingQuantity) || 0;
-                const bQty = parseFloat(b.openingQuantity) || 0;
-                const aMin = parseFloat(a.minLevel) || parseFloat(a.minimumLevel) || 0;
-                const bMin = parseFloat(b.minLevel) || parseFloat(b.minimumLevel) || 0;
-                return (aQty / aMin) - (bQty / bMin);
+                if(t.type === 'RECEIPT' || t.type === 'PAYMENT') {
+                    const d = parseSystemDate(t.date);
+                    const k = `${d.toLocaleString('default', {month:'short'})} ${d.getFullYear().toString().substr(2)}`;
+                    if(!monthlyFlow[k]) monthlyFlow[k] = { in: 0, out: 0 };
+                    if(t.type === 'RECEIPT') monthlyFlow[k].in += t.amt;
+                    if(t.type === 'PAYMENT') monthlyFlow[k].out += t.amt;
+                }
             });
 
-            tblReorder.innerHTML = reorderStocks.map(s => {
-                const currentQty = parseFloat(s.openingQuantity) || 0;
-                const minLevel = parseFloat(s.minLevel) || parseFloat(s.minimumLevel) || 0;
-                const reorderQty = parseFloat(s.reorderLevel) || parseFloat(s.reorderQuantity) || minLevel * 2;
-                const deficit = Math.max(0, minLevel - currentQty);
+            // 🔥 Get pending requests for current user
+            // =========================================================
+// FIX: ONLY SHOW REQUESTS FOR CURRENT USER'S APPROVAL
+// =========================================================
+
+const ActualUser = App.State?.currentuserId || 
+                   App.State?.userId || 
+                   localStorage.getItem('userloginid') || 
+                   localStorage.getItem('workspaceUserId');
+
+// 🔥 FILTER: ONLY requests where current user is the assigned approver at current level
+const userPendingRequests = RAW_REQUESTS.filter(req => {
+    // Skip if no user ID
+    if (!ActualUser) return false;
+    
+    // Check if user is the creator
+    const isCreator = req.requesterId === ActualUser;
+    
+    // 🔥 CRITICAL: Check if user is the EXACT approver at the CURRENT level
+    const isAssignedApprover = req.state === 'PENDING' && 
+                               req.hierarchy && 
+                               req.hierarchy.length > 0 &&
+                               req.hierarchy[req.currentLevelIndex]?.userId === ActualUser;
+    
+    // 🔥 CRITICAL: Check if this is the user's turn (current level matches)
+    const isMyTurn = req.state === 'PENDING' && 
+                     req.currentLevelIndex !== undefined &&
+                     req.hierarchy && 
+                     req.hierarchy[req.currentLevelIndex]?.userId === ActualUser;
+    
+    // 🔥 ONLY return if:
+    // 1. Request is PENDING AND user is the assigned approver at current level
+    // 2. OR Request is RETURNED and user is the creator
+    return (req.state === 'PENDING' && isAssignedApprover) ||
+           (req.state === 'RETURNED_TO_CREATOR' && isCreator);
+});
+
+console.log(`✅ ${userPendingRequests.length} requests pending for user:`, ActualUser);
+
+// For debugging - log the requests
+userPendingRequests.forEach(req => {
+    console.log(`📋 ${req.title}: Level ${req.currentLevelIndex + 1} - Approver: ${req.hierarchy?.[req.currentLevelIndex]?.userId}`);
+});
+
+            // KPIs
+            document.getElementById('kpi-rev').textContent = formatINR(metrics.rev);
+            document.getElementById('kpi-out').textContent = formatINR(metrics.totalOverdue);
+            document.getElementById('kpi-cash').textContent = formatINR(metrics.rec - metrics.pay);
+            document.getElementById('kpi-appr').textContent = userPendingRequests.length;
+            document.getElementById('kpi-rev-sub').textContent = `${rows.filter(t=>t.type==='SALES').length} Slates mapped`;
+            document.getElementById('txnCount').textContent = rows.length;
+
+            // =========================================================
+            // TABLE 1: TRANSACTIONS PIPELINE
+            // =========================================================
+            const tblTxns = document.getElementById('tbl-txns');
+            tblTxns.innerHTML = rows.length ? rows.slice(0, 30).map(t => {
+                const badge = t.type === 'SALES' ? 'bg-primary-subtle text-primary' : 
+                              t.type === 'RECEIPT' ? 'bg-success-subtle text-success' : 
+                              'bg-warning-subtle text-warning';
+                const sign = (t.type === 'SALES' || t.type === 'RECEIPT') ? '+' : '-';
                 
-                // Determine urgency level
-                let urgencyBadge = '';
-                const ratio = currentQty / minLevel;
-                if (ratio <= 0.2) {
-                    urgencyBadge = `<span class="badge bg-danger text-white">⚠️ CRITICAL</span>`;
-                } else if (ratio <= 0.5) {
-                    urgencyBadge = `<span class="badge bg-warning text-dark">⚡ Low</span>`;
-                } else if (ratio < 1) {
-                    urgencyBadge = `<span class="badge bg-info text-white">📉 Below Min</span>`;
-                }
+                const rawHeader = t?._raw?.header || {};
+                const meta = rawHeader?.meta || {};
+                const isReconciled = meta.ReconcilationStatus === "true";
+                
+                const reconBadge = isReconciled 
+                    ? `<span class="badge bg-success text-white border rounded-pill">Reconciled</span>` 
+                    : `<span class="badge bg-warning text-white border rounded-pill">Pending</span>`;
+                
+                return `
+                <tr data-form-id="${t.formId}" data-key="${t.key}" ondblclick="window.editGoTransaction('${t.formId}', '${t.key}', 'dashboard')" style="cursor: pointer;">
+                    <td class="text-muted font-mono">${formatDate(t.date)}</td>
+                    <td class="font-mono fw-bold">${t.doc}</td>
+                    <td class="fw-medium text-truncate" style="max-width:160px;">${t.entityName}</td>
+                    <td><span class="badge ${badge} border rounded-pill">${t.type}</span></td>
+                    <td>${reconBadge}</td>
+                    <td class="text-end fw-bold font-mono">${sign} ${formatINR(t.amt)}</td>
+                </tr>`;
+            }).join('') : `<tr><td colspan="6" class="text-center text-muted py-4">No transactions found.</td></tr>`;
+
+            // =========================================================
+            // TABLE 2: ACTION QUEUES (Requests)
+            // =========================================================
+            const tblAppr = document.getElementById('tbl-approvals');
+            if(userPendingRequests.length === 0) {
+                tblAppr.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No pending actions.</td></tr>`;
+            } else {
+                tblAppr.innerHTML = userPendingRequests.map(req => {
+                    let badge = `<span class="badge bg-light text-dark border">L${(req.currentLevelIndex || 0)+1} Pending</span>`;
+                    if (req.state === 'RETURNED_TO_CREATOR') badge = `<span class="badge bg-danger text-white">Returned</span>`;
+                    else badge = `<span class="badge bg-warning">Action Required</span>`;
+
+                    return `
+                    <tr data-form-id="${req.formId}" data-key="${req.key}" style="cursor: pointer;">
+                        <td class="font-mono text-muted">#${req.key.slice(-5).toUpperCase()}</td>
+                        <td class="fw-bold text-truncate" style="max-width:170px;">${req.title || 'Standard Request'}</td>
+                        <td class="font-mono fw-bold">${formatINR(parseFloat(req.amount || 0))}</td>
+                        <td>${badge}</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-primary" onclick="App.Router('reports/approvalmanagementsystem?id=${req.key}')">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+                }).join('');
+            }
+
+            // =========================================================
+            // TABLE 3: OUTSTANDING DUES
+            // =========================================================
+            pendingDuesList.sort((a, b) => b.daysOverdue - a.daysOverdue);
+            const tblDues = document.getElementById('tbl-dues');
+            tblDues.innerHTML = pendingDuesList.length ? pendingDuesList.map(d => {
+                let badgeClass = d.daysOverdue > 30 ? "bg-danger" : "bg-warning";
+                let badgeText = `${d.daysOverdue}d Overdue`;
 
                 return `
-                <tr data-form-id="Masters/Stock" data-key="${s.Stock_Code || 'N/A'}" style="cursor: pointer;">
-                    <td>
-                        <div class="fw-bold">${s.itemName || 'Unnamed'}</div>
-                        <div class="text-muted font-mono" style="font-size:9px">${s.Stock_Code || '-'}</div>
+                <tr data-form-id="${d.formId}" data-key="${d.key}" style="cursor: pointer;" ondblclick="window.editGoTransaction('${d.formId}', '${d.key}', 'dashboard')">
+                    <td class="fw-bold text-truncate" style="max-width:150px;">
+                        ${d.entityName} 
+                        <span class="d-block fw-normal text-muted" style="font-size:9px">Terms: ${d.creditDays}d</span>
                     </td>
-                    <td class="text-center">
-                        <span class="fw-bold">${currentQty.toFixed(0)}</span>
-                        <span class="text-muted" style="font-size:9px">/ ${minLevel.toFixed(0)} min</span>
-                    </td>
-                    <td>
-                        ${urgencyBadge}
-                        <span class="small text-muted d-block" style="font-size:9px;">Need ${deficit.toFixed(0)} more</span>
-                    </td>
-                    <td class="text-end">
-                        <span class="font-mono fw-bold text-primary">${formatINR(parseFloat(s.openingAmount || 0))}</span>
-                    </td>
+                    <td class="text-muted font-mono">${formatDate(d.date)}</td>
+                    <td><span class="badge ${badgeClass}">${badgeText}</span></td>
+                    <td><span class="font-mono text-muted">${d.doc}</span></td>
+                    <td class="text-end fw-bold text-danger font-mono">${formatINR(d.amt)}</td>
                 </tr>`;
-            }).join('');
-        }
-    }
+            }).join('') : `<tr><td colspan="5" class="text-center text-muted py-4">No outstanding dues.</td></tr>`;
+            
+            // =========================================================
+            // TABLE 4: STOCK DEPLOYMENT
+            // =========================================================
+            const tblStock = document.getElementById('tbl-stock');
+            const sortedStock = RAW_STOCK.sort((a,b) => parseFloat(b.openingAmount||0) - parseFloat(a.openingAmount||0)).slice(0, 10);
+            tblStock.innerHTML = sortedStock.length ? sortedStock.map(s => `
+                <tr data-form-id="Masters/Stock" data-key="${s.Stock_Code || 'N/A'}" style="cursor: pointer;">
+                    <td><div class="fw-bold">${s.itemName || 'Asset'}</div><div class="text-muted font-mono" style="font-size:10px">${s.Stock_Code || '-'}</div></td>
+                    <td class="text-end fw-bold text-primary font-mono">${formatINR(parseFloat(s.openingAmount||0))}</td>
+                </tr>
+            `).join('') : `<tr><td colspan="2" class="text-center text-muted">No stock items found.</td></tr>`;
 
-    this.RenderCharts(metrics.rev, metrics.purch + metrics.pay, metrics.rec - metrics.pay, monthlyFlow, agingBuckets);
-},
+            // =========================================================
+            // TABLE 5: STOCK RE-ORDER
+            // =========================================================
+            const tblReorder = document.getElementById('stock-reorder');
+            if (tblReorder) {
+                const reorderStocks = RAW_STOCK.filter(s => {
+                    const currentQty = parseFloat(s.openingQuantity) || 0;
+                    const minLevel = parseFloat(s.minLevel) || parseFloat(s.minimumLevel) || 0;
+                    return minLevel > 0 && currentQty < minLevel;
+                });
+
+                if (reorderStocks.length === 0) {
+                    tblReorder.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">All stock levels are healthy.</td></tr>`;
+                } else {
+                    reorderStocks.sort((a, b) => {
+                        const aQty = parseFloat(a.openingQuantity) || 0;
+                        const bQty = parseFloat(b.openingQuantity) || 0;
+                        const aMin = parseFloat(a.minLevel) || parseFloat(a.minimumLevel) || 0;
+                        const bMin = parseFloat(b.minLevel) || parseFloat(b.minimumLevel) || 0;
+                        return (aQty / aMin) - (bQty / bMin);
+                    });
+
+                    tblReorder.innerHTML = reorderStocks.map(s => {
+                        const currentQty = parseFloat(s.openingQuantity) || 0;
+                        const minLevel = parseFloat(s.minLevel) || parseFloat(s.minimumLevel) || 0;
+                        const deficit = Math.max(0, minLevel - currentQty);
+                        const ratio = currentQty / minLevel;
+                        
+                        let urgencyBadge = '';
+                        if (ratio <= 0.2) urgencyBadge = `<span class="badge bg-danger">⚠️ CRITICAL</span>`;
+                        else if (ratio <= 0.5) urgencyBadge = `<span class="badge bg-warning text-dark">⚡ Low</span>`;
+                        else if (ratio < 1) urgencyBadge = `<span class="badge bg-info">📉 Below Min</span>`;
+
+                        return `
+                        <tr data-form-id="Masters/Stock" data-key="${s.Stock_Code || 'N/A'}" style="cursor: pointer;">
+                            <td>
+                                <div class="fw-bold">${s.itemName || 'Unnamed'}</div>
+                                <div class="text-muted font-mono" style="font-size:9px">${s.Stock_Code || '-'}</div>
+                            </td>
+                            <td class="text-center">
+                                <span class="fw-bold">${currentQty.toFixed(0)}</span>
+                                <span class="text-muted" style="font-size:9px">/ ${minLevel.toFixed(0)} min</span>
+                            </td>
+                            <td>${urgencyBadge}</td>
+                            <td class="text-end">
+                                <span class="font-mono fw-bold text-primary">${formatINR(parseFloat(s.openingAmount || 0))}</span>
+                            </td>
+                        </tr>`;
+                    }).join('');
+                }
+            }
+
+            this.RenderCharts(metrics.rev, metrics.purch + metrics.pay, metrics.rec - metrics.pay, monthlyFlow, agingBuckets);
+        },
+
+        // =========================================================
+        // RENDER CHARTS
+        // =========================================================
         RenderCharts(revenue, expenses, netBalance, flowMap, agingBuckets) {
             if (typeof Chart === 'undefined') {
                 setTimeout(() => this.RenderCharts(revenue, expenses, netBalance, flowMap, agingBuckets), 150);
@@ -671,7 +729,7 @@ UpdateUI() {
                 });
 
                 document.getElementById('agingLegend').innerHTML = labels.map((l, i) => `
-                    <div class="d-flex justify-content-between align-items-center mb-1 small" style="font-size:0.75rem;">
+                    <div class="d-flex justify-content-between align-items-center mb-1 small">
                         <span class="text-muted"><span class="status-dot" style="background-color:${colors[i]}"></span> ${l}</span>
                         <span class="fw-bold font-mono">${formatINR(agingData[i])}</span>
                     </div>
@@ -679,6 +737,9 @@ UpdateUI() {
             }
         },
 
+        // =========================================================
+        // EXPORT CSV
+        // =========================================================
         ExportCSV() {
             let csv = "Date,DocNo,Entity,Type,Amount\n";
             this.getFiltered().forEach(t => csv += `${new Date(t.date).toLocaleDateString()},${t.doc},${t.entityName},${t.type},${t.amt}\n`);
@@ -690,7 +751,9 @@ UpdateUI() {
         }
     };
 
-    // Global Double-Click Event Handler with Dynamic formId
+    // =========================================================
+    // 4. GLOBAL DOUBLE-CLICK HANDLER
+    // =========================================================
     document.addEventListener("DOMContentLoaded", () => {
         const monitoredContainers = ['tbl-txns', 'tbl-approvals', 'tbl-dues', 'tbl-stock'];
 
@@ -714,8 +777,12 @@ UpdateUI() {
         });
     });
 
-    // Initialize
-})();
+    // =========================================================
+    // 5. INITIALIZE
+    // =========================================================
+    setTimeout(() => {
+        window.ExecutiveOS.Refresh();
+    }, 500);
 
-ExecutiveOS.Refresh();
+})();
 </script>

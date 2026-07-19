@@ -348,9 +348,9 @@ window.StockFormObserver = new MutationObserver((mutations) => {
             if (header) header.innerHTML = '<i class="bi bi-plus-circle me-2"></i>Create New Stock Item';
             
             if (submitBtn) {
-                submitBtn.innerHTML = '<i class="bi bi-check2 me-1"></i> Create Stock Item';
-                submitBtn.classList.remove('btn-success');
-                submitBtn.classList.add('btn-primary');
+                submitBtn.innerHTML = '<i class="bi bi-check2 me-1"></i>';
+                submitBtn.classList.remove('btn-primary');
+                submitBtn.classList.add('btn-success');
             }
         }
 

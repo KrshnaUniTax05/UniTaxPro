@@ -188,9 +188,9 @@
             <hr class="text-muted opacity-25 mb-4">
 
              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="fw-semibold text-primary mb-0">2. Approval Fields</h6>
-                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.addNewFields()">
-                    <i class="bi bi-plus-lg me-1"></i> Add Level
+                <h6 class="fw-semibold text-primary mb-0">2. Approval Custom Fields</h6>
+                <button type="button" class="btn btn-primary btn-sm" title="Add new fields" onclick="window.addNewFields()">
+                    <i class="bi bi-plus-lg"></i>
                 </button>
             </div>
             
@@ -208,8 +208,8 @@
             <!-- Section 2: Hierarchy -->
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h6 class="fw-semibold text-primary mb-0">3. Governance Hierarchy</h6>
-                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.addNewRank()">
-                    <i class="bi bi-plus-lg me-1"></i> Add Level
+                <button type="button" class="btn btn-primary btn-sm" title="Add new approval rank" onclick="window.addNewRank()">
+                    <i class="bi bi-plus-lg"></i>
                 </button>
             </div>
             
@@ -1261,21 +1261,129 @@ window.printApprovalDoc = async () => {
 
 
 
-    window.addNewRank = () => {
-        const cont = document.getElementById('rankContainer');
-        if (!cont) return;
-        const count = cont.children.length + 1;
-        let opts = `<option value="">-- Assign Identity --</option>`;
-        Object.entries(systemUsers).forEach(([id, u]) => {
-             opts += `<option value="${id}">${u.name || 'No Name'} - ${u.designation || "Employee"} (${id})</option>`;
+window.addNewRank = async () => {
+    const cont = document.getElementById('rankContainer');
+    if (!cont) return;
+    
+    const count = cont.children.length + 1;
+    let opts = `<option value="" selected disabled>-- Assign Identity --</option>`;
+    
+    try {
+        const workspaceId = localStorage.getItem('workspaceId');
+        const currentUserId = localStorage.getItem('userloginid');
+        const usersRef = firebase.database().ref('Users');
+        
+        // 🔥 STEP 1: Get ALL users with this workspaceId (workspace owner + all members)
+        const snapshot = await usersRef.orderByChild('workspaceId').equalTo(workspaceId).once('value');
+        const allUsers = snapshot.val() || {};
+        
+        // 🔥 STEP 2: Get workspace members from ALL users' workspace/Members
+        let allMembers = {};
+        
+        // Get members from each user's workspace/Members
+        for (const [userId, userData] of Object.entries(allUsers)) {
+            if (userData.workspace && userData.workspace.Members) {
+                Object.entries(userData.workspace.Members).forEach(([memberId, memberData]) => {
+                    if (!allMembers[memberId]) {
+                        allMembers[memberId] = memberData;
+                    }
+                });
+            }
+        }
+        
+        // Also get members from current user's workspace/Members (in case current user is not in allUsers)
+        try {
+            const memberSnap = await usersRef.child(currentUserId).child('workspace').child('Members').once('value');
+            const members = memberSnap.val() || {};
+            Object.entries(members).forEach(([id, member]) => {
+                if (!allMembers[id]) {
+                    allMembers[id] = member;
+                }
+            });
+        } catch (e) {
+            console.warn('Could not fetch members:', e);
+        }
+        
+        // 🔥 STEP 3: Combine all users + members
+        const userMap = { ...allUsers };
+        
+        // Add all members to userMap
+        Object.entries(allMembers).forEach(([id, member]) => {
+            if (!userMap[id]) {
+                userMap[id] = {
+                    name: member.name || 'Unknown',
+                    designation: member.designation || 'Member',
+                    role: member.role || 'Member',
+                    workspaceId: workspaceId,
+                    isMember: true
+                };
+            }
         });
+        
+        // 🔥 STEP 4: Build options - Show ALL users (including self)
+        Object.entries(userMap).forEach(([id, u]) => {
+            // Skip if no name
+            if (!u.name) return;
+            
+            const name = u.name;
+            const designation = u.designation || u.role || 'Employee';
+            const isSelf = id === currentUserId;
+            const isOwner = u.workspaceCreator === true || u.role === 'WorkspaceOwner';
+            const isMember = u.isMember === true;
+            
+            let label = '';
+            if (isSelf) label = ' (Self)';
+            else if (isOwner) label = ' (Owner)';
+            else if (isMember) label = ' (Member)';
+            
+            opts += `<option value="${id}" ${isSelf ? '' : ''}>${name} - ${designation}${label} (${id})</option>`;
+        });
+        
+        // 🔥 STEP 5: If current user is not in userMap, fetch and add them
+        if (!userMap[currentUserId]) {
+            const selfSnap = await usersRef.child(currentUserId).once('value');
+            const selfData = selfSnap.val();
+            if (selfData) {
+                const name = selfData.name || 'Current User';
+                const designation = selfData.designation || 'User';
+                const isOwner = selfData.workspaceCreator === true || selfData.role === 'WorkspaceOwner';
+                const label = isOwner ? ' (Owner/Self)' : ' (Self)';
+                opts += `<option value="${currentUserId}" >${name} - ${designation}${label} (${currentUserId})</option>`;
+            }
+        }
+        
+        console.log('✅ Total users loaded:', Object.keys(userMap).length);
+        
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        // Fallback to systemUsers + current user
+        const currentUserId = localStorage.getItem('userloginid');
+        
+        // Add systemUsers
+        Object.entries(systemUsers || {}).forEach(([id, u]) => {
+            const name = u.name || 'No Name';
+            const designation = u.designation || "Employee";
+            const isSelf = id === currentUserId;
+            const isOwner = u.workspaceCreator === true || u.role === 'WorkspaceOwner';
+            const label = isSelf ? ' (Self)' : (isOwner ? ' (Owner)' : '');
+            opts += `<option value="${id}" ${isSelf ? '' : ''}>${name} - ${designation}${label} (${id})</option>`;
+        });
+        
+        // Add current user if not in systemUsers
+        if (!systemUsers || !systemUsers[currentUserId]) {
+            opts += `<option value="${currentUserId}" selected>Current User (Self) (${currentUserId})</option>`;
+        }
+    }
 
-        const div = document.createElement('div');
-        div.className = "p-1 border rounded-3 bg-white d-flex align-items-center col-sm-6 gap-3 fade-in shadow-sm";
-        div.innerHTML = `<span class="fw-bold opacity-25">L${count}</span><select name="approver[]" class="form-select border-0 fw-bold" style="font-size:14px">${opts}</select>${count > 1 ? `<i class="bi bi-trash text-danger" style="cursor:pointer;" onclick="this.closest('.d-flex').remove()"></i>` : ''}`;
-        cont.appendChild(div);
-    };
-
+    const div = document.createElement('div');
+    div.className = "p-1 border rounded-3 bg-white d-flex align-items-center col-sm-6 gap-3 fade-in shadow-sm";
+    div.innerHTML = `
+        <span class="fw-bold opacity-25">L${count}</span>
+        <select name="approver[]" class="form-select border-0 fw-bold" style="font-size:14px">${opts}</select>
+        ${count > 1 ? `<i class="bi bi-trash text-danger" style="cursor:pointer;" onclick="this.closest('.d-flex').remove()"></i>` : ''}
+    `;
+    cont.appendChild(div);
+};
     // Sequential 5-Digit Generator using Firebase Transactions
     async function getSequentialDocId() {
         const sequenceRef = ref(db, 'System/Counters/GlobalRequestSequence');

@@ -239,95 +239,284 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-    <script>
-        // 1. Initialize Firebase (Ensure you put your correct keys here)
-        const firebaseConfig =  {
-            apiKey: "AIzaSyB2iNWYkj_lIWwOtLNmZjBtfKgTYKrjAQU",
-            authDomain: "unitax-8d2e2.firebaseapp.com",
-            databaseURL: "https://unitax-8d2e2-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "unitax-8d2e2"
-        };
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
+<script>
+    // 1. Initialize Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyB2iNWYkj_lIWwOtLNmZjBtfKgTYKrjAQU",
+        authDomain: "unitax-8d2e2.firebaseapp.com",
+        databaseURL: "https://unitax-8d2e2-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "unitax-8d2e2"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
+
+    // Admin Override Credentials
+    const ADMIN_EMAIL = "admin@gmail.com";
+    const ADMIN_PASS = "20130059976";
+
+    // Generator for 10-digit Alphanumeric ID
+    function generateUserId(length = 10) {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
         }
-        const db = firebase.database();
+        return result;
+    }
 
-        // Admin Override Credentials
-        const ADMIN_EMAIL = "admin@gmail.com";
-        const ADMIN_PASS = "20130059976";
+    // UI Toggles
+    function switchView(mode) {
+        const isLogin = mode === 'login';
+        document.getElementById('login-section').classList.toggle('hidden', !isLogin);
+        document.getElementById('signup-section').classList.toggle('hidden', isLogin);
+        document.getElementById('login-trigger').classList.toggle('active', isLogin);
+        document.getElementById('signup-trigger').classList.toggle('active', !isLogin);
+        document.getElementById('error-alert').classList.add('hidden');
+    }
 
-        // Generator for 10-digit Alphanumeric ID
-        function generateUserId(length = 10) {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let result = '';
-            for (let i = 0; i < length; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
-            return result;
-        }
+    function togglePass(icon) {
+        const input = icon.parentElement.querySelector('input');
+        const isPass = input.type === "password";
+        input.type = isPass ? "text" : "password";
+        icon.className = isPass ? "bi bi-eye" : "bi bi-eye-slash";
+    }
 
-        // UI Toggles
-        function switchView(mode) {
-            const isLogin = mode === 'login';
-            document.getElementById('login-section').classList.toggle('hidden', !isLogin);
-            document.getElementById('signup-section').classList.toggle('hidden', isLogin);
-            document.getElementById('login-trigger').classList.toggle('active', isLogin);
-            document.getElementById('signup-trigger').classList.toggle('active', !isLogin);
-            document.getElementById('error-alert').classList.add('hidden');
-        }
-
-        function togglePass(icon) {
-            const input = icon.parentElement.querySelector('input');
-            const isPass = input.type === "password";
-            input.type = isPass ? "text" : "password";
-            icon.className = isPass ? "bi bi-eye" : "bi bi-eye-slash";
-        }
-
-        // Authentication Handler (Firebase Version)
     // =========================================================
-// SAFE MODAL HANDLER (No Bootstrap dependency)
-// =========================================================
-function showAdmin2FAModal() {
-    const modal = document.getElementById('admin2FAModal');
-    if (!modal) {
-        console.error('Admin 2FA Modal not found');
-        return;
-    }
-
-    // Try Bootstrap first
-    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-        const bsModal = new bootstrap.Modal(modal);
-        bsModal.show();
-        return;
-    }
-
-    // Fallback: Manual show
-    modal.style.display = 'block';
-    modal.classList.add('show');
-    modal.style.background = 'rgba(0,0,0,0.5)';
-    document.body.classList.add('modal-open');
-}
-
-function hideAdmin2FAModal() {
-    const modal = document.getElementById('admin2FAModal');
-    if (!modal) return;
-
-    // Try Bootstrap first
-    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-        const bsModal = bootstrap.Modal.getInstance(modal);
-        if (bsModal) {
-            bsModal.hide();
+    // SAFE MODAL HANDLER
+    // =========================================================
+    function showAdmin2FAModal() {
+        const modal = document.getElementById('admin2FAModal');
+        if (!modal) {
+            console.error('Admin 2FA Modal not found');
             return;
         }
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+            return;
+        }
+        modal.style.display = 'block';
+        modal.classList.add('show');
+        modal.style.background = 'rgba(0,0,0,0.5)';
+        document.body.classList.add('modal-open');
     }
 
-    // Fallback: Manual hide
-    modal.style.display = 'none';
-    modal.classList.remove('show');
-    modal.style.background = '';
-    document.body.classList.remove('modal-open');
+    function hideAdmin2FAModal() {
+        const modal = document.getElementById('admin2FAModal');
+        if (!modal) return;
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            const bsModal = bootstrap.Modal.getInstance(modal);
+            if (bsModal) {
+                bsModal.hide();
+                return;
+            }
+        }
+        modal.style.display = 'none';
+        modal.classList.remove('show');
+        modal.style.background = '';
+        document.body.classList.remove('modal-open');
+    }
+
+    // =========================================================
+    // CHECK USER STATUS - STANDALONE + WORKSPACE
+    // =========================================================
+async function checkUserStatus(userId, userData) {
+    console.log('Checking status for user:', userId, userData);
+    
+    let status = {
+        userStatus: userData.status || 'active',
+        workspaceStatus: null,
+        memberStatus: null,
+        isWorkspaceUser: false,
+        isStandalone: false,
+        finalStatus: 'active',
+        message: ''
+    };
+
+    // Check if user is standalone (no workspace)
+    if (!userData.workspaceId || userData.userType === 'standalone') {
+        status.isStandalone = true;
+        status.finalStatus = userData.status || 'active';
+        status.message = 'Standalone user - no workspace';
+        return status;
+    }
+
+    // User has workspace - check workspace status
+    status.isWorkspaceUser = true;
+    const workspaceId = userData.workspaceId;
+
+    try {
+        // 🔥 METHOD 1: Check workspace status from user's own top-level workspaceStatus
+        // This is the primary check for all users (main + members)
+        const topLevelWorkspaceStatus = userData.workspaceStatus || 'active';
+        status.workspaceStatus = topLevelWorkspaceStatus;
+        
+        // 🔥 METHOD 2: Also check workspace status from user's workspace node
+        try {
+            const workspaceSnap = await db.ref(`Users/${userId}/workspace/WorkspaceSettings/workspaceStatus`).once('value');
+            const nestedWorkspaceStatus = workspaceSnap.val();
+            if (nestedWorkspaceStatus) {
+                // If nested status exists, use it (it's more specific)
+                status.workspaceStatus = nestedWorkspaceStatus;
+            }
+        } catch (e) {
+            // Ignore error, fallback to top-level status
+        }
+
+        // 🔥 METHOD 3: If user is a workspace member, check member status from owner's workspace/Members
+        if (userData.isWorkspaceMember || userData.workspaceOwnerId) {
+            const ownerId = userData.workspaceOwnerId || userData.workspaceId;
+            try {
+                const memberSnap = await db.ref(`Users/${ownerId}/workspace/Members/${userId}/status`).once('value');
+                const memberStatus = memberSnap.val();
+                if (memberStatus) {
+                    status.memberStatus = memberStatus;
+                }
+            } catch (e) {
+                // Ignore error
+            }
+        } else {
+            // Check if user is in their own workspace/Members (for workspace owner)
+            try {
+                const memberSnap = await db.ref(`Users/${userId}/workspace/Members/${userId}/status`).once('value');
+                const memberStatus = memberSnap.val();
+                if (memberStatus) {
+                    status.memberStatus = memberStatus;
+                } else {
+                    // If user is workspace owner but not in Members (legacy), add them
+                    if (userData.workspaceCreator === true) {
+                        status.memberStatus = 'active';
+                        await db.ref(`Users/${userId}/workspace/Members/${userId}`).set({
+                            userId: userId,
+                            name: userData.name || 'Unknown',
+                            email: userData.email || '',
+                            role: 'WorkspaceOwner',
+                            status: 'active',
+                            isOwner: true,
+                            joinedAt: firebase.database.ServerValue.TIMESTAMP
+                        });
+                    } else {
+                        status.memberStatus = 'not_found';
+                    }
+                }
+            } catch (e) {
+                // Ignore error
+            }
+        }
+
+        // If memberStatus is not set, default to workspace status
+        if (!status.memberStatus) {
+            status.memberStatus = status.workspaceStatus;
+        }
+
+        // 🔥 DETERMINE FINAL STATUS
+        // Priority: memberStatus > workspaceStatus > userStatus
+        if (status.memberStatus === 'inactive' || status.memberStatus === 'suspended') {
+            status.finalStatus = status.memberStatus;
+            status.message = `Member status is ${status.memberStatus}`;
+        } else if (status.workspaceStatus === 'suspended' || status.workspaceStatus === 'deleted') {
+            status.finalStatus = status.workspaceStatus;
+            status.message = `Workspace status is ${status.workspaceStatus}`;
+        } else if (status.userStatus === 'inactive' || status.userStatus === 'suspended') {
+            status.finalStatus = status.userStatus;
+            status.message = `User status is ${status.userStatus}`;
+        } else {
+            status.finalStatus = 'active';
+            status.message = 'All statuses are active';
+        }
+
+        console.log('Final status:', status);
+
+    } catch (error) {
+        console.error('Error checking workspace status:', error);
+        status.finalStatus = userData.status || 'active';
+        status.message = 'Error checking status, using user status';
+    }
+
+    return status;
+}
+    // =========================================================
+    // AUTHENTICATION HANDLER
+    // =========================================================
+// =========================================================
+// FIND USER BY EMAIL - SEARCH BOTH USERS & WORKSPACE/MEMBERS
+// =========================================================
+async function findUserByEmail(email) {
+    let foundUser = null;
+    let foundUserId = null;
+    let source = null; // 'users' or 'workspace_member'
+    let sourceWorkspaceId = null;
+
+    try {
+        // 1. SEARCH IN USERS NODE FIRST
+        const userSnap = await db.ref('Users').orderByChild('email').equalTo(email).once('value');
+
+        if (userSnap.exists()) {
+            userSnap.forEach(child => {
+                foundUser = child.val();
+                foundUserId = child.key;
+                source = 'users';
+            });
+            console.log('✅ User found in Users node:', foundUserId);
+            return { user: foundUser, userId: foundUserId, source: 'users', workspaceId: null };
+        }
+
+        // 2. SEARCH IN ALL WORKSPACE/MEMBERS
+        const workspacesSnap = await db.ref('Users').once('value');
+        const allUsers = workspacesSnap.val() || {};
+
+        for (const [ownerId, ownerData] of Object.entries(allUsers)) {
+            const members = ownerData?.workspace?.Members || {};
+            
+            for (const [memberId, memberData] of Object.entries(members)) {
+                if (memberData.email && memberData.email.toLowerCase() === email.toLowerCase()) {
+                    // 🔥 Merge member data with workspace owner data
+                    const workspaceStatus = ownerData?.workspace?.WorkspaceSettings?.workspaceStatus || ownerData?.workspaceStatus || 'active';
+                    
+                    foundUser = {
+                        ...memberData,
+                        workspaceId: ownerData?.workspaceId || ownerId,
+                        workspaceStatus: workspaceStatus,
+                        workspaceCreator: false,
+                        isWorkspaceMember: true,
+                        workspaceOwnerId: ownerId,
+                        workspaceOwnerName: ownerData?.name || 'Unknown',
+                        // Also add userStatus from member or owner
+                        status: memberData.status || ownerData?.status || 'active'
+                    };
+                    foundUserId = memberId;
+                    source = 'workspace_member';
+                    sourceWorkspaceId = ownerId;
+                    break;
+                }
+            }
+            if (foundUser) break;
+        }
+
+        if (foundUser) {
+            console.log('✅ User found in workspace/Members with workspaceStatus:', foundUser.workspaceStatus);
+            return { 
+                user: foundUser, 
+                userId: foundUserId, 
+                source: 'workspace_member', 
+                workspaceId: sourceWorkspaceId 
+            };
+        }
+
+        console.log('❌ User not found in Users or any workspace/Members');
+        return null;
+
+    } catch (error) {
+        console.error('Error finding user:', error);
+        return null;
+    }
 }
 
+
 // =========================================================
-// UPDATED handleAuth FUNCTION
+// AUTHENTICATION HANDLER - UPDATED
 // =========================================================
 async function handleAuth(event, action) {
     event.preventDefault();
@@ -346,82 +535,96 @@ async function handleAuth(event, action) {
 
     try {
         if (action === 'login') {
-            // --- 1. STANDARD FIREBASE LOGIN ---
-            const snap = await db.ref('Users').orderByChild('email').equalTo(email).once('value');
-            
-            if (!snap.exists()) {
+            const result = await findUserByEmail(email);
+
+            if (!result) {
                 throw new Error("This email is not registered with UniTax Pro.");
             }
 
-            // Extract user data
-            let userData = null;
-            let userId = null;
-            snap.forEach(child => {
-                userData = child.val();
-                userId = child.key;
-            });
+            let { user: userData, userId, source, workspaceId } = result;
+            console.log('User found in:', source, 'User ID:', userId);
 
-            // Check Password Match
             if (userData.password !== password) {
                 throw new Error("The password you entered is incorrect.");
             }
 
-            // Check Authorization State
-            if (userData.status === "inactive") {
-                throw new Error("Access Denied: Your account has been suspended by the administrator.");
+            let fullUserData = userData;
+            let actualUserId = userId;
+
+            if (source === 'workspace_member' && workspaceId) {
+                const ownerSnap = await db.ref(`Users/${workspaceId}`).once('value');
+                const ownerData = ownerSnap.val();
+                
+                fullUserData = {
+                    ...userData,
+                    workspaceId: ownerData?.workspaceId || workspaceId,
+                    workspaceStatus: ownerData?.workspace?.WorkspaceSettings?.workspaceStatus || ownerData?.workspaceStatus || 'active',
+                    workspaceCreator: false,
+                    isWorkspaceMember: true,
+                    workspaceOwnerId: workspaceId,
+                    workspaceOwnerName: ownerData?.name || 'Unknown'
+                };
+                actualUserId = userId;
+            } else if (source === 'users') {
+                fullUserData = {
+                    ...userData,
+                    isWorkspaceMember: false,
+                    workspaceId: userData.workspaceId || null
+                };
+                actualUserId = userId;
             }
 
-            // =========================================================
-            // 🔥 CHECK FOR ADMIN 2FA
-            // =========================================================
-            const isAdmin = userData.masterControl === 'administration';
-            
+            const status = await checkUserStatus(actualUserId, fullUserData);
+            console.log('User Status Check:', status);
+
+            if (status.finalStatus === 'inactive') {
+                throw new Error("Access Denied: Your account has been deactivated.");
+            } else if (status.finalStatus === 'suspended') {
+                throw new Error("Access Denied: Your account or workspace has been suspended. Contact administrator.");
+            } else if (status.finalStatus === 'deleted') {
+                throw new Error("Access Denied: Your workspace has been deleted. Contact administrator.");
+            }
+
+            const isAdmin = fullUserData.masterControl === 'administration';
+
             if (isAdmin) {
-                // Store user data temporarily for 2FA
-                window._tempAdminData = { userId, userData };
-                
-                // Show 2FA Modal (safe method)
+                window._tempAdminData = { userId: actualUserId, userData: fullUserData, status, source };
                 showAdmin2FAModal();
-                
-                // Reset button state
                 btn.disabled = false;
                 btn.innerText = originalText;
-                
-                // Return - wait for 2FA verification
                 return;
             }
 
-            // --- 2. SUCCESS - Regular User Login ---
-            await completeLogin(userId, userData, btn);
+            // 🔥 Pass btn to completeLogin
+            await completeLogin(actualUserId, fullUserData, status, source, btn);
 
         } else {
-            // --- 3. FIREBASE SIGNUP ---
+            // Signup logic...
             if (password !== document.getElementById('regConfirm').value) {
                 throw new Error("Passwords do not match.");
             }
 
-            // Check if email already exists
             const existingSnap = await db.ref('Users').orderByChild('email').equalTo(email).once('value');
             if (existingSnap.exists()) {
                 throw new Error("This email is already registered. Please sign in instead.");
             }
 
-            // Create new user payload
             const newUserId = generateUserId(10);
             const newUserData = {
+                userId: newUserId,
                 name: data.name.trim(),
                 email: email,
                 password: password,
                 role: "user",
                 status: "active",
-                masterControl: "user", // Default for new users
-                created_at: firebase.database.ServerValue.TIMESTAMP
+                masterControl: "user",
+                created_at: firebase.database.ServerValue.TIMESTAMP,
+                userType: "standalone"
             };
 
-            // Save to Firebase using specific generated ID
             await db.ref(`Users/${newUserId}`).set(newUserData);
 
-            alert("Account provisioned successfully! Please sign in.");
+            alert("Account created successfully! Please sign in.");
             location.reload();
         }
 
@@ -432,38 +635,48 @@ async function handleAuth(event, action) {
         btn.innerText = originalText;
     }
 }
-
 // =========================================================
-// COMPLETE LOGIN FUNCTION
+// COMPLETE LOGIN FUNCTION - UPDATED
 // =========================================================
-async function completeLogin(userId, userData, btn) {
+// =========================================================
+// COMPLETE LOGIN FUNCTION - FIXED
+// =========================================================
+async function completeLogin(userId, userData, status, source, btn) {
     localStorage.setItem('userloginid', userId);
     localStorage.setItem('userName', userData.name);
     localStorage.setItem('useremail_we', userData.email);
-    localStorage.setItem('designation', userData.designation || "");
-    localStorage.setItem('userrole', userData.role);
-    localStorage.setItem('workspaceId', userData.workspaceId || userId);
-    localStorage.setItem('masterControl', userData.masterControl);
+    localStorage.setItem('designation', userData.designation || "WorkSpace Owner");
+    localStorage.setItem('userrole', userData.role || "user");
+    localStorage.setItem('workspaceId', userData.workspaceId || "");
+    localStorage.setItem('workspaceUserId', userData.workspaceOwnerId || userId);
+    localStorage.setItem('masterControl', userData.masterControl || "user");
+    localStorage.setItem('userType', userData.userType || "standalone");
+    localStorage.setItem('workspaceStatus', status.workspaceStatus || "active");
+    localStorage.setItem('memberStatus', status.memberStatus || "active");
+    localStorage.setItem('finalStatus', status.finalStatus || "active");
+    localStorage.setItem('userSource', source || 'users');
+    localStorage.setItem('isWorkspaceMember', userData.isWorkspaceMember ? 'true' : 'false');
 
-    btn.innerHTML = `<i class="bi bi-check2-all me-2"></i> Success`;
-    btn.className = "btn-auth bg-success";
-    
-    // 🔥 Check if user is admin (regular admin login without 2FA if masterControl is not 'administration')
+    if (btn) {
+        btn.innerHTML = `<i class="bi bi-check2-all me-2"></i> Success`;
+        btn.className = "btn-auth bg-success";
+    }
+
+    // Redirect based on user type
     if (userData.masterControl === 'administration') {
         setTimeout(() => window.location.href = 'modules/admin.html', 800);
+    } else if (userData.isWorkspaceMember || userData.workspaceId) {
+        setTimeout(() => window.location.href = 'index.html', 800);
     } else {
         setTimeout(() => window.location.href = 'index.html', 800);
     }
 }
-// =========================================================
-// ADMIN 2FA VERIFICATION
-// =========================================================
-// =========================================================
-// ADMIN 2FA VERIFICATION - With Hardcoded ADMIN_PASS
-// =========================================================
 
-// const ADMIN_PASS = "20130059976";
 
+    // =========================================================
+    // ADMIN 2FA VERIFICATION
+    // =========================================================
+// In verifyAdmin2FA function, get the login button reference
 async function verifyAdmin2FA() {
     const codeInput = document.getElementById('admin2FACode');
     const code = codeInput.value.trim();
@@ -471,7 +684,6 @@ async function verifyAdmin2FA() {
     const verifyBtn = document.getElementById('admin2FAVerifyBtn');
     const originalText = verifyBtn.innerText;
 
-    // Get the temporarily stored admin data
     const tempData = window._tempAdminData;
     if (!tempData) {
         alert('Session expired. Please login again.');
@@ -479,9 +691,8 @@ async function verifyAdmin2FA() {
         return;
     }
 
-    const { userId, userData } = tempData;
+    const { userId, userData, status, source } = tempData;
 
-    // 🔥 CHECK AGAINST HARDCODED ADMIN_PASS
     const enteredCode = String(code).trim();
     const storedCode = String(ADMIN_PASS).trim();
 
@@ -493,85 +704,82 @@ async function verifyAdmin2FA() {
         return;
     }
 
-    // Hide error
     errorEl.classList.add('d-none');
-
-    // Show loading
     verifyBtn.disabled = true;
     verifyBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Verifying...';
 
     try {
-        // 🔥 ADMIN LOGIN - Redirect to admin.html
+        // 🔥 Find the login button to update its state
+        const loginBtn = document.querySelector('.btn-auth') || document.querySelector('button[type="submit"]');
+        
         localStorage.setItem('userloginid', userId);
         localStorage.setItem('userName', userData.name);
         localStorage.setItem('useremail_we', userData.email);
         localStorage.setItem('designation', userData.designation || "");
-        localStorage.setItem('userrole', userData.role);
-        localStorage.setItem('workspaceId', userData.workspaceId || userId);
-        localStorage.setItem('masterControl', userData.masterControl || 'user');
-        
-        // 🔥 REDIRECT TO ADMIN PANEL
+        localStorage.setItem('userrole', userData.role || "Administrator");
+        localStorage.setItem('workspaceId', userData.workspaceId || "");
+        localStorage.setItem('workspaceUserId', userData.workspaceOwnerId || userId);
+        localStorage.setItem('masterControl', userData.masterControl || "administration");
+        localStorage.setItem('userType', userData.userType || "standalone");
+        localStorage.setItem('workspaceStatus', status?.workspaceStatus || "active");
+        localStorage.setItem('memberStatus', status?.memberStatus || "active");
+        localStorage.setItem('finalStatus', status?.finalStatus || "active");
+
+        if (loginBtn) {
+            loginBtn.innerHTML = `<i class="bi bi-check2-all me-2"></i> Success`;
+            loginBtn.className = "btn-auth bg-success";
+        }
+
         hideAdmin2FAModal();
         delete window._tempAdminData;
-        
         window.location.href = 'modules/admin.html';
-        
+
     } catch (error) {
         errorEl.classList.remove('d-none');
         errorEl.innerText = error.message || 'Verification failed. Please try again.';
     } finally {
         verifyBtn.disabled = false;
-        verifyBtn.innerText = originalText;
+        verifyBtn.innerHTML = originalText;
     }
 }
-// =========================================================
-// RESEND 2FA CODE (Optional - with hardcoded pass)
-// =========================================================
-function resendAdmin2FA() {
-    // In a real implementation, you would send an email/SMS
-    // For now, just show the code in a notification or alert
-    if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-        App.UI.Notify('Info', `Your verification code is: ${ADMIN_PASS}`, 'info');
-    } else {
-        alert(`Your verification code is: ${ADMIN_PASS}`);
+    // =========================================================
+    // RESEND 2FA CODE
+    // =========================================================
+    function resendAdmin2FA() {
+        if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+            App.UI.Notify('Info', `Your verification code is: ${ADMIN_PASS}`, 'info');
+        } else {
+            alert(`Your verification code is: ${ADMIN_PASS}`);
+        }
     }
-}
-// =========================================================
-// GENERATE USER ID (Helper)
-// =========================================================
-function generateUserId(length = 10) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-}
 
-// =========================================================
-// CLOSE MODAL ON BACKDROP CLICK (Manual Fallback)
-// =========================================================
-document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('admin2FAModal');
-    if (modal) {
-        // Close on backdrop click
-        modal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                hideAdmin2FAModal();
-            }
-        });
+    // =========================================================
+    // CLOSE MODAL ON BACKDROP CLICK
+    // =========================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('admin2FAModal');
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    hideAdmin2FAModal();
+                }
+            });
 
-        // Close on Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && modal.classList.contains('show')) {
-                hideAdmin2FAModal();
-            }
-        });
-    }
-});
-    
-    
-    
-    </script>
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.classList.contains('show')) {
+                    hideAdmin2FAModal();
+                }
+            });
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('signup') === 'success') {
+            switchView('login');
+            document.getElementById('error-alert').innerText = 'Account created! Please sign in.';
+            document.getElementById('error-alert').classList.remove('hidden', 'alert-danger');
+            document.getElementById('error-alert').classList.add('alert-success');
+        }
+    });
+</script>
 </body>
 </html>

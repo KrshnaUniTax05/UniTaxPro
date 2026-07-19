@@ -204,3 +204,301 @@ function openSettingsTab(index) {
         console.warn(`⚠️ No settings tab found at index ${index}`);
     }
 }
+
+// =========================================================
+// UNIQUENESS CHECKER - Standalone Function
+// =========================================================
+
+const UniquenessChecker = {
+    // =========================================================
+    // CONFIG
+    // =========================================================
+    config: {
+        debounceDelay: 500,
+        minLength: 3,
+        checkingColor: '#ffc107',
+        validColor: '#198754',
+        invalidColor: '#dc3545'
+    },
+
+    // =========================================================
+    // STATE
+    // =========================================================
+    state: {
+        timers: {},
+        activeChecks: {}
+    },
+
+    // =========================================================
+    // 🔥 INIT - Apply to a specific form or container
+    // =========================================================
+    init: function(container) {
+        const form = container?.tagName === 'FORM' ? container : container?.querySelector('form');
+        if (!form) return;
+
+        const uniqueInputs = form.querySelectorAll('[data-check-unique="true"]');
+        if (uniqueInputs.length === 0) return;
+
+        uniqueInputs.forEach(input => {
+            // Remove existing listeners to prevent duplicates
+            input.removeEventListener('input', this._handler);
+            input.addEventListener('input', this._handler.bind(this));
+        });
+
+        console.log(`✅ UniquenessChecker initialized on form: ${form.id || 'unnamed'}`);
+    },
+
+    // =========================================================
+    // 🔥 HANDLER - Debounced uniqueness check
+    // =========================================================
+    _handler: function(e) {
+        const input = e.target;
+        const val = input.value.trim();
+        const sheet = input.dataset.sheet_name;
+        const col = input.dataset.column_name;
+
+        if (!sheet || !col) return;
+        if (val.length < this.config.minLength) {
+            this.clearFeedback(input);
+            return;
+        }
+
+        const key = `${sheet}_${col}_${val}`;
+        clearTimeout(this.state.timers[key]);
+
+        // Show checking indicator
+        this.showChecking(input);
+
+        this.state.timers[key] = setTimeout(async () => {
+            try {
+                const isDuplicate = await API.CheckUniqueness(sheet, col, val);
+                this.showResult(input, isDuplicate);
+                
+                // Disable/enable submit button
+                const form = input.closest('form');
+                const saveBtn = form?.querySelector('[type="submit"]');
+                if (saveBtn) saveBtn.disabled = isDuplicate;
+
+                if (isDuplicate) {
+                    if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+                        App.UI.Notify('Validation', `Value "${val}" already exists in ${sheet}`, 'danger');
+                    }
+                }
+            } catch (error) {
+                console.error('Uniqueness check error:', error);
+                this.clearFeedback(input);
+            }
+        }, this.config.debounceDelay);
+    },
+
+    // =========================================================
+    // 🔥 SHOW CHECKING
+    // =========================================================
+    showChecking: function(input) {
+        input.style.borderRight = `3px solid ${this.config.checkingColor}`;
+        input.classList.remove('is-valid', 'is-invalid');
+    },
+
+    // =========================================================
+    // 🔥 SHOW RESULT
+    // =========================================================
+    showResult: function(input, isDuplicate) {
+        const color = isDuplicate ? this.config.invalidColor : this.config.validColor;
+        input.style.borderRight = `3px solid ${color}`;
+        input.classList.toggle('is-invalid', isDuplicate);
+        input.classList.toggle('is-valid', !isDuplicate);
+    },
+
+    // =========================================================
+    // 🔥 CLEAR FEEDBACK
+    // =========================================================
+    clearFeedback: function(input) {
+        input.style.borderRight = '';
+        input.classList.remove('is-valid', 'is-invalid', 'is-warning');
+        const form = input.closest('form');
+        const saveBtn = form?.querySelector('[type="submit"]');
+        if (saveBtn) saveBtn.disabled = false;
+    },
+
+    // =========================================================
+    // 🔥 DESTROY
+    // =========================================================
+    destroy: function(container) {
+        const form = container?.tagName === 'FORM' ? container : container?.querySelector('form');
+        if (!form) return;
+        
+        form.querySelectorAll('[data-check-unique="true"]').forEach(input => {
+            input.removeEventListener('input', this._handler);
+            this.clearFeedback(input);
+        });
+
+        Object.keys(this.state.timers).forEach(key => {
+            clearTimeout(this.state.timers[key]);
+        });
+        this.state.timers = {};
+    }
+};
+
+// =========================================================
+// QUICK FORM LAUNCHER - Updated
+// =========================================================
+
+// const QuickFormLauncher = {
+//     // =========================================================
+//     // CONFIG
+//     // =========================================================
+//     config: {
+//         offcanvasId: 'quickFormOffcanvas',
+//         basePath: 'modules/'
+//     },
+
+//     // =========================================================
+//     // INIT
+//     // =========================================================
+//     init() {
+//         document.addEventListener('keydown', e => {
+//             if ((e.key === 'F8' || e.keyCode === 119) &&
+//                 document.activeElement?.closest('[data-form-path]')) {
+//                 e.preventDefault();
+//                 this.open(document.activeElement.closest('[data-form-path]'));
+//             }
+//         });
+//         console.log('✅ QuickFormLauncher initialized');
+//     },
+
+//     // =========================================================
+//     // OPEN OFFCANVAS
+//     // =========================================================
+//     open(el) {
+//         const path = el.dataset.formPath;
+//         if (!path) return;
+
+//         let oc = document.getElementById(this.config.offcanvasId);
+
+//         if (!oc) {
+//             oc = document.createElement('div');
+//             oc.id = this.config.offcanvasId;
+//             oc.className = 'offcanvas offcanvas-start shadow-lg';
+//             oc.setAttribute('tabindex', '-1');
+            
+//             // 🔥 80vw width
+//             oc.style.cssText = `
+//                 width: 80vw !important;
+//                 max-width: 1200px !important;
+//                 border-left: 1px solid #dee2e6;
+//             `;
+
+//             oc.innerHTML = `
+//                 <div class="offcanvas-header offcanvas-lg border-bottom bg-primary py-3">
+//                     <h5 class="fw-bold mb-0 d-flex align-items-center">
+//                         <i class="bi bi-plus-circle-fill text-white me-2"></i>
+//                         <span class="text-white" id="qfTitle">Quick Create</span>
+//                     </h5>
+//                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+//                 </div>
+//                 <div class="offcanvas-body p-0" id="qfBody" style="background:#f8fafc;overflow:auto;">
+//                     <div class="text-center py-5" id="qfLoader">
+//                         <div class="spinner-border text-primary"></div>
+//                         <p class="text-muted small mt-3 mb-0">Loading form...</p>
+//                     </div>
+//                     <div id="qfContent" style="display:none;"></div>
+//                 </div>
+//             `;
+
+//             document.body.appendChild(oc);
+//         }
+
+//         // 🔥 Get or create instance with keyboard: true for ESC support
+//         const bs = bootstrap.Offcanvas.getOrCreateInstance(oc, {
+//             backdrop: true,
+//             keyboard: true  // ESC closes
+//         });
+
+//         document.getElementById('qfTitle').textContent =
+//             'Quick ' + (path.split('/').pop() || 'Create');
+
+//         document.getElementById('qfLoader').style.display = 'block';
+//         document.getElementById('qfContent').style.display = 'none';
+
+//         bs.show();
+
+//         // Load form
+//         fetch(`${this.config.basePath}${path}.html`)
+//             .then(response => {
+//                 if (!response.ok) throw new Error('Failed to load file');
+//                 return response.text();
+//             })
+//             .then(html => {
+//                 const content = document.getElementById('qfContent');
+//                 content.innerHTML = html;
+
+//                 // 🔥 Execute scripts
+//                 content.querySelectorAll('script').forEach(oldScript => {
+//                     const newScript = document.createElement('script');
+//                     [...oldScript.attributes].forEach(attr => {
+//                         newScript.setAttribute(attr.name, attr.value);
+//                     });
+//                     newScript.textContent = oldScript.textContent;
+//                     oldScript.parentNode.replaceChild(newScript, oldScript);
+//                 });
+
+//                 // 🔥 Initialize Uniqueness Checker on the loaded form
+//                 UniquenessChecker.init(content);
+
+//                 // 🔥 Initialize ERP Logic
+//                 if (typeof InitERPLogic === 'function') {
+//                     InitERPLogic(path);
+//                 }
+
+//                 // 🔥 Populate datalists
+//                 if (typeof API !== 'undefined' && API.PopulateAllDatalists) {
+//                     const form = content.querySelector('form');
+//                     if (form) API.PopulateAllDatalists(form);
+//                 }
+
+//                 document.getElementById('qfLoader').style.display = 'none';
+//                 content.style.display = 'block';
+//             })
+//             .catch(error => {
+//                 console.error(error);
+//                 document.getElementById('qfContent').innerHTML = `
+//                     <div class="p-4">
+//                         <div class="alert alert-warning mb-0">
+//                             <i class="bi bi-exclamation-triangle me-2"></i>
+//                             Failed to load module: <strong>${path}</strong>
+//                         </div>
+//                     </div>
+//                 `;
+//                 document.getElementById('qfLoader').style.display = 'none';
+//                 document.getElementById('qfContent').style.display = 'block';
+//             });
+//     },
+
+//     // =========================================================
+//     // DESTROY
+//     // =========================================================
+//     destroy() {
+//         const oc = document.getElementById(this.config.offcanvasId);
+//         if (oc) {
+//             const bs = bootstrap.Offcanvas.getInstance(oc);
+//             if (bs) bs.dispose();
+//             oc.remove();
+//         }
+//         console.log('QuickFormLauncher destroyed');
+//     }
+// };
+
+// // =========================================================
+// // AUTO-INIT
+// // =========================================================
+// document.addEventListener('DOMContentLoaded', () => {
+//     setTimeout(() => {
+//         QuickFormLauncher.init();
+//         // Make UniquenessChecker globally available
+//         window.UniquenessChecker = UniquenessChecker;
+//     }, 500);
+// });
+
+// window.QuickFormLauncher = QuickFormLauncher;
+
+

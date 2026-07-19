@@ -3,397 +3,424 @@
     <!-- Content here -->
 </div>
 
-
 <!-- Admin Panel Wrapper -->
 <div id="admin-panel-wrapper" class="animate-in  py-2 d-flex flex-column" >
     <div class="card border-0 shadow-sm flex-grow-1 overflow-hidden d-flex flex-row m-0 rounded-0 bg-white" style="display:none; min-height: calc(100vh - 60px) !important;">
         
         <!-- SIDEBAR NAVIGATION -->
         <aside class="admin-sidebar bg-light border-end d-flex flex-column" style="width: 280px; flex-shrink: 0;">
-    <div class="p-4 border-bottom bg-white">
-        <h6 class="fw-bold text-primary small text-uppercase tracking-widest mb-0">Management</h6>
-    </div>
-    <div class="list-group list-group-flush p-2">
-        <button id="btn-tab-list" class="list-group-item list-group-item-action active rounded-3 mb-1 border-0" onclick="window.switchAdminTab('user-list')">
-            <i class="bi bi-people-fill me-2"></i> User Directory
-        </button>
-        <button id="btn-tab-create" class="list-group-item list-group-item-action rounded-3 mb-1 border-0" onclick="window.switchAdminTab('user-create')">
-            <i class="bi bi-person-plus-fill me-2"></i> Add Team Member
-        </button>
-        <button id="btn-tab-workspace" class="list-group-item list-group-item-action rounded-3 mb-1 border-0" onclick="window.switchAdminTab('workspace')">
-            <i class="bi bi-building me-2"></i> Workspace
-        </button>
-    </div>
-    <div class="mt-auto p-4 border-top bg-white">
-        <div class="text-muted fw-bold" style="font-size: 10px; letter-spacing: 1px;">WORKSPACE ANCHOR</div>
-        <div class="font-monospace fw-bold text-primary small" id="admin-ws-id">#PENDING</div>
-    </div>
-</aside>
-
-<!-- MAIN INTERFACE -->
-<main class="flex-grow-1 d-flex flex-column overflow-hidden">
-    
-    <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-center p-4 border-bottom bg-white">
-        <div>
-            <h4 class="fw-bold mb-0 text-dark" id="admin-title">User Directory</h4>
-            <span id="memberCount" class="badge bg-primary-subtle text-primary rounded-pill mt-1">0 Members</span>
-        </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-white btn-sm border shadow-sm fw-bold px-3" onclick="window.fetchWorkspaceUsers()">
-                <i class="bi bi-arrow-clockwise me-1"></i> Sync
-            </button>
-        </div>
-    </div>
-
-    <!-- VIEW: USER LIST -->
-    <div id="tab-user-list" class="admin-tab-pane overflow-y-auto custom-scrollbar">
-        <div class="table-responsive border rounded-2 bg-white overflow-hidden">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light">
-                    <tr class="small text-uppercase fw-bold text-muted" style="font-size: 11px;">
-                        <th class="ps-4 py-3">User ID</th>
-                        <th>Member Details</th>
-                        <th>Login ID (Email)</th>
-                        <th>Security Role</th>
-                        <th>Status</th>
-                        <th class="text-end pe-4">Manage</th>
-                    </tr>
-                </thead>
-                <tbody id="adminUserTableBody">
-                    <!-- Data from Firebase -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- VIEW: USER PROVISIONING -->
-    <div id="tab-user-create" class="admin-tab-pane overflow-y-auto d-none bg-surface">
-        <div class="py-0 m-0" id="provisioning-container">
-            <div class="card border-0 rounded-2 overflow-hidden">
-                <div class="card-body p-4 m-0">
-                    <div class="mb-4">
-                        <h5 class="fw-bold text-dark mb-1">Provision Access</h5>
-                        <p class="text-muted small">The new identity will be linked to your workspace instantly.</p>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Full Name</label>
-                            <input type="text" id="adm_name" class="form-control form-control-sm proper-case" placeholder="e.g. Rahul Sharma">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Designation</label>
-                            <input type="text" id="adm_designation" class="form-control form-control-sm proper-case" placeholder="e.g. Director" autocomplete="on">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Login Email</label>
-                            <input type="email" id="adm_email" class="form-control form-control-sm" placeholder="name@company.com">
-                        </div>
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">Primary Password</label>
-                                <div class="input-group">
-                                    <input type="text" id="adm_pass" class="form-control form-control-sm font-monospace" value="UniTax@2026">
-                                    <button class="btn btn-outline-secondary btn-sm" type="button" onclick="AdminPanel.generatePassword()">
-                                        <i class="bi bi-shuffle"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">Permission Role</label>
-                                <select id="adm_role" class="form-select form-select-sm fw-bold text-primary">
-                                    <option value="Operator">Operator</option>
-                                    <option value="Manager">Manager</option>
-                                    <option value="Auditor">Auditor</option>
-                                    <option value="administrator">Administrator</option>
-                                </select>
-                            </div>
-                        </div>
-                        <button type="button" id="provisionBtn" class="btn btn-primary w-100 py-3 fw-bold rounded-3 transition-all" onclick="window.provisionUser()">
-                            <i class="bi bi-person-check-fill me-2"></i> Finalize Identity Creation
-                        </button>
-                    </div>
-                </div>
+            <div class="p-4 border-bottom bg-white">
+                <h6 class="fw-bold text-primary small text-uppercase tracking-widest mb-0">Management</h6>
             </div>
-        </div>
-    </div>
+            <div class="list-group list-group-flush p-2">
+                <button id="btn-tab-list" class="list-group-item list-group-item-action active rounded-3 mb-1 border-0" onclick="window.switchAdminTab('user-list')">
+                    <i class="bi bi-people-fill me-2"></i> User Directory
+                </button>
+                <button id="btn-tab-create" class="list-group-item list-group-item-action rounded-3 mb-1 border-0" onclick="window.switchAdminTab('user-create')">
+                    <i class="bi bi-person-plus-fill me-2"></i> Add Team Member
+                </button>
+                <button id="btn-tab-workspace" class="list-group-item list-group-item-action rounded-3 mb-1 border-0" onclick="window.switchAdminTab('workspace')">
+                    <i class="bi bi-building me-2"></i> Workspace
+                </button>
+            </div>
+            <div class="mt-auto p-4 border-top bg-white">
+                <div class="text-muted fw-bold" style="font-size: 10px; letter-spacing: 1px;">WORKSPACE ANCHOR</div>
+                <div class="font-monospace fw-bold text-primary small" id="admin-ws-id">#PENDING</div>
+            </div>
+        </aside>
 
-    <!-- VIEW: WORKSPACE -->
-    <div id="tab-workspace" class="admin-tab-pane overflow-y-auto d-none bg-surface">
-  <div class="py-3 m-0" id="workspace-container">
-    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-        <div class="card-body p-4 p-md-5">
-            <!-- Header -->
-            <div class="d-flex align-items-start justify-content-between mb-4 pb-2 border-bottom">
+        <!-- MAIN INTERFACE -->
+        <main class="flex-grow-1 d-flex flex-column overflow-hidden">
+            
+            <!-- HEADER -->
+            <div class="d-flex justify-content-between align-items-center p-4 border-bottom bg-white">
                 <div>
-                    <h5 class="fw-bold text-dark mb-1">
-                        <i class="bi bi-building me-2 text-primary"></i>Workspace Settings
-                    </h5>
-                    <p class="text-muted small mb-0">Manage your workspace details and configurations</p>
+                    <h4 class="fw-bold mb-0 text-dark" id="admin-title">User Directory</h4>
+                    <span id="memberCount" class="badge bg-primary-subtle text-primary rounded-pill mt-1">0 Members</span>
                 </div>
-                <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 rounded-pill" id="headerStatusBadge">
-                    <i class="bi bi-check-circle-fill me-1"></i> Active
-                </span>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-white btn-sm border shadow-sm fw-bold px-3" onclick="window.fetchWorkspaceUsers()">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Sync
+                    </button>
+                </div>
             </div>
 
-            <form id="workspaceForm" class="nosubmit">
-                <div class="row g-4">
-                    <!-- Workspace ID (Read-only) -->
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold small text-secondary">Workspace ID</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="bi bi-hash text-primary"></i>
-                            </span>
-                            <input type="text" id="workspaceId" class="form-control form-control-sm font-monospace bg-light" 
-                                   value="#WS-ABCD1234" readonly disabled>
-                            <button class="btn btn-outline-secondary btn-sm" type="button" onclick="window.copyWorkspaceId()" title="Copy ID">
-                                <i class="bi bi-clipboard"></i>
-                            </button>
-                        </div>
-                        <div class="form-text small">Unique identifier for your workspace</div>
-                    </div>
+            <!-- VIEW: USER LIST -->
+            <div id="tab-user-list" class="admin-tab-pane overflow-y-auto custom-scrollbar">
+                <div class="table-responsive border rounded-2 bg-white overflow-hidden">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr class="small text-uppercase fw-bold text-muted" style="font-size: 11px;">
+                                <th class="ps-4 py-3">User ID</th>
+                                <th>Member Details</th>
+                                <th>Login ID (Email)</th>
+                                <th>Security Role</th>
+                                <th>Status</th>
+                                <th class="text-end pe-4">Manage</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminUserTableBody">
+                            <!-- Data from Firebase -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-                    <!-- Workspace Name -->
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold small text-secondary">
-                            Workspace Name <span class="text-danger">*</span>
-                        </label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="bi bi-building text-primary"></i>
-                            </span>
-                            <input type="text" id="workspaceName" class="form-control form-control-sm proper-case" 
-                                   placeholder="Enter workspace name" value="My Workspace">
-                        </div>
-                        <div class="form-text small">Choose a descriptive name for your workspace</div>
-                    </div>
+            <!-- VIEW: USER PROVISIONING -->
+            <div id="tab-user-create" class="admin-tab-pane overflow-y-auto d-none bg-surface">
+                <div class="py-0 m-0" id="provisioning-container">
+                    <div class="card border-0 rounded-2 overflow-hidden">
+                        <div class="card-body p-4 m-0">
+                            <div class="mb-4">
+                                <h5 class="fw-bold text-dark mb-1">Provision Access</h5>
+                                <p class="text-muted small">The new identity will be linked to your workspace instantly.</p>
+                            </div>
 
-                    <!-- Workspace Status (Read-only) -->
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold small text-secondary">Workspace Status</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="bi bi-circle-fill text-success" id="statusIcon"></i>
-                            </span>
-                            <input type="text" class="form-control form-control-sm bg-light" id="workspaceStatusInput" value="Active" readonly disabled>
-                        </div>
-                    </div>
-
-                    <!-- Created Date (Read-only) -->
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold small text-secondary">Created On</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0">
-                                <i class="bi bi-calendar3 text-primary"></i>
-                            </span>
-                            <input type="text" class="form-control form-control-sm bg-light" id="workspaceCreated" value="Loading..." readonly disabled>
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="col-12">
-                        <hr>
-                        <div class="d-flex justify-content-end gap-2 mt-3">
-                            <button type="reset" class="btn btn-light btn-sm px-4 border">
-                                <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
-                            </button>
-                            <button type="submit" class="btn btn-primary btn-sm px-4" id="workspaceSaveBtn">
-                                <i class="bi bi-check2 me-1"></i> Save Changes
-                            </button>
+                            <div class="space-y-4">
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Full Name</label>
+                                    <input type="text" id="adm_name" class="form-control form-control-sm proper-case" placeholder="e.g. Rahul Sharma">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Designation</label>
+                                    <input type="text" id="adm_designation" class="form-control form-control-sm " placeholder="e.g. Director" autocomplete="on">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Login Email</label>
+                                    <input type="email" id="adm_email" class="form-control form-control-sm" placeholder="name@company.com">
+                                </div>
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Primary Password</label>
+                                        <div class="input-group">
+                                            <input type="text" id="adm_pass" class="form-control form-control-sm font-monospace" value="UniTax@2026">
+                                            <button class="btn btn-outline-secondary btn-sm" type="button" onclick="AdminPanel.generatePassword()">
+                                                <i class="bi bi-shuffle"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Permission Role</label>
+                                        <select id="adm_role" class="form-select form-select-sm fw-bold text-primary">
+                                            <option value="Operator">Operator</option>
+                                            <option value="Manager">Manager</option>
+                                            <option value="Auditor">Auditor</option>
+                                            <option value="Administrator">Administrator</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button type="button" id="provisionBtn" class="btn btn-primary w-100 py-3 fw-bold rounded-3 transition-all" onclick="window.provisionUser()">
+                                    <i class="bi bi-person-check-fill me-2"></i> Finalize Identity Creation
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </form>
+            </div>
 
-            <!-- Stats Footer -->
-            <div class="mt-4 pt-3 border-top">
-                <div class="row g-3 text-center text-sm-start">
-                    <!-- Total Members -->
-                    <div class="col-sm-4">
-                        <div class="d-flex align-items-center justify-content-center justify-content-sm-start gap-3">
-                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; flex-shrink: 0;">
-                                <i class="bi bi-people fs-5"></i>
-                            </div>
-                            <div>
-                                <div class="small text-muted text-uppercase" style="font-size: 9px; letter-spacing: 0.3px;">Total Members</div>
-                                <div class="fw-bold fs-5" id="workspaceMembers">0</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Workspace Status -->
-                    <div class="col-sm-4">
-                        <div class="d-flex align-items-center justify-content-center justify-content-sm-start gap-3">
-                            <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; flex-shrink: 0;">
-                                <i class="bi bi-diagram-3 fs-5"></i>
-                            </div>
-                            <div>
-                                <div class="small text-muted text-uppercase" style="font-size: 9px; letter-spacing: 0.3px;">Workspace Status</div>
-                                <div class="fw-bold fs-5" id="workspaceStatusText">Active</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Security Status -->
-                    <div class="col-sm-4">
-                        <div class="d-flex align-items-center justify-content-center justify-content-sm-start gap-3">
-                            <div class="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; flex-shrink: 0;">
-                                <i class="bi bi-shield-check fs-5"></i>
-                            </div>
-                            <div>
-                                <div class="small text-muted text-uppercase" style="font-size: 9px; letter-spacing: 0.3px;">Security</div>
+            <!-- VIEW: WORKSPACE -->
+            <div id="tab-workspace" class="admin-tab-pane overflow-y-auto d-none bg-surface">
+                <div class="py-3 m-0" id="workspace-container">
+                    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                        <div class="card-body p-4 p-md-5">
+                            <!-- Header -->
+                            <div class="d-flex align-items-start justify-content-between mb-4 pb-2 border-bottom">
                                 <div>
-                                    <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-1 rounded-pill">
-                                        <i class="bi bi-check-circle-fill me-1"></i> Secure
-                                    </span>
+                                    <h5 class="fw-bold text-dark mb-1">
+                                        <i class="bi bi-building me-2 text-primary"></i>Workspace Settings
+                                    </h5>
+                                    <p class="text-muted small mb-0">Manage your workspace details and configurations</p>
+                                </div>
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 rounded-pill" id="headerStatusBadge">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Active
+                                </span>
+                            </div>
+
+                            <form id="workspaceForm" class="nosubmit">
+                                <div class="row g-4">
+                                    <!-- Workspace ID (Read-only) -->
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold small text-secondary">Workspace ID</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-end-0">
+                                                <i class="bi bi-hash text-primary"></i>
+                                            </span>
+                                            <input type="text" id="workspaceId" class="form-control form-control-sm font-monospace bg-light" 
+                                                   value="#WS-ABCD1234" readonly disabled>
+                                            <button class="btn btn-outline-secondary btn-sm" type="button" onclick="window.copyWorkspaceId()" title="Copy ID">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                        </div>
+                                        <div class="form-text small">Unique identifier for your workspace</div>
+                                    </div>
+
+                                    <!-- Workspace Name -->
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold small text-secondary">
+                                            Workspace Name <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-end-0">
+                                                <i class="bi bi-building text-primary"></i>
+                                            </span>
+                                            <input type="text" id="workspaceName" class="form-control form-control-sm proper-case" 
+                                                   placeholder="Enter workspace name" value="My Workspace">
+                                        </div>
+                                        <div class="form-text small">Choose a descriptive name for your workspace</div>
+                                    </div>
+
+                                    <!-- Workspace Status (Read-only) -->
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold small text-secondary">Workspace Status</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-end-0">
+                                                <i class="bi bi-circle-fill text-success" id="statusIcon"></i>
+                                            </span>
+                                            <input type="text" class="form-control form-control-sm bg-light" id="workspaceStatusInput" value="Active" readonly disabled>
+                                        </div>
+                                    </div>
+
+                                    <!-- Created Date (Read-only) -->
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold small text-secondary">Created On</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light border-end-0">
+                                                <i class="bi bi-calendar3 text-primary"></i>
+                                            </span>
+                                            <input type="text" class="form-control form-control-sm bg-light" id="workspaceCreated" value="Loading..." readonly disabled>
+                                        </div>
+                                    </div>
+
+                                    <!-- Action Buttons -->
+                                    <div class="col-12">
+                                        <hr>
+                                        <div class="d-flex justify-content-end gap-2 mt-3">
+                                            <button type="reset" class="btn btn-light btn-sm px-4 border">
+                                                <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                                            </button>
+                                            <button type="submit" class="btn btn-primary btn-sm px-4" id="workspaceSaveBtn">
+                                                <i class="bi bi-check2 me-1"></i> Save Changes
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <!-- Stats Footer -->
+                            <div class="mt-4 pt-3 border-top">
+                                <div class="row g-3 text-center text-sm-start">
+                                    <!-- Total Members -->
+                                    <div class="col-sm-4">
+                                        <div class="d-flex align-items-center justify-content-center justify-content-sm-start gap-3">
+                                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; flex-shrink: 0;">
+                                                <i class="bi bi-people fs-5"></i>
+                                            </div>
+                                            <div>
+                                                <div class="small text-muted text-uppercase" style="font-size: 9px; letter-spacing: 0.3px;">Total Members</div>
+                                                <div class="fw-bold fs-5" id="workspaceMembers">0</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Workspace Status -->
+                                    <div class="col-sm-4">
+                                        <div class="d-flex align-items-center justify-content-center justify-content-sm-start gap-3">
+                                            <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; flex-shrink: 0;">
+                                                <i class="bi bi-diagram-3 fs-5"></i>
+                                            </div>
+                                            <div>
+                                                <div class="small text-muted text-uppercase" style="font-size: 9px; letter-spacing: 0.3px;">Workspace Status</div>
+                                                <div class="fw-bold fs-5" id="workspaceStatusText">Active</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Security Status -->
+                                    <div class="col-sm-4">
+                                        <div class="d-flex align-items-center justify-content-center justify-content-sm-start gap-3">
+                                            <div class="bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; flex-shrink: 0;">
+                                                <i class="bi bi-shield-check fs-5"></i>
+                                            </div>
+                                            <div>
+                                                <div class="small text-muted text-uppercase" style="font-size: 9px; letter-spacing: 0.3px;">Security</div>
+                                                <div>
+                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-1 rounded-pill">
+                                                        <i class="bi bi-check-circle-fill me-1"></i> Secure
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-    </div>
 
-
-    <!-- VIEW: EDIT USER -->
-    <div id="tab-user-edit" class="admin-tab-pane overflow-y-auto d-none bg-surface">
-        <div class="max-w-600 mx-auto" style="max-height: calc(100vh - 60px); overflow-y: scroll;" id="edit-container">
-            <div class="card border-0 rounded-2 overflow-hidden">
-                <div class="card-body p-4 p-md-5">
-                    <div class="mb-4">
-                        <h5 class="fw-bold text-dark mb-1">Edit User Rights</h5>
-                        <p class="text-muted small">Modify user permissions and role assignments.</p>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">User ID</label>
-                            <input type="text" id="edit_userId" class="form-control form-control-sm font-monospace" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Full Name</label>
-                            <input type="text" id="edit_name" class="form-control form-control-sm proper-case">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Designation</label>
-                            <input type="text" id="edit_designation" class="form-control form-control-sm proper-case">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Email Address</label>
-                            <input type="email" id="edit_email" class="form-control form-control-sm" readonly>
-                        </div>
-                        <div class="mb-3 border-danger">
-                            <label class="form-label small fw-bold">Reset Password</label>
-                            <input type="password" id="edit_password" class="form-control form-control-sm proper-case" placeholder="Enter new password to reset">
-                        </div>
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">Security Role</label>
-                                <select id="edit_role" class="form-select form-select-sm fw-bold">
-                                    <option value="Operator">Operator</option>
-                                    <option value="Manager">Manager</option>
-                                    <option value="Auditor">Auditor</option>
-                                    <option value="administrator">Administrator</option>
-                                </select>
+            <!-- VIEW: EDIT USER -->
+            <div id="tab-user-edit" class="admin-tab-pane overflow-y-auto d-none bg-surface m-0">
+                <div class="h-100 w-100" id="edit-container">
+                    <div class="card border-0 shadow-sm rounded-3 h-100 w-100 overflow-hidden">
+                        <div class="card-body p-4 p-md-5 d-flex flex-column h-100 w-100">
+                            <!-- Header -->
+                            <div class="mb-4 flex-shrink-0">
+                                <h5 class="fw-bold text-dark mb-1">
+                                    <i class="bi bi-pencil-square me-2 text-primary"></i>Edit User Rights
+                                </h5>
+                                <p class="text-muted small mb-0">Modify user permissions and role assignments.</p>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">Account Status</label>
-                                <select id="edit_status" class="form-select form-select-sm fw-bold">
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                    <option value="suspended">Suspended</option>
-                                </select>
+
+                            <!-- Form - Full height with 2 columns -->
+                            <div class="flex-grow-1 d-flex flex-column">
+                                <div class="row g-3 flex-grow-1">
+                                    <!-- Left Column -->
+                                    <div class="col-md-6 d-flex flex-column gap-3">
+                                        <div>
+                                            <label class="form-label small fw-bold">User ID</label>
+                                            <input type="text" id="edit_userId" class="form-control form-control-sm bg-light font-monospace" readonly>
+                                        </div>
+                                        <div>
+                                            <label class="form-label small fw-bold">Full Name</label>
+                                            <input type="text" id="edit_name" class="form-control form-control-sm proper-case">
+                                        </div>
+                                        <div>
+                                            <label class="form-label small fw-bold">Designation</label>
+                                            <input type="text" id="edit_designation" class="form-control form-control-sm">
+                                        </div>
+                                        <div>
+                                            <label class="form-label small fw-bold">Email Address</label>
+                                            <input type="email" id="edit_email" class="form-control form-control-sm bg-light" readonly>
+                                        </div>
+                                    </div>
+
+                                    <!-- Right Column -->
+                                    <div class="col-md-6 d-flex flex-column gap-3">
+                                        <div>
+                                            <label class="form-label small fw-bold">Reset Password</label>
+                                            <input type="password" id="edit_password" class="form-control form-control-sm" placeholder="Enter new password to reset">
+                                        </div>
+                                        <div>
+                                            <label class="form-label small fw-bold">Security Role</label>
+                                            <select id="edit_role" class="form-select form-select-sm fw-bold">
+                                                <option value="operator">Operator</option>
+                                                <option value="manager">Manager</option>
+                                                <option value="auditor">Auditor</option>
+                                                <option value="WorkspaceOwner" disabled>Workspace Owner</option>
+                                                <option value="administrator">Administrator</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="form-label small fw-bold">Account Status</label>
+                                            <select id="edit_status" class="form-select form-select-sm fw-bold">
+                                                <option value="active">Active</option>
+                                                <option value="inactive">Inactive</option>
+                                                <option value="suspended">Suspended</option>
+                                            </select>
+                                        </div>
+                                        <!-- Spacer to push buttons down -->
+                                        <div class="flex-grow-1"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Buttons - Full width row at bottom -->
+                                <div class="row g-2 mt-3 flex-shrink-0">
+                                    <div class="col-6">
+                                        <button type="button" id="updateUserBtn" class="btn btn-primary w-100 py-2 fw-bold rounded-3" onclick="window.updateUser()">
+                                            <i class="bi bi-save me-2"></i> Update Rights
+                                        </button>
+                                    </div>
+                                    <div class="col-6">
+                                        <button type="button" class="btn btn-outline-secondary w-100 py-2 fw-bold rounded-3" onclick="window.switchAdminTab('user-list')">
+                                            <i class="bi bi-x-circle me-2"></i> Cancel
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <button type="button" id="updateUserBtn" class="btn btn-primary w-50 py-2 fw-bold rounded-3" onclick="window.updateUser()">
-                                <i class="bi bi-save me-2"></i> Update Rights
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary w-50 py-2 fw-bold rounded-3" onclick="window.switchAdminTab('user-list')">
-                                <i class="bi bi-x-circle me-2"></i> Cancel
-                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</main>
+        </main>
     </div>
 </div>
+
 <script>
+// =========================================================
+// COMPLETE ADMIN SCRIPT - ONE FILE
+// =========================================================
+
 (function() {
+    "use strict";
+
     // =========================================================
     // 1. SECURITY BLOCK & WORKSPACE MAPPING
     // =========================================================
-    const userRole = App.State.userRole;
-    const currentAdminId = App.State.workspaceId;
-    const currentAdminName = App.State.currentUser?.name || App.State.userName || 'ADMIN';
+    const userRole = App.State?.userRole || '';
+    const currentAdminId = App.State?.workspaceId || '';
+    const currentAdminName = App.State?.currentUser?.name || App.State?.userName || 'ADMIN';
 
     const wsLabel = document.getElementById('admin-ws-id');
     if(wsLabel) wsLabel.innerText = `WS-${currentAdminId.slice(-8).toUpperCase()}`;
 
-/// 🛡️ ENFORCED GUARD
-if (userRole !== 'administrator') {
-    // Hide the admin panel wrapper completely - remove from layout
-    const wrapper = document.getElementById('admin-panel-wrapper');
-    if (wrapper) {
-        wrapper.style.display = 'none';
-        wrapper.style.height = '0';
-        wrapper.style.width = '0';
-        wrapper.style.overflow = 'hidden';
-        wrapper.style.padding = '0';
-        wrapper.style.margin = '0';
-        wrapper.style.border = 'none';
-        wrapper.style.position = 'absolute';
-        wrapper.style.visibility = 'hidden';
-        wrapper.style.pointerEvents = 'none';
+    // 🛡️ ENFORCED GUARD
+    const allowedRoles = ['administrator', 'workspaceowner'];
+    if (!allowedRoles.includes((userRole || '').toLowerCase())) {
+        const wrapper = document.getElementById('admin-panel-wrapper');
+        if (wrapper) {
+            wrapper.style.display = 'none';
+            wrapper.style.height = '0';
+            wrapper.style.width = '0';
+            wrapper.style.overflow = 'hidden';
+            wrapper.style.padding = '0';
+            wrapper.style.margin = '0';
+            wrapper.style.border = 'none';
+            wrapper.style.position = 'absolute';
+            wrapper.style.visibility = 'hidden';
+            wrapper.style.pointerEvents = 'none';
+        }
+
+        const overlay = document.getElementById('admin-guard-overlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
+            overlay.style.visibility = 'visible';
+            overlay.style.opacity = '1';
+            overlay.style.position = 'relative';
+            overlay.style.minHeight = 'calc(100vh - 60px)';
+            overlay.style.width = '100%';
+            overlay.innerHTML = `
+                <div class="d-flex flex-column align-items-center justify-content-center text-center p-4 rounded-3 border border-danger border-opacity-25 bg-danger bg-opacity-10" role="alert" style="width: 100%; min-height: calc(100vh - 80px);">
+                    <i class="bi bi-shield-lock-fill fs-2 d-block mb-2 text-danger opacity-75"></i>
+                    <h5 class="fw-bold text-danger">Access Denied</h5>
+                    <p class="mb-0 small">You do not have authorization to view this module.</p>
+                </div>
+            `;
+        }
+
+        const content = document.getElementById('admin-main-content');
+        if (content) {
+            content.style.display = 'none';
+            content.style.height = '0';
+            content.style.width = '0';
+            content.style.overflow = 'hidden';
+            content.style.padding = '0';
+            content.style.margin = '0';
+            content.style.visibility = 'hidden';
+            content.style.pointerEvents = 'none';
+        }
+
+        document.body.style.overflow = 'auto';
+        document.documentElement.style.overflow = 'auto';
+        return;
     }
-    
-    // Show overlay with access denied message
-    const overlay = document.getElementById('admin-guard-overlay');
-    if (overlay) {
-        overlay.style.display = 'flex';
-        overlay.style.visibility = 'visible';
-        overlay.style.opacity = '1';
-        overlay.style.position = 'relative';
-        overlay.style.minHeight = 'calc(100vh - 60px)';
-        overlay.style.width = '100%';
-        overlay.innerHTML = `
-            <div class="d-flex flex-column  align-items-center justify-content-center text-center p-4 rounded-3 border border-danger border-opacity-25 bg-danger bg-opacity-10" role="alert" style="width: 100%; min-height: calc(100vh - 80px);">
-                <i class="bi bi-shield-lock-fill fs-2 d-block mb-2 text-danger opacity-75"></i>
-                <h5 class="fw-bold text-danger">Access Denied</h5>
-                <p class="mb-0 small">You do not have authorization to view this module.</p>
-            </div>
-        `;
-    }
-    
-    // Hide main content
-    const content = document.getElementById('admin-main-content');
-    if (content) {
-        content.style.display = 'none';
-        content.style.height = '0';
-        content.style.width = '0';
-        content.style.overflow = 'hidden';
-        content.style.padding = '0';
-        content.style.margin = '0';
-        content.style.visibility = 'hidden';
-        content.style.pointerEvents = 'none';
-    }
-    
-    // Remove any overflow scroll from body
-    document.body.style.overflow = 'auto';
-    document.documentElement.style.overflow = 'auto';
-    
-    return;
-}
+
     // =========================================================
-    // 2. UNIQUE USER ID GENERATOR
+    // 2. FIREBASE REFERENCE
+    // =========================================================
+    const usersRef = firebase.database().ref('Users');
+
+    // =========================================================
+    // 3. GENERATE UNIQUE USER ID
     // =========================================================
     function generateUniqueUserId(adminId, adminName) {
         let adminInitials = '';
@@ -418,220 +445,289 @@ if (userRole !== 'administrator') {
     }
 
     // =========================================================
-    // 3. GLOBAL USERS DATABASE
+    // 4. FETCH WORKSPACE USERS
     // =========================================================
-    const usersRef = firebase.database().ref('Users');
+window.fetchWorkspaceUsers = async function() {
+    const tbody = document.getElementById('adminUserTableBody');
+    const countBadge = document.getElementById('memberCount');
+    if (!tbody) return;
+    
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 opacity-50"><div class="spinner-border spinner-border-sm text-primary"></div></td></tr>`;
 
-    /**
-     * FETCH TEAM
-     */
-    window.fetchWorkspaceUsers = async function() {
-        const tbody = document.getElementById('adminUserTableBody');
-        const countBadge = document.getElementById('memberCount');
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 opacity-50"><div class="spinner-border spinner-border-sm text-primary"></div></td></tr>`;
+    try {
+        // 🔥 Get the workspace owner (the user who has workspaceId = currentAdminId)
+        let ownerId = null;
+        const ownerSnap = await usersRef.orderByChild('workspaceId').equalTo(currentAdminId).once('value');
+        if (ownerSnap.exists()) {
+            ownerSnap.forEach(child => {
+                ownerId = child.key;
+            });
+        }
+        
+        // If no owner found, fallback to current admin
+        if (!ownerId) {
+            ownerId = currentAdminId;
+        }
 
-        try {
-            const snapshot = await usersRef.once('value');
-            const allUsers = snapshot.val() || {};
+        // 🔥 Get members from workspace/Members ONLY
+        const memberSnap = await usersRef.child(ownerId).child('workspace').child('Members').once('value');
+        const members = memberSnap.val() || {};
+        const memberKeys = Object.keys(members);
+
+        tbody.innerHTML = '';
+        if (countBadge) countBadge.innerText = `${memberKeys.length} Members`;
+
+        if (memberKeys.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5">Your workspace is empty. Create your first user.</td></tr>`;
+            return;
+        }
+
+        // 🔥 Display members directly from workspace/Members
+        Object.entries(members).forEach(([userId, memberData]) => {
+            const tr = document.createElement('tr');
+            const isActive = memberData.status === 'active';
+            const role = memberData.role || 'Operator';
+            const isOwner = memberData.isOwner === true;
             
-            const myTeam = Object.entries(allUsers)
-                .filter(([key, user]) => user.workspaceId === currentAdminId)
-                .map(([key, user]) => ({ key, ...user }));
-
-            tbody.innerHTML = '';
-            countBadge.innerText = `${myTeam.length} Members`;
-
-            if (myTeam.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5">Your workspace is empty. Create your first user.</td></tr>`;
-                return;
-            }
-
-            myTeam.forEach(u => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="ps-4 py-3">
-                        <span class="font-monospace fw-bold text-primary">${u.userId || u.key}</span>
-                    </td>
-                    <td>
-                        <div class="fw-bold text-dark">${u.name || 'Unnamed'}</div>
-                    </td>
-                    <td class="font-monospace small">${u.email || u.key}</td>
-                    <td><span class="badge bg-primary-subtle text-primary border border-primary border-opacity-25">${u.role || 'Operator'}</span></td>
-                    <td><span class="badge ${u.status === 'active' ? 'bg-success' : 'bg-secondary'} text-white px-2 rounded-pill" style="font-size:9px">${u.status || 'Active'}</span></td>
-                    <td class="text-end pe-4">
-                        <button class="btn btn-outline-primary btn-sm border-0 me-1" onclick="window.editUser('${u.key}')" title="Edit Rights">
+            tr.innerHTML = `
+                <td class="ps-4 py-3">
+                    <span class="font-monospace fw-bold text-primary">${memberData.userId || userId}</span>
+                </td>
+                <td>
+                    <div class="fw-bold text-dark">${memberData.name || 'Unnamed'}</div>
+                    <div class="small text-muted">${memberData.designation || ''}</div>
+                </td>
+                <td class="font-monospace small">${memberData.email || userId}</td>
+                <td><span class="badge bg-primary-subtle text-primary border border-primary border-opacity-25">${role}</span></td>
+                <td><span class="badge ${isActive ? 'bg-success' : 'bg-secondary'} text-white px-2 rounded-pill" style="font-size:9px">${memberData.status || 'Active'}</span></td>
+                <td class="text-end pe-4">
+                    ${isOwner ? `
+                        <button class="btn btn-outline-primary btn-sm border-0 me-1" onclick="window.editMember('${userId}')" title="Edit Owner">
                             <i class="bi bi-pencil"></i>
                         </button>
-                        <button class="btn btn-outline-danger btn-sm border-0" onclick="window.terminateUser('${u.key}')" title="Revoke Access">
-                            <i class="bi bi-trash3"></i>
+                        <button class="btn btn-outline-danger btn-sm border-0 me-1"  title="Owner ID cannot be deleted">
+                            <i class="bi bi-person-x text-muted opacity-50"></i>
                         </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        } catch (err) {
-            console.error("Fetch Error:", err);
-            if (typeof App.UI !== 'undefined' && App.UI.Notify) {
-                App.UI.Notify('Sync Error', 'Failed to retrieve team directory.', 'danger');
-            }
-        }
-    };
+                        
+                    ` : `
+                        <button class="btn btn-outline-primary btn-sm border-0 me-1" onclick="window.editMember('${userId}')" title="Edit Rights">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm border-0" onclick="window.removeMember('${userId}')" title="Remove">
+                            <i class="bi bi-person-x"></i>
+                        </button>
+                    `}
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
 
-    /**
-     * PROVISION USER
-     */
-    window.provisionUser = async function() {
-        const btn = document.getElementById('provisionBtn');
-        
-        const name = document.getElementById('adm_name').value.trim();
-        const email = document.getElementById('adm_email').value.trim();
-        const password = document.getElementById('adm_pass').value.trim();
-        const role = document.getElementById('adm_role').value;
-        const designation = document.getElementById('adm_designation').value;
-
-        if (!name || !email || !password) {
-            if (typeof App.UI !== 'undefined' && App.UI.Notify) {
-                App.UI.Notify('Validation', 'Please fill all mandatory fields.', 'warning');
-            } else {
-                alert('Please fill all mandatory fields.');
-            }
-            return;
-        }
-
-        const newUserId = generateUniqueUserId(currentAdminId, currentAdminName);
-        const safeKey = newUserId;
-
-        const existing = await usersRef.child(safeKey).once('value');
-        if (existing.exists()) {
-            if (typeof App.UI !== 'undefined' && App.UI.Notify) {
-                App.UI.Notify('Duplicate', 'A user with this ID already exists.', 'warning');
-            } else {
-                alert('A user with this ID already exists.');
-            }
-            return;
-        }
-
-        btn.disabled = true;
-        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Provisioning...`;
-
-        const userData = {
-            userId: newUserId,
-            name,
-            email,
-            password,
-            designation,
-            admin_role: role,
-            workspaceId: currentAdminId,
-            createdBy: currentAdminId,
-            status: 'active',
-            createdAt: firebase.database.ServerValue.TIMESTAMP
-        };
-
-        try {
-            await usersRef.child(safeKey).set(userData);
-            
-            if (typeof App.UI !== 'undefined' && App.UI.Notify) {
-                App.UI.Notify('Provisioned', `${name} onboarded with ID: ${newUserId}`, 'success');
-            }
-            
-            document.getElementById('adm_name').value = '';
-            document.getElementById('adm_email').value = '';
-            
-            window.switchAdminTab('user-list');
-            window.fetchWorkspaceUsers();
-        } catch (error) {
-            if (typeof App.UI !== 'undefined' && App.UI.Notify) {
-                App.UI.Notify('Error', error.message, 'danger');
-            } else {
-                alert('Error: ' + error.message);
-            }
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = `<i class="bi bi-person-check-fill me-2"></i> Confirm & Onboard User`;
-        }
-    };
-
-    /**
-     * EDIT USER - Load user data into edit form
-     */
-window.editUser = async function(dbKey) {
-    try {
-        const snapshot = await usersRef.child(dbKey).once('value');
-        const userData = snapshot.val();
-        
-        if (!userData) {
-            if (typeof App.UI !== 'undefined' && App.UI.Notify) {
-                App.UI.Notify('Error', 'User not found.', 'danger');
-            }
-            return;
-        }
-
-        // 🔥 CHECK: If user is mainAdmin, restrict role change
-        const isMainAdmin = userData.mainAdmin === "true" || userData.mainAdmin === true;
-        const roleSelect = document.getElementById('edit_role');
-        
-        // Populate edit form
-        document.getElementById('edit_userId').value = userData.userId || dbKey;
-        document.getElementById('edit_name').value = userData.name || '';
-        document.getElementById('edit_designation').value = userData.designation || '';
-        document.getElementById('edit_email').value = userData.email || '';
-        document.getElementById('edit_role').value = userData.role || 'Operator';
-        document.getElementById('edit_status').value = userData.status || 'active';
-        
-        // 🔥 If mainAdmin, disable role change and show warning
-        if (isMainAdmin) {
-            roleSelect.disabled = true;
-            roleSelect.title = 'Main Administrator role cannot be changed';
-            // Add visual indicator
-            roleSelect.style.opacity = '0.6';
-            roleSelect.style.cursor = 'not-allowed';
-            
-            // Show warning message
-            const roleLabel = document.querySelector('label[for="edit_role"]');
-            if (roleLabel) {
-                const warning = document.createElement('span');
-                warning.className = 'text-danger ms-2 small';
-                warning.style.fontSize = '10px';
-                warning.textContent = '🔒 Main Admin - Role protected';
-                if (!roleLabel.querySelector('.text-danger')) {
-                    roleLabel.appendChild(warning);
-                }
-            }
-        } else {
-            roleSelect.disabled = false;
-            roleSelect.title = '';
-            roleSelect.style.opacity = '1';
-            roleSelect.style.cursor = 'default';
-            
-            // Remove warning if exists
-            const roleLabel = document.querySelector('label[for="edit_role"]');
-            if (roleLabel) {
-                const existingWarning = roleLabel.querySelector('.text-danger');
-                if (existingWarning) existingWarning.remove();
-            }
-        }
-        
-        // Store the key for update
-        document.getElementById('edit_userId').dataset.dbKey = dbKey;
-        document.getElementById('edit_userId').dataset.isMainAdmin = isMainAdmin ? 'true' : 'false';
-        
-        // Switch to edit tab
-        window.switchAdminTab('user-edit');
-        
-    } catch (error) {
-        console.error("Edit Error:", error);
+    } catch (err) {
+        console.error("Fetch Error:", err);
         if (typeof App.UI !== 'undefined' && App.UI.Notify) {
-            App.UI.Notify('Error', 'Failed to load user data.', 'danger');
+            App.UI.Notify('Sync Error', 'Failed to retrieve team directory.', 'danger');
         }
     }
 };
-    /**
-     * UPDATE USER - Save edited user data
-     */
+
+
+// =========================================================
+    // 5. PROVISION USER
+    // =========================================================
+window.provisionUser = async function() {
+    const btn = document.getElementById('provisionBtn');
+    if (!btn) return;
+    
+    const name = document.getElementById('adm_name').value.trim();
+    const email = document.getElementById('adm_email').value.trim();
+    const password = document.getElementById('adm_pass').value.trim();
+    const role = document.getElementById('adm_role').value;
+    const designation = document.getElementById('adm_designation').value;
+
+    if (!name || !email || !password) {
+        if (typeof App.UI !== 'undefined' && App.UI.Notify) {
+            App.UI.Notify('Validation', 'Please fill all mandatory fields.', 'warning');
+        } else {
+            alert('Please fill all mandatory fields.');
+        }
+        return;
+    }
+
+    // Get workspace owner (the user who owns this workspace)
+    let workspaceOwnerData = null;
+    let workspaceOwnerId = null;
+    
+    try {
+        const workspaceSnapshot = await usersRef.orderByChild('workspaceId').equalTo(currentAdminId).once('value');
+        if (workspaceSnapshot.exists()) {
+            workspaceSnapshot.forEach(child => {
+                workspaceOwnerData = child.val();
+                workspaceOwnerId = child.key;
+            });
+        }
+        
+        if (!workspaceOwnerData) {
+            const adminSnap = await usersRef.child(currentAdminId).once('value');
+            workspaceOwnerData = adminSnap.val();
+            workspaceOwnerId = currentAdminId;
+        }
+    } catch (error) {
+        console.error('Error fetching workspace owner:', error);
+        const adminSnap = await usersRef.child(currentAdminId).once('value');
+        workspaceOwnerData = adminSnap.val();
+        workspaceOwnerId = currentAdminId;
+    }
+
+    // Generate new user ID (only for workspace member reference)
+    const newUserId = generateUniqueUserId(currentAdminId, currentAdminName);
+
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Provisioning...`;
+
+    try {
+        // 🔥 ONLY ADD TO workspace/Members - NO USERS NODE CREATION
+        const memberData = {
+            userId: newUserId,
+            name: name,
+            password: password,
+            email: email,
+            role: role,
+            status: 'active',
+            designation: designation || '',
+            joinedAt: firebase.database.ServerValue.TIMESTAMP,
+            addedBy: currentAdminId,
+            isOwner: false
+        };
+
+        // Get the workspace owner ID
+        let ownerId = workspaceOwnerId || currentAdminId;
+        
+        // 🔥 Save ONLY to workspace/Members
+        await usersRef.child(ownerId).child('workspace').child('Members').child(newUserId).set(memberData);
+
+        if (typeof App.UI !== 'undefined' && App.UI.Notify) {
+            App.UI.Notify('Provisioned', `${name} added to workspace with ID: ${newUserId}`, 'success');
+        }
+        
+        // Clear form
+        document.getElementById('adm_name').value = '';
+        document.getElementById('adm_email').value = '';
+        document.getElementById('adm_designation').value = '';
+        document.getElementById('adm_pass').value = '';
+        
+        window.switchAdminTab('user-list');
+        window.fetchWorkspaceUsers();
+        
+    } catch (error) {
+        console.error('Provision Error:', error);
+        if (typeof App.UI !== 'undefined' && App.UI.Notify) {
+            App.UI.Notify('Error', error.message || 'Failed to provision user.', 'danger');
+        } else {
+            alert('Error: ' + error.message);
+        }
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="bi bi-person-check-fill me-2"></i> Confirm & Onboard User`;
+    }
+};
+// =========================================================
+// 6. EDIT MEMBER (FROM workspace/Members)
+// =========================================================
+window.editMember = async function(dbKey) {
+    try {
+        // 🔥 Get workspace owner
+        let ownerId = null;
+        const ownerSnap = await usersRef.orderByChild('workspaceId').equalTo(currentAdminId).once('value');
+        if (ownerSnap.exists()) {
+            ownerSnap.forEach(child => {
+                ownerId = child.key;
+            });
+        }
+        if (!ownerId) ownerId = currentAdminId;
+
+        // 🔥 Get member data from workspace/Members
+        const memberSnap = await usersRef.child(ownerId).child('workspace').child('Members').child(dbKey).once('value');
+        const memberData = memberSnap.val();
+        
+        if (!memberData) {
+            if (typeof App.UI !== 'undefined' && App.UI.Notify) {
+                App.UI.Notify('Error', 'Member not found.', 'danger');
+            }
+            return;
+        }
+
+        // Check if member is owner - restrict editing
+        const isOwner = memberData.isOwner === true;
+        const currentUserId = localStorage.getItem('userloginid');
+        const isOwnAccount = memberData.userId === currentUserId || dbKey === currentUserId;
+        
+        const roleSelect = document.getElementById('edit_role');
+        const statusSelect = document.getElementById('edit_status');
+        
+        document.getElementById('edit_userId').value = memberData.userId || dbKey;
+        document.getElementById('edit_name').value = memberData.name || '';
+        document.getElementById('edit_designation').value = memberData.designation || '';
+        document.getElementById('edit_email').value = memberData.email || '';
+        document.getElementById('edit_role').value = memberData.role || 'Operator';
+        document.getElementById('edit_status').value = memberData.status || 'active';
+
+        // 🔥 Own account protection (cannot change own role/status)
+        if (isOwnAccount) {
+            if (roleSelect) {
+                roleSelect.disabled = true;
+                roleSelect.title = 'You cannot change your own role';
+                roleSelect.style.opacity = '0.6';
+                roleSelect.style.cursor = 'not-allowed';
+            }
+            if (statusSelect) {
+                statusSelect.disabled = true;
+                statusSelect.title = 'You cannot change your own status';
+                statusSelect.style.opacity = '0.6';
+                statusSelect.style.cursor = 'not-allowed';
+            }
+        } else {
+            if (statusSelect && !isOwner) {
+                statusSelect.disabled = false;
+                statusSelect.style.opacity = '1';
+                statusSelect.style.cursor = 'default';
+            }
+        }
+
+        // 🔥 Workspace Owner protection (cannot change owner's role)
+        if (isOwner && roleSelect) {
+            roleSelect.disabled = true;
+            roleSelect.title = 'Workspace Owner role cannot be changed';
+            roleSelect.style.opacity = '0.6';
+            roleSelect.style.cursor = 'not-allowed';
+        } else if (roleSelect && !isOwnAccount) {
+            roleSelect.disabled = false;
+            roleSelect.style.opacity = '1';
+            roleSelect.style.cursor = 'default';
+        }
+        
+        document.getElementById('edit_userId').dataset.dbKey = dbKey;
+        document.getElementById('edit_userId').dataset.isOwner = isOwner ? 'true' : 'false';
+        document.getElementById('edit_userId').dataset.isOwnAccount = isOwnAccount ? 'true' : 'false';
+        
+        window.switchAdminTab('user-edit');
+        
+    } catch (error) {
+        console.error("Edit Member Error:", error);
+        if (typeof App.UI !== 'undefined' && App.UI.Notify) {
+            App.UI.Notify('Error', 'Failed to load member data.', 'danger');
+        }
+    }
+};
+
+// =========================================================
+// 7. UPDATE MEMBER (Save to workspace/Members)
+// =========================================================
 window.updateUser = async function() {
     const btn = document.getElementById('updateUserBtn');
     const dbKey = document.getElementById('edit_userId').dataset.dbKey;
-    const isMainAdmin = document.getElementById('edit_userId').dataset.isMainAdmin === 'true';
+    const isOwner = document.getElementById('edit_userId').dataset.isOwner === 'true';
+    
+    if (!btn || !dbKey) return;
     
     const name = document.getElementById('edit_name').value.trim();
     const designation = document.getElementById('edit_designation').value;
@@ -646,22 +742,12 @@ window.updateUser = async function() {
         return;
     }
 
-    if (!dbKey) {
+    // 🔥 Prevent changing owner's role
+    if (isOwner && role !== 'WorkspaceOwner') {
         if (typeof App.UI !== 'undefined' && App.UI.Notify) {
-            App.UI.Notify('Error', 'No user selected for update.', 'danger');
+            App.UI.Notify('Access Denied', 'Workspace Owner role cannot be changed.', 'danger');
         }
-        return;
-    }
-
-    // 🔥 ENFORCE: Main Admin cannot change role from Administrator
-    if (isMainAdmin && role !== 'Administrator' && role !== 'administrator') {
-        if (typeof App.UI !== 'undefined' && App.UI.Notify) {
-            App.UI.Notify('Access Denied', 'Main Administrator role cannot be changed.', 'danger');
-        } else {
-            alert('Main Administrator role cannot be changed.');
-        }
-        // Reset role back to Administrator
-        document.getElementById('edit_role').value = 'Administrator';
+        document.getElementById('edit_role').value = 'WorkspaceOwner';
         return;
     }
 
@@ -669,30 +755,33 @@ window.updateUser = async function() {
     btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Updating...`;
 
     try {
-        // 🔥 Normalize role to proper case (Administrator)
-        let normalizedRole = role;
-        if (role.toLowerCase() === 'administrator') {
-            normalizedRole = 'Administrator';
+        // 🔥 Get workspace owner
+        let ownerId = null;
+        const ownerSnap = await usersRef.orderByChild('workspaceId').equalTo(currentAdminId).once('value');
+        if (ownerSnap.exists()) {
+            ownerSnap.forEach(child => {
+                ownerId = child.key;
+            });
         }
+        if (!ownerId) ownerId = currentAdminId;
 
+        // 🔥 Update member data in workspace/Members
         const updateData = {
             name: name,
-            role: normalizedRole,
+            role: role,
             designation: designation,
             status: status,
-            updatedAt: firebase.database.ServerValue.TIMESTAMP,
-            updatedBy: currentAdminId
+            updatedAt: firebase.database.ServerValue.TIMESTAMP
         };
 
-        // Only update password if provided
         if (password && password.length > 0) {
             updateData.password = password;
         }
 
-        await usersRef.child(dbKey).update(updateData);
+        await usersRef.child(ownerId).child('workspace').child('Members').child(dbKey).update(updateData);
         
         if (typeof App.UI !== 'undefined' && App.UI.Notify) {
-            App.UI.Notify('Updated', `User rights updated successfully.`, 'success');
+            App.UI.Notify('Updated', `Member updated successfully.`, 'success');
         }
         
         window.switchAdminTab('user-list');
@@ -708,100 +797,586 @@ window.updateUser = async function() {
         btn.innerHTML = `<i class="bi bi-save me-2"></i> Update Rights`;
     }
 };
-    /**
-     * TERMINATE USER
-     */
-    window.terminateUser = async function(dbKey) {
-    // 🔥 Check if user is trying to delete themselves
+
+// =========================================================
+// 8. REMOVE/TERMINATE MEMBER (From workspace/Members only)
+// =========================================================
+window.terminateUser = async function(dbKey) {
     const currentUserId = localStorage.getItem('userloginid');
     
     if (dbKey === currentUserId) {
         if (typeof App.UI !== 'undefined' && App.UI.Notify) {
-            App.UI.Notify('Access Denied', 'You cannot delete your own account.', 'danger');
-        } else {
-            alert('You cannot delete your own account.');
+            App.UI.Notify('Access Denied', 'You cannot remove yourself from workspace.', 'danger');
         }
         return;
     }
     
     try {
-        // 🔥 Fetch the user data to check if they are main admin
-        const snap = await usersRef.child(dbKey).once('value');
-        const userData = snap.val();
+        // 🔥 Get workspace owner
+        let ownerId = null;
+        const ownerSnap = await usersRef.orderByChild('workspaceId').equalTo(currentAdminId).once('value');
+        if (ownerSnap.exists()) {
+            ownerSnap.forEach(child => {
+                ownerId = child.key;
+            });
+        }
+        if (!ownerId) ownerId = currentAdminId;
+
+        // 🔥 Get member data from workspace/Members
+        const memberSnap = await usersRef.child(ownerId).child('workspace').child('Members').child(dbKey).once('value');
+        const memberData = memberSnap.val();
         
-        if (!userData) {
+        if (!memberData) {
             if (typeof App.UI !== 'undefined' && App.UI.Notify) {
-                App.UI.Notify('Error', 'User not found.', 'danger');
-            } else {
-                alert('User not found.');
+                App.UI.Notify('Error', 'Member not found.', 'danger');
             }
             return;
         }
         
-        // 🔥 CHECK: If user has mainAdmin: "true", prevent deletion
-        if (userData.mainAdmin === "true" || userData.mainAdmin === true) {
+        // 🔥 Prevent removing workspace owner
+        if (memberData.isOwner === true) {
             if (typeof App.UI !== 'undefined' && App.UI.Notify) {
-                App.UI.Notify('Access Denied', 'Cannot delete the main administrator account.', 'danger');
-            } else {
-                alert('Cannot delete the main administrator account.');
+                App.UI.Notify('Access Denied', 'Cannot remove the Workspace Owner.', 'danger');
             }
             return;
         }
         
-        // 🔥 Optional: Check for workspace creator protection
-        if (userData.workspaceCreator === true) {
-            if (!confirm(`⚠️ This user is the workspace creator. Deleting them may affect the workspace. Continue?`)) {
-                return;
-            }
-        }
-        
-        // ✅ Proceed with deletion
-        if (confirm(`⚠️ TERMINATE ACCESS: This will permanently delete "${userData.name || 'Unknown'}" (${dbKey}). Proceed?`)) {
-            await usersRef.child(dbKey).remove();
+        if (confirm(`⚠️ Remove "${memberData.name || 'Unknown'}" from workspace?`)) {
+            // 🔥 Remove from workspace/Members only (not from Users node)
+            await usersRef.child(ownerId).child('workspace').child('Members').child(dbKey).remove();
+            
             if (typeof App.UI !== 'undefined' && App.UI.Notify) {
-                App.UI.Notify('Terminated', `User "${userData.name || 'Unknown'}" access revoked.`, 'warning');
+                App.UI.Notify('Terminated', `Member "${memberData.name || 'Unknown'}" removed from workspace.`, 'warning');
             }
             window.fetchWorkspaceUsers();
         }
     } catch(e) { 
         console.error('Terminate User Error:', e);
         if (typeof App.UI !== 'undefined' && App.UI.Notify) {
-            App.UI.Notify('Error', 'Failed to terminate user.', 'danger');
-        } else {
-            alert('Error: ' + e.message);
+            App.UI.Notify('Error', 'Failed to terminate member.', 'danger');
         }
     }
 };
+    // =========================================================
+    // 9. UI CONTROLLER
+    // =========================================================
+    window.switchAdminTab = function(tab) {
+        document.querySelectorAll('.admin-tab-pane').forEach(p => p.classList.add('d-none'));
+        const targetPane = document.getElementById(`tab-${tab}`);
+        if (targetPane) {
+            targetPane.classList.remove('d-none');
+        }
+        
+        const listBtn = document.getElementById('btn-tab-list');
+        const createBtn = document.getElementById('btn-tab-create');
+        const workBtn = document.getElementById('btn-tab-workspace');
+        
+        if (listBtn) listBtn.classList.toggle('active', tab === 'user-list');
+        if (createBtn) createBtn.classList.toggle('active', tab === 'user-create');
+        if (workBtn) workBtn.classList.toggle('active', tab === 'workspace');
+        
+        const title = document.getElementById('admin-title');
+        if (title) {
+            if (tab === 'user-list') title.innerText = 'User Directory';
+            else if (tab === 'user-create') title.innerText = 'Onboarding Console';
+            else if (tab === 'user-edit') title.innerText = 'Edit User Rights';
+            else if (tab === 'workspace') title.innerText = 'Workspace Management';
+            else title.innerText = 'Admin Panel';
+        }
+    };
+
 
     // =========================================================
-    // 4. UI CONTROLLER
+// WORKSPACE SETTINGS - User Side Workspace Admin
+// =========================================================
+
+const WorkspaceSettings = {
     // =========================================================
-window.switchAdminTab = function(tab) {
-    document.querySelectorAll('.admin-tab-pane').forEach(p => p.classList.add('d-none'));
-    const targetPane = document.getElementById(`tab-${tab}`);
-    if (targetPane) {
-        targetPane.classList.remove('d-none');
-    }
-    
-    const listBtn = document.getElementById('btn-tab-list');
-    const createBtn = document.getElementById('btn-tab-create');
-    const workBtn = document.getElementById('btn-tab-workspace');
-    
-    if (listBtn) listBtn.classList.toggle('active', tab === 'user-list');
-    if (createBtn) createBtn.classList.toggle('active', tab === 'user-create');
-    if (workBtn) workBtn.classList.toggle('active', tab === 'workspace');
-    
-    const title = document.getElementById('admin-title');
-    if (title) {
-        if (tab === 'user-list') title.innerText = 'User Directory';
-        else if (tab === 'user-create') title.innerText = 'Onboarding Console';
-        else if (tab === 'user-edit') title.innerText = 'Edit User Rights';
-        else if (tab === 'workspace') title.innerText = 'Workspace Management';
-        else title.innerText = 'Admin Panel';
+    // CONFIGURATION
+    // =========================================================
+    config: {
+        dbRef: null,
+        usersRef: null,
+        currentUserId: null,
+        currentWorkspaceId: null,
+        currentUserName: null
+    },
+
+    // =========================================================
+    // STATE
+    // =========================================================
+    state: {
+        isInitialized: false,
+        workspaceData: null,
+        settingsData: null,
+        membersData: null
+    },
+
+    // =========================================================
+    // DOM REFERENCES
+    // =========================================================
+    dom: {
+        workspaceId: null,
+        workspaceName: null,
+        workspaceCreated: null,
+        workspaceUpdated: null,
+        workspaceStatusInput: null,
+        workspaceStatusText: null,
+        statusIcon: null,
+        headerStatusBadge: null,
+        form: null,
+        membersCount: null,
+        saveBtn: null,
+        // Owner display elements
+        ownerStatusBadge: null,
+        ownerNameDisplay: null,
+        ownerEmailDisplay: null,
+        ownerRoleDisplay: null,
+        ownerDesignationDisplay: null,
+        ownerIdDisplay: null
+    },
+
+    // =========================================================
+    // INITIALIZATION
+    // =========================================================
+    init: function(options = {}) {
+        if (this.state.isInitialized) return;
+
+        this.config.currentUserId = options.userId || 
+            localStorage.getItem('userloginid') || 
+            localStorage.getItem('workspaceUserId');
+
+        this.config.currentWorkspaceId = options.workspaceId || 
+            localStorage.getItem('workspaceId');
+
+        this.config.currentUserName = options.userName || 
+            localStorage.getItem('userName') || 'User';
+
+        if (!this.config.currentUserId) {
+            console.warn('WorkspaceSettings: No user ID found');
+            return;
+        }
+
+        if (typeof firebase !== 'undefined') {
+            this.config.dbRef = firebase.database();
+            this.config.usersRef = this.config.dbRef.ref('Users');
+        } else {
+            console.warn('WorkspaceSettings: Firebase not found');
+            return;
+        }
+
+        // Cache DOM elements
+        this.cacheDomElements();
+
+        // Load workspace data
+        this.loadWorkspaceData();
+
+        // Bind events
+        this.bindEvents();
+
+        this.state.isInitialized = true;
+        console.log('✅ WorkspaceSettings initialized for user:', this.config.currentUserName);
+    },
+
+    // =========================================================
+    // CACHE DOM ELEMENTS
+    // =========================================================
+    cacheDomElements: function() {
+        this.dom.workspaceId = document.getElementById('workspaceId');
+        this.dom.workspaceName = document.getElementById('workspaceName');
+        this.dom.workspaceCreated = document.getElementById('workspaceCreated');
+        this.dom.workspaceUpdated = document.getElementById('workspaceUpdated');
+        this.dom.workspaceStatusInput = document.getElementById('workspaceStatusInput');
+        this.dom.workspaceStatusText = document.getElementById('workspaceStatusText');
+        this.dom.statusIcon = document.getElementById('statusIcon');
+        this.dom.headerStatusBadge = document.getElementById('headerStatusBadge');
+        this.dom.form = document.getElementById('workspaceForm');
+        this.dom.membersCount = document.getElementById('workspaceMembers');
+        this.dom.saveBtn = document.getElementById('workspaceSaveBtn');
+
+        // Owner display elements
+        this.dom.ownerStatusBadge = document.getElementById('ownerStatusBadge');
+        this.dom.ownerNameDisplay = document.getElementById('ownerNameDisplay');
+        this.dom.ownerEmailDisplay = document.getElementById('ownerEmailDisplay');
+        this.dom.ownerRoleDisplay = document.getElementById('ownerRoleDisplay');
+        this.dom.ownerDesignationDisplay = document.getElementById('ownerDesignationDisplay');
+        this.dom.ownerIdDisplay = document.getElementById('ownerIdDisplay');
+    },
+
+    // =========================================================
+    // BIND EVENTS
+    // =========================================================
+    bindEvents: function() {
+        if (this.dom.form) {
+            this.dom.form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.saveWorkspaceName();
+            });
+        }
+    },
+
+    // =========================================================
+    // LOAD WORKSPACE DATA
+    // =========================================================
+    loadWorkspaceData: async function() {
+        try {
+            const userId = this.config.currentUserId;
+            const workspaceId = this.config.currentWorkspaceId;
+
+            if (!userId || !workspaceId) {
+                console.warn('WorkspaceSettings: Missing user or workspace ID');
+                return;
+            }
+
+            // 🔥 Get user data
+            const userSnap = await this.config.usersRef.child(userId).once('value');
+            const userData = userSnap.val();
+
+            if (!userData) {
+                console.warn('WorkspaceSettings: User not found');
+                return;
+            }
+
+            // 🔥 Get workspace settings from user's workspace node
+            const workspace = userData.workspace || {};
+            const settings = workspace.WorkspaceSettings || {};
+            const members = workspace.Members || {};
+
+            this.state.workspaceData = userData;
+            this.state.settingsData = settings;
+            this.state.membersData = members;
+
+            // 🔥 Update UI
+            this.updateUI(userData, settings, members);
+
+            console.log('✅ Workspace data loaded successfully');
+
+        } catch (error) {
+            console.error('WorkspaceSettings: Load error', error);
+            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+                App.UI.Notify('Error', 'Failed to load workspace data.', 'danger');
+            }
+        }
+    },
+
+    // =========================================================
+    // UPDATE UI
+    // =========================================================
+    updateUI: function(userData, settings, members) {
+        const workspaceId = settings.workspaceId || userData.workspaceId || this.config.currentWorkspaceId || 'WS-PENDING';
+        const workspaceName = settings.workspaceName || userData.workspaceName || 'My Workspace';
+        const workspaceStatus = settings.workspaceStatus || userData.workspaceStatus;
+        const memberCount = Object.keys(members || {}).length;
+
+        // Workspace ID
+        if (this.dom.workspaceId) {
+            this.dom.workspaceId.value = workspaceId;
+        }
+
+        // Workspace Name
+        if (this.dom.workspaceName) {
+            this.dom.workspaceName.value = workspaceName;
+        }
+
+        // Workspace Status
+        if (this.dom.workspaceStatusInput) {
+            const statusLabel = workspaceStatus.charAt(0).toUpperCase() + workspaceStatus.slice(1);
+            this.dom.workspaceStatusInput.value = statusLabel;
+        }
+
+        // Created Date
+        if (this.dom.workspaceCreated) {
+            const createdAt = settings.createdAt || userData.workspaceCreated || userData.createdAt;
+            if (createdAt) {
+                const date = new Date(createdAt);
+                this.dom.workspaceCreated.value = date.toLocaleString('en-IN', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } else {
+                this.dom.workspaceCreated.value = 'Not set';
+            }
+        }
+
+        // Updated Date
+        if (this.dom.workspaceUpdated) {
+            const updatedAt = settings.updatedAt || userData.workspaceUpdated;
+            if (updatedAt) {
+                const date = new Date(updatedAt);
+                this.dom.workspaceUpdated.value = date.toLocaleString('en-IN', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } else {
+                this.dom.workspaceUpdated.value = 'Never updated';
+            }
+        }
+
+        // Status Icon
+        if (this.dom.statusIcon) {
+            const iconMap = {
+                'active': 'bi-circle-fill text-success',
+                'suspended': 'bi-circle-fill text-warning',
+                'deleted': 'bi-circle-fill text-danger',
+                'inactive': 'bi-circle-fill text-secondary'
+            };
+            this.dom.statusIcon.className = `bi ${iconMap[workspaceStatus] || iconMap['active']}`;
+        }
+
+        // Header Status Badge
+        if (this.dom.headerStatusBadge) {
+            const badgeMap = {
+                'active': { class: 'bg-success bg-opacity-10 text-success border-success', icon: 'bi-check-circle-fill', label: 'Active' },
+                'suspended': { class: 'bg-warning bg-opacity-10 text-warning border-warning', icon: 'bi-exclamation-triangle-fill', label: 'Suspended' },
+                'deleted': { class: 'bg-danger bg-opacity-10 text-danger border-danger', icon: 'bi-x-circle-fill', label: 'Deleted' },
+                'inactive': { class: 'bg-secondary bg-opacity-10 text-secondary border-secondary', icon: 'bi-circle', label: 'Inactive' }
+            };
+            const s = badgeMap[workspaceStatus] || badgeMap['active'];
+            this.dom.headerStatusBadge.className = `badge ${s.class} border px-3 py-2 rounded-pill`;
+            this.dom.headerStatusBadge.innerHTML = `<i class="bi ${s.icon} me-1"></i> ${s.label}`;
+        }
+
+        // Workspace Status Text (Footer)
+        if (this.dom.workspaceStatusText) {
+            const statusLabel = workspaceStatus.charAt(0).toUpperCase() + workspaceStatus.slice(1);
+            this.dom.workspaceStatusText.textContent = statusLabel;
+            const colorMap = {
+                'active': '#198754',
+                'suspended': '#ffc107',
+                'deleted': '#dc3545',
+                'inactive': '#6c757d'
+            };
+            this.dom.workspaceStatusText.style.color = colorMap[workspaceStatus] || '#198754';
+        }
+
+        // Members Count
+        if (this.dom.membersCount) {
+            this.dom.membersCount.textContent = memberCount;
+        }
+
+        // Owner Information
+        const ownerData = userData;
+        
+        // Owner Status Badge
+        if (this.dom.ownerStatusBadge) {
+            const ownerStatus = ownerData.status || 'active';
+            const statusMap = {
+                'active': { class: 'bg-success bg-opacity-10 text-success border-success', icon: 'bi-check-circle-fill', label: 'Active' },
+                'inactive': { class: 'bg-secondary bg-opacity-10 text-secondary border-secondary', icon: 'bi-circle', label: 'Inactive' },
+                'suspended': { class: 'bg-warning bg-opacity-10 text-warning border-warning', icon: 'bi-exclamation-triangle-fill', label: 'Suspended' },
+                'deleted': { class: 'bg-danger bg-opacity-10 text-danger border-danger', icon: 'bi-x-circle-fill', label: 'Deleted' }
+            };
+            const s = statusMap[ownerStatus.toLowerCase()] || statusMap['inactive'];
+            this.dom.ownerStatusBadge.className = `badge ${s.class} border px-3 py-2 rounded-pill`;
+            this.dom.ownerStatusBadge.innerHTML = `<i class="bi ${s.icon} me-1"></i> ${s.label}`;
+        }
+
+        // Owner Name
+        if (this.dom.ownerNameDisplay) {
+            this.dom.ownerNameDisplay.value = ownerData.name || 'Unknown';
+        }
+
+        // Owner Email
+        if (this.dom.ownerEmailDisplay) {
+            this.dom.ownerEmailDisplay.value = ownerData.email || 'N/A';
+        }
+
+        // Owner Role
+        if (this.dom.ownerRoleDisplay) {
+            const role = ownerData.role || 'Unknown';
+            this.dom.ownerRoleDisplay.textContent = role;
+            const roleColor = role === 'WorkspaceOwner' || role === 'Administrator' ? 'text-primary' : 'text-secondary';
+            this.dom.ownerRoleDisplay.className = `fw-semibold ${roleColor}`;
+        }
+
+        // Owner Designation
+        if (this.dom.ownerDesignationDisplay) {
+            this.dom.ownerDesignationDisplay.textContent = ownerData.designation || 'N/A';
+        }
+
+        // Owner ID
+        if (this.dom.ownerIdDisplay) {
+            this.dom.ownerIdDisplay.value = ownerData.userId || this.config.currentUserId || 'N/A';
+        }
+    },
+
+    // =========================================================
+    // SAVE WORKSPACE NAME
+    // =========================================================
+    saveWorkspaceName: async function() {
+        if (!this.dom.workspaceName) return;
+
+        const name = this.dom.workspaceName.value.trim();
+        if (!name) {
+            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+                App.UI.Notify('Validation', 'Please enter a workspace name.', 'warning');
+            }
+            return;
+        }
+
+        const btn = this.dom.saveBtn;
+        const originalText = btn ? btn.innerHTML : 'Save';
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Saving...';
+        }
+
+        try {
+            const userId = this.config.currentUserId;
+            const workspaceId = this.config.currentWorkspaceId;
+
+            if (!userId || !workspaceId) {
+                throw new Error('Missing user or workspace ID');
+            }
+
+            // 🔥 Update workspace name in user's workspace settings
+            const updateData = {
+                'workspace/WorkspaceSettings/workspaceName': name,
+                'workspace/WorkspaceSettings/updatedAt': firebase.database.ServerValue.TIMESTAMP,
+                'workspaceName': name,
+                'workspaceUpdated': firebase.database.ServerValue.TIMESTAMP
+            };
+
+            await this.config.usersRef.child(userId).update(updateData);
+
+            // 🔥 Update local state
+            if (this.state.settingsData) {
+                this.state.settingsData.workspaceName = name;
+                this.state.settingsData.updatedAt = Date.now();
+            }
+            if (this.state.workspaceData) {
+                this.state.workspaceData.workspaceName = name;
+                this.state.workspaceData.workspaceUpdated = Date.now();
+            }
+
+            // 🔥 Update UI
+            this.loadWorkspaceData();
+
+            // 🔥 Update display name in header
+            if (typeof App !== 'undefined' && App.displayWorkspaceName) {
+                App.displayWorkspaceName();
+            }
+
+            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+                App.UI.Notify('Success', 'Workspace name updated successfully.', 'success');
+            }
+
+        } catch (error) {
+            console.error('WorkspaceSettings: Save error', error);
+            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+                App.UI.Notify('Error', 'Failed to save workspace name.', 'danger');
+            }
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+    },
+
+    // =========================================================
+    // COPY WORKSPACE ID
+    // =========================================================
+    copyWorkspaceId: function() {
+        const idField = this.dom.workspaceId;
+        if (!idField) return;
+
+        const text = idField.value;
+        if (!text || text === 'WS-PENDING' || text === '') {
+            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+                App.UI.Notify('Info', 'No workspace ID to copy.', 'info');
+            }
+            return;
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                this.showCopyFeedback(true);
+                if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+                    App.UI.Notify('Copied', 'Workspace ID copied to clipboard.', 'success');
+                }
+            }).catch(() => {
+                this.copyFallback(text);
+            });
+        } else {
+            this.copyFallback(text);
+        }
+    },
+
+    copyFallback: function(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            this.showCopyFeedback(true);
+            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+                App.UI.Notify('Copied', 'Workspace ID copied to clipboard.', 'success');
+            }
+        } catch (e) {
+            this.showCopyFeedback(false);
+            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+                App.UI.Notify('Error', 'Failed to copy.', 'danger');
+            }
+        }
+        document.body.removeChild(textarea);
+    },
+
+    showCopyFeedback: function(success) {
+        const btn = document.querySelector('[onclick*="copyWorkspaceId"]');
+        if (btn) {
+            const icon = btn.querySelector('i');
+            if (icon) {
+                const originalClass = icon.className;
+                icon.className = success ? 'bi bi-check2 text-success' : 'bi bi-x-lg text-danger';
+                setTimeout(() => {
+                    icon.className = originalClass;
+                }, 2000);
+            }
+        }
+    },
+
+    // =========================================================
+    // DESTROY
+    // =========================================================
+    destroy: function() {
+        this.state.isInitialized = false;
+        this.state.workspaceData = null;
+        this.state.settingsData = null;
+        this.state.membersData = null;
+        console.log('WorkspaceSettings destroyed');
     }
 };
+
+// =========================================================
+// AUTO-INITIALIZE
+// =========================================================
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('workspace-container');
+    if (container) {
+        setTimeout(function() {
+        }, 500);
+    }
+});
+WorkspaceSettings.init();
+
+window.WorkspaceSettings = WorkspaceSettings;
+window.copyWorkspaceId = function() {
+    WorkspaceSettings.copyWorkspaceId();
+};
+
     // =========================================================
-    // 5. PASSWORD GENERATOR
+    // 10. PASSWORD GENERATOR
     // =========================================================
     window.AdminPanel = {
         generatePassword() {
@@ -810,594 +1385,23 @@ window.switchAdminTab = function(tab) {
             for (let i = 0; i < 12; i++) {
                 pwd += chars.charAt(Math.floor(Math.random() * chars.length));
             }
-            document.getElementById('adm_pass').value = pwd;const WorkspaceSettings = {
-    config: {
-        dbRef: null,
-        workspaceRef: null,
-        currentUserId: null,
-        currentWorkspaceId: null
-    },
-
-    state: {
-        isInitialized: false,
-        workspaceData: null
-    },
-
-    dom: {
-        workspaceId: null,
-        workspaceName: null,
-        workspaceCreated: null,
-        workspaceStatusInput: null,
-        workspaceStatusText: null,
-        statusIcon: null,
-        headerStatusBadge: null,
-        form: null,
-        membersCount: null,
-        saveBtn: null
-    },
-
-    init: function(options = {}) {
-        if (this.state.isInitialized) return;
-
-        this.config.currentUserId = options.userId || 
-            localStorage.getItem('userloginid');
-
-        this.config.currentWorkspaceId = options.workspaceId || 
-            localStorage.getItem('workspaceId');
-
-        if (!this.config.currentUserId) {
-            console.warn('WorkspaceSettings: No user ID found');
-            return;
-        }
-
-        if (typeof firebase !== 'undefined') {
-            this.config.dbRef = firebase.database();
-            // 🔥 Use workspaceId as the primary key for workspace data
-            this.config.workspaceRef = this.config.dbRef.ref('Workspaces');
-        } else {
-            console.warn('WorkspaceSettings: Firebase not found');
-            return;
-        }
-
-        this.dom.workspaceId = document.getElementById('workspaceId');
-        this.dom.workspaceName = document.getElementById('workspaceName');
-        this.dom.workspaceCreated = document.getElementById('workspaceCreated');
-        this.dom.workspaceStatusInput = document.getElementById('workspaceStatusInput');
-        this.dom.workspaceStatusText = document.getElementById('workspaceStatusText');
-        this.dom.statusIcon = document.getElementById('statusIcon');
-        this.dom.headerStatusBadge = document.getElementById('headerStatusBadge');
-        this.dom.form = document.getElementById('workspaceForm');
-        this.dom.membersCount = document.getElementById('workspaceMembers');
-        this.dom.saveBtn = document.getElementById('workspaceSaveBtn');
-
-        this.loadWorkspaceData();
-
-        if (this.dom.form) {
-            this.dom.form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.saveWorkspaceName();
-            });
-        }
-
-        this.state.isInitialized = true;
-        console.log('WorkspaceSettings initialized');
-    },
-
-    loadWorkspaceData: async function() {
-        if (!this.config.workspaceRef || !this.config.currentWorkspaceId) return;
-
-        try {
-            // 🔥 Load from Workspaces node using workspaceId as key
-            const snap = await this.config.workspaceRef.child(this.config.currentWorkspaceId).once('value');
-            const workspaceData = snap.val();
-
-            if (!workspaceData) {
-                console.warn('WorkspaceSettings: Workspace data not found');
-                return;
-            }
-
-            this.state.workspaceData = workspaceData;
-            this.updateUI(workspaceData);
-
-        } catch (error) {
-            console.error('WorkspaceSettings: Load error', error);
-        }
-    },
-
-    updateUI: function(data) {
-        // Workspace ID
-        if (this.dom.workspaceId) {
-            this.dom.workspaceId.value = data.workspaceId || this.config.currentWorkspaceId || 'WS-PENDING';
-        }
-
-        // Workspace Name
-        if (this.dom.workspaceName) {
-            this.dom.workspaceName.value = data.workspaceName || 'My Workspace';
-        }
-
-        // Created Date
-        if (this.dom.workspaceCreated) {
-            if (data.createdAt) {
-                const date = new Date(data.createdAt);
-                this.dom.workspaceCreated.value = date.toLocaleString('en-IN', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-            } else {
-                this.dom.workspaceCreated.value = 'Not set';
-            }
-        }
-
-        // Status
-        const status = data.workspaceStatus || 'active';
-        const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
-
-        if (this.dom.workspaceStatusInput) {
-            this.dom.workspaceStatusInput.value = status;
-        }
-
-        if (this.dom.workspaceStatusText) {
-            this.dom.workspaceStatusText.textContent = statusLabel;
-            const colorMap = {
-                'active': '#198754',
-                'suspended': '#ffc107',
-                'deleted': '#dc3545'
-            };
-            this.dom.workspaceStatusText.style.color = colorMap[status] || '#198754';
-        }
-
-        if (this.dom.statusIcon) {
-            const iconMap = {
-                'active': 'bi-circle-fill text-success',
-                'suspended': 'bi-circle-fill text-warning',
-                'deleted': 'bi-circle-fill text-danger'
-            };
-            this.dom.statusIcon.className = `bi ${iconMap[status] || iconMap['active']}`;
-        }
-
-        if (this.dom.headerStatusBadge) {
-            const badgeMap = {
-                'active': { class: 'bg-success bg-opacity-10 text-success border-success', icon: 'bi-check-circle-fill', label: 'Active' },
-                'suspended': { class: 'bg-warning bg-opacity-10 text-warning border-warning', icon: 'bi-exclamation-triangle-fill', label: 'Suspended' },
-                'deleted': { class: 'bg-danger bg-opacity-10 text-danger border-danger', icon: 'bi-x-circle-fill', label: 'Deleted' }
-            };
-            const s = badgeMap[status] || badgeMap['active'];
-            this.dom.headerStatusBadge.className = `badge ${s.class} border px-3 py-2 rounded-pill`;
-            this.dom.headerStatusBadge.innerHTML = `<i class="bi ${s.icon} me-1"></i> ${s.label}`;
-        }
-
-        if (this.dom.membersCount) {
-            this.dom.membersCount.textContent = data.membersCount || '0';
-        }
-    },
-
-    saveWorkspaceName: async function() {
-        if (!this.dom.workspaceName) return;
-
-        const name = this.dom.workspaceName.value.trim();
-        if (!name) {
-            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                App.UI.Notify('Validation', 'Please enter a workspace name.', 'warning');
-            }
-            return;
-        }
-
-        const btn = this.dom.saveBtn;
-        const originalText = btn ? btn.innerHTML : 'Save';
-
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Saving...';
-        }
-
-        try {
-            // 🔥 Save under Workspaces node using workspaceId as key
-            await this.config.workspaceRef.child(this.config.currentWorkspaceId).update({
-                workspaceName: name,
-                workspaceId: this.config.currentWorkspaceId,
-                updatedAt: firebase.database.ServerValue.TIMESTAMP
-            });
-
-            if (this.state.workspaceData) {
-                this.state.workspaceData.workspaceName = name;
-                this.state.workspaceData.updatedAt = Date.now();
-            }
-
-            this.updateUI(this.state.workspaceData);
-
-            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                App.UI.Notify('Success', 'Workspace name updated successfully.', 'success');
-            }
-
-        } catch (error) {
-            console.error('WorkspaceSettings: Save error', error);
-            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                App.UI.Notify('Error', 'Failed to save workspace name.', 'danger');
-            }
-        } finally {
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            }
-        }
-    },
-
-    copyWorkspaceId: function() {
-        const idField = this.dom.workspaceId;
-        if (!idField) return;
-
-        const text = idField.value;
-        if (!text || text === 'WS-PENDING') {
-            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                App.UI.Notify('Info', 'No workspace ID to copy.', 'info');
-            }
-            return;
-        }
-
-        navigator.clipboard.writeText(text).then(() => {
-            const btn = document.querySelector('[onclick*="copyWorkspaceId"]');
-            if (btn) {
-                const icon = btn.querySelector('i');
-                const originalClass = icon.className;
-                icon.className = 'bi bi-check2 text-success';
+            const passField = document.getElementById('adm_pass');
+            if (passField) {
+                passField.value = pwd;
+                passField.type = 'text';
                 setTimeout(() => {
-                    icon.className = originalClass;
-                }, 2000);
+                    passField.type = 'password';
+                }, 3000);
             }
-            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                App.UI.Notify('Copied', 'Workspace ID copied to clipboard', 'success');
-            }
-        }).catch(() => {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-        });
-    },
-
-    destroy: function() {
-        this.state.isInitialized = false;
-        this.state.workspaceData = null;
-        console.log('WorkspaceSettings destroyed');
-    }
-};
-
-// Auto-init
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(() => {
-        WorkspaceSettings.init();
-    }, 500);
-});
-
-window.WorkspaceSettings = WorkspaceSettings;
-            document.getElementById('adm_pass').type = 'text';
-            setTimeout(() => {
-                document.getElementById('adm_pass').type = 'password';
-            }, 3000);
         }
     };
 
-    // Initial load
+    // =========================================================
+    // 11. INITIAL LOAD
+    // =========================================================
     window.fetchWorkspaceUsers();
-    
 
 })();
-
-
-
-
-// =========================================================
-// WORKSPACE SETTINGS MANAGER - Isolated Module
-// =========================================================
-
-// =========================================================
-// WORKSPACE SETTINGS MANAGER - Updated
-// =========================================================
-
-const WorkspaceSettings = {
-    config: {
-        dbRef: null,
-        workspaceRef: null,
-        currentUserId: null,
-        currentWorkspaceId: null
-    },
-
-    state: {
-        isInitialized: false,
-        workspaceData: null
-    },
-
-    dom: {
-        workspaceId: null,
-        workspaceName: null,
-        workspaceCreated: null,
-        workspaceStatusInput: null,
-        workspaceStatusText: null,
-        statusIcon: null,
-        headerStatusBadge: null,
-        form: null,
-        membersCount: null,
-        saveBtn: null
-    },
-
-    init: function(options = {}) {
-        if (this.state.isInitialized) return;
-
-        this.config.currentUserId = options.userId || 
-            localStorage.getItem('userloginid');
-
-        this.config.currentWorkspaceId = options.workspaceId || 
-            localStorage.getItem('workspaceId');
-
-        if (!this.config.currentUserId) {
-            console.warn('WorkspaceSettings: No user ID found');
-            return;
-        }
-
-        if (typeof firebase !== 'undefined') {
-            this.config.dbRef = firebase.database();
-            // 🔥 Direct path: WorkspaceId/WorkspaceSetting/
-            this.config.workspaceRef = this.config.dbRef.ref(
-                `${this.config.currentWorkspaceId}/WorkspaceSetting`
-            );
-        } else {
-            console.warn('WorkspaceSettings: Firebase not found');
-            return;
-        }
-
-        this.dom.workspaceId = document.getElementById('workspaceId');
-        this.dom.workspaceName = document.getElementById('workspaceName');
-        this.dom.workspaceCreated = document.getElementById('workspaceCreated');
-        this.dom.workspaceStatusInput = document.getElementById('workspaceStatusInput');
-        this.dom.workspaceStatusText = document.getElementById('workspaceStatusText');
-        this.dom.statusIcon = document.getElementById('statusIcon');
-        this.dom.headerStatusBadge = document.getElementById('headerStatusBadge');
-        this.dom.form = document.getElementById('workspaceForm');
-        this.dom.membersCount = document.getElementById('workspaceMembers');
-        this.dom.saveBtn = document.getElementById('workspaceSaveBtn');
-
-        this.loadWorkspaceData();
-
-        if (this.dom.form) {
-            this.dom.form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.saveWorkspaceName();
-            });
-        }
-
-        this.state.isInitialized = true;
-        console.log('WorkspaceSettings initialized');
-    },
-
-    loadWorkspaceData: async function() {
-        if (!this.config.workspaceRef) return;
-
-        try {
-            // 🔥 Load from WorkspaceId/WorkspaceSetting/
-            const snap = await this.config.workspaceRef.once('value');
-            const workspaceData = snap.val();
-
-            if (!workspaceData) {
-                console.warn('WorkspaceSettings: No workspace data found');
-                // Create default data if not exists
-                await this.createDefaultWorkspaceData();
-                return;
-            }
-
-            this.state.workspaceData = workspaceData;
-            this.updateUI(workspaceData);
-
-        } catch (error) {
-            console.error('WorkspaceSettings: Load error', error);
-        }
-    },
-
-    createDefaultWorkspaceData: async function() {
-        try {
-            const defaultData = {
-                workspaceName: 'My Workspace',
-                workspaceId: this.config.currentWorkspaceId,
-                workspaceStatus: 'active',
-                createdAt: firebase.database.ServerValue.TIMESTAMP,
-                updatedAt: firebase.database.ServerValue.TIMESTAMP
-            };
-            await this.config.workspaceRef.set(defaultData);
-            this.state.workspaceData = defaultData;
-            this.updateUI(defaultData);
-            console.log('WorkspaceSettings: Default data created');
-        } catch (error) {
-            console.error('WorkspaceSettings: Create default error', error);
-        }
-    },
-
-    updateUI: function(data) {
-        // Workspace ID
-        if (this.dom.workspaceId) {
-            this.dom.workspaceId.value = data.workspaceId || this.config.currentWorkspaceId || 'WS-PENDING';
-        }
-
-        // Workspace Name
-        if (this.dom.workspaceName) {
-            this.dom.workspaceName.value = data.workspaceName || 'My Workspace';
-        }
-
-        // Created Date
-        if (this.dom.workspaceCreated) {
-            if (data.createdAt) {
-                const date = new Date(data.createdAt);
-                this.dom.workspaceCreated.value = date.toLocaleString('en-IN', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-            } else {
-                this.dom.workspaceCreated.value = 'Not set';
-            }
-        }
-
-        // Status
-        const status = data.workspaceStatus || 'active';
-        const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
-
-        if (this.dom.workspaceStatusInput) {
-            this.dom.workspaceStatusInput.value = statusLabel;
-        }
-
-        if (this.dom.workspaceStatusText) {
-            this.dom.workspaceStatusText.textContent = statusLabel;
-            const colorMap = {
-                'active': '#198754',
-                'suspended': '#ffc107',
-                'deleted': '#dc3545'
-            };
-            this.dom.workspaceStatusText.style.color = colorMap[status] || '#198754';
-        }
-
-        if (this.dom.statusIcon) {
-            const iconMap = {
-                'active': 'bi-circle-fill text-success',
-                'suspended': 'bi-circle-fill text-warning',
-                'deleted': 'bi-circle-fill text-danger'
-            };
-            this.dom.statusIcon.className = `bi ${iconMap[status] || iconMap['active']}`;
-        }
-
-        if (this.dom.headerStatusBadge) {
-            const badgeMap = {
-                'active': { class: 'bg-success bg-opacity-10 text-success border-success', icon: 'bi-check-circle-fill', label: 'Active' },
-                'suspended': { class: 'bg-warning bg-opacity-10 text-warning border-warning', icon: 'bi-exclamation-triangle-fill', label: 'Suspended' },
-                'deleted': { class: 'bg-danger bg-opacity-10 text-danger border-danger', icon: 'bi-x-circle-fill', label: 'Deleted' }
-            };
-            const s = badgeMap[status] || badgeMap['active'];
-            this.dom.headerStatusBadge.className = `badge ${s.class} border px-3 py-2 rounded-pill`;
-            this.dom.headerStatusBadge.innerHTML = `<i class="bi ${s.icon} me-1"></i> ${s.label}`;
-        }
-
-        if (this.dom.membersCount) {
-            this.dom.membersCount.textContent = data.membersCount || '0';
-        }
-    },
-
-    saveWorkspaceName: async function() {
-        if (!this.dom.workspaceName) return;
-
-        const name = this.dom.workspaceName.value.trim();
-        if (!name) {
-            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                App.UI.Notify('Validation', 'Please enter a workspace name.', 'warning');
-            }
-            return;
-        }
-
-        const btn = this.dom.saveBtn;
-        const originalText = btn ? btn.innerHTML : 'Save';
-
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Saving...';
-        }
-
-        try {
-            // 🔥 Save direct to WorkspaceId/WorkspaceSetting/workspaceName
-            await this.config.workspaceRef.update({
-                workspaceName: name,
-                updatedAt: firebase.database.ServerValue.TIMESTAMP
-            });
-
-            if (this.state.workspaceData) {
-                this.state.workspaceData.workspaceName = name;
-                this.state.workspaceData.updatedAt = Date.now();
-            }
-
-            this.updateUI(this.state.workspaceData);
-
-            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                App.UI.Notify('Success', 'Workspace name updated successfully.', 'success');
-            }
-
-        } catch (error) {
-            console.error('WorkspaceSettings: Save error', error);
-            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                App.UI.Notify('Error', 'Failed to save workspace name.', 'danger');
-            }
-        } finally {
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            }
-        }
-    },
-
-    copyWorkspaceId: function() {
-        const idField = this.dom.workspaceId;
-        if (!idField) return;
-
-        const text = idField.value;
-        if (!text || text === 'WS-PENDING') {
-            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                App.UI.Notify('Info', 'No workspace ID to copy.', 'info');
-            }
-            return;
-        }
-
-        navigator.clipboard.writeText(text).then(() => {
-            const btn = document.querySelector('[onclick*="copyWorkspaceId"]');
-            if (btn) {
-                const icon = btn.querySelector('i');
-                const originalClass = icon.className;
-                icon.className = 'bi bi-check2 text-success';
-                setTimeout(() => {
-                    icon.className = originalClass;
-                }, 2000);
-            }
-            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
-                App.UI.Notify('Copied', 'Workspace ID copied to clipboard', 'success');
-            }
-        }).catch(() => {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-        });
-    },
-
-    destroy: function() {
-        this.state.isInitialized = false;
-        this.state.workspaceData = null;
-        console.log('WorkspaceSettings destroyed');
-    }
-};
-
-// Auto-init
-
-
-window.WorkspaceSettings = WorkspaceSettings;
-
-
-WorkspaceSettings.init();
-
-// =========================================================
-// =========================================================
-// EXPOSE TO WINDOW
-// =========================================================
-window.copyWorkspaceId = function() {
-    WorkspaceSettings.copyWorkspaceId();
-};
-
-window.WorkspaceSettings = WorkspaceSettings;
-// =========================================================
-// AUTO-INITIALIZE ON DOM READY
-// =========================================================
-
 </script>
 
 <style>
@@ -1445,6 +1449,5 @@ window.WorkspaceSettings = WorkspaceSettings;
     }
     main{
         overflow-y: scroll;
-        
     }
 </style>
