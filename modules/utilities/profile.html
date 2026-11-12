@@ -1,0 +1,678 @@
+<div class="animate-in">
+    <div class="card border-0 shadow-sm mb-4">
+        <!-- Command Header -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center p-3 border-bottom bg-light sticky-top z-10 unitax-header">
+            <div>
+                <h5 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-person-badge text-primary me-2"></i>My Profile & Identity Center
+                </h5>
+                <p class="text-muted small mb-0">Manage authorized personal credentials, security, posting limits, and enterprise interface preferences</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary-subtle text-primary border px-3 py-2 font-mono small" id="profRoleBadge">Role: Loading...</span>
+            </div>
+        </div>
+
+        <div class="p-4">
+            <div class="row g-4">
+                <!-- Left Sidebar: Profile Card -->
+                <div class="col-lg-4">
+                    <div class="card border rounded-3 p-4 text-center bg-white shadow-sm h-100">
+                        <div class="position-relative d-inline-block mx-auto mb-3">
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center shadow-sm" style="width: 88px; height: 88px; font-size: 2rem; font-weight: 800;" id="profAvatar">
+                                U
+                            </div>
+                            <span class="position-absolute bottom-0 end-0 p-2 bg-success border border-white rounded-circle" title="Active Identity"></span>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-1" id="profCardName">User</h5>
+                        <p class="text-muted small mb-2 font-mono" id="profCardEmail">user@unitax.local</p>
+                        <div class="mb-3">
+                            <span class="badge bg-light text-secondary border px-3 py-1 font-mono small" id="profCardId">ID: #---</span>
+                        </div>
+                        <div class="border-top pt-3 text-start small">
+                            <div class="d-flex justify-content-between py-1 text-muted">
+                                <span>Workspace:</span>
+                                <span class="fw-bold text-dark font-mono" id="profCardWs">#---</span>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 text-muted">
+                                <span>Designation:</span>
+                                <span class="fw-bold text-dark" id="profCardDesignation">Staff</span>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 text-muted">
+                                <span>Account Status:</span>
+                                <span class="badge bg-success-subtle text-success">Active / Production</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Pane: Multi-Tab Configuration -->
+                <div class="col-lg-8">
+                    <div class="card border rounded-3 bg-white shadow-sm">
+                        <!-- Navigation Tabs -->
+                        <div class="bg-light border-bottom px-3 pt-2">
+                            <ul class="nav nav-tabs border-0" id="profileTabList" role="tablist">
+                                <li class="nav-item">
+                                    <button class="nav-link active fw-bold small py-2 px-3 border-0 bg-transparent text-primary border-bottom border-primary border-2" id="tab-btn-personal" onclick="UserProfileController.SwitchTab('personal', this)">
+                                        <i class="bi bi-person me-1"></i> Personal Identity
+                                    </button>
+                                </li>
+                                <li class="nav-item">
+                                    <button class="nav-link fw-bold small py-2 px-3 border-0 bg-transparent text-muted" id="tab-btn-security" onclick="UserProfileController.SwitchTab('security', this)">
+                                        <i class="bi bi-shield-lock me-1"></i> Security & Password
+                                    </button>
+                                </li>
+                                <li class="nav-item">
+                                    <button class="nav-link fw-bold small py-2 px-3 border-0 bg-transparent text-muted" id="tab-btn-limits" onclick="UserProfileController.SwitchTab('limits', this)">
+                                        <i class="bi bi-bank me-1"></i> Posting Limits & Controls
+                                    </button>
+                                </li>
+                                                                <li class="nav-item">
+                                    <button class="nav-link fw-bold small py-2 px-3 border-0 bg-transparent text-muted" id="tab-btn-organisation" onclick="UserProfileController.SwitchTab('organisation', this)">
+                                        <i class="bi bi-buildings me-1"></i> Organisation Profile
+                                    </button>
+                                </li>
+                                
+                            </ul>
+                        </div>
+
+                        <div class="card-body p-4" style="max-height: calc(100vh - 210px); overflow-y: auto;">
+                            <!-- TAB 1: PERSONAL INFORMATION -->
+                            <div id="profPanePersonal" class="profile-tab-pane">
+                                <h6 class="fw-bold text-dark mb-1">Personal Details</h6>
+                                <p class="text-muted small mb-4">Edit authorized personal fields. Non-editable parameters are restricted by your User Admin.</p>
+
+                                <form id="formPersonal" onsubmit="UserProfileController.UpdateProfile(event)">
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold">Full Name</label>
+                                            <input type="text" id="profInputName" class="form-control form-control-sm" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold">Phone Number</label>
+                                            <input type="text" id="profInputPhone" class="form-control form-control-sm" placeholder="+91 98765 43210">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-muted">Email Address (Read-Only)</label>
+                                            <input type="email" id="profInputEmail" class="form-control form-control-sm bg-light text-muted font-mono" readonly>
+                                            <div class="form-text" style="font-size: 10px;">Managed by Workspace Administrator.</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-muted">Designation (Read-Only)</label>
+                                            <input type="text" id="profInputDesignation" class="form-control form-control-sm bg-light text-muted" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <button type="submit" class="btn btn-sm btn-primary fw-bold px-4 shadow-sm" id="profBtnSaveName">
+                                            <i class="bi bi-check2 me-1"></i> Save Personal Details
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- TAB 2: SECURITY & PASSWORD -->
+                            <div id="profPaneSecurity" class="profile-tab-pane d-none">
+                                <h6 class="fw-bold text-dark mb-1">Update Password</h6>
+                                <p class="text-muted small mb-4">Protect your corporate credentials with a strong, multi-factor compliant password.</p>
+
+                                <form id="formPassword" onsubmit="UserProfileController.UpdatePassword(event)">
+                                    <div class="row g-3 mb-4" style="max-width: 500px;">
+                                        <div class="col-12">
+                                            <label class="form-label small fw-bold">Current Password</label>
+                                            <input type="password" id="profInputCurrentPass" class="form-control form-control-sm" placeholder="Enter current password" required>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label small fw-bold">New Password (Min 6 Characters)</label>
+                                            <input type="password" id="profInputNewPass" class="form-control form-control-sm" placeholder="Enter new password" required>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label small fw-bold">Confirm New Password</label>
+                                            <input type="password" id="profInputConfirmPass" class="form-control form-control-sm" placeholder="Re-enter new password" required>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-sm btn-danger fw-bold px-4 shadow-sm" id="profBtnSavePass">
+                                        <i class="bi bi-key me-1"></i> Update Password
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- TAB 3: ASSIGNED POSTING LIMITS & GOVERNANCE CONTROLS -->
+                            <div id="profPaneLimits" class="profile-tab-pane d-none">
+                                <h6 class="fw-bold text-primary mb-1">
+                                    <i class="bi bi-shield-lock me-1"></i>Your Assigned Financial Posting Limits & Scope (Read-Only)
+                                </h6>
+                                <p class="text-muted small mb-4">These financial posting limits and dimension constraints are enforced on your identity by your User Admin.</p>
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="border rounded-2 p-3 bg-light">
+                                            <div class="text-muted small fw-bold">Single Voucher Posting Ceiling</div>
+                                            <div class="h5 fw-bold font-mono text-dark mt-1 mb-0" id="profLimitCeiling">₹ 0 (Direct Post)</div>
+                                            <div class="text-muted" style="font-size: 10px;">Transactions exceeding this require approval</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="border rounded-2 p-3 bg-light">
+                                            <div class="text-muted small fw-bold">Backdating Posting Authorization</div>
+                                            <div class="h5 fw-bold mt-1 mb-0" id="profLimitBackdate">Allowed</div>
+                                            <div class="text-muted" style="font-size: 10px;">Ability to post vouchers prior to today's date</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="border rounded-2 p-3 bg-light">
+                                            <div class="text-muted small fw-bold">Authorized Profit Center / Project</div>
+                                            <div class="h5 fw-bold font-mono text-primary mt-1 mb-0" id="profLimitProfitCenter">* (All)</div>
+                                            <div class="text-muted" style="font-size: 10px;">Vouchers outside this cost center will be rejected</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="border rounded-2 p-3 bg-light">
+                                            <div class="text-muted small fw-bold">Authorized Account / Ledger Dimension</div>
+                                            <div class="h5 fw-bold font-mono text-dark mt-1 mb-0" id="profLimitLedger">* (All)</div>
+                                            <div class="text-muted" style="font-size: 10px;">Specific account posting confinement</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="border rounded-2 p-3 bg-light">
+                                            <div class="text-muted small fw-bold">Direct Ledger Posting Rights</div>
+                                            <div class="h6 fw-bold mt-1 mb-0" id="profLimitDirectPost">Active (Direct Post to General Ledger)</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                                                        <!-- TAB 4: ORGANISATION PROFILE (Read-Only per Requirement 2) -->
+                            <div id="profPaneOrganisation" class="profile-tab-pane d-none pb-4" style="padding-bottom: 90px !important;">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <h6 class="fw-bold text-dark mb-0">
+                                        <i class="bi bi-buildings text-primary me-2"></i>Organisation & Statutory Profile
+                                    </h6>
+                                    <span class="badge bg-secondary-subtle text-secondary border font-mono small" id="orgAdminBadge">
+                                        <i class="bi bi-shield-lock me-1"></i>Admin Controlled
+                                    </span>
+                                </div>
+                                <p class="text-muted small mb-3">Enterprise company profile, statutory tax registrations, workspace anchor, and active fiscal posting period constraints.</p>
+
+                                <!-- Governance Notice -->
+                                <div class="alert alert-secondary border py-2 px-3 small d-flex align-items-center gap-2 mb-3">
+                                    <i class="bi bi-shield-lock-fill text-primary fs-5"></i>
+                                    <div><strong>Governance Policy:</strong> Organization statutory identity, GSTIN, and fiscal posting periods are managed exclusively by Workspace Administrators in the <strong>User Admin Control Panel</strong>.</div>
+                                </div>
+
+                                <!-- Active Posting Period Status Banner -->
+                                <div class="border rounded-2 p-3 bg-light mb-4">
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                        <div>
+                                            <div class="small fw-bold text-dark"><i class="bi bi-calendar2-range text-primary me-1"></i> Active Fiscal Posting Period Status </div>
+                                            <div class="small text-muted" style="font-size: 11px;">Voucher entry across all transaction modules is constrained within these dates</div>
+                                        </div>
+                                        <span id="orgPostingPeriodBadge" class="badge bg-success-subtle text-success border px-3 py-2 font-mono">01/04/2026 to 31/03/2027 (Strict Enforced)</span>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted">Organisation / Legal Name</label>
+                                        <input type="text" id="orgInputName" class="form-control form-control-sm bg-light text-muted font-mono" readonly>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted">Trade / Division Name</label>
+                                        <input type="text" id="orgInputTradeName" class="form-control form-control-sm bg-light text-muted" readonly>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted">Workspace Anchor ID (System Immutable)</label>
+                                        <input type="text" id="orgInputWsId" class="form-control form-control-sm bg-light text-muted font-mono" readonly>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted">Primary Tenant Owner</label>
+                                        <input type="text" id="orgOwnerDisplay" class="form-control form-control-sm bg-light text-muted" readonly>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted">Primary GSTIN</label>
+                                        <input type="text" id="orgInputGSTIN" class="form-control form-control-sm bg-light font-mono text-uppercase text-muted" readonly>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted">Permanent Account Number (PAN)</label>
+                                        <input type="text" id="orgInputPAN" class="form-control form-control-sm bg-light font-mono text-uppercase text-muted" readonly>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-8">
+                                        <label class="form-label small fw-bold text-muted">Registered Principal Place of Business (Address)</label>
+                                        <input type="text" id="orgInputAddress" class="form-control form-control-sm bg-light text-muted" readonly>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-muted">State & Place of Supply (POS)</label>
+                                        <input type="text" id="orgInputState" class="form-control form-control-sm bg-light text-muted" readonly>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted">Base Reporting Currency</label>
+                                        <input type="text" id="orgInputCurrency" class="form-control form-control-sm bg-light text-muted font-mono" value="INR (₹) - Indian Rupee" readonly>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-muted">Posting Period Scope</label>
+                                        <input type="text" id="orgInputPostingStatus" class="form-control form-control-sm bg-light text-muted font-mono" readonly value="Global Admin Controlled">
+                                    </div>
+                                </div>
+                            </div>
+
+                            </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.UserProfileController = {
+    userData: null,
+
+    SwitchTab(tabName, btn) {
+        document.querySelectorAll('.profile-tab-pane').forEach(p => p.classList.add('d-none'));
+        const paneMap = {
+            'personal': 'profPanePersonal',
+            'security': 'profPaneSecurity',
+            'limits': 'profPaneLimits',
+            'organisation': 'profPaneOrganisation'
+        };
+        const target = document.getElementById(paneMap[tabName]);
+        if (target) target.classList.remove('d-none');
+
+        // Update button active styling
+        const tabList = document.getElementById('profileTabList');
+        if (tabList) {
+            tabList.querySelectorAll('button').forEach(b => {
+                b.className = 'nav-link fw-bold small py-2 px-3 border-0 bg-transparent text-muted';
+            });
+        }
+        if (btn) {
+            btn.className = 'nav-link active fw-bold small py-2 px-3 border-0 bg-transparent text-primary border-bottom border-primary border-2';
+        }
+    },
+
+    async LoadUserData() {
+        // Resolve active authenticated user identity vs workspace owner identity
+        const activeUserId = String(localStorage.getItem('userloginid') || window.App?.State?.currentuserId || '').trim().replace(/^#/, '');
+        const wsOwnerId = String(localStorage.getItem('workspaceUserId') || window.App?.State?.workspaceUserId || window.App?.State?.userId || '').trim().replace(/^#/, '');
+        
+        const initialRole = (localStorage.getItem('userrole') || 'operator').trim().toLowerCase();
+        const isInitiallyAdmin = ['administrator', 'super_administrator', 'admin', 'co_useradmin', 'co_admin', 'workspaceowner', 'owner'].includes(initialRole);
+        const isMember = !isInitiallyAdmin || (wsOwnerId && activeUserId && wsOwnerId.toLowerCase() !== activeUserId.toLowerCase());
+
+        if (isMember) {
+            localStorage.setItem('masterControl', 'operations');
+            if (isInitiallyAdmin) {
+                localStorage.setItem('userrole', 'operator');
+            }
+        }
+
+        let userName = localStorage.getItem('userName') || window.App?.State?.userName || 'User';
+        let userEmail = localStorage.getItem('useremail_we') || window.App?.State?.userEmail || (activeUserId ? `${activeUserId}@unitax.local` : 'user@unitax.local');
+        let userRole = isMember ? (isInitiallyAdmin ? 'operator' : initialRole) : initialRole;
+        let designation = localStorage.getItem('designation') || window.App?.State?.designation || (isMember ? 'Staff Member' : 'Workspace Owner');
+        let userPhone = localStorage.getItem('userPhone') || '';
+
+        // Safe DOM setter helpers
+        const setText = (id, txt) => { const el = document.getElementById(id); if (el) el.innerText = txt; };
+        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+
+        // Fill initial local values
+        setText('profAvatar', (userName.charAt(0) || 'U').toUpperCase());
+        setText('profCardName', userName);
+        setText('profCardEmail', userEmail);
+        setText('profCardId', `ID: #${activeUserId}`);
+        setText('profCardWs', `#${wsOwnerId || activeUserId}`);
+        setText('profCardDesignation', designation);
+        setText('profRoleBadge', `Role: ${userRole.toUpperCase()}`);
+
+        setVal('profInputName', userName);
+        setVal('profInputPhone', userPhone);
+        setVal('profInputEmail', userEmail);
+        setVal('profInputDesignation', designation);
+
+        // Governance & Posting Limits
+        let ceiling = parseFloat(localStorage.getItem('postingLimit') || 0);
+        let canBackdate = localStorage.getItem('canBackdate') === 'true';
+        let canPostDirect = localStorage.getItem('canPostDirect') === 'true';
+        let profitCenter = localStorage.getItem('allowedProfitCenter') || '*';
+        let ledger = localStorage.getItem('allowedLedger') || '*';
+
+        const formatINR = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val);
+
+        const updateLimitsUI = () => {
+            setText('profLimitCeiling', ceiling > 0 ? formatINR(ceiling) : 'Unrestricted (Admin)');
+            const elBackdate = document.getElementById('profLimitBackdate');
+            if (elBackdate) {
+                elBackdate.innerText = canBackdate ? 'Allowed' : 'Restricted (Today Only)';
+                elBackdate.className = canBackdate ? 'h5 fw-bold text-success mt-1 mb-0' : 'h5 fw-bold text-danger mt-1 mb-0';
+            }
+            const elDirect = document.getElementById('profLimitDirectPost');
+            if (elDirect) {
+                elDirect.innerText = canPostDirect ? 'Active (Direct Post to General Ledger)' : 'Restricted (Requires Approval Routing)';
+                elDirect.className = canPostDirect ? 'h6 fw-bold text-success mt-1 mb-0' : 'h6 fw-bold text-danger mt-1 mb-0';
+            }
+            setText('profLimitProfitCenter', profitCenter);
+            setText('profLimitLedger', ledger);
+        };
+        updateLimitsUI();
+
+        // Populate Organisation defaults
+        setVal('orgInputWsId', wsOwnerId || activeUserId);
+        const wsOwnerName = localStorage.getItem('workspaceOwnerName') || 'Workspace Owner';
+        setVal('orgOwnerDisplay', isMember ? `${wsOwnerName} (#${wsOwnerId})` : `${userName} (#${activeUserId})`);
+
+        // Posting period from localStorage
+        let periodConfig = null;
+        try {
+            const cachedP = localStorage.getItem('workspacePostingPeriod');
+            if (cachedP) periodConfig = JSON.parse(cachedP);
+        } catch(e) {}
+
+        const orgPeriodBadge = document.getElementById('orgPostingPeriodBadge');
+        const orgPeriodInput = document.getElementById('orgInputPostingStatus');
+        if (periodConfig && periodConfig.from && periodConfig.to) {
+            const pText = `${periodConfig.from} to ${periodConfig.to}${periodConfig.enforce ? ' [Strict Enforced]' : ' [Advisory]'}`;
+            if (orgPeriodBadge) orgPeriodBadge.innerText = pText;
+            if (orgPeriodInput) orgPeriodInput.value = pText;
+        } else {
+            if (orgPeriodBadge) orgPeriodBadge.innerText = 'Unrestricted (No Lock)';
+            if (orgPeriodInput) orgPeriodInput.value = 'Unrestricted (No Lock)';
+        }
+
+        // Fetch Live User and Workspace Data from Firebase RTDB
+        if (typeof firebase !== 'undefined' && firebase.database) {
+            try {
+                let uData = null;
+                // Query appropriate node based on member vs workspace owner
+                if (isMember && wsOwnerId && activeUserId) {
+                    const snap = await firebase.database().ref(`Users/${wsOwnerId}/workspace/Members/${activeUserId}`).once('value');
+                    if (snap.exists() && snap.val()) uData = snap.val();
+                }
+                if (!uData && activeUserId) {
+                    const snap = await firebase.database().ref(`Users/${activeUserId}`).once('value');
+                    if (snap.exists() && snap.val()) {
+                        const candidate = snap.val();
+                        // Only use if candidate is really this user or if user is owner
+                        if (isMember) {
+                            if (candidate.userId === activeUserId || (candidate.email && candidate.email.toLowerCase() === userEmail.toLowerCase())) {
+                                uData = candidate;
+                            }
+                        } else {
+                            uData = candidate;
+                        }
+                    }
+                }
+
+                if (uData) {
+                    if (uData.name) {
+                        userName = uData.name;
+                        setText('profCardName', userName);
+                        setText('profAvatar', (userName.charAt(0) || 'U').toUpperCase());
+                        setVal('profInputName', userName);
+                        localStorage.setItem('userName', userName);
+                    }
+                    if (uData.phone) {
+                        userPhone = uData.phone;
+                        setVal('profInputPhone', userPhone);
+                        localStorage.setItem('userPhone', userPhone);
+                    }
+                    if (uData.email) {
+                        userEmail = uData.email;
+                        setText('profCardEmail', userEmail);
+                        setVal('profInputEmail', userEmail);
+                        localStorage.setItem('useremail_we', userEmail);
+                    }
+                    if (uData.designation) {
+                        designation = uData.designation;
+                        setText('profCardDesignation', designation);
+                        setVal('profInputDesignation', designation);
+                        localStorage.setItem('designation', designation);
+                    }
+                    // Role handling: NEVER elevate a regular member/operator to administrator in Profile!
+                    if (uData.role) {
+                        let newRole = uData.role.toLowerCase();
+                        if ((!isInitiallyAdmin || isMember) && ['administrator', 'super_administrator', 'admin', 'workspaceowner', 'owner'].includes(newRole)) {
+                            newRole = initialRole || 'operator';
+                        }
+                        userRole = newRole;
+                        setText('profRoleBadge', `Role: ${userRole.toUpperCase()}`);
+                        localStorage.setItem('userrole', userRole);
+                        if (window.App?.State) window.App.State.userRole = userRole;
+                    }
+                    if (uData.postingLimit !== undefined) {
+                        ceiling = parseFloat(uData.postingLimit) || 0;
+                        localStorage.setItem('postingLimit', ceiling);
+                    }
+                    if (uData.canBackdate !== undefined) {
+                        canBackdate = uData.canBackdate === true || uData.canBackdate === 'true';
+                        localStorage.setItem('canBackdate', canBackdate);
+                    }
+                    if (uData.canPostDirect !== undefined) {
+                        canPostDirect = uData.canPostDirect === true || uData.canPostDirect === 'true';
+                        localStorage.setItem('canPostDirect', canPostDirect);
+                    }
+                    if (uData.allowedProfitCenter) {
+                        profitCenter = uData.allowedProfitCenter;
+                        localStorage.setItem('allowedProfitCenter', profitCenter);
+                    }
+                    if (uData.allowedLedger) {
+                        ledger = uData.allowedLedger;
+                        localStorage.setItem('allowedLedger', ledger);
+                    }
+                    updateLimitsUI();
+                }
+
+                // 2. Fetch live workspace settings for Organisation Tab (Read-Only display)
+                const wsRootId = wsOwnerId || activeUserId;
+                const wsSnap = await firebase.database().ref(`Users/${wsRootId}/workspace/WorkspaceSettings`).once('value');
+                const wsData = wsSnap.val() || {};
+
+                // Fetch live owner info for Organisation tab if user is a member
+                if (isMember && wsOwnerId) {
+                    try {
+                        const ownerSnap = await firebase.database().ref(`Users/${wsOwnerId}`).once('value');
+                        if (ownerSnap.exists()) {
+                            const oData = ownerSnap.val() || {};
+                            const oName = oData.name || oData.workspaceName || 'Workspace Owner';
+                            setVal('orgOwnerDisplay', `${oName} (#${wsOwnerId})`);
+                            localStorage.setItem('workspaceOwnerName', oName);
+                        }
+                    } catch (e) {}
+                }
+
+                setVal('orgInputName', wsData.workspaceName || wsData.companyName || 'Corporate Workspace');
+                setVal('orgInputTradeName', wsData.tradeName || '');
+                setVal('orgInputGSTIN', wsData.gstin || '');
+                setVal('orgInputPAN', wsData.pan || '');
+                setVal('orgInputAddress', wsData.address || '');
+                setVal('orgInputState', wsData.state || '');
+
+                if (wsData.postingPeriod) {
+                    const p = wsData.postingPeriod;
+                    const pText = `${p.from} to ${p.to}${p.enforce ? ' [Strict Enforced]' : ' [Advisory]'}`;
+                    if (orgPeriodBadge) orgPeriodBadge.innerText = pText;
+                    if (orgPeriodInput) orgPeriodInput.value = pText;
+                    localStorage.setItem('workspacePostingPeriod', JSON.stringify(p));
+                }
+            } catch (err) {
+                console.warn("Could not load live user/workspace data for profile:", err);
+            }
+        }
+
+        // Live sync active session displays
+        if (window.App && typeof App.UpdateHeaderDisplays === 'function') {
+            App.State.userName = userName;
+            App.State.userRole = userRole;
+            App.State.currentuserId = activeUserId;
+            App.UpdateHeaderDisplays();
+        }
+    },
+
+    async UpdateProfile(e) {
+        if (e && e.preventDefault) e.preventDefault();
+        const newName = (document.getElementById('profInputName')?.value || '').trim();
+        const phone = (document.getElementById('profInputPhone')?.value || '').trim();
+        const btn = document.getElementById('profBtnSaveName');
+
+        if (!newName) {
+            if (window.App?.UI?.Notify) App.UI.Notify('Validation Error', 'Full Name is required.', 'warning');
+            return;
+        }
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+        }
+
+        try {
+            const activeUserId = window.App?.State?.currentuserId || localStorage.getItem('userloginid') || '';
+            const wsOwnerId = window.App?.State?.workspaceUserId || localStorage.getItem('workspaceUserId') || '';
+            const isMember = (wsOwnerId && activeUserId && wsOwnerId !== activeUserId);
+
+            // Update in Firebase
+            if (typeof firebase !== 'undefined' && firebase.database) {
+                const db = firebase.database();
+                const targetPath = isMember
+                    ? `Users/${wsOwnerId}/workspace/Members/${activeUserId}`
+                    : `Users/${activeUserId}`;
+
+                await db.ref(targetPath).update({
+                    name: newName,
+                    phone: phone,
+                    updatedAt: firebase.database.ServerValue.TIMESTAMP
+                });
+            }
+
+            // Update localStorage
+            localStorage.setItem('userName', newName);
+            localStorage.setItem('userPhone', phone);
+
+            // Update Application State & Header Displays
+            if (window.App) {
+                if (window.App.State) {
+                    window.App.State.userName = newName;
+                    window.App.State.userPhone = phone;
+                }
+                if (typeof window.App.UpdateHeaderDisplays === 'function') {
+                    window.App.UpdateHeaderDisplays();
+                }
+            }
+
+            const elCardName = document.getElementById('profCardName');
+            if (elCardName) elCardName.innerText = newName;
+            const elAvatar = document.getElementById('profAvatar');
+            if (elAvatar) elAvatar.innerText = (newName.charAt(0) || 'U').toUpperCase();
+
+            if (window.App?.UI?.Notify) {
+                App.UI.Notify('Success', 'Profile details updated successfully.', 'success');
+            } else {
+                alert('Profile details updated successfully.');
+            }
+        } catch (err) {
+            console.error("Profile update error:", err);
+            if (window.App?.UI?.Notify) {
+                App.UI.Notify('Error', err.message || 'Failed to update profile.', 'danger');
+            } else {
+                alert('Failed to update profile: ' + err.message);
+            }
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check2 me-1"></i> Save Personal Details';
+            }
+        }
+    },
+
+    UpdateOrganisation(e) {
+        if (e && e.preventDefault) e.preventDefault();
+        if (window.App?.UI?.Notify) {
+            App.UI.Notify('Governance Policy', 'Organisation profile is managed exclusively by Workspace Administrators in the User Admin Control Panel.', 'warning');
+        }
+    },
+
+    async UpdatePassword(e) {
+        if (e && e.preventDefault) e.preventDefault();
+        const currentPass = document.getElementById('profInputCurrentPass')?.value || '';
+        const newPass = document.getElementById('profInputNewPass')?.value || '';
+        const confirmPass = document.getElementById('profInputConfirmPass')?.value || '';
+        const btn = document.getElementById('profBtnSavePass');
+
+        if (newPass !== confirmPass) {
+            if (window.App?.UI?.Notify) App.UI.Notify('Password Mismatch', 'New password and confirmation do not match.', 'danger');
+            return;
+        }
+        if (newPass.length < 6) {
+            if (window.App?.UI?.Notify) App.UI.Notify('Weak Password', 'New password must be at least 6 characters.', 'warning');
+            return;
+        }
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Verifying...';
+        }
+
+        try {
+            const activeUserId = window.App?.State?.currentuserId || localStorage.getItem('userloginid') || '';
+            const wsOwnerId = window.App?.State?.workspaceUserId || localStorage.getItem('workspaceUserId') || '';
+            const isMember = (wsOwnerId && activeUserId && wsOwnerId !== activeUserId);
+            const db = firebase.database();
+
+            const targetPath = isMember
+                ? `Users/${wsOwnerId}/workspace/Members/${activeUserId}`
+                : `Users/${activeUserId}`;
+
+            const snap = await db.ref(targetPath).once('value');
+            const u = snap.val();
+            if (!u) throw new Error("Could not locate user identity in database.");
+
+            const currentHash = (window.Utils && typeof Utils.HashPassword === 'function')
+                ? await Utils.HashPassword(currentPass)
+                : currentPass;
+            const isValid = u.passwordHash ? (u.passwordHash === currentHash) : (u.password === currentPass);
+
+            if (!isValid) {
+                throw new Error("Current password is incorrect.");
+            }
+
+            const newHash = (window.Utils && typeof Utils.HashPassword === 'function')
+                ? await Utils.HashPassword(newPass)
+                : newPass;
+
+            await db.ref(targetPath).update({
+                passwordHash: newHash,
+                password: null, // Purge legacy plaintext
+                updatedAt: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            const passForm = document.getElementById('formPassword');
+            if (passForm) passForm.reset();
+
+            if (window.App?.UI?.Notify) {
+                App.UI.Notify('Password Changed', 'Your security password has been updated successfully.', 'success');
+            } else {
+                alert('Your security password has been updated successfully.');
+            }
+        } catch (err) {
+            console.error("Password update error:", err);
+            if (window.App?.UI?.Notify) {
+                App.UI.Notify('Security Error', err.message || 'Failed to update password.', 'danger');
+            } else {
+                alert('Security Error: ' + err.message);
+            }
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-key me-1"></i> Update Password';
+            }
+        }
+    }
+};
+
+window.UserProfileController.LoadUserData();
+</script>

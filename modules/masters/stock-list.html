@@ -1,0 +1,425 @@
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center p-3">
+        <div class="d-flex align-items-center gap-2">
+            
+            <h5 class="fw-bold mb-0">
+                <i class="bi bi-box-seam me-2 text-primary"></i>Stock Registry
+            </h5>
+        </div>
+        <div>
+            <button class="btn btn-erp-icon me-1" onclick="StockManager.LoadList()" title="Refresh Inventory Registry"><i class="bi bi-arrow-clockwise"></i></button>
+            <button class="btn btn-erp-icon btn-erp-icon-primary text-center" title="Create New Stock Item" onclick="StockManager.CreateNew()"><i class="bi bi-plus-lg"></i></button>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light text-muted small">
+                <tr>
+                    <th width="10%" class="ps-4">Code</th>
+                    <th width="20%">Item Name</th>
+                    <th width="10%">HSN</th>
+                    <th width="15%">UQC</th>
+                    <th width="10%">Tax Rate</th>
+                    <th class="text-end">Opening Qty</th>
+                    <th class="text-end">Opening Value</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="stockListBody">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+// --- 1. GLOBAL MODULE CLEANUP (Prevents Identifier Crashes) ---
+if (window.StockFormObserver) {
+    window.StockFormObserver.disconnect();
+}
+
+// --- 2. STOCK MANAGER DEFINITION ---
+window.StockManager = {
+    DbSheet: 'Stock',
+    FormUrl: 'modules/masters/stock-cw.html',
+    data: [], // Local cache for faster UI updates without server re-fetches
+    
+    // Fetch and build the list
+    async LoadList(skipFetch = false) {
+        const tbody = document.getElementById('stockListBody');
+        if (!tbody) {
+            if (typeof App !== 'undefined' && App.Router) App.Router('masters/stock-list');
+            else window.location.href = '#masters/stock-list';
+            return;
+        }
+        
+        if (!skipFetch) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary me-2"></div><span class="text-muted">Loading stock items...</span></td></tr>';
+            try {
+                let rawResponse = await API.Fetch(`Masters/${this.DbSheet}`);
+                let fetchedData = rawResponse?.data || rawResponse?.result || rawResponse;
+                
+                if (!fetchedData || Object.keys(fetchedData).length === 0) {
+                    this.data = [];
+                    return tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted">
+                        <i class="bi bi-box-seam fs-3 d-block mb-2"></i>
+                        No stock items found. Create your first stock item!
+                    </td></tr>`;
+                }
+
+                // Map data locally for filtering and rendering
+                this.data = Array.isArray(fetchedData) 
+                    ? fetchedData.map((v, i) => ({...v, ID: v.id || i})) 
+                    : Object.entries(fetchedData).map(([id, val]) => ({...val, ID: id}));
+                    
+            } catch (error) {
+                console.error('Load Error:', error);
+                return tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i> Error loading stock items: ${error.message}
+                </td></tr>`;
+            }
+        }
+
+        this.RenderList(this.data);
+    },
+
+    // Render List from local data
+    RenderList(dataArray) {
+        const tbody = document.getElementById('stockListBody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        if (!dataArray || dataArray.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted">No stock items available.</td></tr>`;
+            const countEl = document.getElementById('stockCount');
+            if (countEl) countEl.innerText = `(0 records)`;
+            return;
+        }
+
+        dataArray.forEach((record) => {
+            if (!record || typeof record !== 'object') return;
+            const id = record.ID || record.id;
+            const encodedData = encodeURIComponent(JSON.stringify(record));
+            const itemCode = record.Stock_Code || record.stockCode || record.itemCode || '-';
+            const itemCompany = record.CompanyName || record['companyName & CompanyCode'] || '-';
+            const itemunit = record.ItemUnit || record.unit || '-';
+            const itemTax = record.ItemTax || record.taxRate || record.tax || '-';
+            const itemName = record.itemName || record.ItemName || 'Unknown';
+            const hsn = record.itemHSN || record.hsnCode || record.hsn || '-';
+            const openingQty = parseFloat(record.openingQty || record.openingQuantity || record.OpeningQty || 0);
+            const openingVal = parseFloat(record.openingAmount || record.OpeningAmount || 0);
+            
+            tbody.innerHTML += `
+                <tr class="stock-row small" data-id="${id}">
+                    <td class="ps-4 font-mono fw-bold text-primary">${itemCode}</td>
+                    <td class="fw-semibold text-dark">${itemName}</td>
+                    <td class="text-muted text-start font-mono">${hsn}</td>
+                    <td class="text-muted text-start">${itemunit}</td>
+                    <td class="text-muted text-start font-mono">${itemTax}${itemTax !== '-' && !String(itemTax).includes('%') ? '%' : ''}</td>
+                    <td class="text-end text-muted">${openingQty}</td>
+                    <td class="text-end text-muted">${openingVal > 0 ? '₹ ' + openingVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '-'}</td>
+                    <td class="text-end pe-4" style="white-space: nowrap;">
+                        <button class="btn btn-sm btn-light text-primary border me-1" 
+                                onclick="window.StockManager.TriggerEdit('${id}', '${encodedData}')"
+                                title="Edit Stock Item">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-light text-primary border" 
+                                onclick="window.StockManager.Delete('${id}', this)"
+                                title="Delete Stock Item">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        const countEl = document.getElementById('stockCount');
+        if (countEl) countEl.innerText = `(${dataArray.length} records)`;
+    },
+
+    CreateNew() {
+        sessionStorage.removeItem('EditContext_Stock');
+        if (typeof App !== 'undefined' && App.Router) App.Router('masters/stock-cw');
+        else window.location.href = '#masters/stock-cw';
+    },
+
+    TriggerEdit(recordId, encodedData) {
+        const data = JSON.parse(decodeURIComponent(encodedData));
+        sessionStorage.setItem('EditContext_Stock', JSON.stringify({ id: recordId, payload: data }));
+
+        if (typeof App !== 'undefined' && App.Router) App.Router('masters/stock-cw');
+        else window.location.href = '#masters/stock-cw';
+    },
+
+    async Delete(recordId, btn) {
+        const row = btn.closest('tr');
+        const codeCell = row?.querySelector('td:first-child')?.innerText || '';
+        
+        if (['SYS-STOCK', 'SYS-TEST'].includes(codeCell.trim())) {
+            if (App?.UI?.Notify) App.UI.Notify('Error', 'Cannot delete a protected system stock item.', 'danger');
+            else alert('Cannot delete system stock item.');
+            return;
+        }
+        
+        if (!confirm('⚠️ Are you sure you want to delete this stock item?\n\nThis action cannot be undone!')) return;
+        
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        btn.disabled = true;
+        
+        try {
+            // 🔴 LIVE VERIFICATION: Find true key location before deletion
+            let finalDbKey = String(recordId).trim();
+            const serverCheck = await API.Fetch(`Masters/${this.DbSheet}`);
+            const liveData = serverCheck?.data || serverCheck?.result || serverCheck;
+            
+            if (liveData) {
+                const realServerKey = Object.keys(liveData).find(k => 
+                    String(liveData[k]?.Stock_Code || liveData[k]?.stockCode || liveData[k]?.itemCode).trim() === codeCell.trim()
+                );
+                if (realServerKey) finalDbKey = realServerKey;
+            }
+
+            // Using the new API method
+            await API.SafeMasterDelete(this.DbSheet, finalDbKey);
+            
+            if (row) {
+                row.style.transition = 'all 0.3s ease';
+                row.style.opacity = '0';
+                setTimeout(() => row.remove(), 300);
+            }
+            
+            if (App?.UI?.Notify) App.UI.Notify('Success', 'Stock item deleted successfully', 'success');
+            
+            // Update local cache
+            if (this.data) {
+                this.data = this.data.filter(item => String(item.ID) !== String(finalDbKey));
+                const countEl = document.getElementById('stockCount');
+                if (countEl) countEl.innerText = `(${this.data.length} records)`;
+            }
+            
+        } catch (error) {
+            console.error('❌ Delete Error:', error);
+            if (App?.UI?.Notify) App.UI.Notify('Error', error.message || 'Delete failed', 'danger');
+            else alert('Delete failed: ' + error.message);
+            
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
+    },
+
+    FilterList() {
+        const query = document.getElementById('stockSearchFilter')?.value?.toLowerCase() || '';
+        const rows = document.querySelectorAll('#stockListBody tr.stock-row');
+        
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(query) ? '' : 'none';
+        });
+    }
+};
+
+// --- 3. OBSERVER: HYDRATE & FIX FORM ---
+window.StockFormObserver = new MutationObserver((mutations) => {
+    const form = document.getElementById('Stock');
+    
+    if (form && !form.dataset.hydrated) {
+        form.dataset.hydrated = "true";
+
+        // --- ADD BACK BUTTON NEXT TO SUBMIT ---
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.type = 'button'; 
+            submitBtn.removeAttribute('onclick');
+            form.removeAttribute('onsubmit');
+
+            let backBtn = form.querySelector('#backToListBtn');
+            if (!backBtn) {
+                const btnGroup = document.createElement('div');
+                btnGroup.className = 'd-flex gap-2 align-items-center';
+                
+                backBtn = document.createElement('button');
+                backBtn.type = 'button';
+                backBtn.id = 'backToListBtn';
+                backBtn.className = 'btn btn-primary btn-sm shadow-sm fw-bold px-2 mb-0';
+                backBtn.title = 'Back to List';
+                backBtn.innerHTML = '<i class="bi bi-arrow-left"></i>';
+                backBtn.onclick = () => window.StockManager.LoadList();
+
+                submitBtn.parentNode.insertBefore(btnGroup, submitBtn);
+                btnGroup.appendChild(backBtn);
+                btnGroup.appendChild(submitBtn);
+            }
+        }
+
+        // --- ADD BACK BUTTON IN CARD HEADER ---
+        const cardHeader = form.closest('.card')?.querySelector('.card-header');
+        if (cardHeader) {
+            let headerBackBtn = cardHeader.querySelector('#headerBackBtn');
+            if (!headerBackBtn) {
+                headerBackBtn = document.createElement('button');
+                headerBackBtn.type = 'button';
+                headerBackBtn.id = 'headerBackBtn';
+                headerBackBtn.className = 'btn btn-light border shadow-sm px-3 me-2';
+                headerBackBtn.title = 'Back to List';
+                headerBackBtn.innerHTML = '<i class="bi bi-arrow-left"></i>';
+                headerBackBtn.onclick = () => window.StockManager.LoadList();
+                
+                const title = cardHeader.querySelector('h5');
+                if (title) cardHeader.insertBefore(headerBackBtn, title);
+                else cardHeader.prepend(headerBackBtn);
+            }
+        }
+
+        // --- EDIT CONTEXT MEMORY CHECK ---
+        const editContextStr = sessionStorage.getItem('EditContext_Stock');
+
+        if (editContextStr) {
+            const context = JSON.parse(editContextStr);
+            const data = context.payload;
+
+            let hiddenId = form.querySelector('#stockHiddenId');
+            if (!hiddenId) {
+                hiddenId = document.createElement('input');
+                hiddenId.type = 'hidden';
+                hiddenId.id = 'stockHiddenId';
+                hiddenId.name = 'hiddenRecordId';
+                form.appendChild(hiddenId);
+            }
+            hiddenId.value = context.id;
+
+            Object.keys(data).forEach(key => {
+                const input = form.querySelector(`[name="${key}"]`);
+                if (input) input.value = data[key] || '';
+            });
+
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>';
+                submitBtn.title = 'Update item';
+                submitBtn.classList.remove('btn-primary');
+                submitBtn.classList.add('btn-success');
+            }
+
+            const header = form.querySelector('h5');
+            if (header) header.innerHTML = '<i class="bi bi-pencil-square me-2"></i>Edit Stock Item';
+
+            sessionStorage.removeItem('EditContext_Stock');
+            
+        } else {
+            form.querySelector('#stockHiddenId')?.remove();
+            form.reset();
+            
+            const header = form.querySelector('h5');
+            if (header) header.innerHTML = '<i class="bi bi-plus-circle me-2"></i>Create New Stock Item';
+            
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="bi bi-check2 me-1"></i>';
+                submitBtn.classList.remove('btn-primary');
+                submitBtn.classList.add('btn-success');
+            }
+        }
+
+        // --- BULLETPROOF SUBMISSION CLICK HANDLER ---
+        if (submitBtn) {
+            window.SaveMaster = (e) => { 
+                if (e) e.preventDefault(); 
+                console.warn("🛑 Global SaveMaster blocked to prevent duplicate entries."); 
+                return false; 
+            };
+
+            submitBtn.onclick = async function (e) {
+                e.preventDefault();
+
+                const originalHtml = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processing...';
+                submitBtn.disabled = true;
+
+                try {
+                    const formData = new FormData(form);
+                    const payload = Object.fromEntries(formData.entries());
+
+                    form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                        payload[cb.name] = cb.checked;
+                    });
+
+                    const hiddenInput = form.querySelector("#stockHiddenId");
+                    const rawRecordId = hiddenInput ? hiddenInput.value.trim() : "";
+                    let recordId = (rawRecordId && rawRecordId !== 'undefined' && rawRecordId !== 'null') ? rawRecordId : null;
+
+                    delete payload.hiddenRecordId;
+                    delete payload.stockHiddenId;
+                    payload.updated_at = new Date().toISOString();
+
+                    // 🔴 LIVE VERIFICATION: Align local ID with actual Database ID
+                    const targetCode = String(payload.Stock_Code || payload.stockCode || payload.itemCode || '').trim();
+                    const liveServerCheck = await API.Fetch(`Masters/${window.StockManager.DbSheet}`);
+                    const masterNode = liveServerCheck?.data || liveServerCheck?.result || liveServerCheck;
+                    
+                    if (masterNode && targetCode) {
+                        const directMatchId = Object.keys(masterNode).find(key => 
+                            String(masterNode[key]?.Stock_Code || masterNode[key]?.stockCode || masterNode[key]?.itemCode).trim() === targetCode
+                        );
+                        if (directMatchId) {
+                            recordId = directMatchId; // Override with true database key
+                        }
+                    }
+
+                    // ===========================
+                    // EXECUTE MASTER WORK
+                    // ===========================
+                    let opSuccess = false;
+                    if (recordId) {
+                        const upRes = await API.SecureMasterUpdate(window.StockManager.DbSheet, recordId, payload);
+                        opSuccess = upRes !== false;
+                        if (opSuccess && App?.UI?.Notify) App.UI.Notify("Success", "Stock Item Updated Successfully", "success");
+                    } else {
+                        payload.created_at = payload.updated_at;
+                        const saveRes = await API.SaveMaster(`${window.StockManager.DbSheet}`, payload);
+                        opSuccess = saveRes !== false;
+                        if (opSuccess && App?.UI?.Notify) App.UI.Notify("Success", "Stock Item Created Successfully", "success");
+                    }
+
+                    if (opSuccess) {
+                        if (window.API && window.API._MasterCache) {
+                            delete window.API._MasterCache['Stock'];
+                            delete window.API._MasterCache['stock'];
+                        }
+                        await window.StockManager.LoadList();
+                    } else {
+                        submitBtn.innerHTML = originalHtml;
+                        submitBtn.disabled = false;
+                    }
+
+                } catch (error) {
+                    console.error("Save Error:", error);
+                    if (App?.UI?.Notify) App.UI.Notify("Error", error.message || "Save failed", "danger");
+                    else alert(error.message);
+
+                    submitBtn.innerHTML = originalHtml;
+                    submitBtn.disabled = false;
+                }
+            };
+        }
+    }
+});
+
+// Start watching DOM changes
+window.StockFormObserver.observe(document.body, { childList: true, subtree: true });
+
+// Load initial data
+window.StockManager.LoadList();
+
+// Edge case handling if form already exists
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('Stock');
+    if (form && !form.dataset.hydrated) {
+        setTimeout(() => {
+            const formCheck = document.getElementById('Stock');
+            if (formCheck && !formCheck.dataset.hydrated) {
+                const event = new MutationEvent('DOMNodeInserted', { bubbles: true });
+                document.body.dispatchEvent(event);
+            }
+        }, 100);
+    }
+});
+</script>

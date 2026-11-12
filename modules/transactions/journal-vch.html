@@ -1,0 +1,384 @@
+<div class="animate-in erp-module-wrapper">
+    <form id="JournalVoucherForm" data-category="Transactions">
+        <input type="hidden" name="documentType" value="JOURNAL">
+
+        <!-- ===================================================================
+             1. ENTERPRISE COMMAND HEADER
+             =================================================================== -->
+        <div class="card erp-card border-0 mb-3 overflow-hidden shadow-sm">
+            <div class="unitax-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-3" style="width: 42px; height: 42px;">
+                        <i class="bi bi-journal-text fs-4 text-primary"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <h5 class="fw-bold mb-0 text-dark">General Journal Voucher</h5>
+                            <span class="badge bg-primary text-white erp-doc-badge">GL-JOURNAL</span>
+                            <span class="badge bg-light text-muted border small" id="jvStatusBadge">Draft</span>
+                        </div>
+                        <p class="text-muted small mb-0">Adjustments &bull; Provisions &bull; Depreciation &bull; Accruals &bull; Inter-Ledger Reclassifications</p>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-erp-secondary btn-sm shadow-sm" onclick="window.printCurrentForm('journal-vch')" title="Print / Save PDF"><i class="bi bi-printer me-1 text-primary"></i> Print / PDF</button>
+                    <button type="button" class="btn btn-erp-icon" title="Reset Form" onclick="App.Router('transactions/journal-vch')" title="Reset Form">
+                        <i class="bi bi-arrow-counterclockwise me-1 text-primary"></i> Reset
+                    </button>
+                    <button type="submit" id="btnPostJournal" title="Post Journal Voucher to General Ledger" class="btn btn-erp-primary btn-sm px-4 fw-bold shadow-sm">
+                        <i class="bi bi-check2-circle me-1"></i> Post Journal
+                    </button>
+                </div>
+            </div>
+
+            <!-- Real-Time Financial Metric Ribbon -->
+            <div class="row g-0 border-top bg-light text-center py-2 px-3 small border-bottom">
+                <div class="col-6 col-md-3 border-end">
+                    <span class="text-muted text-uppercase fw-semibold" style="font-size: 11px;">Voucher Number</span>
+                    <div class="fw-bold font-mono text-dark" id="ribbonJvNo">JV-AUTO</div>
+                </div>
+                <div class="col-6 col-md-3 border-end">
+                    <span class="text-muted text-uppercase fw-semibold" style="font-size: 11px;">Total Debits</span>
+                    <div class="fw-bold font-mono text-dark">₹ <span id="jv-debit-ribbon">0.00</span></div>
+                </div>
+                <div class="col-6 col-md-3 border-end">
+                    <span class="text-muted text-uppercase fw-semibold" style="font-size: 11px;">Total Credits</span>
+                    <div class="fw-bold font-mono text-primary">₹ <span id="jv-credit-ribbon">0.00</span></div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span class="text-muted text-uppercase fw-semibold" style="font-size: 11px;">Equation Status</span>
+                    <div class="fw-bold font-mono fs-6 text-success" id="jv-status-ribbon">Balanced (₹ 0.00)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================================================
+             2. VOUCHER AUDIT & METADATA CARD
+             =================================================================== -->
+        <div class="card erp-card border-0 mb-3 shadow-sm">
+            <div class="card-body p-3">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">Voucher / Journal No</label>
+                        <input type="text" name="doc_no" id="jvDocNo" class="form-control form-control-sm font-mono fw-bold bg-light" readonly>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold posting-date-label">
+                            <i class="bi bi-calendar-check me-1 text-primary"></i>Compulsory Posting Date <span class="text-danger">*</span>
+                        </label>
+                        <input type="date" name="posting_date" id="jvPostingDate" class="form-control form-control-sm posting-date-field" required>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">Effective Document Date</label>
+                        <input type="date" name="voucher_date" id="jvVoucherDate" class="form-control form-control-sm">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">Parent Company / Entity</label>
+                        <input type="text" name="CompanyName" id="jvCompany" class="form-control form-control-sm"
+                               list="jvCompanyList" placeholder="Select Company..."
+                               data-fetch_column data-sheet_name="Companies" data-column_name="companyName&CompanyCode">
+                        <datalist id="jvCompanyList"></datalist>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Cost Center / Profit Center</label>
+                        <input type="text" name="project" id="jvProject" class="form-control form-control-sm"
+                               list="jvProjectList" placeholder="General, Branch, Project..."
+                               data-fetch_column data-sheet_name="Projects" data-column_name="ProjectName&ProjectCode">
+                        <datalist id="jvProjectList"></datalist>
+                    </div>
+
+                    <div class="col-md-8">
+                        <label class="form-label small fw-bold">Voucher Narration / Audit Memo</label>
+                        <input type="text" name="narration" id="jvNarration" class="form-control form-control-sm" placeholder="Explain the commercial or statutory reason for this journal entry...">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================================================
+             3. MULTI-LINE DEBIT / CREDIT ACCOUNTING GRID
+             =================================================================== -->
+        <div class="card erp-card border-0 mb-3 shadow-sm overflow-hidden">
+            <div class="card-header bg-white py-2 px-3 border-bottom d-flex justify-content-between align-items-center">
+                <div class="fw-bold small text-dark text-uppercase tracking-wide">
+                    <i class="bi bi-list-check me-1 text-primary"></i> Multi-Line General Ledger Postings
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-primary fw-semibold" onclick="window.addJournalLine()" title="Add Entry Line">
+                    <i class="bi bi-plus-lg me-1"></i> Add Account Line
+                </button>
+            </div>
+
+            <div class="table-responsive" style="min-height: 220px;">
+                <table class="table-erp align-middle mb-0" id="journalTable" style="width: 100% !important;">
+                    <thead>
+                        <tr>
+                            <th style="width: 45px;" class="text-center">#</th>
+                            <th style="width: 110px;">Type</th>
+                            <th>Ledger Account <span class="text-danger">*</span></th>
+                            <th style="width: 170px;" class="text-end">Debit (₹)</th>
+                            <th style="width: 170px;" class="text-end">Credit (₹)</th>
+                            <th style="width: 250px;">Line Narration / Remarks</th>
+                            <th style="width: 50px;" class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="journalTableBody">
+                        <!-- Default Row 1 (Debit) -->
+                        <tr>
+                            <td class="text-center text-muted fw-bold row-index">1</td>
+                            <td>
+                                <select name="drcr_type[]" class="form-select form-select-sm fw-bold drcr-type" onchange="window.onDrCrChange(this)">
+                                    <option value="DR" selected>By (Dr)</option>
+                                    <option value="CR">To (Cr)</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" name="offset_account[]" class="form-control form-control-sm"
+                                       list="jvLedgerList" placeholder="Search account..." required
+                                       data-fetch_column data-sheet_name="LedgerCreation" data-column_name="name&ledgerCode">
+                            </td>
+                            <td>
+                                <input type="number" name="amount_dr[]" step="0.01" min="0" class="form-control form-control-sm font-mono text-end jv-amount-dr" placeholder="0.00" oninput="window.calculateJournalTotals()">
+                            </td>
+                            <td>
+                                <input type="number" name="amount_cr[]" step="0.01" min="0" class="form-control form-control-sm font-mono text-end jv-amount-cr bg-light" placeholder="0.00" disabled oninput="window.calculateJournalTotals()">
+                            </td>
+                            <td>
+                                <input type="text" name="line_narration[]" class="form-control form-control-sm" placeholder="Line memo...">
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm text-danger p-0 border-0" onclick="window.removeJournalLine(this)" title="Delete Row">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- Default Row 2 (Credit) -->
+                        <tr>
+                            <td class="text-center text-muted fw-bold row-index">2</td>
+                            <td>
+                                <select name="drcr_type[]" class="form-select form-select-sm fw-bold drcr-type" onchange="window.onDrCrChange(this)">
+                                    <option value="DR">By (Dr)</option>
+                                    <option value="CR" selected>To (Cr)</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" name="offset_account[]" class="form-control form-control-sm"
+                                       list="jvLedgerList" placeholder="Search account..." required
+                                       data-fetch_column data-sheet_name="LedgerCreation" data-column_name="name&ledgerCode">
+                            </td>
+                            <td>
+                                <input type="number" name="amount_dr[]" step="0.01" min="0" class="form-control form-control-sm font-mono text-end jv-amount-dr bg-light" placeholder="0.00" disabled oninput="window.calculateJournalTotals()">
+                            </td>
+                            <td>
+                                <input type="number" name="amount_cr[]" step="0.01" min="0" class="form-control form-control-sm font-mono text-end jv-amount-cr" placeholder="0.00" oninput="window.calculateJournalTotals()">
+                            </td>
+                            <td>
+                                <input type="text" name="line_narration[]" class="form-control form-control-sm" placeholder="Line memo...">
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm text-danger p-0 border-0" onclick="window.removeJournalLine(this)" title="Delete Row">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot class="bg-light fw-bold font-mono">
+                        <tr>
+                            <td colspan="3" class="text-end text-uppercase small text-muted pe-3">Totals</td>
+                            <td class="text-end pe-3" id="footJvDr">₹ 0.00</td>
+                            <td class="text-end pe-3" id="footJvCr">₹ 0.00</td>
+                            <td colspan="2" id="footJvDiff" class="small text-muted">Diff: ₹ 0.00</td>
+                        </tr>
+                    </tfoot>
+                </table>
+                <datalist id="jvLedgerList"></datalist>
+            </div>
+        </div>
+
+        <!-- Hidden inputs for backend compatibility -->
+        <input type="hidden" name="amount" id="jvTotalAmount" value="0">
+        <input type="hidden" name="grandTotal" id="jvGrandTotal" value="0">
+    </form>
+</div>
+
+<script>
+(function() {
+    // Generate Unique JV Number
+    const docNo = "JV-" + Math.floor(100000 + Math.random() * 900000);
+    const docInput = document.getElementById('jvDocNo');
+    const ribbonDoc = document.getElementById('ribbonJvNo');
+    if (docInput) docInput.value = docNo;
+    if (ribbonDoc) ribbonDoc.innerText = docNo;
+
+    // Default Today's Posting Date
+    const today = new Date().toISOString().split('T')[0];
+    const postDateInput = document.getElementById('jvPostingDate');
+    const vchDateInput = document.getElementById('jvVoucherDate');
+    if (postDateInput && !postDateInput.value) postDateInput.value = today;
+    if (vchDateInput && !vchDateInput.value) vchDateInput.value = today;
+
+    window.onDrCrChange = function(selectEl) {
+        const tr = selectEl.closest('tr');
+        const drInput = tr.querySelector('.jv-amount-dr');
+        const crInput = tr.querySelector('.jv-amount-cr');
+        if (selectEl.value === 'DR') {
+            drInput.disabled = false;
+            drInput.classList.remove('bg-light');
+            crInput.disabled = true;
+            crInput.classList.add('bg-light');
+            crInput.value = '';
+        } else {
+            crInput.disabled = false;
+            crInput.classList.remove('bg-light');
+            drInput.disabled = true;
+            drInput.classList.add('bg-light');
+            drInput.value = '';
+        }
+        window.calculateJournalTotals();
+    };
+
+    window.addJournalLine = function() {
+        const tbody = document.getElementById('journalTableBody');
+        const count = tbody.children.length + 1;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="text-center text-muted fw-bold row-index">${count}</td>
+            <td>
+                <select name="drcr_type[]" class="form-select form-select-sm fw-bold drcr-type" onchange="window.onDrCrChange(this)">
+                    <option value="DR">By (Dr)</option>
+                    <option value="CR" selected>To (Cr)</option>
+                </select>
+            </td>
+            <td>
+                <input type="text" name="offset_account[]" class="form-control form-control-sm"
+                       list="jvLedgerList" placeholder="Search account..." required
+                       data-fetch_column data-sheet_name="LedgerCreation" data-column_name="name&ledgerCode">
+            </td>
+            <td>
+                <input type="number" name="amount_dr[]" step="0.01" min="0" class="form-control form-control-sm font-mono text-end jv-amount-dr bg-light" placeholder="0.00" disabled oninput="window.calculateJournalTotals()">
+            </td>
+            <td>
+                <input type="number" name="amount_cr[]" step="0.01" min="0" class="form-control form-control-sm font-mono text-end jv-amount-cr" placeholder="0.00" oninput="window.calculateJournalTotals()">
+            </td>
+            <td>
+                <input type="text" name="line_narration[]" class="form-control form-control-sm" placeholder="Line memo...">
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm text-danger p-0 border-0" onclick="window.removeJournalLine(this)" title="Delete Row">
+                    <i class="bi bi-trash3"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+
+        // Populate lookup for new row
+        if (window.API && API.PopulateAllDatalists) {
+            API.PopulateAllDatalists(document.getElementById('JournalVoucherForm'));
+        }
+        window.calculateJournalTotals();
+    };
+
+    window.removeJournalLine = function(btn) {
+        const tbody = document.getElementById('journalTableBody');
+        if (tbody.children.length <= 2) {
+            App.UI.Notify('Validation', 'A Journal Entry requires at least one Debit and one Credit line.', 'warning');
+            return;
+        }
+        btn.closest('tr').remove();
+        Array.from(tbody.children).forEach((tr, idx) => {
+            const idxEl = tr.querySelector('.row-index');
+            if (idxEl) idxEl.innerText = idx + 1;
+        });
+        window.calculateJournalTotals();
+    };
+
+    window.calculateJournalTotals = function() {
+        let totalDr = 0;
+        let totalCr = 0;
+
+        document.querySelectorAll('.jv-amount-dr').forEach(inp => {
+            if (!inp.disabled) totalDr += (parseFloat(inp.value) || 0);
+        });
+        document.querySelectorAll('.jv-amount-cr').forEach(inp => {
+            if (!inp.disabled) totalCr += (parseFloat(inp.value) || 0);
+        });
+
+        const diff = Math.abs(totalDr - totalCr);
+        const formatINR = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val);
+
+        document.getElementById('jv-debit-ribbon').innerText = totalDr.toFixed(2);
+        document.getElementById('jv-credit-ribbon').innerText = totalCr.toFixed(2);
+        document.getElementById('footJvDr').innerText = formatINR(totalDr);
+        document.getElementById('footJvCr').innerText = formatINR(totalCr);
+
+        const statusRibbon = document.getElementById('jv-status-ribbon');
+        const diffFooter = document.getElementById('footJvDiff');
+        const postBtn = document.getElementById('btnPostJournal');
+
+        document.getElementById('jvTotalAmount').value = totalDr;
+        document.getElementById('jvGrandTotal').value = totalDr;
+
+        if (totalDr > 0 && diff < 0.01) {
+            statusRibbon.className = "fw-bold font-mono fs-6 text-success";
+            statusRibbon.innerText = `Balanced (${formatINR(totalDr)})`;
+            diffFooter.innerHTML = `<span class="badge bg-success-subtle text-success border">Balanced</span>`;
+            if (postBtn) postBtn.disabled = false;
+        } else {
+            statusRibbon.className = "fw-bold font-mono fs-6 text-danger";
+            statusRibbon.innerText = `Diff: ${formatINR(diff)}`;
+            diffFooter.innerHTML = `<span class="badge bg-danger-subtle text-danger border">Difference: ${formatINR(diff)}</span>`;
+        }
+    };
+
+    // Override Form Validation before submit
+    const jvForm = document.getElementById('JournalVoucherForm');
+    if (jvForm) {
+        const originalSubmit = jvForm.onsubmit;
+        jvForm.addEventListener('submit', async function(e) {
+            if (window.API && typeof API.ValidateInputLists === 'function') {
+                const listCheck = await API.ValidateInputLists(jvForm);
+                if (!listCheck.isValid) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+                        App.UI.Notify('Validation Notice', listCheck.message, 'danger');
+                    } else {
+                        alert(listCheck.message);
+                    }
+                    if (listCheck.invalidElement) {
+                        listCheck.invalidElement.classList.add('is-invalid');
+                        listCheck.invalidElement.style.borderColor = '#dc3545';
+                        listCheck.invalidElement.focus();
+                        listCheck.invalidElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    return false;
+                }
+            }
+
+            let totalDr = 0;
+            let totalCr = 0;
+            document.querySelectorAll('.jv-amount-dr').forEach(inp => { if (!inp.disabled) totalDr += (parseFloat(inp.value) || 0); });
+            document.querySelectorAll('.jv-amount-cr').forEach(inp => { if (!inp.disabled) totalCr += (parseFloat(inp.value) || 0); });
+
+            if (totalDr === 0 || totalCr === 0) {
+                e.preventDefault();
+                e.stopPropagation();
+                App.UI.Notify('Validation Error', 'Journal Entry must have non-zero debits and credits.', 'danger');
+                return false;
+            }
+
+            if (Math.abs(totalDr - totalCr) > 0.01) {
+                e.preventDefault();
+                e.stopPropagation();
+                App.UI.Notify('Unbalanced Journal', `Total Debits (₹${totalDr.toFixed(2)}) must equal Total Credits (₹${totalCr.toFixed(2)}).`, 'danger');
+                return false;
+            }
+        }, true);
+    }
+})();
+</script>

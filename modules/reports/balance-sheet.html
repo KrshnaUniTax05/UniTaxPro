@@ -1,0 +1,417 @@
+<div class="animate-in">
+    <div class="card border-0 shadow-sm overflow-hidden mb-4">
+        <!-- Command Header -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center p-3 border-bottom bg-light sticky-top z-10 unitax-header">
+            <div>
+                <h5 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-bank text-primary me-2"></i>Balance Sheet (Statement of Financial Position)
+                </h5>
+                <p class="text-muted small mb-0">Assets, Liabilities & Owner's Equity Reconciliation per Indian Accounting Standards (Ind AS)</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <div class="input-group input-group-sm" style="width: 170px;">
+                    <span class="input-group-text bg-white small">As on Date</span>
+                    <input type="date" id="bsAsOnDate" class="form-control bg-white" onchange="BalanceSheetApp.Compute()">
+                </div>
+                <button type="button" class="btn btn-erp-icon" title="Export CSV" onclick="BalanceSheetApp.ExportCSV()"><i class="bi bi-file-earmark-arrow-down"></i></button>
+                <button type="button" class="btn btn-erp-icon btn-erp-icon-primary" title="Print Balance Sheet" onclick="window.print()"><i class="bi bi-printer"></i></button>
+            </div>
+        </div>
+
+        <div class="p-4">
+            <!-- Balance Sheet Equilibrium Status Bar -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="border rounded-3 p-3 bg-white shadow-sm">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Total Assets (Capital Employed)</div>
+                        <div class="h4 fw-bold font-mono text-primary mb-0" id="bsTotalAssets">₹ 0.00</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded-3 p-3 bg-white shadow-sm">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Total Liabilities & Equity</div>
+                        <div class="h4 fw-bold font-mono text-dark mb-0" id="bsTotalLiabilities">₹ 0.00</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded-3 p-3 bg-white shadow-sm" id="bsDiffCard">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Accounting Equation Equation Status</div>
+                        <div class="h4 fw-bold font-mono text-success mb-0" id="bsEquationStatus">Assets = Liabilities + Equity</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- T-Shape Statement: Liabilities on Left, Assets on Right (Traditional & Ind AS Standard) -->
+            <div class="row g-4">
+                <!-- Left Column: Liabilities & Equity -->
+                <div class="col-lg-6">
+                    <div class="border rounded-3 overflow-hidden bg-white shadow-sm h-100 d-flex flex-column">
+                        <div class="bg-dark text-white px-3 py-2 fw-bold text-uppercase small d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-shield-shaded me-2 text-warning"></i>Liabilities & Owner's Equity</span>
+                            <span class="font-mono" id="bsLiabSummary">INR (₹)</span>
+                        </div>
+                        <div class="table-responsive flex-grow-1">
+                            <table class="table table-sm table-hover mb-0 align-middle" style="width: 100% !important;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="70%" class="ps-3">Classification & Account</th>
+                                        <th width="30%" class="text-end pe-3 font-mono">Amount (INR)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- 1. Equity & Reserves -->
+                                    <tr class="table-secondary fw-bold text-uppercase" style="font-size: 11px;">
+                                        <td colspan="2" class="ps-3 text-dark">1. Capital & Equity Reserves</td>
+                                    </tr>
+                                    <tr>
+                                        <tr style="cursor: pointer;" ondblclick="UniTaxDrilldown.Open('Owner Capital & Equity', 'capital', BalanceSheetApp.DATA.capital)" title="Double click to inspect contributing entries">
+                                        <td class="ps-4">
+                                            <div class="fw-semibold">Owner's Capital Account</div>
+                                            <div class="small text-muted">Contributed Equity & Seed Capital</div>
+                                        </td>
+                                        <td class="text-end pe-3 font-mono" id="bsCapitalAmt">₹ 0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="fw-semibold">Net Retained Profit / (Loss)</div>
+                                            <div class="small text-muted">Accumulated earnings from Operating Statement</div>
+                                        </td>
+                                        <td class="text-end pe-3 font-mono fw-bold" id="bsRetainedProfitAmt">₹ 0.00</td>
+                                    </tr>
+
+                                    <!-- 2. Non-Current Liabilities -->
+                                    <tr class="table-secondary fw-bold text-uppercase" style="font-size: 11px;">
+                                        <td colspan="2" class="ps-3 text-dark">2. Non-Current Liabilities</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="fw-semibold">Long-Term Bank Borrowings</div>
+                                            <div class="small text-muted">Secured term loans & debentures</div>
+                                        </td>
+                                        <td class="text-end pe-3 font-mono" id="bsLongTermDebt">₹ 0.00</td>
+                                    </tr>
+
+                                    <!-- 3. Current Liabilities -->
+                                    <tr class="table-secondary fw-bold text-uppercase" style="font-size: 11px;">
+                                        <td colspan="2" class="ps-3 text-dark">3. Current Liabilities</td>
+                                    </tr>
+                                    <tr style="cursor: pointer;" ondblclick="UniTaxDrilldown.Open('Sundry Creditors (Trade Payables)', 'creditors', BalanceSheetApp.DATA.creditors)" title="Double click to inspect contributing entries">
+                                        <td class="ps-4">
+                                            <div class="fw-semibold">Sundry Creditors (Trade Payables)</div>
+                                            <div class="small text-muted">Pending vendor & supplier payables</div>
+                                        </td>
+                                        <td class="text-end pe-3 font-mono fw-bold text-danger" id="bsCreditorsAmt">₹ 0.00</td>
+                                    </tr>
+                                    <tr style="cursor: pointer;" ondblclick="UniTaxDrilldown.Open('Duties & Taxes Payable', 'duties_taxes', BalanceSheetApp.DATA.dutiesTaxes)" title="Double click to inspect contributing entries">
+                                        <td class="ps-4">
+                                            <div class="fw-semibold">Duties & Taxes Payable (GST / TDS)</div>
+                                            <div class="small text-muted">Net output tax liabilities</div>
+                                        </td>
+                                        <td class="text-end pe-3 font-mono" id="bsDutiesTaxesAmt">₹ 0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="fw-semibold">Other Outstanding Expenses & Provisions</div>
+                                            <div class="small text-muted">Accrued salaries, rent & utilities</div>
+                                        </td>
+                                        <td class="text-end pe-3 font-mono" id="bsOtherPayablesAmt">₹ 0.00</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot class="table-dark fw-bold font-mono">
+                                    <tr>
+                                        <td class="ps-3 text-uppercase">Total Liabilities & Equity</td>
+                                        <td class="text-end pe-3 text-warning" id="bsFootLiabilities">₹ 0.00</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Assets -->
+                <div class="col-lg-6">
+                    <div class="border rounded-3 overflow-hidden bg-white shadow-sm h-100 d-flex flex-column">
+                        <div class="bg-dark text-white px-3 py-2 fw-bold text-uppercase small d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-briefcase me-2 text-info"></i>Enterprise Assets</span>
+                            <span class="font-mono" id="bsAssetsSummary">INR (₹)</span>
+                        </div>
+                        <div class="table-responsive flex-grow-1">
+                            <table class="table table-sm table-hover mb-0 align-middle" style="width: 100% !important;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="70%" class="ps-3">Classification & Account</th>
+                                        <th width="30%" class="text-end pe-3 font-mono">Amount (INR)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- 1. Non-Current Assets -->
+                                    <tr class="table-secondary fw-bold text-uppercase" style="font-size: 11px;">
+                                        <td colspan="2" class="ps-3 text-dark">1. Non-Current Assets</td>
+                                    </tr>
+                                    <tr style="cursor: pointer;" ondblclick="UniTaxDrilldown.Open('Property, Plant & Equipment', 'fixed_assets', BalanceSheetApp.DATA.fixedAssets)" title="Double click to inspect contributing entries">
+                                        <td class="ps-4">
+                                            <div class="fw-semibold">Property, Plant & Equipment</div>
+                                            <div class="small text-muted">Fixed capital assets, machines, computers</div>
+                                        </td>
+                                        <td class="text-end pe-3 font-mono" id="bsFixedAssetsAmt">₹ 0.00</td>
+                                    </tr>
+
+                                    <!-- 2. Current Assets -->
+                                    <tr class="table-secondary fw-bold text-uppercase" style="font-size: 11px;">
+                                        <td colspan="2" class="ps-3 text-dark">2. Current Assets</td>
+                                    </tr>
+                                    <tr style="cursor: pointer;" ondblclick="UniTaxDrilldown.Open('Sundry Debtors (Trade Receivables)', 'debtors', BalanceSheetApp.DATA.debtors)" title="Double click to inspect contributing entries">
+                                        <td class="ps-4">
+                                            <div class="fw-semibold">Sundry Debtors (Trade Receivables)</div>
+                                            <div class="small text-muted">Open balances owed by invoiced customers</div>
+                                        </td>
+                                        <td class="text-end pe-3 font-mono fw-bold text-primary" id="bsDebtorsAmt">₹ 0.00</td>
+                                    </tr>
+                                    <tr style="cursor: pointer;" ondblclick="UniTaxDrilldown.Open('Closing Stock & Inventory Valuation', 'stock', BalanceSheetApp.DATA.stockValuation)" title="Double click to inspect contributing entries">
+                                        <td class="ps-4">
+                                            <div class="fw-semibold">Closing Stock & Inventory</div>
+                                            <div class="small text-muted">Valuation of stock on hand</div>
+                                        </td>
+                                        <td class="text-end pe-3 font-mono fw-bold text-success" id="bsStockValAmt">₹ 0.00</td>
+                                    </tr>
+                                    <tr style="cursor: pointer;" ondblclick="UniTaxDrilldown.Open('Liquid Bank Accounts & Deposits', 'bank', BalanceSheetApp.DATA.bank)" title="Double click to inspect contributing entries">
+                                        <td class="ps-4">
+                                            <div class="fw-semibold">Bank Accounts & Deposits</div>
+                                            <div class="small text-muted">Current & savings liquid bank balances</div>
+                                        </td>
+                                        <td class="text-end pe-3 font-mono fw-bold text-dark" id="bsBankBalancesAmt">₹ 0.00</td>
+                                    </tr>
+                                    <tr style="cursor: pointer;" ondblclick="UniTaxDrilldown.Open('Cash-in-Hand Balances', 'cash', BalanceSheetApp.DATA.cash)" title="Double click to inspect contributing entries">
+                                        <td class="ps-4">
+                                            <div class="fw-semibold">Cash-in-Hand</div>
+                                            <div class="small text-muted">Physical cash balance</div>
+                                        </td>
+                                        <td class="text-end pe-3 font-mono" id="bsCashBalancesAmt">₹ 0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="fw-semibold">Short-Term Loans & Advances</div>
+                                            <div class="small text-muted">Prepaid expenses & supplier deposits</div>
+                                        </td>
+                                        <td class="text-end pe-3 font-mono text-muted" id="bsAdvancesAmt">₹ 0.00</td>
+                                    </tr>
+                                </tbody>
+                                <tfoot class="table-dark fw-bold font-mono">
+                                    <tr>
+                                        <td class="ps-3 text-uppercase">Total Assets</td>
+                                        <td class="text-end pe-3 text-info" id="bsFootAssets">₹ 0.00</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-text mt-3 text-muted small">
+                <i class="bi bi-info-circle me-1"></i> Balance Sheet is rendered dynamically from double-entry ledger summaries, real-time stock valuation, and verified transactional vouchers.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.BalanceSheetApp = {
+    DATA: {},
+
+    async Init() {
+        const today = new Date().toISOString().split('T')[0];
+        const dateInput = document.getElementById('bsAsOnDate');
+        if (dateInput && !dateInput.value) dateInput.value = today;
+
+        await this.Compute();
+    },
+
+    async Compute() {
+        const asOnDate = document.getElementById('bsAsOnDate')?.value || new Date().toISOString().split('T')[0];
+
+        try {
+            const [sales, purchase, receipt, payment, stock, ledgers] = await Promise.all([
+                API.Fetch('Transactions/SalesInvoiceForm').catch(() => ({})),
+                API.Fetch('Transactions/PurchaseInvoiceForm').catch(() => ({})),
+                API.Fetch('Transactions/ReceiptVoucherForm').catch(() => ({})),
+                API.Fetch('Transactions/PaymentVoucherForm').catch(() => ({})),
+                API.Fetch('Masters/Stock').catch(() => ({})),
+                API.Fetch('Masters/LedgerCreation').catch(() => ({}))
+            ]);
+
+            // 1. Compute Debtors (Sales minus Receipts from customers)
+            let totalSales = 0;
+            if (sales) {
+                Object.values(sales).forEach(v => {
+                    const h = v.header || {};
+                    const isDel = v.is_deleted === true || (h && h.is_deleted === true) || v.status === 'DELETED' || (h && h.status === 'DELETED');
+                    const isDraft = v.status === 'DRAFT' || v.status === 'PENDING_APPROVAL' || (h && (h.status === 'DRAFT' || h.status === 'PENDING_APPROVAL'));
+                    if (isDel || isDraft) return;
+                    const d = h.posting_date || v.posting_date;
+                    if (!d || d > asOnDate) return;
+                    totalSales += parseFloat(h.grandTotal || h.total_amount || 0);
+                });
+            }
+
+            let customerReceipts = 0;
+            let liquidBank = 0;
+            let liquidCash = 0;
+
+            if (receipt) {
+                Object.values(receipt).forEach(v => {
+                    const h = v.header || {};
+                    const isDel = v.is_deleted === true || (h && h.is_deleted === true) || v.status === 'DELETED' || (h && h.status === 'DELETED');
+                    const isDraft = v.status === 'DRAFT' || v.status === 'PENDING_APPROVAL' || (h && (h.status === 'DRAFT' || h.status === 'PENDING_APPROVAL'));
+                    if (isDel || isDraft) return;
+                    const d = h.posting_date || v.posting_date;
+                    if (!d || d > asOnDate) return;
+                    const amt = parseFloat(h.grandTotal || h.total || 0);
+                    customerReceipts += amt;
+
+                    const acct = (h.gl_account || '').toLowerCase();
+                    if (acct.includes('cash')) liquidCash += amt;
+                    else liquidBank += amt;
+                });
+            }
+
+            // 2. Compute Creditors (Purchases minus Payments to suppliers)
+            let totalPurchases = 0;
+            if (purchase) {
+                Object.values(purchase).forEach(v => {
+                    const h = v.header || {};
+                    const isDel = v.is_deleted === true || (h && h.is_deleted === true) || v.status === 'DELETED' || (h && h.status === 'DELETED');
+                    const isDraft = v.status === 'DRAFT' || v.status === 'PENDING_APPROVAL' || (h && (h.status === 'DRAFT' || h.status === 'PENDING_APPROVAL'));
+                    if (isDel || isDraft) return;
+                    const d = h.posting_date || v.posting_date;
+                    if (!d || d > asOnDate) return;
+                    totalPurchases += parseFloat(h.grandTotal || h.total_amount || 0);
+                });
+            }
+
+            let supplierPayments = 0;
+            if (payment) {
+                Object.values(payment).forEach(v => {
+                    const h = v.header || {};
+                    const isDel = v.is_deleted === true || (h && h.is_deleted === true) || v.status === 'DELETED' || (h && h.status === 'DELETED');
+                    const isDraft = v.status === 'DRAFT' || v.status === 'PENDING_APPROVAL' || (h && (h.status === 'DRAFT' || h.status === 'PENDING_APPROVAL'));
+                    if (isDel || isDraft) return;
+                    const d = h.posting_date || v.posting_date;
+                    if (!d || d > asOnDate) return;
+                    const amt = parseFloat(h.grandTotal || h.total || 0);
+                    supplierPayments += amt;
+
+                    const acct = (h.gl_account || '').toLowerCase();
+                    if (acct.includes('cash')) liquidCash -= amt;
+                    else liquidBank -= amt;
+                });
+            }
+
+            const debtors = Math.max(0, totalSales - customerReceipts);
+            const creditors = Math.max(0, totalPurchases - supplierPayments);
+
+            // 3. Compute Stock Valuation
+            let stockValuation = 0;
+            if (stock) {
+                Object.values(stock).forEach(s => {
+                    const qty = parseFloat(s.openingQuantity || s.currentStock || s.quantity || 0);
+                    const rate = parseFloat(s.costPrice || s.purchaseRate || s.rate || 0);
+                    stockValuation += (qty * rate);
+                });
+            }
+
+            // 4. Fixed Assets & Capital from Master Ledgers
+            let fixedAssets = 0;
+            let capital = 0;
+            let dutiesTaxes = 0;
+
+            if (ledgers) {
+                Object.values(ledgers).forEach(l => {
+                    const nature = (l.ledgerNature || l.ledgerGroup || l.ledgerType || '').toLowerCase();
+                    const bal = parseFloat(l.openingBalance || 0);
+                    if (nature.includes('fixed asset') || nature.includes('asset')) {
+                        fixedAssets += bal;
+                    } else if (nature.includes('capital') || nature.includes('equity')) {
+                        capital += bal;
+                    } else if (nature.includes('tax') || nature.includes('duty') || nature.includes('gst')) {
+                        dutiesTaxes += bal;
+                    }
+                });
+            }
+
+            // Fallback base capital if none entered
+            // Base capital derived dynamically from ledger creation
+
+            // 5. Net Retained Profit from Trading
+            const retainedProfit = totalSales - totalPurchases - supplierPayments + customerReceipts;
+
+            // 6. Aggregate Total Assets
+            const currentAssets = debtors + stockValuation + Math.max(0, liquidBank) + Math.max(0, liquidCash);
+            const totalAssets = fixedAssets + currentAssets;
+
+            // 7. Aggregate Total Liabilities
+            const totalLiabilities = capital + retainedProfit + creditors + dutiesTaxes;
+
+            const formatINR = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val);
+
+            // Update UI
+            document.getElementById('bsTotalAssets').innerText = formatINR(totalAssets);
+            document.getElementById('bsTotalLiabilities').innerText = formatINR(totalLiabilities);
+            document.getElementById('bsFootAssets').innerText = formatINR(totalAssets);
+            document.getElementById('bsFootLiabilities').innerText = formatINR(totalLiabilities);
+
+            document.getElementById('bsCapitalAmt').innerText = formatINR(capital);
+            document.getElementById('bsRetainedProfitAmt').innerText = formatINR(retainedProfit);
+            document.getElementById('bsCreditorsAmt').innerText = formatINR(creditors);
+            document.getElementById('bsDutiesTaxesAmt').innerText = formatINR(dutiesTaxes);
+
+            document.getElementById('bsFixedAssetsAmt').innerText = formatINR(fixedAssets);
+            document.getElementById('bsDebtorsAmt').innerText = formatINR(debtors);
+            document.getElementById('bsStockValAmt').innerText = formatINR(stockValuation);
+            document.getElementById('bsBankBalancesAmt').innerText = formatINR(Math.max(0, liquidBank));
+            document.getElementById('bsCashBalancesAmt').innerText = formatINR(Math.max(0, liquidCash));
+
+            const diff = Math.abs(totalAssets - totalLiabilities);
+            const eqEl = document.getElementById('bsEquationStatus');
+            if (diff < 1.0) {
+                eqEl.innerText = 'Assets = Liabilities + Equity (Balanced)';
+                eqEl.className = 'h4 fw-bold font-mono text-success mb-0';
+            } else {
+                eqEl.innerText = `Diff: ${formatINR(diff)} (Adjusting)`;
+                eqEl.className = 'h4 fw-bold font-mono text-primary mb-0';
+            }
+
+            this.DATA = {
+                asOnDate, totalAssets, totalLiabilities, capital, retainedProfit, creditors, dutiesTaxes, fixedAssets, debtors, stockValuation, bank: liquidBank, cash: liquidCash
+            };
+
+        } catch (err) {
+            console.error("Balance Sheet Compute Error:", err);
+        }
+    },
+
+    ExportCSV() {
+        const d = this.DATA;
+        let csv = "Balance Sheet (Statement of Financial Position)\n";
+        csv += `As on Date: ${d.asOnDate}\n\n`;
+        csv += `Category,Line Item,Amount (INR)\n`;
+        csv += `Liabilities & Equity,Owner Capital,${d.capital.toFixed(2)}\n`;
+        csv += `Liabilities & Equity,Retained Profit / (Loss),${d.retainedProfit.toFixed(2)}\n`;
+        csv += `Liabilities & Equity,Trade Payables (Creditors),${d.creditors.toFixed(2)}\n`;
+        csv += `Total Liabilities & Equity,,${d.totalLiabilities.toFixed(2)}\n\n`;
+        csv += `Assets,Trade Receivables (Debtors),${d.debtors.toFixed(2)}\n`;
+        csv += `Assets,Inventory Valuation,${d.stockValuation.toFixed(2)}\n`;
+        csv += `Assets,Bank Balances,${d.bank.toFixed(2)}\n`;
+        csv += `Assets,Cash on Hand,${d.cash.toFixed(2)}\n`;
+        csv += `Total Assets,,${d.totalAssets.toFixed(2)}\n`;
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Balance_Sheet_${d.asOnDate}.csv`;
+        a.click();
+    }
+};
+
+window.BalanceSheetApp.Init();
+</script>

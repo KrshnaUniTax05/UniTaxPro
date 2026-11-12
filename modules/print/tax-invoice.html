@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{Document_title}} - {{doc_no}}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+    
+    *, *::before, *::after { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    html, body { margin: 0; padding: 0; background: #ffffff; color: #0f172a; font-family: 'Inter', sans-serif; font-size: 8pt; line-height: 1.35; }
+    .action-bar { position: fixed; top: 0; left: 0; right: 0; background: #0f172a; color: #ffffff; padding: 8px 16px; display: flex; justify-content: space-between; align-items: center; z-index: 9999; }
+    .btn-print { background: #2563eb; color: #ffffff; border: none; padding: 6px 14px; border-radius: 4px; font-weight: 700; cursor: pointer; }
+    
+    .font-mono { font-family: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    .fw-bold { font-weight: 700; }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .nowrap { white-space: nowrap; }
+
+    .header-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; border-bottom: 2px solid #1e3a8a; padding-bottom: 6px; }
+    .company-name { font-size: 13pt; font-weight: 800; color: #0f172a; margin: 0 0 2px 0; text-transform: uppercase; }
+    .company-subtext { font-size: 7.5pt; color: #334155; line-height: 1.35; }
+    .doc-main-title { font-size: 14pt; font-weight: 800; color: #1e3a8a; text-align: right; text-transform: uppercase; }
+    .doc-sub-title { font-size: 7pt; font-weight: 600; color: #64748b; text-align: right; text-transform: uppercase; }
+
+    .meta-table { width: 100%; border-collapse: collapse; background: #f8fafc; border: 1px solid #cbd5e1; margin-bottom: 8px; }
+    .meta-table td { padding: 5px 8px; font-size: 7.5pt; border-right: 1px solid #e2e8f0; }
+    .meta-table td:last-child { border-right: none; }
+    .meta-label { font-size: 6.5pt; color: #64748b; text-transform: uppercase; font-weight: 700; display: block; }
+    .meta-val { font-size: 8pt; font-weight: 700; color: #0f172a; }
+
+    .parties-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; border: 1px solid #cbd5e1; }
+    .party-cell { width: 50%; padding: 6px 8px; vertical-align: top; }
+    .party-cell:first-child { border-right: 1px solid #cbd5e1; }
+    .party-heading { font-size: 7pt; font-weight: 700; text-transform: uppercase; color: #1e3a8a; border-bottom: 1px solid #e2e8f0; padding-bottom: 2px; margin-bottom: 3px; }
+    .party-name { font-size: 9pt; font-weight: 700; color: #0f172a; margin-bottom: 2px; }
+    .party-line { font-size: 7.5pt; color: #334155; line-height: 1.35; }
+
+    .items-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; border: 1px solid #cbd5e1; }
+    .items-table th { background: #f1f5f9; color: #1e293b; font-weight: 700; font-size: 7pt; text-transform: uppercase; padding: 5px 6px; border: 1px solid #cbd5e1; }
+    .items-table td { padding: 4px 6px; border: 1px solid #cbd5e1; font-size: 7.5pt; }
+    .items-table tbody tr:nth-child(even) { background-color: #fbfcfe; }
+
+    .sub-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; border: 1px solid #cbd5e1; }
+    .sub-table th { background: #f8fafc; font-size: 6.5pt; font-weight: 700; text-transform: uppercase; padding: 4px; border: 1px solid #cbd5e1; color: #475569; }
+    .sub-table td { padding: 3px 5px; font-size: 7pt; border: 1px solid #cbd5e1; }
+
+    .summary-container { width: 100%; border-collapse: collapse; margin-bottom: 8px; page-break-inside: avoid; }
+    .summary-left { width: 58%; vertical-align: top; padding-right: 8px; }
+    .summary-right { width: 42%; vertical-align: top; }
+    .amount-words-card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 3px; padding: 5px 8px; margin-bottom: 6px; }
+    .calc-table { width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; }
+    .calc-table td { padding: 4px 8px; font-size: 7.5pt; border-bottom: 1px solid #e2e8f0; }
+    .calc-table tr.grand-row td { background: #1e3a8a; color: #ffffff; font-weight: 800; font-size: 9pt; border-bottom: none; }
+
+    .signature-table { width: 100%; border-collapse: collapse; margin-top: 6px; page-break-inside: avoid; border-top: 1px solid #cbd5e1; }
+    .sig-box { width: 33.33%; text-align: center; vertical-align: bottom; padding: 24px 6px 4px 6px; }
+    .sig-line { border-top: 1px dashed #94a3b8; margin: 0 10px 4px 10px; }
+    .sig-role { font-size: 7pt; font-weight: 700; text-transform: uppercase; color: #334155; }
+
+
+    .signature-table { width: 100%; table-layout: fixed; border-collapse: collapse; margin-top: 14px; page-break-inside: avoid; }
+    .signature-table td { vertical-align: bottom; padding: 0; }
+    .sig-block { display: inline-block; width: 190px; text-align: center; }
+    .sig-org { font-size: 7pt; font-weight: 700; color: #0f172a; margin-bottom: 24px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .sig-space { height: 32px; }
+    .sig-line { border-top: 1px solid #475569; width: 100%; margin: 0 auto 4px auto; }
+    .sig-role { font-size: 7pt; font-weight: 700; text-transform: uppercase; color: #1e293b; letter-spacing: 0.3px; }
+    .sig-note { font-size: 6pt; color: #64748b; margin-top: 1px; }
+    .nowrap { white-space: nowrap !important; }
+
+
+    
+    *, *::before, *::after { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 210mm;
+        background: #ffffff;
+        color: #0f172a;
+        font-family: 'Inter', sans-serif;
+        font-size: 8pt;
+        line-height: 1.35;
+    }
+    
+    
+    
+        html, body {
+            width: 210mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+        }
+        
+        
+    }
+@page {
+        size: A4 portrait;
+        margin: 0;
+    }
+    *, *::before, *::after {
+        box-sizing: border-box;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 210mm;
+        background: #ffffff;
+        color: #0f172a;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        font-size: 8pt;
+        line-height: 1.35;
+    }
+        .print-container {
+        width: 210mm;
+        min-height: 297mm;
+        margin: 0 auto;
+        padding: 8mm 12mm;
+        box-sizing: border-box;
+        background: #ffffff;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .doc-page {
+        width: 100%;
+        min-height: calc(297mm - 16mm);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-sizing: border-box;
+        position: relative;
+    }
+    .doc-header {
+        flex-shrink: 0;
+    }
+    .doc-body {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        margin-top: 6px;
+        margin-bottom: 6px;
+        min-height: 70mm;
+    }
+    .doc-footer {
+        flex-shrink: 0;
+        margin-top: auto;
+    }
+    .signature-table {
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: collapse;
+        margin-top: 14px;
+        page-break-inside: avoid;
+    }
+    .signature-table td {
+        vertical-align: bottom;
+        padding: 0;
+    }
+    .sig-block {
+        display: inline-block;
+        width: 190px;
+        max-width: 100%;
+        text-align: center;
+    }
+    .sig-org {
+        font-size: 7pt;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 24px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+    @media print {
+        .action-bar { display: none !important; }
+        html, body {
+            width: 210mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+        }
+            .print-container {
+        width: 210mm;
+        min-height: 297mm;
+        margin: 0 auto;
+        padding: 8mm 12mm;
+        box-sizing: border-box;
+        background: #ffffff;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .doc-page {
+        width: 100%;
+        min-height: calc(297mm - 16mm);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-sizing: border-box;
+        position: relative;
+    }
+    .doc-header {
+        flex-shrink: 0;
+    }
+    .doc-body {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        margin-top: 6px;
+        margin-bottom: 6px;
+        min-height: 70mm;
+    }
+    .doc-footer {
+        flex-shrink: 0;
+        margin-top: auto;
+    }
+    }
+</style>
+</head>
+<body>
+<div class="action-bar">
+    <div><strong>UniTax ERP</strong> &nbsp;|&nbsp; Document Preview — {{doc_no}}</div>
+    <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
+</div>
+
+<div class="print-container">
+    <div class="doc-page">
+    <div class="doc-header">
+    <table class="header-table">
+        <tr>
+            <td style="width: 60%; vertical-align: top;">
+                <div class="company-name">{{companyName}}</div>
+                <div class="company-subtext">
+                    {{companyAddress}}<br>
+                    <strong>GSTIN:</strong> {{gstin}} | <strong>CIN:</strong> L70100DL2000PLC104787<br>
+                    <strong>Email:</strong> {{companyEmail}} | <strong>Phone:</strong> {{companyPhone}}
+                </div>
+            </td>
+            <td>
+                <div class="doc-main-title">{{Document_title}}</div>
+                <div class="doc-sub-title">Original for Recipient | Section 31 CGST Act</div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="meta-table">
+        <tr>
+            <td style="width: 25%;"><span class="meta-label">Invoice Number</span><span class="meta-val font-mono">{{doc_no}}</span></td>
+            <td style="width: 25%;"><span class="meta-label">Invoice Date</span><span class="meta-val font-mono nowrap">{{date}}</span></td>
+            <td style="width: 25%;"><span class="meta-label">Place of Supply</span><span class="meta-val">{{customer_state}}</span></td>
+            <td style="width: 25%;"><span class="meta-label">Reverse Charge</span><span class="meta-val">NO</span></td>
+        </tr>
+    </table>
+
+    <table class="parties-table">
+        <tr>
+            <td class="party-cell">
+                <div class="party-heading">Details of Receiver (Billed To)</div>
+                <div class="party-name">{{customer_name}}</div>
+                <div class="party-line">
+                    <strong>Address:</strong> {{customer_address}}<br>
+                    <strong>GSTIN / UIN:</strong> <span class="font-mono">{{customer_gst}}</span><br>
+                    <strong>State & Code:</strong> {{customer_state}}<br>
+                    {{customer_phone}} | {{customer_email}}
+                </div>
+            </td>
+            <td class="party-cell">
+                <div class="party-heading">Details of Consignee (Shipped To)</div>
+                <div class="party-name">{{consignee_name}}</div>
+                <div class="party-line">
+                    <strong>Delivery Address:</strong> {{delivery_address}}<br>
+                    <strong>Vehicle No:</strong> <span class="font-mono">{{vehicle_no}}</span><br>
+                    {{delivery_phone}} | {{delivery_email}}
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    </div><!-- end doc-header -->
+    <div class="doc-body">
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th style="width: 4%;">#</th>
+                <th style="width: 38%;">Description of Goods / Services</th>
+                <th style="width: 10%;">HSN/SAC</th>
+                <th style="width: 10%;">Qty</th>
+                <th style="width: 10%; text-align: right;">Rate (₹)</th>
+                <th style="width: 10%; text-align: right;">Taxable (₹)</th>
+                <th style="width: 6%; text-align: center;">GST</th>
+                <th style="width: 12%; text-align: right;">Amount (₹)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{items_html}}
+        </tbody>
+    </table>
+
+    <table class="sub-table">
+        <thead>
+            <tr>
+                <th rowspan="2" style="width: 12%;">HSN/SAC</th>
+                <th rowspan="2" style="width: 18%; text-align: right;">Taxable (₹)</th>
+                <th colspan="2" style="width: 25%; text-align: center;">Central Tax (CGST)</th>
+                <th colspan="2" style="width: 25%; text-align: center;">State Tax (SGST)</th>
+                <th rowspan="2" style="width: 20%; text-align: right;">Total Tax (₹)</th>
+            </tr>
+            <tr>
+                <th style="width: 8%; text-align: center;">Rate</th>
+                <th style="width: 17%; text-align: right;">Amount (₹)</th>
+                <th style="width: 8%; text-align: center;">Rate</th>
+                <th style="width: 17%; text-align: right;">Amount (₹)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{hsn_html}}
+        </tbody>
+    </table>
+
+    <table class="summary-container">
+        <tr>
+            <td class="summary-left">
+                </div><!-- end doc-body -->
+    <div class="doc-footer">
+    <div class="amount-words-card">
+                    <div style="font-size: 6.5pt; font-weight: 700; text-transform: uppercase; color: #64748b;">Amount in Words:</div>
+                    <div style="font-size: 7.5pt; font-weight: 700; color: #0f172a; font-style: italic;">{{amountInWords}}</div>
+                </div>
+                <div style="border: 1px solid #cbd5e1; border-radius: 3px; padding: 5px 8px; margin-bottom: 6px;">
+                    <div style="font-size: 6.5pt; font-weight: 700; text-transform: uppercase; color: #1e3a8a;">Bank Details for RTGS / NEFT:</div>
+                    <div style="font-size: 7pt; color: #334155; line-height: 1.4;">
+                        <strong>Bank:</strong> {{bank_name}} | <strong>A/C:</strong> <span class="font-mono">{{bank_ac}}</span> | <strong>IFSC:</strong> <span class="font-mono">{{bank_ifsc}}</span><br>
+                        <strong>UPI:</strong> <span class="font-mono">{{upi_id}}</span>
+                    </div>
+                </div>
+                <div style="font-size: 6.5pt; color: #64748b; line-height: 1.3; border: 1px dashed #cbd5e1; padding: 4px; border-radius: 3px;">
+                    We declare that this invoice shows the actual price of the goods or services described and that all particulars are true and correct.
+                </div>
+            </td>
+            <td class="summary-right">
+                <table class="calc-table">
+                    <tr><td style="color: #475569;">Taxable Amount:</td><td class="text-right font-mono fw-bold">₹ {{subTotal}}</td></tr>
+                    <tr><td style="color: #475569;">Central Tax (CGST):</td><td class="text-right font-mono">₹ {{taxTotal}}</td></tr>
+                    <tr><td style="color: #475569;">State Tax (SGST):</td><td class="text-right font-mono">₹ {{taxTotal}}</td></tr>
+                    <tr class="grand-row"><td>Total Invoice Amount:</td><td class="text-right font-mono">₹ {{grandTotal}}</td></tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <table class="signature-table">
+        <tr>
+            <td style="width: 33.33%; text-align: left;">
+                <div class="sig-block">
+                    <div class="sig-space"></div>
+                    <div class="sig-line"></div>
+                    <div class="sig-role">Customer Acknowledgment</div>
+                    <div class="sig-note">Receiver's Seal & Signature</div>
+                </div>
+            </td>
+            <td style="width: 33.33%; text-align: center;">
+                <div class="sig-block">
+                    <div class="sig-space"></div>
+                    <div class="sig-line"></div>
+                    <div class="sig-role">Prepared & Checked By</div>
+                    <div class="sig-note">Accounts Department</div>
+                </div>
+            </td>
+            <td style="width: 33.33%; text-align: right;">
+                <div class="sig-block" style="float: right;">
+                    <div class="sig-org">For <strong>{{companyName}}</strong></div>
+                    <div class="sig-line"></div>
+                    <div class="sig-role">Authorized Signatory</div>
+                    <div class="sig-note">Digitally authenticated by UniTax ERP</div>
+                </div>
+            </td>
+        </tr>
+    </table>
+    </div><!-- end doc-footer -->
+</div>
+</div>
+</body>
+</html>

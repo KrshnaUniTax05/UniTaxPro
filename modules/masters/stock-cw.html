@@ -1,0 +1,147 @@
+<div class="animate-in">
+    <form id="Stock" data-listattribute="stock" data-category="Masters" autocomplete="off">
+        <div class="card border-0 shadow-sm overflow-hidden">
+            <div class="card-body p-0">
+                <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-light unitax-header">
+                    <div>
+                        <h5 class="fw-bold mb-0">Stock / Material Master</h5>
+                        <p class="text-muted small mb-0">Manage products, services, and valuation rules</p>
+                    </div>
+                    <div class="d-flex gap-2 align-items-center">
+                    <button type="button" class="btn btn-outline-secondary btn-sm fw-semibold" onclick="UniTaxRouter.Navigate('masters/stock-list')">
+                        <i class="bi bi-arrow-left me-1"></i> Inventory Registry
+                    </button>
+                    <button type="submit" class="btn btn-success btn-sm px-3 shadow-sm fw-bold"><i class="bi bi-check2 me-1"></i> Save Item</button>
+                </div>
+                </div>
+
+                <div class="p-4">
+                    <div class="row g-4">
+                        <!-- Left: Core Logic -->
+                        <div class="col-lg-8 border-end">
+                            <h6 class="fw-bold text-primary small text-uppercase mb-3">Specification</h6>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">Stock Code (SKU)</label>
+                                    <input type="text" name="Stock_Code" class="form-control form-control-sm  upper-case fw-bold" 
+                                           data-check-unique="true" data-sheet_name="Stock" data-column_name="Stock_Code" minlength="5" maxlength="5" required autofocus>
+                                </div>
+                                <div class="col-md-8">
+                                    <label class="form-label small fw-bold">Item Display Name</label>
+                                    <input type="text" name="itemName" class="form-control form-control-sm " required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold">Item Description</label>
+                                    <textarea name="Description" class="form-control form-control-sm" rows="2"></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Item Group / Category</label>
+                                    <input type="text" name="itemGroup" list="Stock-Group-List" class="form-control form-control-sm">
+                                    <!-- <datalist id="Stock-Group-List"></datalist> -->
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">HSN/SAC Code</label>
+                                    <input type="text" name="itemHSN" class="form-control form-control-sm " minlength="4" maxlength="8" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Stock Type</label>
+                                    <select name="StockType" class="form-select form-select-sm">
+                                        <option value="Goods">Inventory Goods</option>
+                                        <option value="Services">Services (Non-Inv)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">Base Unit (UOM)</label>
+                                    <input type="text" name="ItemUnit" list="units-list" class="form-control form-control-sm" required>
+                                    <datalist id="units-list">
+                                        <option value="BAG-BAGS">
+                                        <option value="BAL-BALE">
+                                        <option value="BDL-BUNDLES">
+                                        <option value="BKL-BUCKLES">
+                                        <option value="BOU-BILLION OF UNITS">
+                                        <option value="BOX-BOX">
+                                        <option value="BTL-BOTTLES">
+                                        <option value="BUN-BUNCHES">
+                                        <option value="CAN-CANS">
+                                        <option value="CBM-CUBIC METERS">
+                                        <option value="CCM-CUBIC CENTIMETERS">
+                                        <option value="CMS-CENTIMETERS">
+                                        <option value="CTN-CARTONS">
+                                        <option value="DOZ-DOZENS">
+                                        <option value="DRM-DRUMS">
+                                        <option value="GGK-GREAT GROSS">
+                                        <option value="GMS-GRAMMES">
+                                        <option value="GRS-GROSS">
+                                        <option value="GYD-GROSS YARDS">
+                                        <option value="KGS-KILOGRAMS">
+                                        <option value="KLR-KILOLITRE">
+                                        <option value="KME-KILOMETRE">
+                                        <option value="LTR-LITRES">
+                                        <option value="MLT-MILILITRE">
+                                        <option value="MTR-METERS">
+                                        <option value="MTS-METRIC TON">
+                                        <option value="NOS-NUMBERS">
+                                        <option value="PAC-PACKS">
+                                        <option value="PCS-PIECES">
+                                        <option value="PRS-PAIRS">
+                                        <option value="QTL-QUINTAL">
+                                        <option value="ROL-ROLLS">
+                                        <option value="SET-SETS">
+                                        <option value="SQF-SQUARE FEET">
+                                        <option value="SQM-SQUARE METERS">
+                                        <option value="SQY-SQUARE YARDS">
+                                        <option value="TBS-TABLETS">
+                                        <option value="TGM-TEN GROSS">
+                                        <option value="THD-THOUSANDS">
+                                        <option value="TON-TONNES">
+                                        <option value="TUB-TUBES">
+                                        <option value="UGS-US GALLONS">
+                                        <option value="UNT-UNITS">
+                                        <option value="YDS-YARDS">
+                                        <option value="OTH-OTHERS">
+                                    </datalist>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">GST Rate (%)</label>
+                                    <select name="ItemTax" class="form-select form-select-sm">
+                                        <option value="0">0%</option><option value="5">5%</option><option value="12">12%</option><option value="18" selected>18%</option><option value="28">28%</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold text-danger">Reorder Level</label>
+                                    <input type="number" name="minLevel" class="form-control form-control-sm" value="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Valuation & Context -->
+                        <div class="col-lg-4">
+                            <h6 class="fw-bold text-primary small text-uppercase mb-3">Inventory Valuation</h6>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold">Linked Company</label>
+                                    <input type="text" name="CompanyName" list="compList_stock" class="form-control form-control-sm" 
+                                           data-fetch_column data-sheet_name="Companies" data-column_name="companyName & CompanyCode" required>
+                                    <datalist id="compList_stock"></datalist>
+                                </div>
+                                <div class="col-12 mt-4 bg-light p-3 rounded-3">
+                                    <label class="form-label small fw-bold text-success">Opening Balance</label>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <label class="small opacity-75">Qty</label>
+                                            <input type="number" name="openingQty" class="form-control form-control-sm" value="0">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="small opacity-75">Total Value</label>
+                                            <input type="number" name="openingAmount" class="form-control form-control-sm" value="0">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

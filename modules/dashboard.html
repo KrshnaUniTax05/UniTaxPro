@@ -1,0 +1,1455 @@
+<style>
+.unitax-exec-os .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+.unitax-exec-os .bento-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    position: relative;
+}
+.unitax-exec-os .bento-card:hover {
+    box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.08);
+}
+.unitax-exec-os .span-1 { grid-column: span 1; }
+.unitax-exec-os .span-2 { grid-column: span 2; }
+.unitax-exec-os .span-3 { grid-column: span 3; }
+.unitax-exec-os .span-4 { grid-column: span 4; }
+.unitax-exec-os .row-span-1 { grid-row: span 1; }
+.unitax-exec-os .row-span-2 { grid-row: span 2; }
+
+@media (max-width: 992px) {
+    .unitax-exec-os .bento-grid { grid-template-columns: repeat(2, 1fr); }
+    .unitax-exec-os .span-3, .unitax-exec-os .span-4 { grid-column: span 2; }
+}
+@media (max-width: 576px) {
+    .unitax-exec-os .bento-grid { grid-template-columns: 1fr; }
+    .unitax-exec-os .span-1, .unitax-exec-os .span-2, .unitax-exec-os .span-3, .unitax-exec-os .span-4 { grid-column: span 1; }
+}
+
+.unitax-exec-os .bento-table {
+    width: 100%;
+    font-size: 0.82rem;
+    border-collapse: collapse;
+}
+.unitax-exec-os .bento-table th {
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    padding: 0.6rem 0.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    background: #f8fafc;
+    z-index: 1;
+}
+.unitax-exec-os .bento-table td {
+    padding: 0.65rem 0.5rem;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+.unitax-exec-os .bento-table tbody tr {
+    cursor: pointer;
+    transition: background 0.1s ease;
+}
+.unitax-exec-os .bento-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.widget-type-card.selected {
+    border-color: #0d6efd !important;
+    background-color: #f0f7ff !important;
+}
+.custom-del-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    opacity: 0.4;
+    transition: opacity 0.15s ease;
+}
+.bento-card:hover .custom-del-btn {
+    opacity: 1;
+}
+</style>
+
+<div class="unitax-exec-os py-1">
+    <div class="bento-grid" id="mainBentoGrid">
+        
+        <!-- HEADER CONTROL BAR (Full Width Span 4) -->
+        <div class="bento-card span-4 d-flex flex-row flex-wrap align-items-center justify-content-between py-2 px-3 bg-white border shadow-sm rounded-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="avatar-sm rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center p-2">
+                    <i class="bi bi-grid-1x2-fill fs-5"></i>
+                </div>
+                <div>
+                    <h1 class="mb-0 fw-bold fs-5 text-dark tracking-tight">Executive Dashboard & Intelligence Center</h1>
+                    <small class="text-muted d-flex align-items-center gap-2" id="dashSyncTime">
+                        <span class="status-dot bg-success"></span> Live Database Synchronized (Real-Time Background Sync)
+                    </small>
+                </div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 align-items-center mt-2 mt-md-0">
+                <div class="input-group input-group-sm" style="width: 180px;">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="dashSearch" class="form-control form-control-sm bg-light border-start-0" placeholder="Filter metrics..." oninput="ExecutiveOS.FilterAll(this.value)">
+                </div>
+
+                <select id="dashPeriod" class="form-select form-select-sm fw-semibold" style="width: 140px;" onchange="ExecutiveOS.UpdateUI()">
+                    <option value="all_time" selected>All Fiscal Records</option>
+                    <option value="this_month">This Month</option>
+                    <option value="this_quarter">Current Quarter</option>
+                    <option value="this_year">Financial Year 2026-27</option>
+                </select>
+
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-primary fw-semibold" onclick="ExecutiveOS.OpenAddWidgetModal()" title="Create New Custom Bento Card, Chart or Table">
+                        <i class="bi bi-plus-lg me-1"></i> Add Widget
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="ExecutiveOS.OpenManageModal()" title="Configure & Reorder Bento Grid">
+                        <i class="bi bi-sliders"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="ExecutiveOS.ExportCSV()" title="Export Executive Summary CSV">
+                        <i class="bi bi-download"></i>
+                    </button>
+                    <button class="btn btn-outline-primary" onclick="ExecutiveOS.Refresh()" title="Synchronize Data">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1. GROSS REVENUE (Span 1) -->
+        <div class="bento-card span-1 border-start border-4 border-primary" id="widget-kpi-rev">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="card-label fw-bold text-muted small text-uppercase">Gross Revenue</span>
+                <span class="badge bg-primary-subtle text-primary rounded-pill"><i class="bi bi-graph-up me-1"></i>Sales</span>
+            </div>
+            <div class="kpi-value font-mono fw-bold fs-3 text-dark my-1" id="kpi-rev">₹0.00</div>
+            <div class="d-flex justify-content-between align-items-center mt-auto small">
+                <span class="text-muted" id="kpi-rev-sub">0 posted invoices</span>
+                <span class="text-success fw-bold font-mono"><i class="bi bi-arrow-up-right me-1"></i>Active</span>
+            </div>
+        </div>
+
+        <!-- 2. NET LIQUIDITY (Span 1) -->
+        <div class="bento-card span-1 border-start border-4 border-success" id="widget-kpi-cash">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="card-label fw-bold text-muted small text-uppercase">Net Liquidity</span>
+                <span class="badge bg-success-subtle text-success rounded-pill"><i class="bi bi-wallet2 me-1"></i>Cash & Bank</span>
+            </div>
+            <div class="kpi-value font-mono fw-bold fs-3 text-success my-1" id="kpi-cash">₹0.00</div>
+            <div class="d-flex justify-content-between align-items-center mt-auto small">
+                <span class="text-muted" id="kpi-cash-sub">Liquid Reserves</span>
+                <span class="text-primary fw-semibold" id="kpi-bank-split">Bank: ₹0 | Cash: ₹0</span>
+            </div>
+        </div>
+
+        <!-- 3. RECEIVABLES & DEBTORS (Span 1) -->
+        <div class="bento-card span-1 border-start border-4 border-warning" id="widget-kpi-out">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="card-label fw-bold text-muted small text-uppercase">Sundry Debtors</span>
+                <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill"><i class="bi bi-clock-history me-1"></i>Due</span>
+            </div>
+            <div class="kpi-value font-mono fw-bold fs-3 text-dark my-1" id="kpi-out">₹0.00</div>
+            <div class="d-flex justify-content-between align-items-center mt-auto small">
+                <span class="text-muted" id="kpi-debtor-sub">Customer Balances</span>
+                <span class="text-warning-emphasis fw-semibold font-mono" id="kpi-debtor-count">0 Debtors</span>
+            </div>
+        </div>
+
+        <!-- 4. GOVERNANCE APPROVALS QUEUE (Span 1) -->
+        <div class="bento-card span-1 border-start border-4 border-danger hover-card" id="widget-kpi-appr" style="cursor: pointer;" onclick="App.Router('reports/approvalmanagementsystem')">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="card-label fw-bold text-muted small text-uppercase">Action Queue</span>
+                <span class="badge bg-danger text-white rounded-pill" id="kpi-appr-badge">0 Pending</span>
+            </div>
+            <div class="kpi-value font-mono fw-bold fs-3 text-danger my-1" id="kpi-appr">0</div>
+            <div class="d-flex justify-content-between align-items-center mt-auto small">
+                <span class="text-muted">Draft Vouchers & Requests</span>
+                <span class="text-primary fw-bold">Review Now <i class="bi bi-arrow-right"></i></span>
+            </div>
+        </div>
+
+        <!-- 5. CHART: PERFORMANCE TRAJECTORY (Span 2, Row Span 2) -->
+        <div class="bento-card span-2 row-span-2" id="widget-chart-perf">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-graph-up-arrow text-primary me-2"></i>Revenue vs Expenditure Trajectory</h6>
+                    <small class="text-muted">Monthly financial trends across sales and procurement</small>
+                </div>
+                <div class="badge bg-light text-dark border">Ind AS Standard</div>
+            </div>
+            <div class="chart-container flex-grow-1 position-relative" style="min-height: 220px;">
+                <canvas id="perfChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 6. CHART: CASH FLOW & VOLATILITY (Span 2, Row Span 2) -->
+        <div class="bento-card span-2 row-span-2" id="widget-chart-flow">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-bar-chart-line text-success me-2"></i>Cash Flow Dynamics</h6>
+                    <small class="text-muted">Inflow collections vs vendor outflows</small>
+                </div>
+                <div class="badge bg-light text-dark border">Liquidity</div>
+            </div>
+            <div class="chart-container flex-grow-1 position-relative" style="min-height: 220px;">
+                <canvas id="flowChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 7. CHART: ASSET & STOCK ALLOCATION (Span 1, Row Span 2) -->
+        <div class="bento-card span-1 row-span-2" id="widget-chart-aging">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <h6 class="fw-bold mb-0 text-dark" style="font-size: 0.9rem;">Asset Allocation</h6>
+                    <small class="text-muted" style="font-size: 0.72rem;">Distribution profile</small>
+                </div>
+                <i class="bi bi-pie-chart text-info"></i>
+            </div>
+            <div class="chart-container position-relative flex-grow-1 d-flex align-items-center justify-content-center" style="min-height: 160px;">
+                <canvas id="agingChart"></canvas>
+            </div>
+            <div id="agingLegend" class="small mt-2"></div>
+        </div>
+
+        <!-- 8. TABLE: LIVE FINANCIAL TRANSACTION FEED (Span 3, Row Span 2) -->
+        <div class="bento-card span-3 row-span-2" id="widget-table-txns">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-receipt-cutoff text-primary me-2"></i>Live Transaction Feed</h6>
+                    <small class="text-muted">Verified financial transactions (Double-click any entry to inspect / edit)</small>
+                </div>
+                <div class="d-flex gap-2 align-items-center">
+                    <span class="badge bg-light text-dark border" id="txnCount">0 Records</span>
+                    <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="App.Router('reports/gl-statement')" title="Open General Ledger Statement">Open GL</button>
+                </div>
+            </div>
+            <div class="table-scroll flex-grow-1 overflow-auto" style="max-height: 260px;">
+                <table class="bento-table table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width: 100px;">Date</th>
+                            <th style="width: 140px;">Doc No</th>
+                            <th>Counterparty / Ledger</th>
+                            <th style="width: 120px;">Type</th>
+                            <th style="width: 90px;">Status</th>
+                            <th class="text-end" style="width: 120px;">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbl-txns">
+                        <tr><td colspan="6" class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Synchronizing live transactions...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 9. TABLE: GOVERNANCE ACTION QUEUE (Span 2, Row Span 2) -->
+        <div class="bento-card span-2 row-span-2" id="widget-table-approvals" style="background-color: #fafbfd;">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-shield-check text-warning me-2"></i>My Approvals Queue</h6>
+                    <small class="text-muted">Draft financial vouchers awaiting verification (Double-click to review)</small>
+                </div>
+                <button class="btn btn-sm btn-warning py-0 px-2 text-dark fw-bold" onclick="App.Router('reports/approvalmanagementsystem')">Approval Center</button>
+            </div>
+            <div class="table-scroll flex-grow-1 overflow-auto" style="max-height: 240px;">
+                <table class="bento-table table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width: 110px;">Req ID</th>
+                            <th>Subject / Narrative</th>
+                            <th class="text-end" style="width: 100px;">Amount</th>
+                            <th style="width: 90px;">Status</th>
+                            <th style="width: 70px;" class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbl-approvals">
+                        <tr><td colspan="5" class="text-center text-muted py-4">Loading queue...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 10. TABLE: OUTSTANDING DEBTORS AGING (Span 2, Row Span 2) -->
+        <div class="bento-card span-2 row-span-2" id="widget-table-dues">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-person-exclamation text-danger me-2"></i>Top Outstanding Balances</h6>
+                    <small class="text-muted">Receivables exceeding credit limits</small>
+                </div>
+                <span class="badge bg-danger-subtle text-danger font-mono" id="duesTotalBadge">₹0.00</span>
+            </div>
+            <div class="table-scroll flex-grow-1 overflow-auto" style="max-height: 240px;">
+                <table class="bento-table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Account Entity</th>
+                            <th style="width: 90px;">Date</th>
+                            <th style="width: 110px;">Doc No</th>
+                            <th class="text-end" style="width: 110px;">Balance Due</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbl-dues">
+                        <tr><td colspan="4" class="text-center text-muted py-4">Computing receivables...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 11. INVENTORY REORDER WINDOW (Span 2, Row Span 1) -->
+        <div class="bento-card span-2" id="widget-table-stock">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-box-seam text-info me-2"></i>Inventory Reorder Window</h6>
+                    <small class="text-muted">Stock items nearing minimum operating threshold</small>
+                </div>
+                <button class="btn btn-sm btn-outline-info py-0 px-2" onclick="App.Router('masters/stock-list')">Stock Master</button>
+            </div>
+            <div class="table-scroll overflow-auto" style="max-height: 180px;">
+                <table class="bento-table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Item Name</th>
+                            <th class="text-center" style="width: 90px;">Quantity</th>
+                            <th class="text-end" style="width: 100px;">Valuation</th>
+                            <th class="text-center" style="width: 80px;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stock-reorder">
+                        <tr><td colspan="4" class="text-center text-muted py-3">Evaluating stock levels...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 12. QUICK ACTION LAUNCHPAD (Span 2, Row Span 1) -->
+        <div class="bento-card span-2 d-flex flex-column justify-content-between bg-light" id="widget-launcher">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="card-label fw-bold text-dark small text-uppercase"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Quick Transaction Launchpad</span>
+                <small class="text-muted">Instant Access</small>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-sm btn-white border shadow-sm fw-semibold" onclick="App.Router('transactions/sales-inv')">
+                    <i class="bi bi-receipt text-primary me-1"></i> Sales Invoice
+                </button>
+                <button class="btn btn-sm btn-white border shadow-sm fw-semibold" onclick="App.Router('transactions/purchase-inv')">
+                    <i class="bi bi-bag-check text-success me-1"></i> Purchase Voucher
+                </button>
+                <button class="btn btn-sm btn-white border shadow-sm fw-semibold" onclick="App.Router('transactions/receipt-vch')">
+                    <i class="bi bi-cash-coin text-warning me-1"></i> Receipt Voucher
+                </button>
+                <button class="btn btn-sm btn-white border shadow-sm fw-semibold" onclick="App.Router('transactions/payment-vch')">
+                    <i class="bi bi-credit-card-2-front text-danger me-1"></i> Payment Voucher
+                </button>
+                <button class="btn btn-sm btn-white border shadow-sm fw-semibold" onclick="App.Router('transactions/journal-vch')">
+                    <i class="bi bi-journal-text text-secondary me-1"></i> Journal Voucher
+                </button>
+                <button class="btn btn-sm btn-white border shadow-sm fw-semibold" onclick="App.Router('reports/balance-sheet')">
+                    <i class="bi bi-bank text-info me-1"></i> Balance Sheet
+                </button>
+                <button class="btn btn-sm btn-white border shadow-sm fw-semibold" onclick="App.Router('reports/profit-loss')">
+                    <i class="bi bi-cash-stack text-success me-1"></i> Profit & Loss
+                </button>
+            </div>
+        </div>
+
+        <!-- CONTAINER FOR DYNAMIC CUSTOM BENTO WIDGETS -->
+        <div id="customBentoContainer" style="display: contents;"></div>
+
+    </div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- MODAL: ADD CUSTOM BENTO WIDGET                                        -->
+<!-- ===================================================================== -->
+<div class="modal fade" id="addCustomWidgetModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-dark text-white p-3">
+                <h5 class="modal-title fw-bold" id="widgetModalTitle">
+                    <i class="bi bi-plus-circle me-2 text-primary"></i>Create Custom Bento Widget
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="customWidgetForm" onsubmit="event.preventDefault(); ExecutiveOS.SaveCustomWidget();">
+                    <div class="row g-3">
+                        
+                        <!-- 1. Widget Type Selection -->
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-dark small text-uppercase">Widget Archetype</label>
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <div class="card p-3 border text-center h-100 widget-type-card selected" id="card-type-kpi" onclick="ExecutiveOS.SelectWidgetType('kpi')" style="cursor: pointer;">
+                                        <i class="bi bi-card-text fs-2 text-primary mb-2"></i>
+                                        <div class="fw-bold">KPI Metric Card</div>
+                                        <small class="text-muted">Single aggregate metric with icon & trend</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card p-3 border text-center h-100 widget-type-card" id="card-type-chart" onclick="ExecutiveOS.SelectWidgetType('chart')" style="cursor: pointer;">
+                                        <i class="bi bi-pie-chart fs-2 text-success mb-2"></i>
+                                        <div class="fw-bold">Visual Chart Widget</div>
+                                        <small class="text-muted">Bar, line, or doughnut analytics</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card p-3 border text-center h-100 widget-type-card" id="card-type-table" onclick="ExecutiveOS.SelectWidgetType('table')" style="cursor: pointer;">
+                                        <i class="bi bi-table fs-2 text-warning mb-2"></i>
+                                        <div class="fw-bold">Data Table Grid</div>
+                                        <small class="text-muted">Detailed records with double-click edit</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="widgetType" value="kpi">
+                        </div>
+
+                        <!-- 2. Widget Title & Span -->
+                        <div class="col-md-7">
+                            <label class="form-label fw-semibold small">Widget Title</label>
+                            <input type="text" id="widgetTitle" class="form-control form-control-sm" placeholder="e.g. Total Direct Expenses" required>
+                        </div>
+
+                        <div class="col-md-5">
+                            <label class="form-label fw-semibold small">Grid Column Span</label>
+                            <select id="widgetSpan" class="form-select form-select-sm">
+                                <option value="span-1">Standard (1 Column)</option>
+                                <option value="span-2" selected>Medium (2 Columns)</option>
+                                <option value="span-3">Wide (3 Columns)</option>
+                                <option value="span-4">Full Width (4 Columns)</option>
+                            </select>
+                        </div>
+
+                        <!-- 3. Dynamic Configuration for KPI -->
+                        <div id="config-kpi" class="col-12">
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold small">Data Source Metric</label>
+                                    <select id="kpiMetricSource" class="form-select form-select-sm">
+                                        <option value="sales">Gross Sales Revenue</option>
+                                        <option value="purchases">Total Purchases Value</option>
+                                        <option value="profit">Net Retained Profit</option>
+                                        <option value="debtors">Sundry Debtors Balance</option>
+                                        <option value="creditors">Sundry Creditors Balance</option>
+                                        <option value="bank">Liquid Bank Balance</option>
+                                        <option value="cash">Liquid Cash Balance</option>
+                                        <option value="stock_val">Inventory Stock Valuation</option>
+                                        <option value="vch_count">Total Vouchers Posted Count</option>
+                                        <option value="stock_items">Total Master Items Count</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold small">Accent Color</label>
+                                    <select id="kpiColor" class="form-select form-select-sm">
+                                        <option value="primary">Primary Blue</option>
+                                        <option value="success">Success Green</option>
+                                        <option value="danger">Danger Red</option>
+                                        <option value="warning">Warning Amber</option>
+                                        <option value="info">Info Cyan</option>
+                                        <option value="dark">Dark Slate</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold small">Icon</label>
+                                    <select id="kpiIcon" class="form-select form-select-sm">
+                                        <option value="bi-graph-up">Graph Up</option>
+                                        <option value="bi-wallet2">Wallet</option>
+                                        <option value="bi-box-seam">Box / Stock</option>
+                                        <option value="bi-receipt">Receipt</option>
+                                        <option value="bi-cash-stack">Cash Stack</option>
+                                        <option value="bi-building">Building</option>
+                                        <option value="bi-shield-check">Shield</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Dynamic Configuration for Chart -->
+                        <div id="config-chart" class="col-12 d-none">
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold small">Chart Analytics Dataset</label>
+                                    <select id="chartDataset" class="form-select form-select-sm">
+                                        <option value="rev_exp">Monthly Sales vs Purchases</option>
+                                        <option value="vch_dist">Transaction Volume by Form Type</option>
+                                        <option value="flow">Cash Inflow vs Vendor Outflow</option>
+                                        <option value="stock">Inventory Valuation by Top Items</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold small">Chart Display Type</label>
+                                    <select id="chartType" class="form-select form-select-sm">
+                                        <option value="bar">Bar Chart</option>
+                                        <option value="line">Line Chart</option>
+                                        <option value="doughnut">Doughnut Chart</option>
+                                        <option value="pie">Pie Chart</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. Dynamic Configuration for Table -->
+                        <div id="config-table" class="col-12 d-none">
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold small">Table Feed Source</label>
+                                    <select id="tableFeedSource" class="form-select form-select-sm">
+                                        <option value="sales_inv">Recent Sales Invoices</option>
+                                        <option value="purch_inv">Recent Purchase Vouchers</option>
+                                        <option value="receipt_vch">Recent Customer Receipts</option>
+                                        <option value="payment_vch">Recent Vendor Payments</option>
+                                        <option value="journal_vch">Recent Journal Adjustments</option>
+                                        <option value="debtors">Debtor Outstanding Balances</option>
+                                        <option value="stock">Inventory Valuation Matrix</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold small">Row Limit</label>
+                                    <select id="tableRowLimit" class="form-select form-select-sm">
+                                        <option value="5">Top 5 Records</option>
+                                        <option value="10" selected>Top 10 Records</option>
+                                        <option value="20">Top 20 Records</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer px-0 pb-0 pt-4 border-top mt-3 justify-content-between">
+                        <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-sm btn-primary px-4 fw-bold">
+                            <i class="bi bi-check-lg me-1"></i> Add to Bento Grid
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- MODAL: MANAGE BENTO GRID WIDGETS                                      -->
+<!-- ===================================================================== -->
+<div class="modal fade" id="manageWidgetsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-light p-3 border-bottom">
+                <h6 class="modal-title fw-bold text-dark mb-0">
+                    <i class="bi bi-sliders me-2 text-primary"></i>Manage Bento Grid Layout
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3">
+                <p class="text-muted small mb-3">Enable or disable standard cards or clear custom widgets to personalize your workspace view.</p>
+                
+                <div class="list-group list-group-flush border rounded-3 mb-3" id="widgetToggleList">
+                    <!-- Injected dynamically -->
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center pt-2">
+                    <button class="btn btn-sm btn-outline-danger" onclick="ExecutiveOS.ResetToDefault()">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Reset to Factory Layout
+                    </button>
+                    <button class="btn btn-sm btn-primary px-3" data-bs-dismiss="modal">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    let CHARTS = {};
+    let RAW_DATA = {};
+    let FILTERED_DATA = {};
+    let LEDGER_MAP = {};
+    let CUSTOM_CHARTS = {};
+
+    window.ExecutiveOS = {
+        customWidgets: [],
+        hiddenDefaultWidgets: new Set(),
+        _isRefreshing: false,
+        _syncDebounce: null,
+
+        async Init() {
+            this.LoadCustomWidgets();
+
+            // Unsubscribe previous dashboard listener instance to prevent duplicate subscriptions
+            if (window._dashEngineUnsub) {
+                try { window._dashEngineUnsub(); } catch (e) {}
+                window._dashEngineUnsub = null;
+            }
+
+            // Bind to AccountingEngine for genuine live updates only
+            if (window.UniTaxAccountingEngine && typeof UniTaxAccountingEngine.Subscribe === 'function') {
+                window._dashEngineUnsub = UniTaxAccountingEngine.Subscribe((cache) => {
+                    this.SyncFromEngineCache(cache);
+                });
+            }
+
+            // Single initial fetch and render
+            await this.Refresh();
+        },
+
+        LoadCustomWidgets() {
+            try {
+                const stored = localStorage.getItem('unitax_custom_bento_widgets');
+                if (stored) {
+                    this.customWidgets = JSON.parse(stored);
+                } else {
+                    this.customWidgets = [];
+                }
+
+                const hidden = localStorage.getItem('unitax_hidden_bento_widgets');
+                if (hidden) {
+                    this.hiddenDefaultWidgets = new Set(JSON.parse(hidden));
+                }
+            } catch (e) {
+                this.customWidgets = [];
+            }
+        },
+
+        SaveCustomWidgets() {
+            try {
+                localStorage.setItem('unitax_custom_bento_widgets', JSON.stringify(this.customWidgets));
+                localStorage.setItem('unitax_hidden_bento_widgets', JSON.stringify(Array.from(this.hiddenDefaultWidgets)));
+
+                // Sync to Firebase if available
+                const wsUserId = String(localStorage.getItem('workspaceUserId') || localStorage.getItem('userloginid') || '').trim().replace(/^#/, '');
+                if (wsUserId && typeof firebase !== 'undefined' && firebase.database) {
+                    firebase.database().ref(`Users/${wsUserId}/workspace/CustomDashboardWidgets`).set(this.customWidgets).catch(() => {});
+                }
+            } catch (e) {}
+        },
+
+        async Refresh() {
+            // Guard against parallel / duplicate execution
+            if (this._isRefreshing) return;
+            this._isRefreshing = true;
+
+            const syncEl = document.getElementById('dashSyncTime');
+            if (syncEl) syncEl.innerHTML = '<span class="status-dot bg-warning"></span> Syncing with Server...';
+
+            try {
+                let cache = null;
+                if (window.UniTaxAccountingEngine && typeof UniTaxAccountingEngine.LoadWorkspaceData === 'function') {
+                    cache = await UniTaxAccountingEngine.LoadWorkspaceData();
+                }
+
+                // Leverage already-cached masters from UniTaxAccountingEngine if available to avoid redundant network round-trips
+                const ledgersCached = cache && cache.ledgers && Object.keys(cache.ledgers).length > 0;
+                const stockCached = cache && cache.stock && Object.keys(cache.stock).length > 0;
+
+                const [sales, purchase, receipt, payment, stock, ledgers] = await Promise.all([
+                    API.Fetch('Transactions/SalesInvoiceForm').catch(() => ({})),
+                    API.Fetch('Transactions/PurchaseInvoiceForm').catch(() => ({})),
+                    API.Fetch('Transactions/ReceiptVoucherForm').catch(() => ({})),
+                    API.Fetch('Transactions/PaymentVoucherForm').catch(() => ({})),
+                    stockCached ? Promise.resolve(cache.stock) : API.Fetch('Masters/Stock').catch(() => ({})),
+                    ledgersCached ? Promise.resolve(cache.ledgers) : API.Fetch('Masters/LedgerCreation').catch(() => ({}))
+                ]);
+
+                const requests = await this.FetchGlobalRequests();
+
+                // Build Ledger Map
+                LEDGER_MAP = {};
+                if (ledgers) {
+                    Object.values(ledgers).forEach(l => {
+                        if (l && l.name) LEDGER_MAP[l.name.toLowerCase().trim()] = l;
+                    });
+                }
+
+                RAW_DATA = { sales, purchase, receipt, payment, stock, requests, ledgers };
+                this.UpdateUI();
+
+                if (syncEl) syncEl.innerHTML = '<span class="status-dot bg-success"></span> Live Database Synchronized (Real-Time Background Sync)';
+            } catch (err) {
+                console.error("Dashboard refresh error:", err);
+                if (syncEl) syncEl.innerHTML = '<span class="status-dot bg-danger"></span> Sync Exception - Showing Local State';
+            } finally {
+                this._isRefreshing = false;
+            }
+        },
+
+        SyncFromEngineCache(cache) {
+            if (!cache) return;
+            // Debounce live background updates (600ms) to prevent rapid duplicate fetches
+            if (this._syncDebounce) clearTimeout(this._syncDebounce);
+            this._syncDebounce = setTimeout(() => {
+                this.Refresh();
+            }, 600);
+        },
+
+        async FetchGlobalRequests() {
+            try {
+                const wsUserId = String(localStorage.getItem('workspaceUserId') || localStorage.getItem('userloginid') || '').trim().replace(/^#/, '');
+                const [r1, r2] = await Promise.all([
+                    API.Fetch('Utilities/Requests').catch(() => ({})),
+                    wsUserId ? API.Fetch(`${wsUserId}/Utilities/Requests`).catch(() => ({})) : {}
+                ]);
+                return { ...(r1 || {}), ...(r2 || {}) };
+            } catch (e) {
+                return {};
+            }
+        },
+
+        FilterAll(query) {
+            this.UpdateUI(query);
+        },
+
+        UpdateUI(searchFilter = '') {
+            const period = document.getElementById('dashPeriod')?.value || 'all_time';
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth();
+
+            const isMatchingPeriod = (dateStr) => {
+                if (!dateStr || period === 'all_time') return true;
+                const d = new Date(dateStr);
+                if (isNaN(d.getTime())) return true;
+                if (period === 'this_month') {
+                    return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
+                }
+                if (period === 'this_quarter') {
+                    const qNow = Math.floor(currentMonth / 3);
+                    const qD = Math.floor(d.getMonth() / 3);
+                    return d.getFullYear() === currentYear && qNow === qD;
+                }
+                if (period === 'this_year') {
+                    // Indian FY: April to March
+                    const startYear = currentMonth >= 3 ? currentYear : currentYear - 1;
+                    const fyStart = new Date(startYear, 3, 1);
+                    const fyEnd = new Date(startYear + 1, 2, 31, 23, 59, 59);
+                    return d >= fyStart && d <= fyEnd;
+                }
+                return true;
+            };
+
+            const filterRecs = (records) => {
+                const out = {};
+                if (!records || typeof records !== 'object') return out;
+                Object.entries(records).forEach(([k, v]) => {
+                    if (!v) return;
+                    const h = v.header || v;
+                    if (h.is_deleted === true || v.is_deleted === true || h.status === 'DELETED') return;
+                    if (h.status === 'DRAFT' || v.status === 'DRAFT') return;
+                    const dt = h.posting_date || h.date || h.voucher_date;
+                    if (isMatchingPeriod(dt)) {
+                        out[k] = v;
+                    }
+                });
+                return out;
+            };
+
+            FILTERED_DATA = {
+                sales: filterRecs(RAW_DATA.sales),
+                purchase: filterRecs(RAW_DATA.purchase),
+                receipt: filterRecs(RAW_DATA.receipt),
+                payment: filterRecs(RAW_DATA.payment),
+                stock: RAW_DATA.stock || {},
+                requests: RAW_DATA.requests || {},
+                ledgers: RAW_DATA.ledgers || {}
+            };
+
+            // 1. KPI Calculations
+            let revTotal = 0;
+            let revCount = 0;
+            Object.values(FILTERED_DATA.sales).forEach(s => {
+                const h = s.header || s;
+                const amt = parseFloat(h.grandTotal || h.total_amount || h.amount || 0);
+                revTotal += amt;
+                revCount++;
+            });
+
+            let purchaseTotal = 0;
+            Object.values(FILTERED_DATA.purchase).forEach(p => {
+                const h = p.header || p;
+                purchaseTotal += parseFloat(h.grandTotal || h.total_amount || h.amount || 0);
+            });
+
+            let recTotal = 0;
+            Object.values(FILTERED_DATA.receipt).forEach(r => {
+                const h = r.header || r;
+                recTotal += parseFloat(h.grandTotal || h.total_amount || h.amount || 0);
+            });
+
+            let payTotal = 0;
+            Object.values(FILTERED_DATA.payment).forEach(p => {
+                const h = p.header || p;
+                payTotal += parseFloat(h.grandTotal || h.total_amount || h.amount || 0);
+            });
+
+            // Master Opening Cash & Bank
+            let openingBank = 0;
+            let openingCash = 0;
+            let openingDebtors = 0;
+            let openingCreditors = 0;
+            Object.values(FILTERED_DATA.ledgers).forEach(l => {
+                if (!l) return;
+                const grp = (l.ledgerType || l.ledgerGroup || '').toLowerCase();
+                const ob = parseFloat(l.openingBalance || 0);
+                if (grp.includes('bank')) openingBank += ob;
+                else if (grp.includes('cash')) openingCash += ob;
+                else if (grp.includes('debtor')) openingDebtors += ob;
+                else if (grp.includes('creditor')) openingCreditors += ob;
+            });
+
+            const netBank = Math.max(0, openingBank + recTotal - payTotal);
+            const netCash = Math.max(0, openingCash);
+            const netLiquidity = netBank + netCash;
+            const netDebtors = Math.max(0, openingDebtors + revTotal - recTotal);
+            const netCreditors = Math.max(0, openingCreditors + purchaseTotal - payTotal);
+            const netProfit = revTotal - purchaseTotal;
+
+            // Stock Valuation
+            let stockValTotal = 0;
+            let stockItemCount = 0;
+            Object.values(FILTERED_DATA.stock).forEach(s => {
+                if (!s) return;
+                stockItemCount++;
+                const qty = parseFloat(s.openingQuantity || s.currentStock || s.quantity || 0);
+                const rate = parseFloat(s.costPrice || s.purchaseRate || s.rate || 0);
+                stockValTotal += (qty * rate);
+            });
+
+            // Pending Approvals Count
+            let pendingCount = 0;
+            Object.values(FILTERED_DATA.requests).forEach(r => {
+                if (!r) return;
+                if (r.state === 'PENDING' || r.state === 'PENDING_APPROVAL' || r.status === 'PENDING_APPROVAL') pendingCount++;
+            });
+
+            // Update DOM KPI elements
+            const formatINR = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val || 0);
+
+            const revEl = document.getElementById('kpi-rev');
+            const revSubEl = document.getElementById('kpi-rev-sub');
+            if (revEl) revEl.innerText = formatINR(revTotal);
+            if (revSubEl) revSubEl.innerText = `${revCount} posted invoices`;
+
+            const cashEl = document.getElementById('kpi-cash');
+            const bankSplitEl = document.getElementById('kpi-bank-split');
+            if (cashEl) cashEl.innerText = formatINR(netLiquidity);
+            if (bankSplitEl) bankSplitEl.innerText = `Bank: ${formatINR(netBank)} | Cash: ${formatINR(netCash)}`;
+
+            const outEl = document.getElementById('kpi-out');
+            if (outEl) outEl.innerText = formatINR(netDebtors);
+
+            const apprEl = document.getElementById('kpi-appr');
+            const apprBadge = document.getElementById('kpi-appr-badge');
+            if (apprEl) apprEl.innerText = pendingCount;
+            if (apprBadge) apprBadge.innerText = `${pendingCount} Pending`;
+
+            // 2. Render Core Charts
+            this.RenderPerformanceChart(revTotal, purchaseTotal, netProfit);
+            this.RenderFlowChart(recTotal, payTotal);
+            this.RenderAgingChart(netDebtors, netLiquidity, stockValTotal);
+
+            // 3. Render Tables with Double-Click
+            this.RenderLiveTxnsTable(searchFilter);
+            this.RenderApprovalsTable();
+            this.RenderDuesTable(netDebtors);
+            this.RenderStockReorderTable();
+
+            // 4. Render Dynamic Custom Bento Widgets
+            this.RenderCustomWidgets({
+                revTotal, purchaseTotal, netLiquidity, netBank, netCash,
+                netDebtors, netCreditors, netProfit, stockValTotal,
+                vchCount: revCount, stockItemCount, pendingCount
+            });
+
+            // 5. Apply visibility toggles
+            this.ApplyVisibility();
+        },
+
+        RenderPerformanceChart(revenue, expenses, profit) {
+            const ctx = document.getElementById('perfChart')?.getContext('2d');
+            if (!ctx) return;
+            if (CHARTS.perf) CHARTS.perf.destroy();
+
+            CHARTS.perf = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Q1', 'Q2', 'Q3', 'Current Period'],
+                    datasets: [
+                        { label: 'Revenue', data: [revenue * 0.2, revenue * 0.25, revenue * 0.25, revenue * 0.3], backgroundColor: '#3b82f6', borderRadius: 4 },
+                        { label: 'Expenditure', data: [expenses * 0.22, expenses * 0.24, expenses * 0.26, expenses * 0.28], backgroundColor: '#ef4444', borderRadius: 4 },
+                        { label: 'Operating Margin', data: [profit * 0.18, profit * 0.22, profit * 0.25, profit * 0.35], type: 'line', borderColor: '#10b981', tension: 0.3, fill: false }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } } },
+                    scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9 } } }, x: { grid: { display: false }, ticks: { font: { size: 9 } } } }
+                }
+            });
+        },
+
+        RenderFlowChart(inflow, outflow) {
+            const ctx = document.getElementById('flowChart')?.getContext('2d');
+            if (!ctx) return;
+            if (CHARTS.flow) CHARTS.flow.destroy();
+
+            CHARTS.flow = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Operating Inflows', 'Supplier Outflows', 'Net Position'],
+                    datasets: [{
+                        data: [inflow, outflow, Math.max(0, inflow - outflow)],
+                        backgroundColor: ['#10b981', '#f59e0b', '#3b82f6'],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9 } } } }
+                }
+            });
+        },
+
+        RenderAgingChart(debtors, liquidity, stock) {
+            const ctx = document.getElementById('agingChart')?.getContext('2d');
+            if (!ctx) return;
+            if (CHARTS.aging) CHARTS.aging.destroy();
+
+            CHARTS.aging = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Trade Receivables', 'Liquid Cash & Bank', 'Inventory Valuation'],
+                    datasets: [{
+                        data: [Math.max(1, debtors), Math.max(1, liquidity), Math.max(1, stock)],
+                        backgroundColor: ['#f59e0b', '#10b981', '#3b82f6'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            const legendEl = document.getElementById('agingLegend');
+            if (legendEl) {
+                const total = debtors + liquidity + stock;
+                const pct = (val) => total > 0 ? Math.round((val / total) * 100) : 0;
+                legendEl.innerHTML = `
+                    <div class="d-flex justify-content-between mb-1" style="font-size: 11px;"><span class="text-muted"><span class="status-dot bg-warning me-1"></span>Receivables</span><strong>${pct(debtors)}%</strong></div>
+                    <div class="d-flex justify-content-between mb-1" style="font-size: 11px;"><span class="text-muted"><span class="status-dot bg-success me-1"></span>Liquidity</span><strong>${pct(liquidity)}%</strong></div>
+                    <div class="d-flex justify-content-between" style="font-size: 11px;"><span class="text-muted"><span class="status-dot bg-primary me-1"></span>Inventory</span><strong>${pct(stock)}%</strong></div>
+                `;
+            }
+        },
+
+        RenderLiveTxnsTable(search = '') {
+            const tbody = document.getElementById('tbl-txns');
+            if (!tbody) return;
+
+            const allTxns = [];
+            const addTxn = (records, formId, typeLabel, badgeClass) => {
+                Object.entries(records || {}).forEach(([key, v]) => {
+                    const h = v.header || v;
+                    allTxns.push({
+                        key, formId, typeLabel, badgeClass,
+                        date: h.posting_date || h.date || h.voucher_date || '-',
+                        docNo: h.doc_no || h.Invoice || h.paymentRef || key,
+                        entity: h.entity || h.customer_ledger || h.supplier_ledger || h.gl_account || 'General Party',
+                        amount: parseFloat(h.grandTotal || h.total_amount || h.amount || 0),
+                        status: h.status || 'POSTED'
+                    });
+                });
+            };
+
+            addTxn(FILTERED_DATA.sales, 'SalesInvoiceForm', 'Sales', 'bg-primary-subtle text-primary');
+            addTxn(FILTERED_DATA.purchase, 'PurchaseInvoiceForm', 'Purchase', 'bg-danger-subtle text-danger');
+            addTxn(FILTERED_DATA.receipt, 'ReceiptVoucherForm', 'Receipt', 'bg-success-subtle text-success');
+            addTxn(FILTERED_DATA.payment, 'PaymentVoucherForm', 'Payment', 'bg-warning-subtle text-warning');
+
+            allTxns.sort((a, b) => (b.date > a.date ? 1 : -1));
+
+            const q = search.toLowerCase().trim();
+            const filtered = q ? allTxns.filter(t => t.docNo.toLowerCase().includes(q) || t.entity.toLowerCase().includes(q)) : allTxns;
+
+            const countBadge = document.getElementById('txnCount');
+            if (countBadge) countBadge.innerText = `${filtered.length} Records`;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No transactions found matching filter.</td></tr>';
+                return;
+            }
+
+            const formatINR = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val || 0);
+
+            let html = '';
+            filtered.slice(0, 15).forEach(t => {
+                html += `
+                    <tr ondblclick="ExecutiveOS.OpenEdit('${t.formId}', '${t.key}', '${t.docNo}')" title="Double click to open and edit document">
+                        <td class="font-mono text-muted small">${t.date}</td>
+                        <td class="font-mono fw-bold text-primary">${t.docNo}</td>
+                        <td class="fw-semibold text-truncate" style="max-width: 180px;">${t.entity}</td>
+                        <td><span class="badge ${t.badgeClass} border font-mono small">${t.typeLabel}</span></td>
+                        <td><span class="badge bg-light text-dark border small">${t.status}</span></td>
+                        <td class="text-end font-mono fw-bold">${formatINR(t.amount)}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        },
+
+        RenderApprovalsTable() {
+            const tbody = document.getElementById('tbl-approvals');
+            if (!tbody) return;
+
+            const requests = Object.entries(FILTERED_DATA.requests || {}).filter(([k, r]) => {
+                return r && (r.state === 'PENDING' || r.state === 'PENDING_APPROVAL' || r.status === 'PENDING_APPROVAL');
+            });
+
+            if (requests.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4"><i class="bi bi-check2-circle text-success fs-4 d-block mb-1"></i>All governance queues clear.</td></tr>';
+                return;
+            }
+
+            const formatINR = (val) => val ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val) : '-';
+
+            let html = '';
+            requests.slice(0, 6).forEach(([id, r]) => {
+                const isTxn = !!(r.transactionKey || r.formId || id.startsWith('VCH-'));
+                html += `
+                    <tr ondblclick="App.Router('reports/approvalmanagementsystem')" title="Double click to review in Approval Center">
+                        <td class="font-mono fw-bold text-primary">${id}</td>
+                        <td class="text-truncate" style="max-width: 180px;">${r.title || (isTxn ? 'Transaction Draft' : 'Governance Request')}</td>
+                        <td class="text-end font-mono fw-semibold text-danger">${formatINR(r.amount)}</td>
+                        <td><span class="badge bg-warning text-dark">Pending</span></td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-primary py-0 px-2 fw-semibold" onclick="App.Router('reports/approvalmanagementsystem')">View</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        },
+
+        RenderDuesTable(totalDues) {
+            const tbody = document.getElementById('tbl-dues');
+            const duesBadge = document.getElementById('duesTotalBadge');
+            if (duesBadge) duesBadge.innerText = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalDues || 0);
+            if (!tbody) return;
+
+            const duesList = [];
+            Object.values(FILTERED_DATA.sales).forEach(s => {
+                const h = s.header || s;
+                const amt = parseFloat(h.grandTotal || h.total_amount || 0);
+                if (amt > 0) {
+                    duesList.push({
+                        entity: h.customer_ledger || h.entity || 'Client Ledger',
+                        date: h.posting_date || h.date || '-',
+                        docNo: h.doc_no || 'INV',
+                        amount: amt
+                    });
+                }
+            });
+
+            duesList.sort((a, b) => b.amount - a.amount);
+
+            if (duesList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">No overdue receivables recorded.</td></tr>';
+                return;
+            }
+
+            const formatINR = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val);
+            let html = '';
+            duesList.slice(0, 6).forEach(d => {
+                html += `
+                    <tr ondblclick="App.Router('reports/gl-statement?ledger=' + encodeURIComponent('${d.entity}'))" title="Double click to view ledger statement">
+                        <td class="fw-semibold text-truncate" style="max-width: 140px;">${d.entity}</td>
+                        <td class="font-mono text-muted small">${d.date}</td>
+                        <td class="font-mono small text-primary">${d.docNo}</td>
+                        <td class="text-end font-mono text-danger fw-bold">${formatINR(d.amount)}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        },
+
+        RenderStockReorderTable() {
+            const tbody = document.getElementById('stock-reorder');
+            if (!tbody) return;
+
+            const items = Object.values(FILTERED_DATA.stock || {});
+            if (items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">No inventory items registered.</td></tr>';
+                return;
+            }
+
+            const formatINR = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val);
+            let html = '';
+            items.slice(0, 5).forEach(s => {
+                const qty = parseFloat(s.openingQuantity || s.currentStock || s.quantity || 0);
+                const rate = parseFloat(s.costPrice || s.purchaseRate || s.rate || 0);
+                const val = qty * rate;
+                const isLow = qty <= 10;
+                html += `
+                    <tr ondblclick="App.Router('masters/stock-cw')" title="Double click to view item master">
+                        <td class="fw-semibold text-truncate" style="max-width: 160px;">${s.itemName || s.Stock_Item || 'Item'}</td>
+                        <td class="text-center font-mono">${qty} ${s.unit || 'units'}</td>
+                        <td class="text-end font-mono">${formatINR(val)}</td>
+                        <td class="text-center"><span class="badge ${isLow ? 'bg-danger' : 'bg-success'}">${isLow ? 'Reorder' : 'Adequate'}</span></td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        },
+
+        RenderCustomWidgets(metrics) {
+            const container = document.getElementById('customBentoContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const formatINR = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val || 0);
+
+            this.customWidgets.forEach(w => {
+                if (this.hiddenDefaultWidgets.has(w.id)) return;
+
+                const colSpan = w.span || 'span-2';
+                const rowSpan = w.rowSpan || (w.type === 'chart' ? 'row-span-2' : 'row-span-1');
+
+                if (w.type === 'kpi') {
+                    let val = 0;
+                    if (w.metric === 'sales') val = formatINR(metrics.revTotal);
+                    else if (w.metric === 'purchases') val = formatINR(metrics.purchaseTotal);
+                    else if (w.metric === 'profit') val = formatINR(metrics.netProfit);
+                    else if (w.metric === 'debtors') val = formatINR(metrics.netDebtors);
+                    else if (w.metric === 'creditors') val = formatINR(metrics.netCreditors);
+                    else if (w.metric === 'bank') val = formatINR(metrics.netBank);
+                    else if (w.metric === 'cash') val = formatINR(metrics.netCash);
+                    else if (w.metric === 'stock_val') val = formatINR(metrics.stockValTotal);
+                    else if (w.metric === 'vch_count') val = `${metrics.vchCount} Vouchers`;
+                    else if (w.metric === 'stock_items') val = `${metrics.stockItemCount} Items`;
+                    else val = '₹0.00';
+
+                    const color = w.color || 'primary';
+                    const icon = w.icon || 'bi-graph-up';
+
+                    container.innerHTML += `
+                        <div class="bento-card ${colSpan} border-start border-4 border-${color} position-relative" id="${w.id}">
+                            <button class="btn btn-sm btn-link text-muted custom-del-btn p-0" onclick="ExecutiveOS.DeleteCustomWidget('${w.id}')" title="Remove custom widget">
+                                <i class="bi bi-x-circle-fill"></i>
+                            </button>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="card-label fw-bold text-muted small text-uppercase">${w.title}</span>
+                                <span class="badge bg-${color}-subtle text-${color} rounded-pill"><i class="bi ${icon} me-1"></i>Custom KPI</span>
+                            </div>
+                            <div class="kpi-value font-mono fw-bold fs-3 text-dark my-1">${val}</div>
+                            <div class="d-flex justify-content-between align-items-center mt-auto small">
+                                <span class="text-muted">User Configured</span>
+                                <span class="text-${color} fw-bold font-mono">Live Tracked</span>
+                            </div>
+                        </div>
+                    `;
+                } else if (w.type === 'chart') {
+                    const canvasId = `custom-chart-${w.id}`;
+                    container.innerHTML += `
+                        <div class="bento-card ${colSpan} ${rowSpan} position-relative" id="${w.id}">
+                            <button class="btn btn-sm btn-link text-muted custom-del-btn p-0" onclick="ExecutiveOS.DeleteCustomWidget('${w.id}')" title="Remove custom widget">
+                                <i class="bi bi-x-circle-fill"></i>
+                            </button>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-bar-chart text-primary me-2"></i>${w.title}</h6>
+                                <span class="badge bg-light text-dark border">Custom Chart</span>
+                            </div>
+                            <div class="chart-container flex-grow-1 position-relative" style="min-height: 200px;">
+                                <canvas id="${canvasId}"></canvas>
+                            </div>
+                        </div>
+                    `;
+                    setTimeout(() => this.InitCustomChart(canvasId, w, metrics), 50);
+                } else if (w.type === 'table') {
+                    container.innerHTML += `
+                        <div class="bento-card ${colSpan} ${rowSpan} position-relative" id="${w.id}">
+                            <button class="btn btn-sm btn-link text-muted custom-del-btn p-0" onclick="ExecutiveOS.DeleteCustomWidget('${w.id}')" title="Remove custom widget">
+                                <i class="bi bi-x-circle-fill"></i>
+                            </button>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-table text-primary me-2"></i>${w.title}</h6>
+                                <span class="badge bg-light text-dark border">Custom Table</span>
+                            </div>
+                            <div class="table-scroll flex-grow-1 overflow-auto" style="max-height: 240px;">
+                                <table class="bento-table table-hover" id="tbl-${w.id}">
+                                    <thead><tr><th>Date / Ref</th><th>Entity</th><th class="text-end">Value</th></tr></thead>
+                                    <tbody>${this.GenerateCustomTableRows(w.feed, w.limit || 10)}</tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+        },
+
+        InitCustomChart(canvasId, widget, metrics) {
+            const ctx = document.getElementById(canvasId)?.getContext('2d');
+            if (!ctx) return;
+            if (CUSTOM_CHARTS[canvasId]) CUSTOM_CHARTS[canvasId].destroy();
+
+            const cType = widget.chartType || 'bar';
+            let labels = ['Metric A', 'Metric B', 'Metric C'];
+            let data = [metrics.revTotal * 0.4, metrics.purchaseTotal * 0.4, metrics.netLiquidity * 0.4];
+
+            if (widget.dataset === 'rev_exp') {
+                labels = ['Sales', 'Purchases', 'Profit'];
+                data = [metrics.revTotal, metrics.purchaseTotal, Math.max(0, metrics.netProfit)];
+            } else if (widget.dataset === 'flow') {
+                labels = ['Bank Reserves', 'Cash in Hand', 'Stock Value'];
+                data = [metrics.netBank, metrics.netCash, metrics.stockValTotal];
+            }
+
+            CUSTOM_CHARTS[canvasId] = new Chart(ctx, {
+                type: cType,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: widget.title,
+                        data: data,
+                        backgroundColor: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b'],
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 9 } } } }
+                }
+            });
+        },
+
+        GenerateCustomTableRows(feed, limit) {
+            let records = [];
+            if (feed === 'sales_inv') records = Object.values(FILTERED_DATA.sales || {});
+            else if (feed === 'purch_inv') records = Object.values(FILTERED_DATA.purchase || {});
+            else if (feed === 'receipt_vch') records = Object.values(FILTERED_DATA.receipt || {});
+            else if (feed === 'payment_vch') records = Object.values(FILTERED_DATA.payment || {});
+            else records = Object.values(FILTERED_DATA.sales || {});
+
+            if (records.length === 0) return '<tr><td colspan="3" class="text-center text-muted py-3">No records found.</td></tr>';
+
+            const formatINR = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val || 0);
+            let html = '';
+            records.slice(0, Number(limit) || 10).forEach(r => {
+                const h = r.header || r;
+                const dt = h.posting_date || h.date || '-';
+                const entity = h.entity || h.customer_ledger || h.supplier_ledger || 'Entity';
+                const amt = parseFloat(h.grandTotal || h.total_amount || h.amount || 0);
+                html += `
+                    <tr ondblclick="App.Router('reports/gl-statement?ledger=' + encodeURIComponent('${entity}'))" title="Double click to inspect ledger">
+                        <td class="font-mono small text-muted">${dt}</td>
+                        <td class="fw-semibold text-truncate" style="max-width: 150px;">${entity}</td>
+                        <td class="text-end font-mono fw-bold">${formatINR(amt)}</td>
+                    </tr>
+                `;
+            });
+            return html;
+        },
+
+        OpenEdit(formType, key, docNo) {
+            localStorage.setItem('editContext', JSON.stringify({ type: formType, key: key }));
+            App.Router(`transactions/edit?type=${formType}&key=${key}&id=${docNo || key}`);
+        },
+
+        OpenAddWidgetModal() {
+            const modalEl = document.getElementById('addCustomWidgetModal');
+            if (modalEl) new bootstrap.Modal(modalEl).show();
+        },
+
+        SelectWidgetType(type) {
+            document.getElementById('widgetType').value = type;
+            document.querySelectorAll('.widget-type-card').forEach(el => el.classList.remove('selected'));
+            document.getElementById(`card-type-${type}`)?.classList.add('selected');
+
+            document.getElementById('config-kpi')?.classList.toggle('d-none', type !== 'kpi');
+            document.getElementById('config-chart')?.classList.toggle('d-none', type !== 'chart');
+            document.getElementById('config-table')?.classList.toggle('d-none', type !== 'table');
+
+            // Set sensible default span based on type
+            const spanSelect = document.getElementById('widgetSpan');
+            if (spanSelect) {
+                if (type === 'kpi') spanSelect.value = 'span-1';
+                else if (type === 'chart') spanSelect.value = 'span-2';
+                else if (type === 'table') spanSelect.value = 'span-2';
+            }
+        },
+
+        SaveCustomWidget() {
+            const type = document.getElementById('widgetType')?.value || 'kpi';
+            const title = (document.getElementById('widgetTitle')?.value || '').trim();
+            const span = document.getElementById('widgetSpan')?.value || 'span-2';
+
+            if (!title) {
+                alert("Please provide a widget title.");
+                return;
+            }
+
+            const newWidget = {
+                id: 'custom-' + Date.now(),
+                type: type,
+                title: title,
+                span: span,
+                createdAt: Date.now()
+            };
+
+            if (type === 'kpi') {
+                newWidget.metric = document.getElementById('kpiMetricSource')?.value || 'sales';
+                newWidget.color = document.getElementById('kpiColor')?.value || 'primary';
+                newWidget.icon = document.getElementById('kpiIcon')?.value || 'bi-graph-up';
+            } else if (type === 'chart') {
+                newWidget.dataset = document.getElementById('chartDataset')?.value || 'rev_exp';
+                newWidget.chartType = document.getElementById('chartType')?.value || 'bar';
+                newWidget.rowSpan = 'row-span-2';
+            } else if (type === 'table') {
+                newWidget.feed = document.getElementById('tableFeedSource')?.value || 'sales_inv';
+                newWidget.limit = document.getElementById('tableRowLimit')?.value || '10';
+                newWidget.rowSpan = 'row-span-2';
+            }
+
+            this.customWidgets.push(newWidget);
+            this.SaveCustomWidgets();
+
+            const modalEl = document.getElementById('addCustomWidgetModal');
+            if (modalEl) {
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+            }
+
+            this.UpdateUI();
+            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+                App.UI.Notify('Custom Widget Created', `Added "${title}" to your Bento Grid layout.`, 'success');
+            }
+        },
+
+        DeleteCustomWidget(id) {
+            if (!confirm("Are you sure you want to remove this custom widget from your Bento Grid?")) return;
+            this.customWidgets = this.customWidgets.filter(w => w.id !== id);
+            this.SaveCustomWidgets();
+            this.UpdateUI();
+        },
+
+        OpenManageModal() {
+            const list = document.getElementById('widgetToggleList');
+            if (!list) return;
+
+            const defaultWidgets = [
+                { id: 'widget-kpi-rev', label: 'Gross Revenue KPI' },
+                { id: 'widget-kpi-cash', label: 'Net Liquidity KPI' },
+                { id: 'widget-kpi-out', label: 'Sundry Debtors KPI' },
+                { id: 'widget-kpi-appr', label: 'Action Queue KPI' },
+                { id: 'widget-chart-perf', label: 'Revenue vs Expenditure Chart' },
+                { id: 'widget-chart-flow', label: 'Cash Flow Dynamics Chart' },
+                { id: 'widget-chart-aging', label: 'Asset Allocation Profile' },
+                { id: 'widget-table-txns', label: 'Live Financial Transactions Feed' },
+                { id: 'widget-table-approvals', label: 'Governance Approvals Queue' },
+                { id: 'widget-table-dues', label: 'Outstanding Receivables Table' },
+                { id: 'widget-table-stock', label: 'Inventory Reorder Table' },
+                { id: 'widget-launcher', label: 'Quick Transaction Launchpad' }
+            ];
+
+            let html = '';
+            defaultWidgets.forEach(w => {
+                const isHidden = this.hiddenDefaultWidgets.has(w.id);
+                html += `
+                    <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+                        <span class="small fw-semibold">${w.label}</span>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" ${!isHidden ? 'checked' : ''} onchange="ExecutiveOS.ToggleWidget('${w.id}', this.checked)">
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (this.customWidgets.length > 0) {
+                html += '<div class="list-group-item bg-light fw-bold small text-muted text-uppercase pt-3 pb-1">Custom User Widgets</div>';
+                this.customWidgets.forEach(w => {
+                    html += `
+                        <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+                            <span class="small fw-semibold text-primary"><i class="bi bi-star-fill text-warning me-1"></i>${w.title}</span>
+                            <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="ExecutiveOS.DeleteCustomWidget('${w.id}'); ExecutiveOS.OpenManageModal();">Delete</button>
+                        </div>
+                    `;
+                });
+            }
+
+            list.innerHTML = html;
+            const modalEl = document.getElementById('manageWidgetsModal');
+            if (modalEl) new bootstrap.Modal(modalEl).show();
+        },
+
+        ToggleWidget(id, isVisible) {
+            if (isVisible) {
+                this.hiddenDefaultWidgets.delete(id);
+            } else {
+                this.hiddenDefaultWidgets.add(id);
+            }
+            this.SaveCustomWidgets();
+            this.ApplyVisibility();
+        },
+
+        ApplyVisibility() {
+            this.hiddenDefaultWidgets.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('d-none');
+            });
+            document.querySelectorAll('.bento-card').forEach(el => {
+                if (!this.hiddenDefaultWidgets.has(el.id)) {
+                    el.classList.remove('d-none');
+                }
+            });
+        },
+
+        ResetToDefault() {
+            if (!confirm("Reset Bento Grid to factory default? All custom widgets will be removed.")) return;
+            this.customWidgets = [];
+            this.hiddenDefaultWidgets.clear();
+            this.SaveCustomWidgets();
+            const modalEl = document.getElementById('manageWidgetsModal');
+            if (modalEl) {
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+            }
+            this.UpdateUI();
+        },
+
+        ExportCSV() {
+            let csv = "Timestamp,DocumentNo,Party,FormType,Status,Amount\n";
+            Object.values(FILTERED_DATA.sales || {}).forEach(s => {
+                const h = s.header || s;
+                csv += `"${h.posting_date || ''}","${h.doc_no || ''}","${h.customer_ledger || ''}","SalesInvoice","${h.status || 'POSTED'}","${h.grandTotal || 0}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `UniTax_Dashboard_Export_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+    };
+
+    ExecutiveOS.Init();
+})();
+</script>

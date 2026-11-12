@@ -1,0 +1,1032 @@
+/**
+ * UNITAX PRO - Centralized Enterprise Modules Stylesheet (modules.css)
+ * Consolidated from internal module stylesheets to guarantee 100% uniform UI/UX
+ */
+
+
+/* ==========================================================================
+   MODULE COMPONENT STYLES: MODULES/DASHBOARD.HTML
+   ========================================================================== */
+
+.unitax-exec-os {
+        --bg-body: #f4f4f5;
+        --surface: #ffffff;
+        --border: #e4e4e7;
+        --text-main: #09090b;
+        --text-muted: #71717a;
+        --primary: #0f172a;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --radius-lg: 1.25rem;
+
+        background-color: transparent;
+        font-family: 'Inter', -apple-system, sans-serif;
+        color: var(--text-main);
+        min-height: 100%;
+        box-sizing: border-box;
+    }
+
+    .unitax-exec-os *, .unitax-exec-os *::before, .unitax-exec-os *::after { box-sizing: inherit; }
+
+    /* --- Bento Grid Layout --- */
+    .unitax-exec-os .bento-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-auto-rows: minmax(100px, auto);
+        gap: .25rem;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+
+    .unitax-exec-os .bento-card {
+        background-color: var(--surface);
+        /* border-radius: var(--radius-lg); */
+        border: 1px solid var(--border);
+        padding: 10px;
+        display: flex;
+        max-height: 50vh;
+        overflow-y: scroll;
+        flex-direction: column;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+        transition: transform 0.2s, box-shadow 0.2s;
+        overflow: hidden;
+    }
+
+    .unitax-exec-os .bento-card:hover { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
+
+    /* Grid Spans */
+    .unitax-exec-os .span-4 { grid-column: span 4; }
+    .unitax-exec-os .span-2 { grid-column: span 2; }
+    .unitax-exec-os .span-1 { grid-column: span 1; }
+    .unitax-exec-os .row-span-2 { grid-row: span 2; }
+
+    @media (max-width: 1200px) {
+        .unitax-exec-os .bento-grid { grid-template-columns: repeat(2, 1fr); }
+        .unitax-exec-os .span-1, .unitax-exec-os .span-2, .unitax-exec-os .span-4 { grid-column: span 2; }
+    }
+
+    /* --- Typography & Elements --- */
+    .unitax-exec-os .card-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .unitax-exec-os .kpi-value {
+        font-size: 2rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1;
+        text-align: end;
+        margin-right: 10px;
+        margin-bottom: 0.5rem;
+        color: var(--primary);
+    }
+
+    /* --- Custom Tables --- */
+    .unitax-exec-os .table-scroll { flex-grow: 1; overflow-y: auto; max-height: calc(100vh - 195px) !important; padding-right: 5px; }
+    .unitax-exec-os .table-scroll::-webkit-scrollbar { width: 5px; }
+    .unitax-exec-os .table-scroll::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 10px; }
+
+    .unitax-exec-os .bento-table { width: 100%; font-size: 0.85rem; border-collapse: collapse; margin: 0; }
+    .unitax-exec-os .bento-table th { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; padding: 0.75rem 0.5rem; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); z-index: 1; }
+    .unitax-exec-os .bento-table td { padding: 0.85rem 0.5rem; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--text-main); }
+
+    /* Status Dots & Badges */
+    .unitax-exec-os .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+    .unitax-exec-os .status-pending { color: var(--warning); }
+    .unitax-exec-os .status-pending .status-dot { background-color: var(--warning); }
+    .unitax-exec-os .status-approved { color: var(--success); }
+    .unitax-exec-os .status-approved .status-dot { background-color: var(--success); }
+    .unitax-exec-os .status-rejected { color: var(--danger); }
+    .unitax-exec-os .status-rejected .status-dot { background-color: var(--danger); }
+
+    .unitax-exec-os .badge-soft { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.02em; }
+    .unitax-exec-os .bg-danger-soft { background-color: #fee2e2; color: #b91c1c; }
+    .unitax-exec-os .bg-warning-soft { background-color: #fef3c7; color: #b45309; }
+    .unitax-exec-os .bg-success-soft { background-color: #d1fae5; color: #047857; }
+
+    .unitax-exec-os .font-mono { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; }
+    .unitax-exec-os .chart-container { position: relative; height: 100%; width: 100%; min-height: 220px; }
+    
+    @keyframes pulse-warning {
+        0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+        70% { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+    }
+    .unitax-exec-os .Pulse { animation: pulse-warning 2s infinite; }
+
+
+/* ==========================================================================
+   MODULE COMPONENT STYLES: MODULES/REPORTS/RECONCILATION.HTML
+   ========================================================================== */
+
+/* Core Workspace Container */
+.unitax-reconcile-os {
+    /* background: #ffffff; */
+    /* border: 1px solid #e2e8f0; */
+    border-radius: 8px;
+    margin:10px 0px !important;
+    overflow: hidden;
+    font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Scrollable Table Area */
+.unitax-reconcile-os .table-scroll {
+    max-height: calc(100vh - 195px) !important;
+    overflow-y: auto;
+    /* background: #f8fafc; */
+}
+.unitax-reconcile-os .table-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.unitax-reconcile-os .table-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+/* Table Architecture */
+.unitax-reconcile-os .reconcile-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    table-layout: auto;
+}
+.unitax-reconcile-os .reconcile-table th {
+    color: #475569;
+    background: #f8fafc;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.65rem;
+    letter-spacing: 0.04em;
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+.unitax-reconcile-os .reconcile-table td {
+    padding: 0.5rem;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+
+/* Row States */
+.unitax-reconcile-os .reconcile-table tr { transition: background-color 0.15s ease; background: #ffffff; }
+.unitax-reconcile-os .reconcile-table tr:hover { background: #f8fafc; }
+.unitax-reconcile-os .reconcile-table tr.row-reconciled { background: #f0fdf4; }
+.unitax-reconcile-os .reconcile-table tr.row-reconciled:hover { background: #dcfce7; }
+
+/* Input Adjustments */
+.unitax-reconcile-os .reconcile-table .form-control-sm {
+    border-color: #cbd5e1;
+    font-size: 0.75rem;
+    box-shadow: none !important;
+}
+.unitax-reconcile-os .reconcile-table .form-control-sm:disabled {
+    background-color: transparent;
+    border-color: transparent;
+    color: #0f172a;
+    font-weight: 500;
+    cursor: default;
+}
+
+/* Status Badges & Buttons */
+.unitax-reconcile-os .status-badge {
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.unitax-reconcile-os .status-badge-reconciled { background: #dcfce7; color: #166534; }
+.unitax-reconcile-os .status-badge-unreconciled { background: #fef3c7; color: #92400e; }
+
+.unitax-reconcile-os .btn-reconcile {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    font-weight: 500;
+    border: none;
+    transition: all 0.2s;
+}
+.unitax-reconcile-os .btn-reconcile-submit { background: #0f172a; color: white; }
+.unitax-reconcile-os .btn-reconcile-submit:hover { background: #334155; color: white; }
+.unitax-reconcile-os .btn-reconcile-resubmit { background: transparent; color: #166534; border: 1px solid #166534; }
+.unitax-reconcile-os .btn-reconcile-resubmit:hover { background: #166534; color: white; }
+
+.unitax-reconcile-os .reconcile-empty-state { text-align: center; padding: 2rem 0; color: #64748b; }
+
+
+/* ==========================================================================
+   MODULE COMPONENT STYLES: MODULES/REPORTS/GL-STATEMENT.HTML
+   ========================================================================== */
+
+/* -------------------------------------------------------------
+   BANK STATEMENT PRINT STYLESHEET (TRUE EDGE-TO-EDGE)
+------------------------------------------------------------- */
+.d-print-block { display: none; }
+.d-print-inline { display: none; }
+
+/* Screen styles for better header visibility */
+.statement-table thead th {
+    background-color: #0b3d91 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    padding: 12px 10px !important;
+    border-bottom: 3px solid #062b6b !important;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    white-space: nowrap;
+}
+
+/* Striped rows for screen */
+.statement-table tbody tr:nth-child(even) {
+    background-color: #f8f9fa !important;
+}
+
+.statement-table tbody tr:hover {
+    background-color: #e8f0fe !important;
+    cursor: pointer;
+}
+
+/* Universal Enterprise Table Layout */
+.master-print-table {
+    display: table !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    border-collapse: collapse;
+}
+
+.master-print-table thead th {
+    position: sticky;
+    top: 0;
+    background: #0f172a !important;
+    color: #f8fafc !important;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    z-index: 10;
+}
+
+.gl-statement-wrapper .card-full-height {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.table-responsive.print-table-wrapper {
+    flex: 1;
+    overflow: visible;
+}
+
+@media print {
+    @page { 
+        margin: 0mm !important; 
+        size: A4 portrait !important; 
+    }
+    #errorNotificationBox{
+        display: none !important;
+    }
+
+    .content-viewport{
+        padding: 0px !important;
+    }
+
+    .print-table-container{
+        scrollbar-width: none !important;
+        font-size: .8rem;
+    }
+
+    body, html, #root, #app, #main-wrapper, .container-fluid, .container, main, .content-wrapper, .page-content {
+        background: #ffffff !important; 
+        margin: 0 !important; 
+        padding: 0 !important; 
+        width: 100% !important; 
+        max-width: 100% !important; 
+        box-sizing: border-box !important;
+    }
+
+    /* Remove all scroll and height restrictions in print */
+    .master-print-table,
+    .table-responsive.print-table-wrapper,
+    .animate-in,
+    .card,
+    .card-body {
+        display: block !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        flex: none !important;
+    }
+
+    .card, .card-body, .animate-in, .table-responsive, .print-table-wrapper {
+        border: none !important; 
+        box-shadow: none !important; 
+        margin: 0 !important; 
+        padding: 0 !important; 
+        width: 100% !important; 
+        display: block !important; 
+        overflow: visible !important;
+    }
+
+    .no-print, header, nav, .sidebar, #glFilterFormWrapper, #statementSummary { 
+        display: none !important; 
+    }
+    
+    /* Hide Action column in print */
+    .statement-table th:last-child, 
+    .statement-table td:last-child { 
+        display: none !important; 
+    }
+
+    .d-print-block { 
+        display: block !important; 
+    }
+    
+    .d-print-inline { 
+        display: inline !important; 
+    }
+    
+    .d-print-table-header-group { 
+        display: table-header-group !important; 
+    }
+    
+    .d-print-table-footer-group { 
+        display: table-footer-group !important; 
+    }
+
+    /* REMOVE fixed positioning - let content flow naturally */
+     .bank-print-header {
+        position: static !important;
+        page-break-after: avoid;
+        page-break-inside: avoid;
+    }
+    
+    /* Ensure table header repeats on every page */
+    .statement-table thead {
+        display: table-header-group;
+    }
+    
+    /* Prevent page breaks inside header elements */
+    .bank-banner,
+    .customer-info-box {
+        page-break-inside: avoid;
+        page-break-after: avoid;
+    }
+    
+    /* Ensure footer stays at bottom of last page */
+    .bank-print-footer {
+        position: static;
+        page-break-before: avoid;
+        margin-top: 40px;
+    }
+    
+    /* Signatures at bottom */
+    .signatures {
+        page-break-inside: avoid;
+        margin-top: 40px;
+    }
+    
+     .bank-print-footer { 
+        position: fixed; 
+        bottom: 0; 
+        left: 0; 
+        right: 0;
+        width: 100%; 
+        z-index: 1000; 
+        background: white; 
+        border-top: 2px solid #0b3d91 !important; 
+        padding: 15px 25px !important; 
+        font-size: 8pt; 
+        color: #666 !important; 
+    }
+    
+    .bank-print-footer p { 
+        padding: 0 10px; 
+        margin: 0;
+    }
+
+    /* Spacers - no longer needed, keep for structure */
+    .print-header-spacer { 
+        height: 0 !important; 
+    } 
+    
+    .print-footer-spacer { 
+        height: 0 !important; 
+    } 
+
+    /* Banner Styles */
+    .bank-banner { 
+        background-color: #0b3d91 !important; 
+        color: #ffffff !important; 
+        padding: 20px 25px !important; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        border-radius: 0 !important; 
+        width: 100% !important; 
+        box-sizing: border-box !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    .statement-title-box { 
+        text-align: right; 
+        color: #ffffff !important; 
+    }
+    
+    .statement-title-box h2 { 
+        margin: 0; 
+        font-size: 14pt; 
+        font-weight: 600; 
+        color: #ffffff !important;
+    }
+    
+    .statement-title-box p { 
+        margin: 5px 0 0 0; 
+        font-size: 9pt; 
+        opacity: 0.9; 
+        color: #ffffff !important;
+    }
+
+    /* Customer Info Box */
+    .customer-info-box { 
+        background-color: #f4f7fa !important; 
+        border-bottom: 2px solid #0b3d91 !important; 
+        border-top: none !important; 
+        border-left: none !important; 
+        border-right: none !important; 
+        border-radius: 0 !important; 
+        padding: 15px 25px !important; 
+        display: flex; 
+        margin: 0;
+        justify-content: space-between; 
+        width: 100% !important; 
+        box-sizing: border-box !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        page-break-inside: avoid;
+    }
+    
+    .info-left .label-text { 
+        font-size: 9pt; 
+        color: #555 !important; 
+        text-transform: uppercase; 
+        margin: 0 0 4px 0; 
+    }
+    
+    .info-left h3 { 
+        margin: 0 0 8px 0; 
+        font-size: 14pt; 
+        color: #000 !important; 
+    }
+    
+    .info-left .sub-text { 
+        margin: 0; 
+        font-size: 9pt; 
+        color: #444 !important; 
+    }
+
+    /* Meta Table */
+    .meta-table { 
+        border-collapse: collapse; 
+        font-size: 9pt; 
+        width: auto;
+    }
+    
+    .meta-table td, 
+    .meta-table th { 
+        padding: 3px 10px; 
+        text-align: right; 
+    }
+    
+    .meta-table td:first-child, 
+    .meta-table th:first-child { 
+        text-align: left; 
+        color: #666 !important; 
+    }
+
+    .highlight-row { 
+        background-color: #e2e8f0 !important; 
+        border-radius: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    .highlight-row td { 
+        padding: 5px 10px; 
+        color: #0b3d91 !important; 
+        font-weight: bold;
+    }
+
+    /* Master Table - FULL WIDTH, NO RESTRICTIONS */
+    .master-print-table { 
+        width: 100% !important; 
+        border-collapse: collapse !important; 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        display: table !important;
+    }
+    
+    .master-print-table > tbody > tr > td { 
+        padding: 0 !important; 
+    }
+    
+    /* Statement Table - SHOW ALL ROWS */
+    .statement-table { 
+        width: 100% !important; 
+        border-collapse: collapse !important; 
+        font-size: 9pt !important; 
+        table-layout: auto !important; 
+        margin: 0 !important; 
+    }
+    
+    .statement-table thead { 
+        display: table-header-group;
+    }
+    
+    .statement-table thead tr {
+        page-break-inside: avoid;
+        page-break-after: avoid;
+    }
+    
+    .statement-table th { 
+        background-color: #0b3d91 !important; 
+        color: #ffffff !important; 
+        padding: 10px 10px !important; 
+        font-weight: 700 !important; 
+        text-transform: uppercase; 
+        font-size: 8pt !important;
+        border: none !important; 
+        border-bottom: 2px solid #ffffff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        white-space: nowrap;
+    }
+    
+    .statement-table td { 
+        padding: 8px 10px !important; 
+        border-left: none !important; 
+        border-right: none !important; 
+        border-bottom: 1px solid #dce4ec !important; 
+        vertical-align: top; 
+        color: #333 !important;
+    }
+
+    /* Striped rows in print */
+    .statement-table tbody tr:nth-child(even) { 
+        background-color: #f5f5f5 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    .statement-table tbody tr:nth-child(odd) { 
+        background-color: #ffffff !important;
+    }
+
+    /* First and last cell padding */
+    .statement-table th:first-child, 
+    .statement-table td:first-child { 
+        padding-left: 25px !important; 
+    }
+    
+    .statement-table th:nth-child(7), 
+    .statement-table td:nth-child(7) { 
+        padding-right: 25px !important; 
+    }
+
+    /* Page breaks - rows will naturally flow to next page */
+    .statement-table tbody tr { 
+        page-break-inside: avoid; 
+        page-break-after: auto;
+    }
+    
+    /* Ensure table header repeats on every page */
+    .statement-table thead {
+        display: table-header-group;
+    }
+    
+    /* Ensure footer appears at end of table */
+    .statement-table tfoot {
+        display: table-footer-group;
+    }
+
+    /* Signatures - always at bottom of last page */
+    /* Signatures */
+    .signatures { 
+        display: flex; 
+        justify-content: space-between; 
+        margin-top: 40px; 
+        padding: 0 25px; 
+        margin-bottom: 20px;
+    }
+    
+    .sig-line { 
+        border-top: 2px solid #000; 
+        width: 250px; 
+        text-align: center; 
+        padding-top: 5px; 
+        font-weight: bold; 
+        color: #000 !important;
+    }
+
+    /* Ensure colors print correctly */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    /* Remove default page headers/footers */
+    @page {
+        @top-center {
+            content: none;
+        }
+        
+        @bottom-center {
+            content: none;
+        }
+    }
+}
+
+
+/* ==========================================================================
+   MODULE COMPONENT STYLES: MODULES/REPORTS/APPROVALMANAGEMENTSYSTEM.HTML
+   ========================================================================== */
+
+/* =========================================================
+       PREMIUM GOVERNANCE HUB - DESIGN SYSTEM (SCOPED)
+       ========================================================= */
+
+    /* 1. Layout Container & Variables (Moved from :root to scope them) */
+    .premium-workflow-app {
+        --wf-primary: #2563eb;
+        --wf-primary-bg: #eff6ff;
+        --wf-success: #10b981;
+        --wf-danger: #ef4444;
+        --wf-warning: #f59e0b;
+        --wf-surface: #f8fafc;
+        --wf-border: #e2e8f0;
+        --wf-text-main: #1e293b;
+        --wf-text-muted: #64748b;
+
+        /* background-color: #f1f5f9; */
+        height: 100% !important; min-height: 100% !important; width: 100% !important; display: flex; flex-direction: column; flex-grow: 1;
+    }
+
+    .premium-workflow-app .engine-wrapper {
+        /* background: var(--); */
+        transition: all 0.3s ease;
+    }
+    
+    .premium-workflow-app #v-title {
+        font-size: 24px !important;
+        text-transform: capitalize;
+    }
+
+    .premium-workflow-app #v-amount {
+        font-size: 24px;
+    }
+
+    .premium-workflow-app #inboxList {
+        scrollbar-width: none;
+    }
+
+    /* 2. Custom Typography & Spacing */
+    .premium-workflow-app .tracking-tight { 
+        letter-spacing: -0.025em; 
+    }
+    
+    .premium-workflow-app .section-title {
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--wf-text-muted);
+        margin-bottom: 1.25rem;
+    }
+
+    /* 3. Sidebar Queue Styling */
+    .premium-workflow-app .sidebar-queue {
+        width: 380px;
+        background-color: var(--wf-surface);
+    }
+
+    .premium-workflow-app .list-group-item {
+        border: none;
+        background: transparent;
+        padding: 1.25rem;
+        margin-bottom: 2px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border-left: 4px solid transparent;
+    }
+
+    .premium-workflow-app .list-group-item:hover {
+        background-color: #f1f5f9;
+        transform: translateX(4px);
+    }
+
+    .premium-workflow-app .active-request {
+        background-color: #ffffff !important;
+        border-left-color: var(--wf-primary) !important;
+        z-index: 1;
+    }
+
+    /* 4. Document Viewer - High End Paper Feel */
+    .premium-workflow-app .main-viewer {
+        background: #ffffff;
+    }
+
+    .premium-workflow-app .doc-paper {
+        background: #ffffff;
+        border: 1px solid var(--wf-border);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+    /* 5. Premium Stepper (Audit Trail) */
+    .premium-workflow-app .audit-stepper {
+        position: relative;
+        padding-left: 32px;
+    }
+
+    .premium-workflow-app .audit-stepper::before {
+        content: "";
+        position: absolute;
+        left: 11px;
+        top: 10px;
+        bottom: 10px;
+        width: 2px;
+        background: var(--wf-border);
+    }
+
+    .premium-workflow-app .audit-node {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+
+    .premium-workflow-app .audit-node::before {
+        content: "";
+        position: absolute;
+        left: -26px;
+        top: 4px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid #cbd5e1;
+        z-index: 2;
+        transition: all 0.3s ease;
+    }
+
+    /* Node Context Colors */
+    .premium-workflow-app .node-create::before { background: var(--wf-text-muted); border-color: var(--wf-text-muted); }
+    .premium-workflow-app .node-approve::before { background: var(--wf-success); border-color: var(--wf-success); box-shadow: 0 0 0 4px #d1fae5; }
+    .premium-workflow-app .node-return::before { background: var(--wf-danger); border-color: var(--wf-danger); box-shadow: 0 0 0 4px #fee2e2; }
+    .premium-workflow-app .node-pending::before { background: var(--wf-primary); border-color: var(--wf-primary); box-shadow: 0 0 0 4px var(--wf-primary-bg); }
+
+    .premium-workflow-app .node-title { font-size: 0.85rem; font-weight: 700; color: var(--wf-text-main); }
+    .premium-workflow-app .node-meta { font-size: 0.75rem; color: var(--wf-text-muted); margin-bottom: 4px; }
+
+    /* Speech Bubble Comments */
+    .premium-workflow-app .node-comment {
+        font-size: 0.8rem;
+        padding: 0.75rem 1rem;
+        background: #ffffff;
+        border: 1px solid var(--wf-border);
+        border-radius: 8px;
+        color: var(--wf-text-main);
+        font-style: italic;
+        margin-top: 8px;
+    }
+
+    /* 6. Action Panel (Sticky Decision Bar) */
+    .premium-workflow-app #action-panel {
+        background: rgba(255, 255, 255, 0.8);
+        border-top: 1px solid var(--wf-border);
+    }
+
+    .premium-workflow-app .form-control-solid {
+        background-color: var(--wf-surface);
+        border: 1px solid transparent;
+        padding: 0.75rem 1rem;
+        transition: all 0.2s;
+    }
+
+    .premium-workflow-app .form-control-solid:focus {
+        background-color: #fff;
+        border-color: var(--wf-primary);
+    }
+
+    /* 7. Animations & Micro-interactions */
+    
+
+    .premium-workflow-app .Pulse {
+        animation: pulse-primary 2s infinite;
+    }
+
+    /* 8. Badge Refinement */
+    .premium-workflow-app .badge-xs {
+        font-size: 10px;
+        padding: 3px 8px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+    }
+
+    /* Scrollbar Refinement */
+    .premium-workflow-app .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+    .premium-workflow-app .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .premium-workflow-app .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* 9. Dark Mode Overrides (Adaptive) */
+    body.dark-mode .premium-workflow-app {
+        --wf-surface: #0f172a; /* Updated variable name to match declaration */
+        --wf-border: #334155;
+        --wf-text-main: #f1f5f9;
+        --wf-text-muted: #94a3b8;
+    }
+
+    body.dark-mode .premium-workflow-app .engine-wrapper,
+    body.dark-mode .premium-workflow-app .bg-white,
+    body.dark-mode .premium-workflow-app .list-group-item:hover,
+    body.dark-mode .premium-workflow-app .node-comment {
+        background-color: #1e293b !important;
+        color: #fff !important;
+    }
+
+    body.dark-mode .premium-workflow-app .active-request {
+        background-color: #334155 !important;
+    }
+
+
+/* ==========================================================================
+   MODULE COMPONENT STYLES: MODULES/REPORTS/GSTR1.HTML
+   ========================================================================== */
+
+
+
+/* .gstr-master-table th, .gstr-master-table td { padding: 0.55rem 0.65rem !important; vertical-align: middle; }
+    .gstr-row-clickable { cursor: pointer; transition: background 0.15s ease; }
+    .gstr-row-clickable:hover { background-color: rgba(25, 135, 84, 0.06) !important; }
+    .gstr-subhead-row { background-color: #fafbfc; font-weight: 500; }
+    .fw-mono { font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; } */
+
+    .gstr-master-table td{
+        padding: 05px 10px !important;
+    }
+    .gstr-master-table{
+        font-size: 16px;
+    }
+
+
+/* ==========================================================================
+   MODULE COMPONENT STYLES: MODULES/REPORTS/INVENTORYRETURN.HTML
+   ========================================================================== */
+
+/* Table Container Styling */
+    #viewStockSummary .table-responsive {
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+    }
+
+    /* Target all standard data cells */
+    #viewStockSummary .table td, 
+    #viewStockSummary .table th { 
+        font-size: 13px !important;
+        padding: 6px 10px !important; /* Balanced padding for readability */
+        vertical-align: middle;
+        border: solid 1px var(--apple-system);
+    }
+
+    /* Specific override for tbody cells */
+    #viewStockSummary tbody td { 
+        min-height: 12px !important;
+        /* Using padding instead of margin for table cells, as margin does not work on td elements */
+        padding: 4px 10px !important; 
+    }
+
+    /* Optional: Zebra striping for better readability */
+    #viewStockSummary tbody tr:nth-of-type(odd) {
+        background-color: rgba(0,0,0,0.02);
+    }
+
+    /* Optional: Hover effect */
+    #viewStockSummary tbody tr:hover {
+        background-color: rgba(0,0,0,0.05);
+    }
+
+
+/* ==========================================================================
+   MODULE COMPONENT STYLES: MODULES/UTILITIES/ABOUTUS.HTML
+   ========================================================================== */
+
+.about-us-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.tracking-wide { letter-spacing: 0.08em; }
+.tracking-tight { letter-spacing: -0.025em; }
+.tracking-widest { letter-spacing: 0.15em; }
+
+.icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hover-lift {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;
+}
+.hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08) !important;
+}
+
+.founder-img-box {
+    min-height: 380px;
+    position: relative;
+    overflow: hidden;
+    background: #0f172a;
+}
+
+.hover-link {
+    transition: padding-left 0.2s ease, opacity 0.2s ease;
+}
+.hover-link:hover {
+    padding-left: 4px;
+    opacity: 1 !important;
+    color: #60a5fa !important;
+}
+
+.hover-opacity-100:hover {
+    opacity: 1 !important;
+    transition: opacity 0.2s ease;
+}
+
+.stat-box {
+    padding: 0.75rem 0.5rem;
+    transition: transform 0.2s ease;
+}
+.stat-box:hover {
+    transform: translateY(-2px);
+}
+
+/* Dark Mode Overrides for About Us */
+body.dark-mode .about-us-wrapper .card.bg-white {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+body.dark-mode .about-us-wrapper .text-dark {
+    color: #f1f5f9 !important;
+}
+body.dark-mode .about-us-wrapper .text-muted {
+    color: #94a3b8 !important;
+}
+body.dark-mode .about-us-wrapper .border-end {
+    border-color: #334155 !important;
+}
+
+/* ==========================================================================
+   ENTERPRISE CONTAINER BOUNDARY & OVERFLOW SCROLL (ROBUST & RESILIENT)
+   ========================================================================== */
+/* responsive d-none handled natively by Bootstrap */
+
+#main-content {
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+#main-content > .animate-in,
+#main-content > form,
+#main-content > div:not(.modal) {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.card:not(.d-none) {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.table-responsive,
+.print-table-container,
+.master-print-table-wrapper {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+    box-sizing: border-box;
+}

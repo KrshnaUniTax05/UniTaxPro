@@ -1,0 +1,661 @@
+<style>
+.notice-unread-card {
+    background: #fffbeb !important;
+    border-left: 3px solid #f59e0b !important;
+}
+.notice-read-card {
+    border-left: 3px solid transparent !important;
+}
+.notice-feed-row {
+    transition: background 0.18s ease, box-shadow 0.18s ease;
+}
+.notice-feed-row:hover {
+    background: #f8fafc !important;
+    box-shadow: inset 3px 0 0 #e2e8f0;
+}
+.notice-unread-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #f59e0b;
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.16);
+    flex-shrink: 0;
+}
+.notice-meta-right {
+    min-width: 124px;
+    align-self: stretch;
+}
+.notice-date {
+    display: inline-flex; align-items: center; gap: .4rem;
+    font-size: 11px; font-weight: 600; color: #64748b;
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 999px;
+    padding: .25rem .65rem; white-space: nowrap;
+}
+.notice-status {
+    display: inline-flex; align-items: center; gap: .35rem;
+    font-size: 10px; font-weight: 700; letter-spacing: .02em;
+    border-radius: 999px; padding: .32rem .65rem; border: 1px solid transparent;
+    white-space: nowrap;
+}
+.notice-status-read {
+    color: #15803d; background: #f0fdf4; border-color: #bbf7d0;
+}
+.notice-status-unread {
+    color: #b45309; background: #fffbeb; border-color: #fde68a;
+}
+.notice-view-btn {
+    border-radius: 999px; padding: .24rem .7rem; font-size: 11px;
+    border: 1px solid #dbe4ee; color: #334155; background: #fff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+.notice-view-btn:hover {
+    background: #f1f5f9; color: #0f172a; border-color: #cbd5e1;
+}
+</style>
+
+<div class="animate-in">
+    <div class="card border-0 shadow-sm overflow-hidden mb-4 erp-card">
+        <!-- Enterprise Header -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center p-3 border-bottom bg-light sticky-top z-10 unitax-header">
+            <div>
+                <h5 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-bell-fill text-primary me-2"></i>Enterprise Notification & Updates Center
+                </h5>
+                <p class="text-muted small mb-0">Live statutory tax circulars, Master Admin release updates, workflow approval requests, and audit alerts</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-warning-subtle text-warning border border-warning-subtle font-mono small px-3 py-2" id="notifUnreadBadge">0 Unread</span>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="btnMarkAllRead" onclick="NotificationCenterController.MarkAllAsRead()">
+                    <i class="bi bi-check2-all me-1"></i> Mark All as Read
+                </button>
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="NotificationCenterController.FetchAllFeeds()">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Sync Feeds
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="App.goBack()" title="Back">
+                    <i class="bi bi-arrow-left"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-3">
+            <!-- Filter & Search Toolbar -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3 p-2 bg-light border rounded-3">
+                <!-- Category Nav Pills -->
+                <div class="btn-group" role="group" id="notifFilterPills">
+                    <button type="button" class="btn btn-sm btn-primary active fw-semibold px-3" data-category="all" onclick="NotificationCenterController.SetCategory('all', this)">
+                        <i class="bi bi-inbox-fill me-1"></i> All Alerts <span class="badge bg-white text-primary ms-1" id="badgeCountAll">0</span>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold px-3" data-category="tax" onclick="NotificationCenterController.SetCategory('tax', this)">
+                        <i class="bi bi-file-earmark-text-fill text-primary me-1"></i> Tax Notifications <span class="badge bg-success-subtle text-success ms-1" id="badgeCountTax">0</span>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold px-3" data-category="release" onclick="NotificationCenterController.SetCategory('release', this)">
+                        <i class="bi bi-clock-history text-primary me-1"></i> Release Updates <span class="badge bg-info-subtle text-info ms-1" id="badgeCountRelease">0</span>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold px-3" data-category="tasks" onclick="NotificationCenterController.SetCategory('tasks', this)">
+                        <i class="bi bi-check2-square text-primary me-1"></i> Tasks & Approvals <span class="badge bg-warning-subtle text-warning ms-1" id="badgeCountTasks">0</span>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold px-3" data-category="unread" onclick="NotificationCenterController.SetCategory('unread', this)">
+                        <i class="bi bi-circle-fill text-warning me-1" style="font-size: 10px;"></i> Unread Only
+                    </button>
+                </div>
+
+                <!-- Live Search Box -->
+                <div class="input-group input-group-sm" style="max-width: 320px;">
+                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="notifSearchInput" class="form-control border-start-0" placeholder="Search notices, version, keywords..." oninput="NotificationCenterController.FilterItems()">
+                </div>
+            </div>
+
+            <!-- Feed Stream Container -->
+            <div class="border rounded-3 bg-white overflow-hidden shadow-sm">
+                <!-- Table-like List Header -->
+                <div class="d-flex justify-content-between align-items-center bg-light px-3 py-2 border-bottom text-muted small fw-bold text-uppercase" style="font-size: 11px; letter-spacing: 0.05em;">
+                    <div class="d-flex align-items-center gap-2">
+                        <span>Notice & Event Stream</span>
+                    </div>
+                    <div>Source / Effective Date</div>
+                </div>
+
+                <!-- Feed Items List -->
+                <div id="fullNotificationList" class="list-group list-group-flush" style="min-height: auto; max-height: calc(100vh - 220px); overflow-y: auto;">
+                    <div class="text-center py-5 text-muted">
+                        <span class="spinner-border text-primary spinner-border-sm me-2"></span>
+                        <span class="small">Synchronizing enterprise notification stream...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: VIEW NOTIFICATION / TAX CIRCULAR DETAIL -->
+<div class="modal fade" id="modalNoticeDetail" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-light border-bottom py-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span id="modalNoticeCategoryBadge" class="badge bg-success-subtle text-success border px-2 py-1 font-mono small">TAX NOTIFICATION</span>
+                    <span id="modalNoticeVersionBadge" class="badge bg-primary text-white font-mono small d-none">v1.0</span>
+                    <h6 class="modal-title fw-bold text-dark mb-0 ms-1" id="modalNoticeTitle">Notice Title</h6>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="d-flex justify-content-between align-items-center pb-3 mb-3 border-bottom small text-muted">
+                    <div>
+                        <i class="bi bi-person-circle me-1"></i> Published by: <strong class="text-dark" id="modalNoticeAuthor">Master Admin</strong>
+                    </div>
+                    <div>
+                        <i class="bi bi-calendar-event me-1"></i> <span id="modalNoticeDate">Today</span>
+                    </div>
+                </div>
+                <div class="text-dark lh-base" id="modalNoticeBody" style="font-size: 0.95rem; white-space: pre-wrap; max-height: 400px; overflow-y: auto;">
+                    Notice content...
+                </div>
+                <div id="modalNoticeLinkWrapper" class="mt-4 pt-3 border-top d-none">
+                    <a href="#" target="_blank" id="modalNoticeLink" class="btn btn-sm btn-outline-primary fw-bold">
+                        <i class="bi bi-box-arrow-up-right me-1"></i> Open External Official Link / Circular
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer bg-light py-2">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.NotificationCenterController = {
+    items: [],
+    currentCategory: 'all',
+    searchQuery: '',
+    userId: null,
+    wsUserId: null,
+
+    Init: function() {
+        this.userId = String(localStorage.getItem('userloginid') || localStorage.getItem('userId') || '').trim().replace(/^#/, '');
+        this.wsUserId = String(localStorage.getItem('workspaceUserId') || this.userId || '').trim().replace(/^#/, '');
+        this.readSet = this.GetLocalReadSet();
+        this.BindReadStateListener();
+        this.FetchAllFeeds();
+    },
+
+    GetLocalReadSet: function() {
+        try { return new Set(JSON.parse(localStorage.getItem('unitax_notif_read') || '[]')); } catch(e) { return new Set(); }
+    },
+
+    SaveLocalReadSet: function(set) {
+        try { localStorage.setItem('unitax_notif_read', JSON.stringify(Array.from(set))); } catch(e) {}
+    },
+
+    GetReadPath: function() {
+        if (!this.wsUserId || !this.userId) return null;
+        return `Users/${this.wsUserId}/workspace/NotificationReadState/${this.userId}`;
+    },
+
+    BindReadStateListener: function() {
+        if (typeof firebase === 'undefined' || !firebase.database) return;
+        const path = this.GetReadPath();
+        if (!path || this.readPath === path) return;
+        this.readPath = path;
+        try {
+            firebase.database().ref(path).on('value', (snap) => {
+                const val = snap && snap.val();
+                const next = new Set();
+                if (val && typeof val === 'object') {
+                    Object.entries(val).forEach(([k, v]) => { if (v) next.add(k); });
+                }
+                this.GetLocalReadSet().forEach(id => next.add(id));
+                this.readSet = next;
+                this.Render();
+                this.UpdateBadges();
+            }, (err) => {
+                console.warn('Notification read-state listener failed:', err);
+                this.readSet = this.GetLocalReadSet();
+                this.Render();
+                this.UpdateBadges();
+            });
+        } catch(e) {
+            console.warn('Notification read-state binding failed:', e);
+        }
+    },
+
+    SetCategory: function(cat, btn) {
+        this.currentCategory = cat;
+        const container = document.getElementById('notifFilterPills');
+        if (container) {
+            container.querySelectorAll('button').forEach(b => {
+                b.className = 'btn btn-sm btn-outline-secondary fw-semibold px-3';
+            });
+        }
+        if (btn) {
+            const activeClass = cat === 'unread' ? 'btn btn-sm btn-warning active fw-semibold px-3 text-dark' : 'btn btn-sm btn-dark active fw-semibold px-3';
+            btn.className = activeClass;
+        }
+        this.Render();
+    },
+
+    FilterItems: function() {
+        this.searchQuery = (document.getElementById('notifSearchInput')?.value || '').toLowerCase().trim();
+        this.Render();
+    },
+
+    IsItemUnread: function(item) {
+        if (!item || !item.id) return false;
+        if (item.status === 'completed') return false;
+        return !this.readSet.has(item.id);
+    },
+
+    MarkSingleAsRead: function(id, notify = true) {
+        if (!id) return;
+        const item = this.items.find(i => i && i.id === id);
+        this.readSet.add(id);
+        const local = this.GetLocalReadSet();
+        local.add(id);
+        this.SaveLocalReadSet(local);
+        const path = this.GetReadPath();
+        if (path && typeof firebase !== 'undefined' && firebase.database) {
+            const updates = {};
+            updates[id] = true;
+            firebase.database().ref(path).update(updates).catch(err => console.warn('Unable to persist read state:', err));
+
+            // Direct system alert records keep ReadStatus in sync for other consumers.
+            if (item && item.source === 'Notifications' && item.recordId && this.userId) {
+                const rs = {};
+                rs[`ReadStatus/${this.userId}`] = 'read';
+                firebase.database().ref(`Utilities/Notifications/${item.recordId}`).update(rs).catch(() => {});
+                if (this.wsUserId) firebase.database().ref(`${this.wsUserId}/Utilities/Notifications/${item.recordId}`).update(rs).catch(() => {});
+            }
+        }
+        this.Render();
+        this.UpdateBadges();
+        if (notify && window.App && window.App.UI && typeof App.UI.Notify === 'function') {
+            App.UI.Notify('Marked as Read', 'Notice marked as read on the server.', 'success');
+        }
+    },
+
+    MarkAllAsRead: function() {
+        const path = this.GetReadPath();
+        const local = this.GetLocalReadSet();
+        const updates = {};
+        (this.items || []).forEach(it => {
+            if (it && it.id) {
+                this.readSet.add(it.id);
+                local.add(it.id);
+                updates[it.id] = true;
+            }
+        });
+        if (Object.keys(updates).length === 0) {
+            this.Render();
+            this.UpdateBadges();
+            return;
+        }
+        this.SaveLocalReadSet(local);
+        if (path && typeof firebase !== 'undefined' && firebase.database) {
+            firebase.database().ref(path).update(updates).catch(err => console.warn('Unable to synchronize read state:', err));
+        }
+        this.Render();
+        this.UpdateBadges();
+        if (window.App && window.App.UI && typeof App.UI.Notify === 'function') {
+            App.UI.Notify('All Caught Up', 'All notifications and updates marked as read.', 'success');
+        }
+    },
+
+    FetchAllFeeds: async function() {
+        const listEl = document.getElementById('fullNotificationList');
+        if (listEl) {
+            listEl.innerHTML = `
+                <div class="text-center py-5 text-muted">
+                    <span class="spinner-border text-primary spinner-border-sm me-2"></span>
+                    <span class="small">Synchronizing enterprise notification stream...</span>
+                </div>
+            `;
+        }
+
+        const feedMap = new Map();
+        const db = (typeof firebase !== 'undefined' && firebase.database) ? firebase.database() : null;
+
+        if (db) {
+            try {
+                // 1. Fetch Master Admin Updates (PlatformMaster/Updates & Utilities/Updates)
+                const [masterUpdSnap, utilUpdSnap, notifSnap, taskAssignedSnap, taskCreatedSnap] = await Promise.all([
+                    db.ref('PlatformMaster/Updates').limitToLast(50).once('value').catch(() => null),
+                    db.ref('Utilities/Updates').limitToLast(50).once('value').catch(() => null),
+                    db.ref('Utilities/Notifications').limitToLast(50).once('value').catch(() => null),
+                    db.ref('Utilities/Tasks').orderByChild('assignedTo').equalTo(this.userId).limitToLast(30).once('value').catch(() => null),
+                    db.ref('Utilities/Tasks').orderByChild('assignedBy').equalTo(this.userId).limitToLast(30).once('value').catch(() => null)
+                ]);
+
+                // Process Master Admin Updates
+                const processUpdates = (snap, sourceName) => {
+                    if (snap && snap.exists()) {
+                        snap.forEach(child => {
+                            const u = child.val();
+                            if (!u) return;
+                            const cat = (u.category || 'Tax Notification').trim();
+                            const isTax = cat.toLowerCase().includes('tax') || cat.toLowerCase().includes('compliance');
+                            feedMap.set(`upd_${child.key}`, {
+                                id: `upd_${child.key}`,
+                                recordId: child.key,
+                                source: sourceName,
+                                kind: isTax ? 'tax' : 'release',
+                                category: cat,
+                                version: u.version || '',
+                                title: u.title || (isTax ? 'Tax Circular Update' : 'Platform Release Note'),
+                                message: u.notes || u.narration || '',
+                                timestamp: u.createdAt || u.timestamp || Date.now(),
+                                author: u.author || u.updatedBy || 'Master Platform Admin',
+                                link: u.link || '',
+                                status: 'published'
+                            });
+                        });
+                    }
+                };
+                processUpdates(masterUpdSnap, 'PlatformMaster');
+                processUpdates(utilUpdSnap, 'UtilitiesUpdates');
+
+                // Process General Notifications
+                if (notifSnap && notifSnap.exists()) {
+                    notifSnap.forEach(child => {
+                        const n = child.val();
+                        if (!n) return;
+                        if (n.target === 'all' || n.target === this.userId || n.userId === this.userId) {
+                            const notifId = n.dedupeKey ? String(n.dedupeKey) : `notif_${child.key}`;
+                            feedMap.set(notifId, {
+                                id: notifId,
+                                recordId: child.key,
+                                source: 'Notifications',
+                                kind: 'general',
+                                category: n.category || 'Alert',
+                                title: n.title || 'System Alert',
+                                message: n.message || n.text || '',
+                                timestamp: n.timestamp || Date.now(),
+                                author: n.author || 'UniTax Governance',
+                                link: n.link || '',
+                                status: n.status || 'active'
+                            });
+                        }
+                    });
+                }
+
+                // Process Tasks & Approvals
+                const processTasks = (snap, isOwner) => {
+                    if (snap && snap.exists()) {
+                        snap.forEach(child => {
+                            const t = child.val();
+                            if (!t) return;
+                            feedMap.set(`task_${child.key}`, {
+                                id: `task_${child.key}`,
+                                recordId: child.key,
+                                source: 'Tasks',
+                                kind: 'tasks',
+                                category: 'Task / Approval',
+                                title: t.title || (isOwner ? `Task Assigned to ${t.assignedToName || 'Member'}` : `Task from ${t.assignerName || 'Manager'}`),
+                                message: t.text || t.narration || 'Pending task item',
+                                timestamp: t.timestamp || Date.now(),
+                                author: t.assignerName || 'Manager',
+                                link: t.link || '',
+                                status: t.done ? 'completed' : 'pending',
+                                isTask: true,
+                                taskId: child.key
+                            });
+                        });
+                    }
+                };
+                processTasks(taskAssignedSnap, false);
+                processTasks(taskCreatedSnap, true);
+
+            } catch (err) {
+                console.error("Error synchronizing notification feeds:", err);
+            }
+        }
+
+        // If no items returned from remote, provide baseline statutory tax circular
+        if (feedMap.size === 0) {
+            feedMap.set('default_tax_1', {
+                id: 'default_tax_1',
+                source: 'System',
+                kind: 'tax',
+                category: 'Tax Notification',
+                title: 'CBIC Advisory: Mandatory E-Invoicing & B2B Recipient Verification',
+                message: 'All GSTIN taxpayers with aggregate turnover exceeding specified thresholds must ensure instantaneous generation of IRN QR codes and enforce Section 34 matching for Debit/Credit Notes.',
+                timestamp: Date.now() - 3600000,
+                author: 'Master Admin',
+                link: 'https://cbic.gov.in',
+                status: 'published'
+            });
+            feedMap.set('default_rel_1', {
+                id: 'default_rel_1',
+                source: 'System',
+                kind: 'release',
+                category: 'Feature Release',
+                version: 'v2.6 Enterprise',
+                title: 'UniTax Enterprise Edition: Granular Fiscal Posting Period & Live Audit Engine',
+                message: 'Introduced strict enterprise fiscal period locking, multi-dimensional ledger constraints, and live dual customer/vendor audit ribbon.',
+                timestamp: Date.now() - 7200000,
+                author: 'Master Admin',
+                status: 'published'
+            });
+        }
+
+        this.items = Array.from(feedMap.values());
+        this.items.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+        this.UpdateBadges();
+        this.Render();
+    },
+
+    UpdateBadges: function() {
+        let unread = 0;
+        let taxCount = 0;
+        let releaseCount = 0;
+        let taskCount = 0;
+
+        this.items.forEach(it => {
+            if (this.IsItemUnread(it)) unread++;
+            if (it.kind === 'tax') taxCount++;
+            else if (it.kind === 'release') releaseCount++;
+            else if (it.kind === 'tasks') taskCount++;
+        });
+
+        const badgeUnread = document.getElementById('notifUnreadBadge');
+        if (badgeUnread) badgeUnread.innerText = `${unread} Unread`;
+
+        const bAll = document.getElementById('badgeCountAll');
+        if (bAll) bAll.innerText = this.items.length;
+
+        const bTax = document.getElementById('badgeCountTax');
+        if (bTax) bTax.innerText = taxCount;
+
+        const bRel = document.getElementById('badgeCountRelease');
+        if (bRel) bRel.innerText = releaseCount;
+
+        const bTask = document.getElementById('badgeCountTasks');
+        if (bTask) bTask.innerText = taskCount;
+    },
+
+    Render: function() {
+        const listEl = document.getElementById('fullNotificationList');
+        if (!listEl) return;
+
+        const unreadCount = this.items.filter(i => this.IsItemUnread(i)).length;
+        const unreadBadge = document.getElementById('notifUnreadBadge');
+        if (unreadBadge) unreadBadge.innerText = `${unreadCount} Unread`;
+
+        let filtered = this.items;
+
+        // Apply category filter
+        if (this.currentCategory === 'tax') {
+            filtered = filtered.filter(i => i.kind === 'tax');
+        } else if (this.currentCategory === 'release') {
+            filtered = filtered.filter(i => i.kind === 'release');
+        } else if (this.currentCategory === 'tasks') {
+            filtered = filtered.filter(i => i.kind === 'tasks');
+        } else if (this.currentCategory === 'unread') {
+            filtered = filtered.filter(i => this.IsItemUnread(i));
+        }
+
+        // Apply search query
+        if (this.searchQuery) {
+            filtered = filtered.filter(i => {
+                const combined = `${i.title || ''} ${i.message || ''} ${i.category || ''} ${i.version || ''}`.toLowerCase();
+                return combined.includes(this.searchQuery);
+            });
+        }
+
+        if (filtered.length === 0) {
+            listEl.innerHTML = `
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox fs-1 d-block mb-3 text-secondary opacity-50"></i>
+                    <h6 class="fw-bold text-dark">No Notices in this Category</h6>
+                    <p class="small mb-0">All clear! No pending notifications matching your active filter.</p>
+                </div>
+            `;
+            return;
+        }
+
+        listEl.innerHTML = filtered.map((item, idx) => {
+            const isUnread = this.IsItemUnread(item);
+            const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Recent';
+            const timeAgo = this.FormatRelativeTime(item.timestamp);
+
+            let iconHtml = '<i class="bi bi-bell text-secondary"></i>';
+            let iconBg = 'bg-secondary-subtle';
+            let catBadge = '<span class="badge bg-light text-secondary border font-mono small">NOTICE</span>';
+
+            if (item.kind === 'tax') {
+                iconHtml = '<i class="bi bi-file-earmark-text-fill text-success fs-5"></i>';
+                iconBg = 'bg-success-subtle';
+                catBadge = '<span class="badge bg-success-subtle text-success border font-mono fw-bold" style="font-size: 10px;"><i class="bi bi-shield-check me-1"></i>TAX NOTIFICATION</span>';
+            } else if (item.kind === 'release') {
+                iconHtml = '<i class="bi bi-rocket-takeoff-fill text-primary fs-5"></i>';
+                iconBg = 'bg-primary-subtle';
+                catBadge = `<span class="badge bg-primary-subtle text-primary border font-mono fw-bold" style="font-size: 10px;"><i class="bi bi-clock-history me-1"></i>${item.version || 'RELEASE UPDATE'}</span>`;
+            } else if (item.kind === 'tasks') {
+                const isDone = item.status === 'completed';
+                iconHtml = isDone ? '<i class="bi bi-check2-circle text-success fs-5"></i>' : '<i class="bi bi-hourglass-split text-warning fs-5"></i>';
+                iconBg = isDone ? 'bg-success-subtle' : 'bg-warning-subtle';
+                catBadge = isDone
+                    ? '<span class="badge bg-success-subtle text-success border font-mono" style="font-size: 10px;">TASK COMPLETED</span>'
+                    : '<span class="badge bg-warning-subtle text-warning border font-mono fw-bold" style="font-size: 10px;">PENDING TASK</span>';
+            }
+
+            const unreadMarker = isUnread ? '<span class="notice-unread-dot" title="Unread"></span>' : '';
+            const cardClass = isUnread ? 'notice-unread-card' : 'notice-read-card';
+            const statusPill = isUnread
+                ? `<span class="notice-status notice-status-unread"><i class="bi bi-circle-fill" style="font-size: 7px;"></i> Unread</span>`
+                : `<span class="notice-status notice-status-read"><i class="bi bi-check2-all"></i> Read</span>`;
+            const readAction = isUnread
+                ? `<button type="button" class="notice-view-btn" data-action="mark-read" onclick="event.stopPropagation(); NotificationCenterController.MarkSingleAsRead(this.closest('.notice-feed-row').dataset.id)"><i class="bi bi-check2 me-1"></i>Mark read</button>`
+                : '';
+
+            return `
+                <div class="list-group-item list-group-item-action p-3 border-bottom notice-feed-row ${cardClass}" data-id="${escapeHTML(item.id)}" style="cursor: pointer;" onclick="NotificationCenterController.OpenModal(this.dataset.id)">
+                    <div class="d-flex w-100 justify-content-between align-items-stretch gap-3">
+                        <div class="d-flex align-items-start gap-3 flex-grow-1 min-w-0">
+                            <div class="${iconBg} rounded-3 p-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px;">
+                                ${iconHtml}
+                            </div>
+                            <div class="flex-grow-1 pe-3 min-w-0">
+                                <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                    ${unreadMarker}
+                                    ${catBadge}
+                                    <h6 class="fw-bold text-dark mb-0">${escapeHTML(item.title || 'Notification')}</h6>
+                                </div>
+                                <p class="text-secondary small mb-2 text-truncate-2" style="max-width: 820px; line-height: 1.4;">
+                                    ${escapeHTML(item.message || '')}
+                                </p>
+                                <div class="d-flex align-items-center gap-3 small text-muted font-mono" style="font-size: 11px;">
+                                    <span><i class="bi bi-person me-1"></i>${escapeHTML(item.author || 'Master Admin')}</span>
+                                    <span>&bull;</span>
+                                    <span><i class="bi bi-clock me-1"></i>${timeAgo}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="notice-meta-right text-end d-flex flex-column justify-content-between align-items-end">
+                            <span class="notice-date"><i class="bi bi-calendar3"></i>${dateStr}</span>
+                            <div class="d-flex align-items-center gap-2 mt-2">
+                                ${statusPill}
+                                ${readAction}
+                                <button type="button" class="notice-view-btn" data-action="view" onclick="event.stopPropagation(); NotificationCenterController.OpenModal(this.closest('.notice-feed-row').dataset.id)">
+                                    <i class="bi bi-eye me-1"></i>View notice
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    OpenModal: function(id) {
+        const item = this.items.find(i => i.id === id);
+        if (!item) return;
+        this.MarkSingleAsRead(id, false);
+
+        const catEl = document.getElementById('modalNoticeCategoryBadge');
+        const verEl = document.getElementById('modalNoticeVersionBadge');
+        const titleEl = document.getElementById('modalNoticeTitle');
+        const authorEl = document.getElementById('modalNoticeAuthor');
+        const dateEl = document.getElementById('modalNoticeDate');
+        const bodyEl = document.getElementById('modalNoticeBody');
+        const linkWrapper = document.getElementById('modalNoticeLinkWrapper');
+        const linkEl = document.getElementById('modalNoticeLink');
+
+        if (catEl) {
+            catEl.innerText = item.category || (item.kind === 'tax' ? 'TAX NOTIFICATION' : 'RELEASE UPDATE');
+            catEl.className = item.kind === 'tax' ? 'badge bg-success-subtle text-success border px-2 py-1 font-mono small' : 'badge bg-primary-subtle text-primary border px-2 py-1 font-mono small';
+        }
+
+        if (verEl) {
+            if (item.version) {
+                verEl.innerText = item.version;
+                verEl.classList.remove('d-none');
+            } else {
+                verEl.classList.add('d-none');
+            }
+        }
+
+        if (titleEl) titleEl.innerText = item.title || 'Platform Notice';
+        if (authorEl) authorEl.innerText = item.author || 'Master Platform Admin';
+        if (dateEl) dateEl.innerText = item.timestamp ? new Date(item.timestamp).toLocaleString('en-IN') : 'Recent';
+        if (bodyEl) bodyEl.innerText = item.message || 'No description provided.';
+
+        if (linkWrapper && linkEl) {
+            if (item.link) {
+                linkEl.href = item.link;
+                linkWrapper.classList.remove('d-none');
+            } else {
+                linkWrapper.classList.add('d-none');
+            }
+        }
+
+        const modalEl = document.getElementById('modalNoticeDetail');
+        if (modalEl) {
+            const bsModal = new bootstrap.Modal(modalEl);
+            bsModal.show();
+        }
+    },
+
+    FormatRelativeTime: function(timestamp) {
+        if (!timestamp) return 'Just now';
+        const diff = Math.floor((Date.now() - timestamp) / 1000);
+        if (diff < 60) return 'Just now';
+        if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+        if (diff < 172800) return 'Yesterday';
+        return `${Math.floor(diff / 86400)}d ago`;
+    }
+};
+
+function escapeHTML(str) {
+    if (!str) return '';
+    return str.toString()
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+NotificationCenterController.Init();
+</script>

@@ -1,0 +1,345 @@
+<div class="animate-in">
+    <div class="card border-0 shadow-sm overflow-hidden mb-4">
+        <!-- Command Header -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center p-3 border-bottom bg-light sticky-top z-10 unitax-header">
+            <div>
+                <h5 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-graph-up-arrow text-primary me-2"></i>Profit & Loss Statement
+                </h5>
+                <p class="text-muted small mb-0">Statement of Financial Performance — Revenue, COGS, Expenses & Net Earnings</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <div class="input-group input-group-sm" style="width: 140px;">
+                    <span class="input-group-text bg-white small">From</span>
+                    <input type="date" id="plFromDate" class="form-control bg-white" onchange="ProfitLossApp.Compute()">
+                </div>
+                <div class="input-group input-group-sm" style="width: 140px;">
+                    <span class="input-group-text bg-white small">To</span>
+                    <input type="date" id="plToDate" class="form-control bg-white" onchange="ProfitLossApp.Compute()">
+                </div>
+                <button type="button" class="btn btn-erp-icon" title="Export CSV" onclick="ProfitLossApp.ExportCSV()"><i class="bi bi-file-earmark-arrow-down"></i></button>
+                <button type="button" class="btn btn-erp-icon btn-erp-icon-primary" title="Print Profit & Loss Statement" onclick="window.print()"><i class="bi bi-printer"></i></button>
+            </div>
+        </div>
+
+        <div class="p-4">
+            <!-- Executive KPI Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="border rounded-3 p-3 bg-white shadow-sm">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Total Revenue</div>
+                        <div class="h4 fw-bold font-mono text-dark mb-0" id="plTotalRevenue">₹ 0.00</div>
+                        <span class="badge bg-success-subtle text-success small mt-1 font-mono">100% of Topline</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded-3 p-3 bg-white shadow-sm">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Cost of Goods (COGS)</div>
+                        <div class="h4 fw-bold font-mono text-danger mb-0" id="plTotalCOGS">₹ 0.00</div>
+                        <span class="badge bg-light text-muted small mt-1 font-mono" id="plCogsPct">0.0% of Revenue</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded-3 p-3 bg-white shadow-sm">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Gross Profit</div>
+                        <div class="h4 fw-bold font-mono text-primary mb-0" id="plGrossProfit">₹ 0.00</div>
+                        <span class="badge bg-primary-subtle text-primary small mt-1 font-mono" id="plGrossMargin">0.0% Margin</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded-3 p-3 bg-white shadow-sm" id="plNetProfitCard">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Net Earnings / (Loss)</div>
+                        <div class="h4 fw-bold font-mono text-success mb-0" id="plNetProfit">₹ 0.00</div>
+                        <span class="badge bg-success-subtle text-success small mt-1 font-mono" id="plNetMargin">0.0% Net Margin</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Statement Grid (Income vs Expenditure) -->
+            <div class="row g-4">
+                <!-- Part 1: Trading Account (Revenue & COGS) -->
+                <div class="col-12">
+                    <div class="border rounded-3 overflow-hidden bg-white shadow-sm">
+                        <div class="bg-light px-3 py-2 border-bottom fw-bold text-uppercase small text-dark d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-cart-check me-2 text-primary"></i>Trading Account: Revenue & Direct Cost of Goods</span>
+                            <span class="font-mono text-muted" id="plTradingPeriod">Period</span>
+                        </div>
+                        <table class="table table-sm table-hover mb-0 align-middle" style="width: 100% !important;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="50%" class="ps-3">Expenditure / Cost (Debit)</th>
+                                    <th width="15%" class="text-end font-mono">Amount (INR)</th>
+                                    <th width="50%" class="ps-4">Income / Revenue (Credit)</th>
+                                    <th width="15%" class="text-end pe-3 font-mono">Amount (INR)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="ps-3" style="cursor: pointer;" ondblclick="UniTaxDrilldown.Open('Purchases & Direct Materials', 'purchases', ProfitLossApp.DATA.totalPurchases)" title="Double click to inspect source vouchers">
+                                        <div class="fw-semibold">Purchases & Direct Materials</div>
+                                        <div class="small text-muted">Purchase invoices & direct stock acquisitions</div>
+                                    </td>
+                                    <td class="text-end font-mono fw-bold text-danger" id="plPurchasesAmt">₹ 0.00</td>
+                                    <td class="ps-4" style="cursor: pointer;" ondblclick="UniTaxDrilldown.Open('Sales Revenue from Operations', 'sales', ProfitLossApp.DATA.totalSales)" title="Double click to inspect source vouchers">
+                                        <div class="fw-semibold">Sales Revenue from Operations</div>
+                                        <div class="small text-muted">Customer billings & outward tax invoices</div>
+                                    </td>
+                                    <td class="text-end pe-3 font-mono fw-bold text-success" id="plSalesAmt">₹ 0.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="ps-3" style="cursor: pointer;" ondblclick="UniTaxDrilldown.Open('Direct Freight & Inward Costs', 'direct_expenses', ProfitLossApp.DATA.directExpenses)" title="Double click to inspect source vouchers">
+                                        <div class="fw-semibold">Direct Freight & Inward Costs</div>
+                                        <div class="small text-muted">Inward transport, customs & loading fees</div>
+                                    </td>
+                                    <td class="text-end font-mono text-muted" id="plDirectFreightAmt">₹ 0.00</td>
+                                    <td class="ps-4" style="cursor: pointer;" ondblclick="UniTaxDrilldown.Open('Direct Operating Income', 'direct_incomes', ProfitLossApp.DATA.directIncomes)" title="Double click to inspect source vouchers">
+                                        <div class="fw-semibold">Direct Operating Income</div>
+                                        <div class="small text-muted">Service fees, freight charged to customers</div>
+                                    </td>
+                                    <td class="text-end pe-3 font-mono text-muted" id="plOtherDirectIncome">₹ 0.00</td>
+                                </tr>
+                                <tr class="table-light fw-bold border-top">
+                                    <td class="ps-3 text-primary">Gross Profit c/d (Transferred to P&L)</td>
+                                    <td class="text-end font-mono text-primary" id="plGrossProfitCd">₹ 0.00</td>
+                                    <td class="ps-4 text-uppercase">Total Trading Revenue</td>
+                                    <td class="text-end pe-3 font-mono" id="plTotalTradingCredit">₹ 0.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Part 2: Operating Statement (Indirect Expenses & Net Profit) -->
+                <div class="col-12">
+                    <div class="border rounded-3 overflow-hidden bg-white shadow-sm">
+                        <div class="bg-light px-3 py-2 border-bottom fw-bold text-uppercase small text-dark d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-cash-stack me-2 text-success"></i>Operating Profit & Loss: Overhead Expenses vs Operating Margins</span>
+                            <span class="font-mono text-muted">Net Earnings Determination</span>
+                        </div>
+                        <table class="table table-sm table-hover mb-0 align-middle" style="width: 100% !important;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="50%" class="ps-3">Operating & Administrative Expenses (Debit)</th>
+                                    <th width="15%" class="text-end font-mono">Amount (INR)</th>
+                                    <th width="50%" class="ps-4">Gross Margin & Non-Operating Income (Credit)</th>
+                                    <th width="15%" class="text-end pe-3 font-mono">Amount (INR)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="plExpensesBody">
+                                <tr>
+                                    <td class="ps-3" style="cursor: pointer;" ondblclick="UniTaxDrilldown.Open('Operating Overheads & Administration', 'indirect_expenses', ProfitLossApp.DATA.indirectExp)" title="Double click to inspect source vouchers">
+                                        <div class="fw-semibold">Operating Overheads & Administration</div>
+                                        <div class="small text-muted">Salaries, rent, software licenses, utilities</div>
+                                    </td>
+                                    <td class="text-end font-mono text-danger fw-semibold" id="plIndirectExpAmt">₹ 0.00</td>
+                                    <td class="ps-4">
+                                        <div class="fw-semibold text-primary">Gross Profit b/d</div>
+                                        <div class="small text-muted">Transferred from Trading Account</div>
+                                    </td>
+                                    <td class="text-end pe-3 font-mono fw-bold text-primary" id="plGrossProfitBd">₹ 0.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="ps-3" style="cursor: pointer;" ondblclick="UniTaxDrilldown.Open('Financial & Bank Charges', 'indirect_expenses', ProfitLossApp.DATA.indirectExp)" title="Double click to inspect source vouchers">
+                                        <div class="fw-semibold">Financial & Bank Charges</div>
+                                        <div class="small text-muted">Payment gateway charges, processing & interest</div>
+                                    </td>
+                                    <td class="text-end font-mono text-muted" id="plBankChargesAmt">₹ 0.00</td>
+                                    <td class="ps-4" style="cursor: pointer;" ondblclick="UniTaxDrilldown.Open('Other Indirect Receipts', 'indirect_incomes', ProfitLossApp.DATA.indirectIncomes)" title="Double click to inspect source vouchers">
+                                        <div class="fw-semibold">Other Indirect Receipts</div>
+                                        <div class="small text-muted">Discounts received, interest income, recoveries</div>
+                                    </td>
+                                    <td class="text-end pe-3 font-mono text-muted" id="plOtherReceiptsAmt">₹ 0.00</td>
+                                </tr>
+                            </tbody>
+                            <tfoot class="table-dark fw-bold font-mono">
+                                <tr>
+                                    <td class="ps-3 text-uppercase">Net Retained Profit / (Loss) for the Period</td>
+                                    <td class="text-end text-success" id="plFootNetProfit">₹ 0.00</td>
+                                    <td class="ps-4 text-uppercase">Total Balanced Overheads & Retained Earnings</td>
+                                    <td class="text-end pe-3" id="plFootTotalCredit">₹ 0.00</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-text mt-3 text-muted small">
+                <i class="bi bi-info-circle me-1"></i> Figures are dynamically aggregated from verified Sales Invoices, Purchase Invoices, Payment Vouchers, and Master Ledger postings.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.ProfitLossApp = {
+    DATA: {},
+
+    async Init() {
+        const today = new Date().toISOString().split('T')[0];
+        const firstDayOfYear = new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0];
+        
+        const fromInput = document.getElementById('plFromDate');
+        const toInput = document.getElementById('plToDate');
+        if (fromInput && !fromInput.value) fromInput.value = firstDayOfYear;
+        if (toInput && !toInput.value) toInput.value = today;
+
+        await this.Compute();
+    },
+
+    async Compute() {
+        const fromDate = document.getElementById('plFromDate')?.value || '2000-01-01';
+        const toDate = document.getElementById('plToDate')?.value || '2099-12-31';
+
+        const periodEl = document.getElementById('plTradingPeriod');
+        if (periodEl) periodEl.innerText = `${fromDate} to ${toDate}`;
+
+        try {
+            const [sales, purchase, payment, receipt] = await Promise.all([
+                API.Fetch('Transactions/SalesInvoiceForm').catch(() => ({})),
+                API.Fetch('Transactions/PurchaseInvoiceForm').catch(() => ({})),
+                API.Fetch('Transactions/PaymentVoucherForm').catch(() => ({})),
+                API.Fetch('Transactions/ReceiptVoucherForm').catch(() => ({}))
+            ]);
+
+            // 1. Compute Sales
+            let totalSales = 0;
+            if (sales) {
+                Object.values(sales).forEach(v => {
+                    const h = v.header || {};
+                    const isDel = v.is_deleted === true || (h && h.is_deleted === true) || v.status === 'DELETED' || (h && h.status === 'DELETED');
+                    const isDraft = v.status === 'DRAFT' || v.status === 'PENDING_APPROVAL' || (h && (h.status === 'DRAFT' || h.status === 'PENDING_APPROVAL'));
+                    if (isDel || isDraft) return;
+                    const d = h.posting_date || v.posting_date;
+                    if (!d || d < fromDate || d > toDate) return;
+                    totalSales += parseFloat(h.grandTotal || h.total_amount || 0);
+                });
+            }
+
+            // 2. Compute Purchases
+            let totalPurchases = 0;
+            if (purchase) {
+                Object.values(purchase).forEach(v => {
+                    const h = v.header || {};
+                    const isDel = v.is_deleted === true || (h && h.is_deleted === true) || v.status === 'DELETED' || (h && h.status === 'DELETED');
+                    const isDraft = v.status === 'DRAFT' || v.status === 'PENDING_APPROVAL' || (h && (h.status === 'DRAFT' || h.status === 'PENDING_APPROVAL'));
+                    if (isDel || isDraft) return;
+                    const d = h.posting_date || v.posting_date;
+                    if (!d || d < fromDate || d > toDate) return;
+                    totalPurchases += parseFloat(h.grandTotal || h.total_amount || 0);
+                });
+            }
+
+            // 3. Compute Indirect Operating Expenses (Payments)
+            let indirectExp = 0;
+            let bankCharges = 0;
+            if (payment) {
+                Object.values(payment).forEach(v => {
+                    const h = v.header || {};
+                    const isDel = v.is_deleted === true || (h && h.is_deleted === true) || v.status === 'DELETED' || (h && h.status === 'DELETED');
+                    const isDraft = v.status === 'DRAFT' || v.status === 'PENDING_APPROVAL' || (h && (h.status === 'DRAFT' || h.status === 'PENDING_APPROVAL'));
+                    if (isDel || isDraft) return;
+                    const d = h.posting_date || v.posting_date;
+                    if (!d || d < fromDate || d > toDate) return;
+                    const amt = parseFloat(h.grandTotal || h.total || 0);
+                    const party = (h.gl_account || '').toLowerCase();
+                    if (party.includes('charge') || party.includes('bank fee') || party.includes('interest')) {
+                        bankCharges += amt;
+                    } else {
+                        indirectExp += amt;
+                    }
+                });
+            }
+
+            // 4. Other Indirect Receipts
+            let otherIncome = 0;
+            if (receipt) {
+                Object.values(receipt).forEach(v => {
+                    const h = v.header || {};
+                    const isDel = v.is_deleted === true || (h && h.is_deleted === true) || v.status === 'DELETED' || (h && h.status === 'DELETED');
+                    const isDraft = v.status === 'DRAFT' || v.status === 'PENDING_APPROVAL' || (h && (h.status === 'DRAFT' || h.status === 'PENDING_APPROVAL'));
+                    if (isDel || isDraft) return;
+                    const d = h.posting_date || v.posting_date;
+                    if (!d || d < fromDate || d > toDate) return;
+                    // Income from non-customer receipts
+                    const entity = (h.entity || '').toLowerCase();
+                    if (entity.includes('interest') || entity.includes('dividend') || entity.includes('discount')) {
+                        otherIncome += parseFloat(h.grandTotal || h.total || 0);
+                    }
+                });
+            }
+
+            // 5. Margin Calculations
+            const grossProfit = totalSales - totalPurchases;
+            const totalIndirectExp = indirectExp + bankCharges;
+            const netProfit = grossProfit + otherIncome - totalIndirectExp;
+
+            const cogsPct = totalSales > 0 ? ((totalPurchases / totalSales) * 100).toFixed(1) : '0.0';
+            const grossMargin = totalSales > 0 ? ((grossProfit / totalSales) * 100).toFixed(1) : '0.0';
+            const netMargin = totalSales > 0 ? ((netProfit / totalSales) * 100).toFixed(1) : '0.0';
+
+            const formatINR = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val);
+
+            this.DATA = { totalSales, totalPurchases, indirectExp, bankCharges, grossProfit, netProfit };
+            // Update UI elements
+            document.getElementById('plTotalRevenue').innerText = formatINR(totalSales);
+            document.getElementById('plTotalCOGS').innerText = formatINR(totalPurchases);
+            document.getElementById('plGrossProfit').innerText = formatINR(grossProfit);
+            document.getElementById('plNetProfit').innerText = formatINR(netProfit);
+
+            document.getElementById('plCogsPct').innerText = `${cogsPct}% of Revenue`;
+            document.getElementById('plGrossMargin').innerText = `${grossMargin}% Margin`;
+            document.getElementById('plNetMargin').innerText = `${netMargin}% Net Margin`;
+
+            document.getElementById('plSalesAmt').innerText = formatINR(totalSales);
+            document.getElementById('plPurchasesAmt').innerText = formatINR(totalPurchases);
+            document.getElementById('plGrossProfitCd').innerText = formatINR(grossProfit);
+            document.getElementById('plTotalTradingCredit').innerText = formatINR(totalSales);
+
+            document.getElementById('plGrossProfitBd').innerText = formatINR(grossProfit);
+            document.getElementById('plIndirectExpAmt').innerText = formatINR(indirectExp);
+            document.getElementById('plBankChargesAmt').innerText = formatINR(bankCharges);
+            document.getElementById('plOtherReceiptsAmt').innerText = formatINR(otherIncome);
+
+            document.getElementById('plFootNetProfit').innerText = formatINR(netProfit);
+            document.getElementById('plFootTotalCredit').innerText = formatINR(grossProfit + otherIncome);
+
+            const netEl = document.getElementById('plNetProfit');
+            if (netProfit >= 0) {
+                netEl.className = 'h4 fw-bold font-mono text-success mb-0';
+            } else {
+                netEl.className = 'h4 fw-bold font-mono text-danger mb-0';
+            }
+
+            this.DATA = {
+                totalSales, totalPurchases, grossProfit, indirectExp, bankCharges, otherIncome, netProfit, fromDate, toDate
+            };
+
+        } catch (err) {
+            console.error("P&L Compute Error:", err);
+        }
+    },
+
+    ExportCSV() {
+        const d = this.DATA;
+        let csv = "Profit and Loss Statement\n";
+        csv += `Period: ${d.fromDate} to ${d.toDate}\n\n`;
+        csv += `Classification,Account / Category,Debit (INR),Credit (INR)\n`;
+        csv += `Trading,Sales Revenue from Operations,0,${d.totalSales.toFixed(2)}\n`;
+        csv += `Trading,Purchases & Cost of Materials,${d.totalPurchases.toFixed(2)},0\n`;
+        csv += `Trading,Gross Profit,0,${d.grossProfit.toFixed(2)}\n`;
+        csv += `Operating,Indirect Expenses & Overheads,${d.indirectExp.toFixed(2)},0\n`;
+        csv += `Operating,Financial & Bank Charges,${d.bankCharges.toFixed(2)},0\n`;
+        csv += `Operating,Other Receipts & Income,0,${d.otherIncome.toFixed(2)}\n`;
+        csv += `Earnings,Net Earnings for Period,0,${d.netProfit.toFixed(2)}\n`;
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Profit_and_Loss_${d.toDate}.csv`;
+        a.click();
+    }
+};
+
+window.ProfitLossApp.Init();
+</script>

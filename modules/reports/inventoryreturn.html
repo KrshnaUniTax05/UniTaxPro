@@ -1,0 +1,712 @@
+<div class="animate-in">
+    <div class="card border-0 shadow-sm overflow-hidden main-card-wrapper">
+        <div class="card-body p-0 border-bottom bg-light">
+            <div class="d-flex flex-wrap justify-content-between align-items-center p-3 gap-2 unitax-header">
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark" id="reportTitle">
+                        <i class="bi bi-boxes text-primary me-2"></i>Stock Valuation & Inventory Register
+                    </h5>
+                    <p class="text-muted small mb-0" id="reportSubtitle">Real-time valuation, FIFO average cost, and movement audit trail</p>
+                </div>
+                <div class="d-flex flex-wrap gap-2 align-items-end">
+                    <div style="min-width: 120px;">
+                        <label class="small fw-bold text-muted mb-1">Group By</label>
+                        <select id="stockGroupBy" class="form-select form-select-sm shadow-sm" onchange="generateStockSummary()">
+                            <option value="item">Item-wise</option>
+                            <option value="hsn">HSN-wise</option>
+                        </select>
+                    </div>
+                    <div style="min-width: 130px;">
+                        <label class="small fw-bold text-muted mb-1">From Date</label>
+                        <input type="date" id="stockFromDate" class="form-control form-control-sm shadow-sm" onchange="generateStockSummary()">
+                    </div>
+                    <div style="min-width: 130px;">
+                        <label class="small fw-bold text-muted mb-1">To Date</label>
+                        <input type="date" id="stockToDate" class="form-control form-control-sm shadow-sm" onchange="generateStockSummary()">
+                    </div>
+                    <div class="d-flex gap-1 align-items-center">
+                        <button type="button" id="btnBackToSummary" class="btn btn-erp-icon shadow-sm" style="display: none;" onclick="showSummaryView()" title="Back to Stock Summary">
+                            <i class="bi bi-arrow-left"></i>
+                        </button>
+                        <button type="button" class="btn btn-erp-icon btn-erp-icon-primary shadow-sm" onclick="generateStockSummary()" title="Refresh Valuation">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                        <button type="button" class="btn btn-erp-icon shadow-sm" onclick="exportStockCSV()" title="Export Stock Register to CSV">
+                            <i class="bi bi-file-earmark-arrow-down"></i>
+                        </button>
+                        <button type="button" class="btn btn-erp-icon shadow-sm" onclick="window.print()" title="Print Stock Valuation Report">
+                            <i class="bi bi-printer"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="viewStockSummary" class="p-0 table-responsive print-table-wrapper w-100" style="width: 100% !important; min-width: 100%; max-height: calc(100vh - 200px); overflow-y: auto;">
+            <table class="table table-sm table-hover table-bordered mb-0 align-middle master-print-table w-100" style="font-size: 0.85rem; width: 100% !important; min-width: 100%; table-layout: fixed;">
+                <colgroup>
+                    <col style="width: 22%;">
+                    <col style="width: 8%;">
+                    <col style="width: 5%;">
+                    <col style="width: 7%;">
+                    <col style="width: 9%;">
+                    <col style="width: 7%;">
+                    <col style="width: 9%;">
+                    <col style="width: 7%;">
+                    <col style="width: 9%;">
+                    <col style="width: 6%;">
+                    <col style="width: 5%;">
+                    <col style="width: 6%;">
+                </colgroup>
+                <thead class="bg-dark text-white sticky-top" style="background-color: #0f172a !important;">
+                    <tr class="text-center align-middle border-bottom border-secondary">
+                        <th rowspan="2" class="text-start ps-3 py-2 text-white">Item Description & Code</th>
+                        <th rowspan="2" class="text-white">HSN</th>
+                        <th rowspan="2" class="text-white">UQC</th>
+                        <th colspan="2" class="border-start border-end border-secondary py-1 text-white bg-dark">Opening Balance</th>
+                        <th colspan="2" class="border-end border-secondary py-1 text-white bg-dark">Inwards (Purchase/Ret)</th>
+                        <th colspan="2" class="border-end border-secondary py-1 text-white bg-dark">Outwards (Sales/Ret)</th>
+                        <th colspan="3" class="py-1 text-white bg-dark">Closing Valuation</th>
+                    </tr>
+                    <tr class="text-center border-bottom border-secondary text-white small" style="font-size: 11px;">
+                        <th class="border-start border-secondary py-1">Qty</th>
+                        <th class="border-end border-secondary py-1">Value (₹)</th>
+                        <th class="py-1">Qty</th>
+                        <th class="border-end border-secondary py-1">Value (₹)</th>
+                        <th class="py-1">Qty</th>
+                        <th class="border-end border-secondary py-1">Value (₹)</th>
+                        <th class="py-1">Qty</th>
+                        <th class="py-1">Avg Rate</th>
+                        <th class="pe-3 py-1">Valuation (₹)</th>
+                    </tr>
+                </thead>
+                <tbody id="stockSummaryBody">
+                    <tr><td colspan="12" class="text-center py-5 text-muted"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Loading inventory data...</td></tr>
+                </tbody>
+                <tfoot class="table-light fw-bold sticky-bottom shadow-sm">
+                    <tr class="text-end px-3">
+                        <td colspan="3" class="text-start ps-3 text-uppercase">Grand Total</td>
+                        <td id="totOpQty">-</td><td id="totOpVal">-</td>
+                        <td id="totInQty">-</td><td id="totInVal">-</td>
+                        <td id="totOutQty">-</td><td id="totOutVal">-</td>
+                        <td id="totClQty">-</td><td></td><td id="totClVal" class="pe-3">-</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div id="viewItemLedger" class="p-0 table-responsive print-table-wrapper w-100" style="display: none; width: 100% !important; min-width: 100%; max-height: calc(100vh - 200px); overflow-y: auto;">
+            <table class="table table-sm table-hover mb-0 align-middle master-print-table w-100" style="font-size: 0.85rem; width: 100% !important; min-width: 100%; table-layout: fixed;">
+                <colgroup>
+                    <col style="width: 10%;">
+                    <col style="width: 15%;">
+                    <col style="width: 15%;">
+                    <col style="width: 25%;">
+                    <col style="width: 10%;">
+                    <col style="width: 10%;">
+                    <col style="width: 15%;">
+                </colgroup>
+                <thead class="table-dark sticky-top">
+                    <tr>
+                        <th class="ps-3">Date</th>
+                        <th>Vch Type</th>
+                        <th>Vch No.</th>
+                        <th>Particulars (Party)</th>
+                        <th class="text-end text-secondary">Inward Qty</th>
+                        <th class="text-end text-danger">Outward Qty</th>
+                        <th class="text-end pe-3">Balance Qty</th>
+                    </tr>
+                </thead>
+                <tbody id="itemLedgerBody">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    // 1. Initialize Dates
+    const now = new Date();
+    document.getElementById('stockToDate').valueAsDate = now;
+    document.getElementById('stockFromDate').valueAsDate = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    let globalStockData = {};
+    let masterItemCache = {}; // Cache for master item data
+
+    // --- MASTER DATA FETCHER (Robust) ---
+    async function fetchMasterItems() {
+        try {
+            const items = await API.Fetch('Masters/Stock').catch(() => ({}));
+            masterItemCache = {};
+            
+            Object.values(items).forEach(item => {
+                const rawName = (item.itemName || item.ItemName || "").trim();
+                if (!rawName) return;
+                
+                const stockCode = (item.Stock_Code || item.stockCode || "").trim();
+                const hsn = (item.itemHSN || item.hsn || "").trim();
+                const unit = (item.ItemUnit || item.unit || "Nos").trim();
+                const openingQty = parseFloat(item.openingQty) || 0;
+                const openingAmount = parseFloat(item.openingAmount) || 0;
+                
+                // Store by both name and code for quick lookup
+                if (stockCode) masterItemCache[stockCode] = { 
+                    name: rawName, 
+                    code: stockCode, 
+                    hsn: hsn, 
+                    unit: unit, 
+                    opQty: openingQty, 
+                    opVal: openingAmount 
+                };
+                
+                // Also store by name as fallback
+                masterItemCache[rawName] = masterItemCache[rawName] || { 
+                    name: rawName, 
+                    code: stockCode, 
+                    hsn: hsn, 
+                    unit: unit, 
+                    opQty: openingQty, 
+                    opVal: openingAmount 
+                };
+            });
+            
+            console.log(`✅ Loaded ${Object.keys(masterItemCache).length} master items`);
+            return masterItemCache;
+        } catch (e) {
+            console.warn("⚠️ Master data fetch failed:", e);
+            return {};
+        }
+    }
+
+    // --- GET MASTER DATA FOR AN ITEM (Robust) ---
+    function getMasterData(itemName, stockCode) {
+        // Try by stock code first
+        if (stockCode && masterItemCache[stockCode]) {
+            return masterItemCache[stockCode];
+        }
+        
+        // Try by name
+        if (itemName && masterItemCache[itemName]) {
+            return masterItemCache[itemName];
+        }
+        
+        // Try case-insensitive name match
+        if (itemName) {
+            const lowerName = itemName.toLowerCase();
+            for (let key in masterItemCache) {
+                if (key.toLowerCase() === lowerName) {
+                    return masterItemCache[key];
+                }
+            }
+        }
+        
+        // Return default if not found
+        return {
+            name: itemName || 'Unknown Item',
+            code: stockCode || 'N/A',
+            hsn: 'N/A',
+            unit: 'Nos',
+            opQty: 0,
+            opVal: 0
+        };
+    }
+
+    // --- MATH ENGINE FOR INVENTORY (FIXED - Better Purchase Detection) ---
+    const getInventoryImpact = (vch) => {
+        const rawFormId = vch.formId || vch.meta?.form_id || vch.meta?.documentType || "";
+        const formLower = rawFormId.toLowerCase();
+        
+        let type = "NONE";
+        
+        // FIX: Better detection for purchase forms
+        // Check for Purchase forms first
+        if (formLower.includes('purchase') && !formLower.includes('return') && !formLower.includes('debitnote')) {
+            type = "IN";
+        }
+        // Check for Sales forms
+        else if (formLower.includes('sale') && !formLower.includes('return') && !formLower.includes('creditnote')) {
+            type = "OUT";
+        }
+        // Check for Sales Return / Credit Note
+        else if (formLower.includes('salesreturn') || formLower.includes('creditnote')) {
+            type = "IN";
+        }
+        // Check for Purchase Return / Debit Note
+        else if (formLower.includes('purchasereturn') || formLower.includes('debitnote')) {
+            type = "OUT";
+        }
+        // Check for Opening Stock
+        else if (formLower.includes('openingstock')) {
+            type = "IN";
+        }
+        // Fallback: Check by form ID string
+        else {
+            // Look for common purchase patterns
+            if (formLower.includes('purchase') || formLower.includes('purchaseinvoice')) {
+                type = "IN";
+            }
+            // Look for common sales patterns
+            else if (formLower.includes('sale') || formLower.includes('salesinvoice')) {
+                type = "OUT";
+            }
+        }
+
+        const h = vch.header || {};
+        const m = vch.meta || {};
+        const getValidName = (...names) => {
+            for(let n of names) if(n && n.trim() !== '' && n.trim().toLowerCase() !== 'unknown') return n.trim();
+            return "Cash / Default Party";
+        };
+        
+        const partyName = getValidName(m.customer_ledger, m.supplier_ledger, h.customer_ledger, h.supplier_ledger, h.entity);
+
+        // Debug logging
+        if (type !== "NONE") {
+            console.log(`📄 Voucher: ${rawFormId} | Type: ${type} | Party: ${partyName}`);
+        }
+        
+        return { type, partyName, formRaw: rawFormId };
+    };
+
+    // --- EXTRACT ITEMS FROM VOUCHER (Robust) ---
+    function extractItemsFromVoucher(vch) {
+        const items = [];
+        
+        // Try multiple possible item locations
+        const possibleItemSources = [
+            vch.items,
+            vch.line_items,
+            vch.inventory_items,
+            vch.product_items,
+            vch.details
+        ];
+        
+        for (let source of possibleItemSources) {
+            if (source) {
+                if (Array.isArray(source)) {
+                    return source;
+                } else if (typeof source === 'object') {
+                    return Object.values(source);
+                }
+            }
+        }
+        
+        // Try direct item properties
+        if (vch.itemName || vch.item_name || vch.product) {
+            items.push(vch);
+        }
+        
+        return items;
+    }
+
+    // --- FETCH ALL TRANSACTIONS (Enhanced) ---
+    async function fetchAllTransactions() {
+        let types = (window.API && typeof API.GetAllTransactionTypes === 'function')
+            ? await API.GetAllTransactionTypes().catch(() => null)
+            : null;
+        if (!types || !Array.isArray(types)) {
+            types = [
+                'SalesInvoiceForm', 'SalesReturnForm', 'CreditNoteForm', 
+                'PurchaseInvoiceForm', 'PurchaseReturnForm', 'DebitNoteForm',
+                'PaymentVoucherForm', 'ReceiptVoucherForm', 'ReceiptPayForm'
+            ];
+        }
+        
+        let allTransactions = [];
+        let fetchPromises = [];
+
+        for (const type of types) {
+            fetchPromises.push(
+                API.Fetch(`Transactions/${type}`)
+                    .then(data => {
+                        if (data) {
+                            Object.entries(data).forEach(([key, vch]) => {
+                                // Exclude soft-deleted and draft/pending transactions
+                                const isDeleted = vch.is_deleted === true || (vch.header && vch.header.is_deleted === true) || vch.status === 'DELETED' || (vch.header && vch.header.status === 'DELETED');
+                                const isDraftOrPending = vch.status === 'DRAFT' || vch.status === 'PENDING_APPROVAL' || (vch.header && (vch.header.status === 'DRAFT' || vch.header.status === 'PENDING_APPROVAL'));
+                                if (!isDeleted && !isDraftOrPending) {
+                                    allTransactions.push({ 
+                                        ...vch, 
+                                        key, 
+                                        formId: type,
+                                        header: vch.header || vch.meta || {},
+                                        items: extractItemsFromVoucher(vch)
+                                    });
+                                }
+                            });
+                            console.log(`✅ Loaded ${Object.keys(data).length} transactions from ${type}`);
+                        }
+                    })
+                    .catch((err) => {
+                        console.log(`⚠️ No data for ${type} or error:`, err.message);
+                    })
+            );
+        }
+
+        await Promise.allSettled(fetchPromises);
+        
+        // Sort by date
+        allTransactions.sort((a, b) => {
+            let timeA = new Date(a.header?.date || a.header?.voucher_date || 0).getTime();
+            let timeB = new Date(b.header?.date || b.header?.voucher_date || 0).getTime();
+            return timeA - timeB;
+        });
+
+        console.log(`✅ Total loaded ${allTransactions.length} transactions`);
+        return allTransactions;
+    }
+
+    // --- MAIN GENERATE FUNCTION (Enhanced) ---
+    window.generateStockSummary = async function() {
+        const fromDateStr = document.getElementById('stockFromDate').value;
+        const toDateStr = document.getElementById('stockToDate').value;
+        const groupBy = document.getElementById('stockGroupBy')?.value || 'item';
+        const tbody = document.getElementById('stockSummaryBody');
+
+        tbody.innerHTML = `<tr><td colspan="12" class="text-center py-5 text-muted">
+            <div class="spinner-border spinner-border-sm text-primary me-2"></div> 
+            Loading Master Data & Transactions...
+        </td></tr>`;
+
+        try {
+            // STEP 1: Load Master Data
+            await fetchMasterItems();
+            
+            let stockMap = {};
+
+            // STEP 2: Seed from Master Data
+            Object.values(masterItemCache).forEach(item => {
+                if (!item.name) return;
+                
+                const mapKey = groupBy === 'hsn' ? `HSN: ${item.hsn}` : `${item.name}_${item.code}`;
+                
+                stockMap[mapKey] = { 
+                    name: groupBy === 'hsn' ? 'Multiple Items' : item.name, 
+                    code: groupBy === 'hsn' ? '-' : item.code,
+                    hsn: item.hsn || 'N/A',
+                    unit: item.unit || 'Nos', 
+                    opQty: item.opQty || 0, 
+                    opVal: item.opVal || 0, 
+                    inQty: 0, inVal: 0, outQty: 0, outVal: 0, 
+                    history: [],
+                    masterData: item // Store full master data
+                };
+            });
+
+            // STEP 3: Fetch All Transactions
+            const allTransactions = await fetchAllTransactions();
+
+            // STEP 4: Process Transactions
+            let processedCount = 0;
+            allTransactions.forEach(vch => {
+                const vchDateStr = vch.header?.date || vch.header?.voucher_date;
+                if (!vchDateStr) return;
+                if (toDateStr && vchDateStr > toDateStr) return; 
+
+                const impact = getInventoryImpact(vch);
+                if (impact.type === "NONE") {
+                    // Debug: Log skipped transactions only if they have items
+                    const items = Array.isArray(vch.items) ? vch.items : Object.values(vch.items || {});
+                    if (items.length > 0) {
+                        console.log(`⏭️ Skipped: ${vch.formId} - No inventory impact`);
+                    }
+                    return;
+                }
+
+                const items = Array.isArray(vch.items) ? vch.items : Object.values(vch.items || {});
+                
+                if (items.length === 0) {
+                    console.log(`⚠️ No items found in voucher: ${vch.formId} - ${vch.key}`);
+                    return;
+                }
+                
+                processedCount++;
+                items.forEach(item => {
+                    // Extract item details with fallbacks
+                    const rawName = item.itemName || item.item_name || item.product || item.name || "";
+                    const stockCode = item.Stock_Code || item.stock_code || item.item_code || item.code || "";
+                    
+                    // Get master data for this item
+                    const master = getMasterData(rawName, stockCode);
+                    
+                    // Use master data if available, otherwise use transaction data
+                    const finalName = master.name || rawName || 'Unknown Item';
+                    const finalCode = master.code || stockCode || 'N/A';
+                    const finalHsn = master.hsn || item.itemHSN || item.hsn || 'N/A';
+                    const finalUnit = master.unit || item.ItemUnit || item.unit || 'Nos';
+                    
+                    const mapKey = groupBy === 'hsn' ? `HSN: ${finalHsn}` : `${finalName}_${finalCode}`;
+
+                    // Initialize if not exists
+                    if (!stockMap[mapKey]) {
+                        stockMap[mapKey] = { 
+                            name: groupBy === 'hsn' ? 'Multiple Items' : finalName, 
+                            code: groupBy === 'hsn' ? '-' : finalCode,
+                            hsn: finalHsn,
+                            unit: finalUnit, 
+                            opQty: 0, opVal: 0, 
+                            inQty: 0, inVal: 0, 
+                            outQty: 0, outVal: 0, 
+                            history: [],
+                            masterData: master
+                        };
+                    }
+
+                    // Calculate quantities
+                    const qty = parseFloat(item.qty) || 0;
+                    const rate = parseFloat(item.rate) || parseFloat(item.amount) || 0;
+                    const val = qty * rate;
+
+                    const entry = {
+                        date: vchDateStr,
+                        vchNo: vch.header?.doc_no || vch.header?.Invoice || vch.header?.supplier_bill_no || "N/A",
+                        vchType: impact.formRaw.replace('Form', '').replace(/([A-Z])/g, ' $1').trim(),
+                        party: impact.partyName,
+                        type: impact.type,
+                        qty: qty, 
+                        rate: rate, 
+                        val: val,
+                        key: vch.key, 
+                        formId: vch.formId,
+                        itemName: finalName,
+                        itemCode: finalCode
+                    };
+
+                    // Apply to opening or period
+                    if (fromDateStr && vchDateStr < fromDateStr) {
+                        if (impact.type === "IN") {
+                            stockMap[mapKey].opQty += qty;
+                            stockMap[mapKey].opVal += val;
+                        } else {
+                            stockMap[mapKey].opQty -= qty;
+                            stockMap[mapKey].opVal -= val; 
+                        }
+                    } else {
+                        if (impact.type === "IN") {
+                            stockMap[mapKey].inQty += qty;
+                            stockMap[mapKey].inVal += val;
+                        } else {
+                            stockMap[mapKey].outQty += qty;
+                            stockMap[mapKey].outVal += val;
+                        }
+                        stockMap[mapKey].history.push(entry);
+                    }
+                });
+            });
+
+            console.log(`✅ Processed ${processedCount} transactions with inventory impact`);
+
+            // Clean up empty entries
+            for (let key in stockMap) {
+                const item = stockMap[key];
+                if (item.inQty === 0 && item.outQty === 0 && item.opQty === 0) {
+                    // Keep only if it has history
+                    if (item.history.length === 0) {
+                        delete stockMap[key];
+                    }
+                }
+            }
+
+            globalStockData = stockMap;
+            console.log(`✅ Final ${Object.keys(globalStockData).length} stock items with activity`);
+            renderSummaryTable();
+
+        } catch (error) {
+            console.error("❌ Inventory Engine Error:", error);
+            tbody.innerHTML = `<tr><td colspan="12" class="text-center py-5 text-danger fw-bold">
+                Failed to load inventory: ${error.message}
+            </td></tr>`;
+        }
+    };
+
+    // --- RENDER SUMMARY TABLE (Enhanced) ---
+    function renderSummaryTable() {
+        const tbody = document.getElementById('stockSummaryBody');
+        tbody.innerHTML = '';
+
+        const sortedItems = Object.values(globalStockData).sort((a, b) => a.name.localeCompare(b.name));
+
+        let tOpQ = 0, tOpV = 0, tInQ = 0, tInV = 0, tOutQ = 0, tOutV = 0, tClQ = 0, tClV = 0;
+        const fmt = (val, isQty = false) => {
+            if (!val || val === 0 || isNaN(val)) return '-';
+            return isQty ? parseFloat(val).toLocaleString('en-IN', {maximumFractionDigits: 2}) : Utils.FormatINR(val);
+        };
+
+        sortedItems.forEach(item => {
+            const clQty = parseFloat((item.opQty + item.inQty - item.outQty).toFixed(4));
+            const clVal = parseFloat((item.opVal + item.inVal - item.outVal).toFixed(2));
+            const avgRate = clQty !== 0 ? Math.abs(clVal / clQty) : 0;
+
+            if (clQty === 0 && clVal === 0 && item.inQty === 0 && item.outQty === 0 && item.opQty === 0) return;
+
+            tOpQ += item.opQty; tOpV += item.opVal;
+            tInQ += item.inQty; tInV += item.inVal;
+            tOutQ += item.outQty; tOutV += item.outVal;
+            tClQ += clQty; tClV += clVal;
+
+            const qtyClass = clQty < 0 ? 'text-danger fw-bold' : 'text-success fw-bold';
+            const valClass = clVal < 0 ? 'text-danger fw-bold' : 'text-success fw-bold';
+
+            const tr = document.createElement('tr');
+            tr.style.cursor = 'pointer';
+            tr.title = "Double-click to view Item Ledger";
+            tr.ondblclick = () => showItemLedger(item.code === '-' ? `HSN: ${item.hsn}` : `${item.name}_${item.code}`);
+
+            tr.innerHTML = `
+                <td class="ps-3 fw-bold text-dark">
+                    ${item.name} 
+                    ${item.code !== '-' ? `<span class="text-muted small fw-normal ms-1">(${item.code})</span>` : ''}
+                </td>
+                <td class="text-muted small text-center">${item.hsn}</td>
+                <td class="text-muted small">${item.unit}</td>
+                <td class="text-end bg-secondary bg-opacity-10">${fmt(item.opQty, true)}</td>
+                <td class="text-end bg-secondary bg-opacity-10">${fmt(item.opVal)}</td>
+                <td class="text-end bg-transparent bg-opacity-10 fw-medium">${fmt(item.inQty, true)}</td>
+                <td class="text-end bg-transparent bg-opacity-10">${fmt(item.inVal)}</td>
+                <td class="text-end bg-danger bg-opacity-10 fw-medium">${fmt(item.outQty, true)}</td>
+                <td class="text-end bg-danger bg-opacity-10">${fmt(item.outVal)}</td>
+                <td class="text-end bg-success bg-opacity-10 fs-6 ${qtyClass}">${fmt(clQty, true)}</td>
+                <td class="text-end bg-success bg-opacity-10 text-muted small">${fmt(avgRate)}</td>
+                <td class="text-end bg-success bg-opacity-10 pe-3 ${valClass}">${fmt(clVal)}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        if (tbody.innerHTML === '') {
+            tbody.innerHTML = `<tr><td colspan="12" class="text-center py-5 text-muted fw-bold">No active inventory items found.</td></tr>`;
+        }
+
+        // Totals update
+        document.getElementById('totOpQty').innerText = fmt(tOpQ, true);
+        document.getElementById('totOpVal').innerText = fmt(tOpV);
+        document.getElementById('totInQty').innerText = fmt(tInQ, true);
+        document.getElementById('totInVal').innerText = fmt(tInV);
+        document.getElementById('totOutQty').innerText = fmt(tOutQ, true);
+        document.getElementById('totOutVal').innerText = fmt(tOutV);
+        
+        const footQtyClass = tClQ < 0 ? 'text-danger' : 'text-dark';
+        const footValClass = tClV < 0 ? 'text-danger' : 'text-dark';
+        document.getElementById('totClQty').innerHTML = `<span class="${footQtyClass}">${fmt(tClQ, true)}</span>`;
+        document.getElementById('totClVal').innerHTML = `<span class="${footValClass}">${fmt(tClV)}</span>`;
+    }
+
+    // --- VIEW CONTROLLERS (Item Ledger) ---
+    
+    // --- EXPORT CSV FUNCTION ---
+    window.exportStockCSV = function() {
+        const rows = [];
+        rows.push(['Item Description', 'Code', 'HSN', 'Unit', 'Opening Qty', 'Opening Value', 'Inward Qty', 'Inward Value', 'Outward Qty', 'Outward Value', 'Closing Qty', 'Avg Rate', 'Closing Valuation']);
+        
+        Object.values(globalStockData).forEach(item => {
+            const clQty = item.opQty + item.inQty - item.outQty;
+            const clVal = item.opVal + item.inVal - item.outVal;
+            const avgRate = clQty > 0 ? (clVal / clQty) : 0;
+            rows.push([
+                `"${item.name}"`, item.code, item.hsn, item.unit,
+                item.opQty, item.opVal.toFixed(2),
+                item.inQty, item.inVal.toFixed(2),
+                item.outQty, item.outVal.toFixed(2),
+                clQty, avgRate.toFixed(2), clVal.toFixed(2)
+            ]);
+        });
+
+        const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Stock_Valuation_${document.getElementById('stockToDate').value}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    window.showItemLedger = function(mapKey) {
+        document.getElementById('viewStockSummary').style.display = 'none';
+        document.getElementById('viewItemLedger').style.display = 'block';
+        document.getElementById('btnBackToSummary').style.display = 'inline-block';
+        
+        const itemData = globalStockData[mapKey];
+        if (!itemData) {
+            console.warn('Item not found:', mapKey);
+            return;
+        }
+
+        const displayName = itemData.code === '-' ? `HSN: ${itemData.hsn}` : `${itemData.name} (${itemData.code})`;
+        document.getElementById('reportTitle').innerHTML = `<i class="bi bi-box-seam me-2"></i> Ledger: <span class="text-primary">${displayName}</span>`;
+        document.getElementById('reportSubtitle').innerText = `Double-click any entry to open the specific voucher.`;
+
+        const tbody = document.getElementById('itemLedgerBody');
+        tbody.innerHTML = '';
+
+        let runningQty = itemData.opQty;
+        const fmt = (val, isQty = false) => (val === 0 || !val || isNaN(val) ? '-' : (isQty ? parseFloat(val).toLocaleString('en-IN') : Utils.FormatINR(val)));
+
+        if (itemData.opQty !== 0 || itemData.opVal !== 0) {
+            const opClass = runningQty < 0 ? 'text-danger' : 'text-dark';
+            tbody.innerHTML += `
+                <tr class="fw-bold text-muted bg-light">
+                    <td class="ps-3">${Utils.FormatDate(document.getElementById('stockFromDate').value)}</td>
+                    <td></td><td></td>
+                    <td>OPENING BALANCE</td>
+                    <td class="text-end"></td><td class="text-end"></td>
+                    <td class="text-end pe-3 ${opClass}">${fmt(runningQty, true)} ${itemData.unit}</td>
+                </tr>
+            `;
+        }
+
+        itemData.history.forEach(entry => {
+            if (entry.type === "IN") runningQty += entry.qty;
+            else if (entry.type === "OUT") runningQty -= entry.qty;
+
+            const inStr = entry.type === "IN" ? fmt(entry.qty, true) : "-";
+            const outStr = entry.type === "OUT" ? fmt(entry.qty, true) : "-";
+            const runClass = runningQty < 0 ? 'text-danger fw-bold' : 'text-success fw-bold';
+
+            const tr = document.createElement('tr');
+            tr.style.cursor = 'pointer';
+            tr.title = "Double-click to open Voucher";
+            
+            tr.ondblclick = function() {
+                let currentRoute = 'reports/inventoryreturn'; 
+                if (typeof App !== 'undefined' && App.State && App.State.currentRoute) currentRoute = App.State.currentRoute;
+                else if (window.location.hash) currentRoute = window.location.hash.replace('#', '');
+
+                localStorage.setItem('editContext', JSON.stringify({ 
+                    type: entry.formId, key: entry.key, returnRoute: currentRoute 
+                }));
+                
+                if (typeof App !== 'undefined' && App.Router) App.Router('transactions/edit'); 
+            };
+
+            tr.innerHTML = `
+                <td class="ps-3">${Utils.FormatDate(entry.date)}</td>
+                <td><span class="badge border text-dark bg-transparent no-print">${entry.vchType}</span></td>
+                <td class="fw-bold text-dark">${entry.vchNo}</td>
+                <td class="fw-medium text-dark">${entry.party}</td>
+                <td class="text-end fw-bold text-primary">${inStr}</td>
+                <td class="text-end fw-bold text-danger">${outStr}</td>
+                <td class="text-end pe-3 ${runClass}">${fmt(runningQty, true)} ${itemData.unit}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        if (itemData.history.length === 0) {
+            tbody.innerHTML += `<tr><td colspan="7" class="text-center py-5 text-muted fw-bold">No active transactions in this specific period.</td></tr>`;
+        }
+    };
+
+    window.showSummaryView = function() {
+        document.getElementById('viewStockSummary').style.display = 'block';
+        document.getElementById('viewItemLedger').style.display = 'none';
+        document.getElementById('btnBackToSummary').style.display = 'none';
+        
+        document.getElementById('reportTitle').innerText = 'Stock Summary';
+        document.getElementById('reportSubtitle').innerText = 'Real-time Inventory Valuation & Movement';
+    };
+
+    // Initialize
+    setTimeout(generateStockSummary, 100);
+
+})();
+</script>

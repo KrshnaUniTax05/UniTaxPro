@@ -1,0 +1,85 @@
+/**
+ * UNITAX PRO - Enterprise Design System Variables
+ * Modern ERP - High Density & Professional Contrast
+ */
+:root {
+    /* Brand & Accent Colors (UniTax Pro Palette) */
+    --brand-primary: #0052ea;
+    --primary-color: #0052ea;
+    --brand-primary-hover: #003eb3;
+    --brand-primary-light: #eff5ff;
+    --brand-primary-subtle: #dbeafe;
+    --brand-accent: #0284c7;
+
+    /* Focus & Controls */
+    --focus-ring: 0 0 0 3px rgba(0, 82, 234, 0.15);
+    --input-height: 34px;
+    --input-font-size: 0.8125rem;
+    --table-head-bg: #0f172a;
+    --table-head-color: #f8fafc;
+
+    /* Semantic Status Colors */
+    --status-success: #10b981;
+    --status-success-subtle: #ecfdf5;
+    --status-warning: #f59e0b;
+    --status-warning-subtle: #fffbeb;
+    --status-danger: #ef4444;
+    --status-danger-subtle: #fef2f2;
+    --status-info: #06b6d4;
+    --status-info-subtle: #ecfeff;
+
+    /* Neutrals & Surfaces */
+    --bg-app: #f8fafc;
+    --bg-surface: #ffffff;
+    --bg-surface-alt: #f1f5f9;
+    --sidebar-bg: #0f172a;
+    --sidebar-surface: #1e293b;
+    --sidebar-hover: #334155;
+    --sidebar-text: #e2e8f0;
+    --sidebar-muted: #94a3b8;
+
+    /* Text & Typography */
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    --text-inverse: #ffffff;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+    /* Enterprise Type Scale (dense high-contrast ERP) */
+    --font-size-2xs: 0.625rem;   /* 10px - micro labels, badges, timestamps */
+    --font-size-xs: 0.6875rem;   /* 11px - tiny metadata */
+    --font-size-sm: 0.75rem;     /* 12px - table headers, helper text */
+    --font-size-md: 0.8125rem;   /* 13px - tabular data / inputs */
+    --font-size-base: 0.875rem;  /* 14px - body copy */
+    --font-size-lg: 0.9375rem;   /* 15px - emphasized body */
+    --font-size-xl: 1.0625rem;   /* 17px - card titles */
+    --font-size-2xl: 1.25rem;    /* 20px - page titles */
+    --font-size-3xl: 1.5rem;     /* 24px - hero / modal titles */
+    --font-size-4xl: 1.875rem;   /* 30px - KPI / empty states */
+    --line-height-tight: 1.25;
+    --line-height-base: 1.45;
+    --line-height-relaxed: 1.65;
+    --font-weight-book: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --font-weight-extrabold: 800;
+
+    /* Borders & Outlines */
+    --border-color: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --border-radius-sm: 4px;
+    --border-radius: 8px;
+    --border-radius-lg: 12px;
+
+    /* Layout Dimensions */
+    --topbar-height: 56px;
+    --sidebar-width: 270px;
+    --sidebar-collapsed-width: 68px;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+}

@@ -1,0 +1,895 @@
+<style>
+@media print {
+    #glTable {
+        width: 100% !important;
+        table-layout: fixed !important;
+        font-size: 7.5pt !important;
+    }
+    #glTable th, #glTable td {
+        padding: 3px 4px !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+    .bank-banner {
+        padding: 10px 14px !important;
+    }
+    .customer-info-box {
+        padding: 10px 14px !important;
+    }
+    .viewport-footer-breadcrumb, footer {
+        display: none !important;
+        visibility: hidden !important;
+    }
+}
+</style>
+<div class="animate-in gl-statement-wrapper">
+    <div class="card border-0 shadow-sm main-card-wrapper">
+        <div class="card-body p-0">
+            <div class="screen-only">
+                <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-light no-print">
+                    <div>
+                        <h5 class="fw-bold mb-0">General Ledger Statement</h5>
+                        <p class="text-muted small mb-0">View account history and running balance</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" title="Print Account Statement" class="btn btn-erp-icon" onclick="window.printLedgerStatement()">
+                            <i class="bi bi-printer"></i>
+                        </button>
+                        <button type="button" title="View Statement" class="btn btn-erp-icon btn-erp-icon-primary" onclick="generateStatement()">
+                            <i class="bi bi-check2 me-1"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-4 no-print" id="glFilterFormWrapper">
+                    <form id="glFilterForm" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Company Code / Entity</label>
+                            <input type="text" id="targetCompany" name="companySearch" class="form-control form-control-sm" 
+                                   list="glCompanyList" placeholder="All Companies / Primary"
+                                   data-fetch_column data-sheet_name="Companies" data-column_name="companyName&CompanyCode">
+                            <datalist id="glCompanyList"></datalist>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Select Ledger Account <span class="text-danger">*</span></label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white"><i class="bi bi-person-badge"></i></span>
+                                <input type="text" id="targetAccount" name="ledgerSearch" class="form-control" 
+                                       list="ledgerList" placeholder="Search Ledger Name..." required
+                                       data-fetch_column data-sheet_name="LedgerCreation" data-column_name="name&ledgerCode">
+                            </div>
+                            <datalist id="ledgerList"></datalist>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold posting-date-label"><i class="bi bi-calendar-event me-1"></i>From Posting Date</label>
+                            <input type="date" id="fromDate" class="form-control form-control-sm posting-date-field">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold posting-date-label"><i class="bi bi-calendar-check me-1"></i>To Posting Date</label>
+                            <input type="date" id="toDate" class="form-control form-control-sm posting-date-field">
+                        </div>
+
+                        <!-- Granular Search Mode Switch -->
+                        <div class="col-12 mt-2">
+                            <div class="d-flex justify-content-between align-items-center py-2 px-3 bg-light rounded-2 border">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" id="glGranularToggle" onchange="window.toggleGlGranularSearch(this.checked)">
+                                    <label class="form-check-label fw-bold small text-dark" for="glGranularToggle">
+                                        <i class="bi bi-sliders2 me-1 text-primary"></i> Granular Field-by-Field Search (Option Enabled)
+                                    </label>
+                                </div>
+                                <span class="badge bg-white text-muted border small" id="glFilterModeBadge">
+                                    Primary Filter Mode (Extract All by Posting Date, GL, Company)
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Granular Search Panel (Collapsible) -->
+                        <div id="glGranularPanel" class="col-12 p-3 bg-white border rounded-2 shadow-sm" style="display: none;">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Document / Voucher No</label>
+                                    <input type="text" id="glSearchDocNo" class="form-control form-control-sm" placeholder="e.g. SL-, PV-, CRN-...">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Entity / Counterparty</label>
+                                    <input type="text" id="glSearchEntity" class="form-control form-control-sm" placeholder="Customer or Supplier...">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Project / Cost Center</label>
+                                    <input type="text" id="glSearchProject" class="form-control form-control-sm" placeholder="General, Project A...">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Document Type</label>
+                                    <select id="glSearchDocType" class="form-select form-select-sm">
+                                        <option value="" selected>All Document Types</option>
+                                        <option value="SALE">Sales Invoices</option>
+                                        <option value="PURCHASE">Purchase Bills</option>
+                                        <option value="PAYMENT">Payment Vouchers</option>
+                                        <option value="RECEIPT">Receipt Vouchers</option>
+                                        <option value="CREDITNOTE">Credit Notes</option>
+                                        <option value="DEBITNOTE">Debit Notes</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">Narration / Memo Keyword</label>
+                                    <input type="text" id="glSearchNarration" class="form-control form-control-sm" placeholder="Search narration or line remarks...">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Min Amount (₹)</label>
+                                    <input type="number" id="glSearchMinAmount" class="form-control form-control-sm" placeholder="0.00" step="any">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Max Amount (₹)</label>
+                                    <input type="number" id="glSearchMaxAmount" class="form-control form-control-sm" placeholder="No limit" step="any">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label small fw-bold">Direction</label>
+                                    <select id="glSearchDrCr" class="form-select form-select-sm">
+                                        <option value="" selected>Debit & Credit</option>
+                                        <option value="DR">Debit Only</option>
+                                        <option value="CR">Credit Only</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="statementSummary" class="row g-3 px-4 pb-3 no-print" style="display: none;">
+                    <div class="col-md-4">
+                        <div class="p-2 border rounded bg-white text-center">
+                            <div class="text-muted small text-uppercase">Total Debit</div>
+                            <div class="fw-bold h6 mb-0 " id="statDebit">₹ 0.00</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-2 border rounded bg-white text-center">
+                            <div class="text-muted small text-uppercase">Total Credit</div>
+                            <div class="fw-bold h6 mb-0 " id="statCredit">₹ 0.00</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-2 border rounded bg-primary text-white text-center shadow-sm">
+                            <div class="opacity-75 small text-uppercase">Closing Balance</div>
+                            <div class="fw-bold h6 mb-0" id="statClosing">₹ 0.00</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PRINT HEADER - WILL REPEAT ON EVERY PAGE -->
+            <div class="bank-print-header d-none d-print-block">
+                <div class="bank-banner">
+                    <div class="company-info-box text-start">
+                        <h2 id="print-company-name" class="mb-1" style="font-size: 12pt; font-weight: 800; color: #ffffff !important; letter-spacing: 0.5px;">YOUR COMPANY NAME</h2>
+                        <p id="print-company-address" class="mb-1" style="font-size: 7pt; opacity: 0.9; color: #ffffff !important;">Company Complete Address, City, State, ZIP</p>
+                        <p id="print-company-contact" class="mb-0" style="font-size: 7pt; opacity: 0.9; color: #ffffff !important;">GSTIN: XXXXXXXXXXXXXXX | Ph: +91-0000000000</p>
+                    </div>
+                    <div class="statement-title-box">
+                        <div class="brand">
+                            <span class="fs-4 fw-bold text-white">UniTax <span class="text-white">PRO</span></span>
+                        </div>
+                        <h2>STATEMENT OF ACCOUNT</h2>
+                        <p>Generated: <span id="print-generated-date"></span></p>
+                    </div>
+                </div>
+
+                <div class="customer-info-box">
+                    <div class="info-left">
+                        <p class="label-text">Account Name</p>
+                        <h3 id="print-acc-name" class="fw-bold m-0 pb-1"></h3>
+                        <p class="sub-text pt-1">A/C Code: <strong id="print-acc-code" class="text-dark"></strong> | Currency: <strong>INR (₹)</strong></p>
+                    </div>
+                    <div class="info-right">
+                        <table class="meta-table">
+                            <tr>
+                                <td>Statement Period:</th>
+                                <td id="print-period-range" class="fw-bold"></td>
+                            </tr>
+                            <tr>
+                                <td>Total Debits:</th>
+                                <td id="print-header-dr" class=" fw-bold">0.00</td>
+                            </tr>
+                            <tr>
+                                <td>Total Credits:</th>
+                                <td id="print-header-cr" class=" fw-bold">0.00</td>
+                            </tr>
+                            <tr class="highlight-row">
+                                <td>Closing Balance:</th>
+                                <td id="print-closing-bal" class="fw-bold">0.00</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WRAPPER DIV FOR TABLE WITH PROPER PAGE BREAK HANDLING -->
+            <div class="print-table-container">
+                <table class="table table-sm table-hover mb-0 statement-table table-striped" id="glTable" style="width: 100% !important;">
+                    <thead>
+                        <tr>
+                            <th class="ps-2" width="4%">#</th>
+                            <th width="10%">Posting Date</th>
+                            <th width="9%">Doc Date</th>
+                            <th width="8%">Type</th>
+                            <th width="13%">Doc No</th>
+                            <th width="26%">Narration / Particulars</th>
+                            <th class="text-end" width="10%">Debit (₹)</th>
+                            <th class="text-end" width="10%">Credit (₹)</th>
+                            <th class="text-end pe-2" width="10%">Balance</th>
+                            <th class="text-end pe-3 no-print screen-only" width="4%">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="glTableBody">
+                        <tr><td colspan="10" class="text-center py-5 text-muted no-print">Please select an account and click "View Statement"</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- PRINT FOOTER - APPEARS ONLY ON LAST PAGE -->
+            <div class="bank-print-footer p-1 d-none d-print-block">
+                <p><strong>Disclaimer:</strong> This is a computer-generated statement and does not require a physical signature. If no discrepancy is reported within 7 days from the statement date, the balance will be considered correct and binding.</p>
+                <div class="signatures">
+                    <div class="sig-line">Authorized Signatory</div>
+                    <div class="sig-line">Customer / Auditor Signature</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const now = new Date();
+    document.getElementById('toDate').valueAsDate = now;
+    // Default to start of current Indian FY (April 1st) so historical vouchers in the FY are immediately visible
+    const fyYear = (now.getMonth() >= 3) ? now.getFullYear() : now.getFullYear() - 1;
+    document.getElementById('fromDate').value = `${fyYear}-04-01`;
+
+    // --- Check URL parameters for ledger drill-down linking ---
+    setTimeout(() => {
+        try {
+            const rawHash = window.location.hash || '';
+            const searchPart = rawHash.includes('?') ? rawHash.split('?')[1] : (window.location.search ? window.location.search.substring(1) : '');
+            if (searchPart) {
+                const params = new URLSearchParams(searchPart);
+                const targetL = params.get('ledger') || params.get('account');
+                if (targetL) {
+                    const decoded = decodeURIComponent(targetL);
+                    const acctInput = document.getElementById('targetAccount');
+                    if (acctInput) {
+                        acctInput.value = decoded;
+                        window.generateStatement();
+                    }
+                }
+            }
+        } catch(e) {}
+    }, 300);
+
+    // --- FIX CHROME PRINT CLIPPING BUG GLOBALLY ---
+    if (!window.printFixAttached) {
+        window.addEventListener('beforeprint', () => {
+            document.querySelectorAll('.print-table-wrapper, .master-print-table, .main-card-wrapper, .card-body').forEach(el => {
+                el.style.setProperty('overflow', 'visible', 'important');
+                el.style.setProperty('height', 'auto', 'important');
+                el.style.setProperty('max-height', 'none', 'important');
+            });
+        });
+        window.addEventListener('afterprint', () => {
+            document.querySelectorAll('.print-table-wrapper, .master-print-table, .main-card-wrapper, .card-body').forEach(el => {
+                el.style.overflow = ''; el.style.height = ''; el.style.maxHeight = '';
+            });
+        });
+        window.printFixAttached = true;
+    }
+
+    const getDocPrefix = (formId) => {
+        const typeMap = {
+            'SalesInvoiceForm': 'Sales',
+            'PurchaseInvoiceForm': 'Purchase',
+            'SalesReturnForm': 'Credit Note',
+            'CreditNoteForm': 'Credit Note',
+            'PurchaseReturnForm': 'Debit Note',
+            'DebitNoteForm': 'Debit Note',
+            'ReceiptVoucherForm': 'Receipt',
+            'PaymentVoucherForm': 'Payment',
+            'ReceiptPayForm': 'Contra',
+            'JournalVoucherForm': 'Journal'
+        };
+        return typeMap[formId] || formId.replace('Form', '').replace(/([A-Z])/g, ' $1').trim();
+    };
+
+    window.toggleGlGranularSearch = function(isEnabled) {
+        const panel = document.getElementById('glGranularPanel');
+        const badge = document.getElementById('glFilterModeBadge');
+        if (panel) panel.style.display = isEnabled ? 'block' : 'none';
+        if (badge) {
+            if (isEnabled) {
+                badge.className = "badge bg-primary text-white border-0 small";
+                badge.innerText = "Granular Search Active (Field-by-Field Filtering)";
+            } else {
+                badge.className = "badge bg-white text-muted border small";
+                badge.innerText = "Primary Filter Mode (Extract All by Posting Date, GL, Company)";
+            }
+        }
+    };
+
+    window.clearGlDateFilters = function() {
+        document.getElementById('fromDate').value = '';
+        document.getElementById('toDate').value = '';
+        window.generateStatement();
+    };
+
+    window.generateStatement = async function() {
+        const accountInput = document.getElementById('targetAccount');
+        const account = accountInput ? accountInput.value.trim() : '';
+        const tbody = document.getElementById('glTableBody');
+        const fromDate = document.getElementById('fromDate')?.value || '';
+        const toDate = document.getElementById('toDate')?.value || '';
+        
+        if (!account) return App.UI.Notify('Validation', 'Please select a ledger account.', 'warning');
+        
+        let ledgerCode = '';
+        let ledgerName = account;
+        const codeMatch = account.match(/\(([^)]+)\)/);
+        if (codeMatch) {
+            ledgerCode = codeMatch[1].trim();
+            ledgerName = account.replace(`(${codeMatch[1]})`, '').trim();
+        } else {
+            const sqMatch = account.match(/\[([^\]]+)\]/);
+            if (sqMatch) {
+                ledgerCode = sqMatch[1].trim();
+                ledgerName = account.replace(`[${sqMatch[1]}]`, '').trim();
+            }
+        }
+        
+        tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5 no-print"><div class="spinner-border spinner-border-sm text-primary"></div> Analyzing ledger statement and verifying all double-entry postings...</td></tr>`;
+
+        let ledgerMap = {};
+        let resolvedLedgerCode = ledgerCode;
+        let resolvedLedgerName = ledgerName;
+        let linkedCompanyCode = null;
+        let openingBalance = 0;
+        let openingBalanceType = 'Dr';
+
+        // --- 1. RESOLVE LEDGER & COMPANY & OPENING BALANCE ---
+        try {
+            const masterData = await API.Fetch('Masters/LedgerCreation');
+            if (masterData) {
+                Object.values(masterData).forEach(ledger => {
+                    if (!ledger) return;
+                    const codeStr = ledger.ledgerCode ? ledger.ledgerCode.toString().trim() : '';
+                    const nameStr = ledger.name ? ledger.name.toString().trim() : '';
+                    if (codeStr) ledgerMap[codeStr.toLowerCase()] = nameStr;
+                    if (nameStr) ledgerMap[nameStr.toLowerCase()] = nameStr;
+                    
+                    const searchInput = account.toLowerCase();
+                    if ((codeStr && codeStr.toLowerCase() === searchInput) || 
+                        (nameStr && nameStr.toLowerCase() === searchInput) || 
+                        (codeStr && ledgerCode && codeStr.toLowerCase() === ledgerCode.toLowerCase()) || 
+                        (nameStr && nameStr.toLowerCase() === ledgerName.toLowerCase()) ||
+                        (nameStr && searchInput.includes(nameStr.toLowerCase())) ||
+                        (codeStr && searchInput.includes(codeStr.toLowerCase()))) {
+                        
+                        resolvedLedgerCode = codeStr || resolvedLedgerCode;
+                        resolvedLedgerName = nameStr || resolvedLedgerName;
+                        linkedCompanyCode = ledger.CompanyName || ledger.CompanyCode;
+                        
+                        const rawOpeningBal = parseFloat(ledger.openingBalance) || 
+                                             parseFloat(ledger.OpeningBalance) || 
+                                             parseFloat(ledger.openingAmount) || 0;
+                        openingBalance = rawOpeningBal;
+                        
+                        const ledgerNature = (ledger.ledgerNature || ledger.LedgerNature || ledger.nature || ledger.balanceType || '').toLowerCase();
+                        if (openingBalance !== 0) {
+                            if (ledgerNature.includes('cr') || ledgerNature.includes('credit') || ledgerNature.includes('liability') || ledgerNature.includes('income') || ledgerNature.includes('equity') || ledgerNature.includes('capital')) {
+                                openingBalanceType = 'Cr';
+                            } else {
+                                openingBalanceType = 'Dr';
+                            }
+                        }
+                    }
+                });
+            }
+        } catch (e) {}
+
+        // --- 2. FETCH COMPANY DETAILS ---
+        try {
+            const companiesData = await API.Fetch('Masters/Companies');
+            let companyInfo = null;
+            if (companiesData) {
+                const compList = Object.values(companiesData);
+                if (linkedCompanyCode) {
+                    companyInfo = compList.find(c => 
+                        c && (String(c.CompanyCode || '').toLowerCase() === String(linkedCompanyCode).toLowerCase() || 
+                        String(c.companyName || '').toLowerCase().includes(String(linkedCompanyCode).toLowerCase()))
+                    );
+                }
+                const targetCompInput = document.getElementById('targetCompany')?.value?.trim();
+                if (!companyInfo && targetCompInput) {
+                    companyInfo = compList.find(c => 
+                        c && (targetCompInput.toLowerCase().includes(String(c.companyName || '').toLowerCase()) || 
+                        targetCompInput.toLowerCase().includes(String(c.CompanyCode || '').toLowerCase()))
+                    );
+                }
+                if (!companyInfo && compList.length > 0) {
+                    companyInfo = compList[0];
+                }
+            }
+            if (companyInfo) {
+                const compName = (companyInfo.companyName || "UniTax PRO").toUpperCase();
+                const compAddr = `${companyInfo.companyAddress1 || ''} ${companyInfo.companyAddress2 || ''}, ${companyInfo.Company_State || ''}`.trim() || 'Corporate Financial Center, India';
+                const compContact = `GSTIN: ${companyInfo.GSTIN || 'N/A'}${companyInfo.Phone || companyInfo.companyPhone ? ' | Ph: ' + (companyInfo.Phone || companyInfo.companyPhone) : ''}`;
+                const nameEl = document.getElementById('print-company-name');
+                const addrEl = document.getElementById('print-company-address');
+                const contEl = document.getElementById('print-company-contact');
+                if (nameEl) nameEl.innerText = compName;
+                if (addrEl) addrEl.innerText = compAddr;
+                if (contEl) contEl.innerText = compContact;
+            } else {
+                const wsName = (typeof App !== 'undefined' && App.State && App.State.workspaceName) || localStorage.getItem('workspaceName') || 'SIGNATURE GLOBAL INDIA LIMITED';
+                const nameEl = document.getElementById('print-company-name');
+                if (nameEl) nameEl.innerText = wsName.toUpperCase();
+            }
+        } catch (e) {
+            console.warn("Company details fetch warning:", e);
+        }
+
+        const isSalesAccountSearch = resolvedLedgerName.toLowerCase().includes('sale');
+        const isPurchAccountSearch = resolvedLedgerName.toLowerCase().includes('purchas');
+        const isTaxAccountSearch = resolvedLedgerName.toLowerCase().includes('duty') || resolvedLedgerName.toLowerCase().includes('tax') || resolvedLedgerName.toLowerCase().includes('gst');
+        
+        // --- 3. FETCH ALL VOUCHERS ACROSS ROOT AND FORMS ---
+        let allTransactions = [];
+        try {
+            // Priority 1: Fetch entire Transactions tree in single network call
+            const rootTxns = await API.Fetch('Transactions');
+            if (rootTxns && typeof rootTxns === 'object') {
+                Object.entries(rootTxns).forEach(([type, formRecords]) => {
+                    if (formRecords && typeof formRecords === 'object') {
+                        Object.entries(formRecords).forEach(([key, vch]) => {
+                            if (!vch || typeof vch !== 'object') return;
+                            const isDeleted = vch.is_deleted === true || (vch.header && vch.header.is_deleted === true) || vch.status === 'DELETED' || (vch.header && vch.header.status === 'DELETED');
+                            const isDraftOrPending = vch.status === 'DRAFT' || vch.status === 'PENDING_APPROVAL' || (vch.header && (vch.header.status === 'DRAFT' || vch.header.status === 'PENDING_APPROVAL'));
+                            if (!isDeleted && !isDraftOrPending) {
+                                allTransactions.push({ ...vch, key, formId: type });
+                            }
+                        });
+                    }
+                });
+            }
+        } catch (e) {}
+
+        // Priority 2: Fallback query canonical types if root was empty
+        if (allTransactions.length === 0) {
+            let types = (window.API && typeof API.GetAllTransactionTypes === 'function')
+                ? await API.GetAllTransactionTypes().catch(() => null)
+                : null;
+            if (!types || !Array.isArray(types)) {
+                types = [
+                    'SalesInvoiceForm', 'SalesReturnForm', 'CreditNoteForm',
+                    'PurchaseInvoiceForm', 'PurchaseReturnForm', 'DebitNoteForm',
+                    'PaymentVoucherForm', 'ReceiptVoucherForm', 'ReceiptPayForm', 'JournalVoucherForm'
+                ];
+            }
+            for (const type of types) {
+                try {
+                    const data = await API.Fetch(`Transactions/${type}`);
+                    if (data && typeof data === 'object') {
+                        Object.entries(data).forEach(([key, vch]) => {
+                            if (!vch || typeof vch !== 'object') return;
+                            const isDeleted = vch.is_deleted === true || (vch.header && vch.header.is_deleted === true) || vch.status === 'DELETED' || (vch.header && vch.header.status === 'DELETED');
+                            const isDraftOrPending = vch.status === 'DRAFT' || vch.status === 'PENDING_APPROVAL' || (vch.header && (vch.header.status === 'DRAFT' || vch.header.status === 'PENDING_APPROVAL'));
+                            if (!isDeleted && !isDraftOrPending) allTransactions.push({ ...vch, key, formId: type });
+                        });
+                    }
+                } catch(e) {}
+            }
+        }
+
+        allTransactions.sort((a, b) => {
+            let timeA = a.header?.posted_at || a.posted_at || new Date(a.header?.posting_date || a.header?.date || a.date || 0).getTime() || 0;
+            let timeB = b.header?.posted_at || b.posted_at || new Date(b.header?.posting_date || b.header?.date || b.date || 0).getTime() || 0;
+            return timeA - timeB; 
+        });
+
+        // --- 4. STRICT DOUBLE-ENTRY ACCOUNTING IMPACT EVALUATOR ---
+        const targetClean = resolvedLedgerName.toLowerCase().trim();
+        const targetCodeClean = resolvedLedgerCode ? resolvedLedgerCode.toLowerCase().trim() : '';
+
+        const isLedgerMatch = (accName) => {
+            if (!accName) return false;
+            const str = String(accName).toLowerCase().trim();
+            if (targetClean && str.includes(targetClean)) return true;
+            if (targetCodeClean && str.includes(targetCodeClean)) return true;
+            if (isSalesAccountSearch && str.includes('sale')) return true;
+            if (isPurchAccountSearch && str.includes('purchas')) return true;
+            if (isTaxAccountSearch && (str.includes('tax') || str.includes('duty') || str.includes('gst'))) return true;
+            return false;
+        };
+
+        const processTransactionImpact = (vch) => {
+            const h = vch.header || vch;
+            const rawFormId = vch.formId || "JournalVoucher";
+            const formLower = rawFormId.toLowerCase();
+            const items = Array.isArray(vch.items) ? vch.items : (vch.items ? Object.values(vch.items) : []);
+
+            let dr = 0, cr = 0, displayEntityName = "";
+
+            // A. JOURNAL VOUCHER (Multi-Line Double Entry)
+            if (formLower.includes('journal')) {
+                let drLines = [];
+                let crLines = [];
+                items.forEach(it => {
+                    if (!it) return;
+                    const acct = it.account || it.offset_account || it.ledger || '';
+                    const amtDr = parseFloat(it.amount_dr || it.debit || it.dr || 0) || 0;
+                    const amtCr = parseFloat(it.amount_cr || it.credit || it.cr || 0) || 0;
+                    const lineType = String(it.type || '').toUpperCase();
+
+                    if (amtDr > 0 || lineType === 'DR') {
+                        drLines.push({ account: acct, amount: amtDr || parseFloat(it.amount || 0) });
+                    }
+                    if (amtCr > 0 || lineType === 'CR') {
+                        crLines.push({ account: acct, amount: amtCr || parseFloat(it.amount || 0) });
+                    }
+                });
+
+                // Check target on Debit side
+                drLines.forEach(d => {
+                    if (isLedgerMatch(d.account)) {
+                        dr += d.amount;
+                        displayEntityName = crLines[0]?.account || "Journal Credit Entry";
+                    }
+                });
+
+                // Check target on Credit side
+                crLines.forEach(c => {
+                    if (isLedgerMatch(c.account)) {
+                        cr += c.amount;
+                        displayEntityName = drLines[0]?.account || "Journal Debit Entry";
+                    }
+                });
+
+                if (dr > 0 || cr > 0) {
+                    return { dr, cr, displayEntityName, h, rawFormId };
+                }
+            }
+
+            // Calculate Item Math & Totals
+            let itemSubtotal = 0; 
+            let taxTotal = parseFloat(h.taxTotal || 0) || 0;
+            if (items.length > 0) {
+                items.forEach(i => {
+                    const qty = parseFloat(i.qty) || 1;
+                    const rate = parseFloat(i.rate) || parseFloat(i.amount) || 0;
+                    itemSubtotal += (qty * rate);
+                    const taxPrc = parseFloat(i.auto_item_name_ItemTax) || parseFloat(i.taxRate) || 0;
+                    if (!h.taxTotal) taxTotal += (qty * rate) * (taxPrc / 100);
+                });
+            }
+            
+            const grandTotal = parseFloat(h.grandTotal) || parseFloat(h.amount) || parseFloat(h.total) || 
+                              parseFloat(h.dr_amount) || parseFloat(h.cr_amount) || (itemSubtotal + taxTotal) || 0;
+
+            const getValidName = (...names) => {
+                for(let n of names) {
+                    if(n && typeof n === 'string' && n.trim() !== '' && n.trim().toLowerCase() !== 'undefined') return n.trim();
+                }
+                return "";
+            };
+
+            const partyField = getValidName(h.customer_ledger, h.supplier_ledger, h.entity, h.party_account, h.gl_account) || "Party Ledger";
+            const bankField = getValidName(h.bank_account, h.debitLedger, h.creditLedger, h.gl_account) || "Bank / Cash Account";
+
+            // B. SALES TAX INVOICE
+            if (formLower.includes('sale') && !formLower.includes('return') && !formLower.includes('creditnote')) {
+                if (isLedgerMatch(partyField)) {
+                    dr = grandTotal;
+                    displayEntityName = "Sales Account";
+                } else if (isLedgerMatch("Sales Account") || isSalesAccountSearch) {
+                    cr = grandTotal - taxTotal;
+                    displayEntityName = partyField;
+                } else if (isTaxAccountSearch && taxTotal > 0) {
+                    cr = taxTotal;
+                    displayEntityName = partyField;
+                }
+            }
+            // C. PURCHASE VOUCHER
+            else if (formLower.includes('purchase') && !formLower.includes('return') && !formLower.includes('debitnote')) {
+                if (isLedgerMatch(partyField)) {
+                    cr = grandTotal;
+                    displayEntityName = "Purchase Account";
+                } else if (isLedgerMatch("Purchase Account") || isPurchAccountSearch) {
+                    dr = grandTotal - taxTotal;
+                    displayEntityName = partyField;
+                } else if (isTaxAccountSearch && taxTotal > 0) {
+                    dr = taxTotal;
+                    displayEntityName = partyField;
+                }
+            }
+            // D. SALES RETURN / CREDIT NOTE
+            else if (formLower.includes('salesreturn') || formLower.includes('creditnote')) {
+                if (isLedgerMatch(partyField)) {
+                    cr = grandTotal;
+                    displayEntityName = "Sales Return Account";
+                } else if (isLedgerMatch("Sales Return Account") || isSalesAccountSearch) {
+                    dr = grandTotal;
+                    displayEntityName = partyField;
+                }
+            }
+            // E. PURCHASE RETURN / DEBIT NOTE
+            else if (formLower.includes('purchasereturn') || formLower.includes('debitnote')) {
+                if (isLedgerMatch(partyField)) {
+                    dr = grandTotal;
+                    displayEntityName = "Purchase Return Account";
+                } else if (isLedgerMatch("Purchase Return Account") || isPurchAccountSearch) {
+                    cr = grandTotal;
+                    displayEntityName = partyField;
+                }
+            }
+            // F. RECEIPT VOUCHER (Bank Debited, Customer/Income Credited)
+            else if (formLower.includes('receipt') && !formLower.includes('pay')) {
+                if (isLedgerMatch(bankField)) {
+                    dr = grandTotal;
+                    displayEntityName = partyField;
+                } else if (isLedgerMatch(partyField)) {
+                    cr = grandTotal;
+                    displayEntityName = bankField;
+                }
+            }
+            // G. PAYMENT VOUCHER (Bank Credited, Vendor/Expense Debited)
+            else if (formLower.includes('payment')) {
+                if (isLedgerMatch(bankField)) {
+                    cr = grandTotal;
+                    displayEntityName = partyField;
+                } else if (isLedgerMatch(partyField)) {
+                    dr = grandTotal;
+                    displayEntityName = bankField;
+                }
+            }
+            // H. CONTRA / RECEIPT-PAY MOVEMENT
+            else if (formLower.includes('receiptpay')) {
+                const docType = (h.documentType || '').toUpperCase();
+                if (docType === 'RECEIPT') {
+                    if (isLedgerMatch(bankField)) { dr = grandTotal; displayEntityName = partyField; }
+                    else if (isLedgerMatch(partyField)) { cr = grandTotal; displayEntityName = bankField; }
+                } else {
+                    if (isLedgerMatch(bankField)) { cr = grandTotal; displayEntityName = partyField; }
+                    else if (isLedgerMatch(partyField)) { dr = grandTotal; displayEntityName = bankField; }
+                }
+            }
+            // I. GENERIC DOUBLE ENTRY & FAILSAFE
+            else {
+                if (isLedgerMatch(h.debitLedger)) {
+                    dr = grandTotal;
+                    displayEntityName = h.creditLedger || "Offsetting Entry";
+                } else if (isLedgerMatch(h.creditLedger)) {
+                    cr = grandTotal;
+                    displayEntityName = h.debitLedger || "Offsetting Entry";
+                } else if (isLedgerMatch(partyField)) {
+                    dr = grandTotal;
+                    displayEntityName = "General Ledger Entry";
+                }
+            }
+
+            return { dr, cr, displayEntityName: displayEntityName || "Offsetting Account", h, rawFormId };
+        };
+
+        // --- 5. PROCESS TRANSACTIONS WITH OPENING BALANCE & DATE RANGE ---
+        const isGranular = document.getElementById('glGranularToggle')?.checked || false;
+        const targetComp = (document.getElementById('targetCompany')?.value || '').trim().toLowerCase();
+        const sDocNo = (document.getElementById('glSearchDocNo')?.value || '').trim().toLowerCase();
+        const sEntity = (document.getElementById('glSearchEntity')?.value || '').trim().toLowerCase();
+        const sProject = (document.getElementById('glSearchProject')?.value || '').trim().toLowerCase();
+        const sDocType = (document.getElementById('glSearchDocType')?.value || '').trim().toUpperCase();
+        const sNarration = (document.getElementById('glSearchNarration')?.value || '').trim().toLowerCase();
+        const sMinAmt = parseFloat(document.getElementById('glSearchMinAmount')?.value) || null;
+        const sMaxAmt = parseFloat(document.getElementById('glSearchMaxAmount')?.value) || null;
+        const sDrCr = (document.getElementById('glSearchDrCr')?.value || '').trim().toUpperCase();
+
+        let runningBalance = openingBalance;
+        let periodTransactions = [];
+        let totalMatchedOutOfRange = 0;
+
+        allTransactions.forEach(vch => {
+            const h = vch.header || vch || {};
+            const vchPostingDate = h.posting_date || vch.posting_date || h.date || vch.date || h.voucher_date || vch.voucher_date || (h.posted_at ? new Date(h.posted_at).toISOString().split('T')[0] : '') || new Date().toISOString().split('T')[0];
+            const vchDocDate = h.voucher_date || h.date || vchPostingDate;
+
+            // Company Filter (if company specified)
+            if (targetComp) {
+                const vchComp = String(h.CompanyCode || h.companyName || '').toLowerCase();
+                if (vchComp && !vchComp.includes(targetComp)) return;
+            }
+
+            const impact = processTransactionImpact(vch);
+            if (impact.dr === 0 && impact.cr === 0) return;
+
+            // Granular Filter
+            if (isGranular) {
+                const docNo = String(h.doc_no || h.supplier_bill_no || h.Invoice || h.paymentRef || '').toLowerCase();
+                if (sDocNo && !docNo.includes(sDocNo)) return;
+
+                const ent = String(impact.displayEntityName || h.entity || '').toLowerCase();
+                if (sEntity && !ent.includes(sEntity)) return;
+
+                const proj = String(h.project || '').toLowerCase();
+                if (sProject && !proj.includes(sProject)) return;
+
+                if (sDocType) {
+                    const docType = String(h.documentType || vch.documentType || impact.rawFormId || '').toUpperCase();
+                    if (!docType.includes(sDocType)) return;
+                }
+
+                const narr = String(h.narration || '').toLowerCase();
+                if (sNarration && !narr.includes(sNarration)) return;
+
+                const txnAmt = impact.dr > 0 ? impact.dr : impact.cr;
+                if (sMinAmt !== null && txnAmt < sMinAmt) return;
+                if (sMaxAmt !== null && txnAmt > sMaxAmt) return;
+
+                if (sDrCr === 'DR' && impact.dr === 0) return;
+                if (sDrCr === 'CR' && impact.cr === 0) return;
+            }
+
+            if (fromDate && vchPostingDate < fromDate) {
+                totalMatchedOutOfRange++;
+                if (openingBalanceType === 'Dr') {
+                    runningBalance += (impact.dr - impact.cr);
+                } else {
+                    runningBalance += (impact.cr - impact.dr);
+                }
+            } else if (toDate && vchPostingDate > toDate) {
+                totalMatchedOutOfRange++;
+            } else {
+                periodTransactions.push({ vch, impact, postingDate: vchPostingDate, docDate: vchDocDate });
+            }
+        });
+
+        // --- 6. RENDER TABLE ---
+        tbody.innerHTML = '';
+        if (periodTransactions.length === 0 && openingBalance === 0) {
+            let outOfRangeHint = '';
+            if (totalMatchedOutOfRange > 0) {
+                outOfRangeHint = `<div class="mt-2 text-dark"><span class="badge bg-warning text-dark me-2">${totalMatchedOutOfRange} transactions found outside current date filter</span><button type="button" class="btn btn-sm btn-outline-primary fw-bold" onclick="clearGlDateFilters()"><i class="bi bi-calendar-x me-1"></i>Clear Date Filter & View All</button></div>`;
+            }
+            tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5"><div class="fw-bold text-secondary mb-1">No transactions found for: ${resolvedLedgerName}</div><div class="text-muted small">Verify statement period: ${fromDate || 'Beginning'} to ${toDate || 'Present'}</div>${outOfRangeHint}</td></tr>`;
+            document.getElementById('statementSummary').style.display = 'none';
+            return;
+        }
+
+        let totalDr = 0, totalCr = 0;
+        let serialNumber = 1; 
+        const formatMoney = (val) => (val === 0 || !val ? '-' : Utils.FormatINR(val));
+
+        // --- 7. RENDER OPENING BALANCE ROW ---
+        if (openingBalance !== 0 || runningBalance !== 0) {
+            const trOb = document.createElement('tr');
+            trOb.className = "fw-bold text-primary bg-light";
+            trOb.innerHTML = `
+                <td class="ps-3 text-center">-</td>
+                <td></td><td></td><td></td><td></td>
+                <td class="text-end">OPENING BALANCE</td>
+                <td class="text-end text-danger">${openingBalanceType === 'Dr' ? formatMoney(Math.abs(runningBalance)) : '-'}</td>
+                <td class="text-end text-success">${openingBalanceType === 'Cr' ? formatMoney(Math.abs(runningBalance)) : '-'}</td>
+                <td class="text-end fw-bold font-mono">${Utils.FormatINR(Math.abs(runningBalance))} <small class="text-muted ms-1">${openingBalanceType}</small></td>
+                <td class="no-print screen-only"></td>
+            `;
+            tbody.appendChild(trOb);
+        }
+
+        // --- 8. RENDER PERIOD TRANSACTIONS ---
+        periodTransactions.forEach(({vch, impact, postingDate, docDate}) => {
+            runningBalance += (impact.dr - impact.cr);
+            totalDr += impact.dr;
+            totalCr += impact.cr;
+
+            const balType = runningBalance >= 0 ? 'Dr' : 'Cr';
+            const balString = `${Utils.FormatINR(Math.abs(runningBalance))} <small class="text-muted ms-1">${balType}</small>`;
+            const finalEntityName = ledgerMap[impact.displayEntityName.toLowerCase()] || impact.displayEntityName;
+            
+            let docPrefix = getDocPrefix(impact.rawFormId);
+
+            const tr = document.createElement('tr');
+            tr.style.cursor = 'pointer';
+            tr.title = 'Double click to edit and inspect document';
+            tr.ondblclick = function() {
+                editTransaction(vch.formId, vch.key);  
+                return false;
+            };
+            
+            tr.innerHTML = `
+                <td class="ps-3 fw-medium text-muted">${serialNumber++}</td> 
+                <td class="fw-bold text-primary font-mono">${Utils.FormatDate(postingDate)}</td>
+                <td class="fw-medium text-muted">${Utils.FormatDate(docDate)}</td>
+                <td><span class="badge border text-dark bg-transparent no-print">${docPrefix}</span><span class="d-none d-print-inline">${docPrefix}</span></td>
+                <td class="fw-bold font-mono">${impact.h.doc_no || impact.h.supplier_bill_no || impact.h.invoice_no || impact.h.paymentRef || 'N/A'}</td>
+                <td><div class="fw-bold text-dark">${finalEntityName.toUpperCase()}</div><div class="text-muted small">${impact.h.narration || ''}</div></td>
+                <td class="text-end font-mono">${formatMoney(impact.dr)}</td>
+                <td class="text-end font-mono">${formatMoney(impact.cr)}</td>
+                <td class="text-end fw-bold font-mono">${balString}</td>
+                <td class="text-end pe-3 no-print screen-only">
+                    <div class="dropdown">
+                        <button class="btn btn-erp-icon border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Actions">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="font-size: 0.9rem;">
+                            <li>
+                                <a class="dropdown-item py-2 fw-medium" href="#" onclick="editTransaction('${vch.formId}', '${vch.key}'); return false;">
+                                    <i class="bi bi-pencil-square text-primary me-2"></i> Edit Document
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2 fw-medium" href="#" onclick="window.printTransaction('${vch.formId}', '${vch.key}'); return false;">
+                                    <i class="bi bi-printer text-dark me-2"></i> Print / Save PDF
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item py-2 fw-medium text-danger" href="#" onclick="deleteTransaction('${vch.formId}', '${vch.key}'); return false;">
+                                    <i class="bi bi-trash text-danger me-2"></i> Delete
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // --- 9. RENDER GRAND TOTAL & UI ---
+        const finalBalType = runningBalance >= 0 ? 'Dr' : 'Cr';
+        const grandTotalRow = document.createElement('tr');
+        grandTotalRow.className = "table-active border-top border-dark fw-bold no-print";
+        grandTotalRow.innerHTML = `
+            <td colspan="6" class="text-end ps-4 text-uppercase">Total Period Activity</td> 
+            <td class="text-end font-mono">${Utils.FormatINR(totalDr)}</td>
+            <td class="text-end font-mono">${Utils.FormatINR(totalCr)}</td>
+            <td class="text-end font-mono" colspan="2">CLOSING: ${Utils.FormatINR(Math.abs(runningBalance))} ${finalBalType}</td>
+        `;
+        tbody.appendChild(grandTotalRow);
+
+        // --- 10. UPDATE SUMMARY ---
+        document.getElementById('statementSummary').style.display = 'flex';
+        document.getElementById('statDebit').innerText = `₹ ${Utils.FormatINR(totalDr)} DR`;
+        document.getElementById('statCredit').innerText = `₹ ${Utils.FormatINR(totalCr)} CR`;
+        document.getElementById('statClosing').innerHTML = `₹ ${Utils.FormatINR(Math.abs(runningBalance))} <span class="fs-6 opacity-75">${finalBalType}</span>`;
+
+        // --- 11. UPDATE PRINT HEADER ---
+        document.getElementById('print-acc-name').innerText = (resolvedLedgerName || account).toUpperCase();
+        document.getElementById('print-acc-code').innerText = resolvedLedgerCode || "N/A";
+        document.getElementById('print-period-range').innerText = `${Utils.FormatDate(fromDate || 'Beginning')} to ${Utils.FormatDate(toDate || new Date())}`;
+        document.getElementById('print-generated-date').innerText = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date()).toUpperCase();
+        document.getElementById('print-header-dr').innerText = `₹ ${Utils.FormatINR(totalDr)} DR`;
+        document.getElementById('print-header-cr').innerText = `₹ ${Utils.FormatINR(totalCr)} CR`;
+        document.getElementById('print-closing-bal').innerText = `₹ ${Utils.FormatINR(Math.abs(runningBalance))} ${finalBalType}`;
+    };
+
+    window.deleteTransaction = async function(formId, key) {
+        if(confirm("Move this transaction to the Deleted Archive?")) {
+            const success = await API.DeleteTransaction(formId, key);
+            if(success) window.generateStatement(); 
+        }
+    };
+
+    window.editTransaction = function(formId, key) {
+        const record = (typeof allTransactions !== 'undefined' && Array.isArray(allTransactions))
+            ? allTransactions.find(t => t.key === key && t.formId === formId)
+            : null;
+        localStorage.setItem('editContext', JSON.stringify({
+            type: formId,
+            key: key,
+            record: record || null,
+            returnRoute: 'reports/gl-statement'
+        }));
+        if (typeof App !== 'undefined' && App.Router) {
+            App.Router(`transactions/edit?type=${encodeURIComponent(formId)}&key=${encodeURIComponent(key)}`);
+        } else {
+            window.location.hash = `#/transactions/edit?type=${encodeURIComponent(formId)}&key=${encodeURIComponent(key)}`;
+        }
+    };
+})();
+</script>

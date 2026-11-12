@@ -1,0 +1,311 @@
+<div class="animate-in">
+    <form id="Projects" data-listattribute="project" data-category="Masters" autocomplete="off">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <!-- Header Toolbar -->
+                <div class="d-flex flex-wrap justify-content-between align-items-center p-3 border-bottom bg-light unitax-header">
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary-subtle text-primary border font-mono small">MASTER REGISTRY</span>
+                            <h5 class="fw-bold mb-0 text-dark">Profit Center & Cost Segment Setup</h5>
+                        </div>
+                        <p class="text-muted small mb-0">Multi-dimensional performance unit, budgetary governance, managerial hierarchy & cost allocation matrix</p>
+                    </div>
+                    <div class="d-flex gap-2 align-items-center mt-2 mt-md-0">
+                        <button type="button" class="btn btn-outline-secondary btn-sm fw-semibold" onclick="if(typeof App !== 'undefined' && App.Router) App.Router('masters/project-list'); else UniTaxRouter.Navigate('masters/project-list');">
+                            <i class="bi bi-arrow-left me-1"></i> Profit Center Registry
+                        </button>
+                        <button type="reset" class="btn btn-light btn-sm px-3 border text-muted">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                        </button>
+                        <button type="submit" class="btn btn-success btn-sm px-4 shadow-sm fw-bold">
+                            <i class="bi bi-check2-circle me-1"></i> Save Profit Center
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Category Navigation Pills -->
+                <div class="bg-white px-3 pt-3 border-bottom">
+                    <ul class="nav nav-pills nav-fill gap-2 pb-3" id="profitCenterTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active fw-bold small py-2 border text-start" id="tab-core-btn" data-bs-toggle="pill" data-bs-target="#pc-tab-core" type="button" role="tab">
+                                <i class="bi bi-diagram-3 me-2 text-primary"></i>1. Core Identification & Hierarchy
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link fw-bold small py-2 border text-start" id="tab-mgmt-btn" data-bs-toggle="pill" data-bs-target="#pc-tab-mgmt" type="button" role="tab">
+                                <i class="bi bi-person-badge me-2 text-success"></i>2. Management & Governance
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link fw-bold small py-2 border text-start" id="tab-fin-btn" data-bs-toggle="pill" data-bs-target="#pc-tab-fin" type="button" role="tab">
+                                <i class="bi bi-graph-up-arrow me-2 text-warning"></i>3. Financial Targets & Budgeting
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link fw-bold small py-2 border text-start" id="tab-rules-btn" data-bs-toggle="pill" data-bs-target="#pc-tab-rules" type="button" role="tab">
+                                <i class="bi bi-gear-wide-connected me-2 text-info"></i>4. Accounting Rules & Lifecycle
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Tabbed Category Content -->
+                <div class="p-4 bg-light">
+                    <div class="tab-content" id="profitCenterTabContent">
+
+                        <!-- TAB 1: CORE IDENTIFICATION & HIERARCHY -->
+                        <div class="tab-pane fade show active" id="pc-tab-core" role="tabpanel">
+                            <div class="card border-0 shadow-sm p-4 bg-white mb-3">
+                                <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">
+                                    <i class="bi bi-building-gear me-2"></i>Organizational Alignment & Identification
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold">Profit Center Code <span class="text-danger">*</span></label>
+                                        <input type="text" name="ProjectCode" class="form-control form-control-sm upper-case fw-bold font-mono" 
+                                               data-check-unique="true" data-sheet_name="Projects" data-column_name="ProjectCode" maxlength="12" placeholder="e.g. PC-101" required autofocus>
+                                        <div class="form-text" style="font-size: 10px;">Unique alphanumeric enterprise key</div>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label small fw-bold">Profit Center / Division Name <span class="text-danger">*</span></label>
+                                        <input type="text" name="ProjectName" class="form-control form-control-sm upper-case fw-semibold" placeholder="e.g. North Regional Retail Division" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Linked Company / Legal Entity <span class="text-danger">*</span></label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-white"><i class="bi bi-building"></i></span>
+                                            <input type="text" name="CompanyName" list="compList_proj" class="form-control" 
+                                                   data-fetch_column data-sheet_name="Companies" data-column_name="companyName & CompanyCode" placeholder="Select Company..." required>
+                                        </div>
+                                        <datalist id="compList_proj"></datalist>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Operating Business Unit</label>
+                                        <select name="BusinessUnit" class="form-select form-select-sm">
+                                            <option value="Corporate Headquarters">Corporate Headquarters</option>
+                                            <option value="Commercial Retail" selected>Commercial Retail</option>
+                                            <option value="B2B Enterprise Solutions">B2B Enterprise Solutions</option>
+                                            <option value="Digital & E-Commerce">Digital & E-Commerce</option>
+                                            <option value="Logistics & Supply Chain">Logistics & Supply Chain</option>
+                                            <option value="Manufacturing & Plant Operations">Manufacturing & Plant Operations</option>
+                                            <option value="Shared Services & HR">Shared Services & HR</option>
+                                            <option value="Research & Development (R&D)">Research & Development (R&D)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Market / Industry Sector</label>
+                                        <select name="Segment" class="form-select form-select-sm">
+                                            <option value="Commercial & Retail Trade">Commercial & Retail Trade</option>
+                                            <option value="Infrastructure & Real Estate">Infrastructure & Real Estate</option>
+                                            <option value="Technology & SaaS">Technology & SaaS</option>
+                                            <option value="Consumer Products & FMCG">Consumer Products & FMCG</option>
+                                            <option value="Healthcare & Life Sciences">Healthcare & Life Sciences</option>
+                                            <option value="Financial & Treasury Services">Financial & Treasury Services</option>
+                                            <option value="Specialty Consulting">Specialty Consulting</option>
+                                            <option value="Automotive & Industrial">Automotive & Industrial</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Parent Performance Center</label>
+                                        <input type="text" name="ParentProject" class="form-control form-control-sm" placeholder="Independent Top-Level (or Parent Code)">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <button type="button" class="btn btn-primary btn-sm px-4 fw-bold" onclick="document.getElementById('tab-mgmt-btn').click();">
+                                    Next: Management & Governance <i class="bi bi-arrow-right ms-1"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- TAB 2: MANAGEMENT & GOVERNANCE -->
+                        <div class="tab-pane fade" id="pc-tab-mgmt" role="tabpanel">
+                            <div class="card border-0 shadow-sm p-4 bg-white mb-3">
+                                <h6 class="fw-bold text-success border-bottom pb-2 mb-3">
+                                    <i class="bi bi-person-check me-2"></i>Executive Leadership & Jurisdictional Scope
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Center Head / Controlling Manager</label>
+                                        <input type="text" name="ManagerName" class="form-control form-control-sm" placeholder="e.g. Rajesh Sharma / VP Operations">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Manager Official Email</label>
+                                        <input type="email" name="ManagerEmail" class="form-control form-control-sm" placeholder="manager@unitax.enterprise">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Manager Contact / Mobile</label>
+                                        <input type="text" name="ManagerPhone" class="form-control form-control-sm font-mono" placeholder="+91 98765 43210">
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Center Archetype & Responsibility</label>
+                                        <select name="CenterType" class="form-select form-select-sm">
+                                            <option value="Profit Center (Revenue & Cost)" selected>Profit Center (Revenue & Cost Responsibility)</option>
+                                            <option value="Cost Center (Expenditure Tracking Only)">Cost Center (Expenditure Tracking Only)</option>
+                                            <option value="Investment Center (ROIC & Capital Focus)">Investment Center (ROIC & Capital Focus)</option>
+                                            <option value="Revenue Center (Sales & Inflow Focus)">Revenue Center (Sales & Inflow Focus)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label small fw-bold">Physical Facility / City / Operating Hub</label>
+                                        <input type="text" name="Location" class="form-control form-control-sm" placeholder="e.g. DLF Cyber City, Sector 25, Gurugram">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold">Applicable GSTIN / State ID</label>
+                                        <input type="text" name="GSTIN" class="form-control form-control-sm font-mono upper-case" maxlength="15" placeholder="15-digit GSTIN">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <button type="button" class="btn btn-outline-secondary btn-sm px-3" onclick="document.getElementById('tab-core-btn').click();">
+                                    <i class="bi bi-arrow-left me-1"></i> Back to Core
+                                </button>
+                                <button type="button" class="btn btn-primary btn-sm px-4 fw-bold" onclick="document.getElementById('tab-fin-btn').click();">
+                                    Next: Financial Targets <i class="bi bi-arrow-right ms-1"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- TAB 3: FINANCIAL TARGETS & BUDGETING -->
+                        <div class="tab-pane fade" id="pc-tab-fin" role="tabpanel">
+                            <div class="card border-0 shadow-sm p-4 bg-white mb-3">
+                                <h6 class="fw-bold text-warning border-bottom pb-2 mb-3">
+                                    <i class="bi bi-cash-stack me-2"></i>Budget Allocation & Commercial Benchmarks
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Annual Gross Revenue Target (₹)</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light fw-bold">₹</span>
+                                            <input type="number" name="AnnualRevenueTarget" class="form-control font-mono fw-bold" placeholder="0.00" step="any">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Annual Operating Budget Cap (₹)</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-light fw-bold">₹</span>
+                                            <input type="number" name="AnnualBudgetCap" class="form-control font-mono fw-bold text-danger" placeholder="0.00" step="any">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Minimum Operating Margin (%)</label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" name="TargetMarginPct" class="form-control font-mono" placeholder="e.g. 22" step="0.1" max="100">
+                                            <span class="input-group-text bg-light">%</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Functional Currency</label>
+                                        <select name="Currency" class="form-select form-select-sm">
+                                            <option value="INR" selected>INR - Indian Rupee (₹)</option>
+                                            <option value="USD">USD - US Dollar ($)</option>
+                                            <option value="EUR">EUR - Euro (€)</option>
+                                            <option value="GBP">GBP - British Pound (£)</option>
+                                            <option value="AED">AED - UAE Dirham</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Overhead Allocation Basis</label>
+                                        <select name="AllocationBase" class="form-select form-select-sm">
+                                            <option value="Direct Headcount Proportion" selected>Direct Headcount Proportion</option>
+                                            <option value="Physical Floor Area / Sq. Ft.">Physical Floor Area / Sq. Ft.</option>
+                                            <option value="Revenue Generation Ratio">Revenue Generation Ratio</option>
+                                            <option value="Activity-Based Costing (ABC)">Activity-Based Costing (ABC)</option>
+                                            <option value="Equal Fixed Split">Equal Fixed Split</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Variance Warning Threshold</label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" name="VarianceThreshold" class="form-control font-mono" value="10" step="1">
+                                            <span class="input-group-text bg-light">%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <button type="button" class="btn btn-outline-secondary btn-sm px-3" onclick="document.getElementById('tab-mgmt-btn').click();">
+                                    <i class="bi bi-arrow-left me-1"></i> Back to Management
+                                </button>
+                                <button type="button" class="btn btn-primary btn-sm px-4 fw-bold" onclick="document.getElementById('tab-rules-btn').click();">
+                                    Next: Accounting Rules <i class="bi bi-arrow-right ms-1"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- TAB 4: ACCOUNTING RULES & LIFECYCLE -->
+                        <div class="tab-pane fade" id="pc-tab-rules" role="tabpanel">
+                            <div class="card border-0 shadow-sm p-4 bg-white mb-3">
+                                <h6 class="fw-bold text-info border-bottom pb-2 mb-3">
+                                    <i class="bi bi-journal-check me-2"></i>Ledger Posting & Audit Lifecycle
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Default Bank / Settlement Ledger</label>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text bg-white"><i class="bi bi-bank"></i></span>
+                                            <input type="text" name="DefaultBankLedger" list="ledgerList_proj" class="form-control" 
+                                                   data-fetch_column data-sheet_name="Ledgers" data-column_name="ledgerName & AccountCode" placeholder="Default Bank / Cash Account...">
+                                        </div>
+                                        <datalist id="ledgerList_proj"></datalist>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold">Effective Activation Date</label>
+                                        <input type="date" name="EffectiveDate" class="form-control form-control-sm font-mono">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold">Sunset / Review Date</label>
+                                        <input type="date" name="SunsetDate" class="form-control form-control-sm font-mono">
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Center Operational Status</label>
+                                        <select name="Status" class="form-select form-select-sm fw-bold">
+                                            <option value="ACTIVE" selected class="text-success">ACTIVE (Fully Operational)</option>
+                                            <option value="UNDER_REVIEW" class="text-warning">UNDER REVIEW (Pending Audit)</option>
+                                            <option value="SUSPENDED" class="text-danger">SUSPENDED (Posting Blocked)</option>
+                                            <option value="DECOMMISSIONED" class="text-muted">DECOMMISSIONED (Historical Only)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Mandatory Voucher Line Tagging</label>
+                                        <select name="RequireTagging" class="form-select form-select-sm">
+                                            <option value="Yes" selected>Yes - Enforce on all vouchers under this company</option>
+                                            <option value="No">No - Optional allocation</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">MCA Rule 3(1) Audit Flag</label>
+                                        <div class="form-control form-control-sm bg-light d-flex align-items-center justify-content-between">
+                                            <span class="small text-muted font-mono">Continuous Audit Logging</span>
+                                            <span class="badge bg-success-subtle text-success border">MANDATED</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold">Operational Charter & Strategic Scope</label>
+                                        <textarea name="Narration" class="form-control form-control-sm" rows="3" placeholder="Provide executive overview of operations, division objectives, and financial governance mandate..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <button type="button" class="btn btn-outline-secondary btn-sm px-3" onclick="document.getElementById('tab-fin-btn').click();">
+                                    <i class="bi bi-arrow-left me-1"></i> Back to Financials
+                                </button>
+                                <button type="submit" class="btn btn-success btn-sm px-4 fw-bold shadow-sm">
+                                    <i class="bi bi-check2-circle me-1"></i> Save Profit Center
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>

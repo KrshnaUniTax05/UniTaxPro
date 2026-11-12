@@ -1,0 +1,640 @@
+<div class="animate-in">
+    <div class="card border-0 shadow-sm overflow-hidden mb-4 erp-card">
+        <!-- Master Enterprise Header -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center p-3 border-bottom bg-light sticky-top z-10 unitax-header">
+            <div>
+                <h5 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-gear-wide-connected text-primary me-2"></i>Workspace & Enterprise Settings
+                </h5>
+                <p class="text-muted small mb-0">Configure company statutory identity, banking details, invoice print templates, fiscal posting window, and view platform updates</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="App.Router('dashboard')">
+                    <i class="bi bi-x-lg me-1"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-primary btn-sm px-3 fw-bold shadow-sm" onclick="document.getElementById('settingsSaveTrigger').click()">
+                    <i class="bi bi-check2 me-1"></i> Save Changes
+                </button>
+            </div>
+        </div>
+
+        <div class="d-flex flex-column flex-md-row flex-grow-1" style="min-height: 0;">
+            <!-- Left Navigation Sidebar -->
+            <aside class="border-end bg-light p-3" style="width: 260px; min-width: 260px;">
+                <div class="text-muted small fw-bold text-uppercase mb-2" style="font-size: 11px; letter-spacing: 0.05em;">Configuration Sections</div>
+                <div class="list-group list-group-flush gap-1" id="settingsTabs">
+                    <button type="button" class="list-group-item list-group-item-action active rounded-2 border-0 small py-2 fw-semibold" data-target="company-profile">
+                        <i class="bi bi-building me-2 text-primary"></i> Company Profile
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action rounded-2 border-0 small py-2 fw-semibold" data-target="banking-settings">
+                        <i class="bi bi-bank me-2 text-primary"></i> Banking Details
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action rounded-2 border-0 small py-2 fw-semibold" data-target="posting-controls">
+                        <i class="bi bi-calendar2-range me-2 text-primary"></i> Fiscal Posting Window
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action rounded-2 border-0 small py-2 fw-semibold" data-target="print-settings">
+                        <i class="bi bi-printer me-2 text-primary"></i> Print & Vouchers
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action rounded-2 border-0 small py-2 fw-semibold" data-target="system-prefs">
+                        <i class="bi bi-sliders me-2 text-primary"></i> Preferences & Display
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action rounded-2 border-0 small py-2 fw-semibold" data-target="updates">
+                        <i class="bi bi-megaphone me-2 text-primary"></i> Updates & Notices <span class="badge bg-primary text-white rounded-pill ms-auto small" id="settingsUpdCount">0</span>
+                    </button>
+                </div>
+
+                <div class="mt-4 p-3 border rounded-2 bg-white small">
+                    <div class="text-muted fw-bold" style="font-size: 10px;">WORKSPACE PROFILE</div>
+                    <div class="font-mono fw-bold text-primary small text-truncate" id="setWsDisplay">#WS-LOADING</div>
+                    <div class="text-muted mt-1" style="font-size: 10px;">Currency: <strong>INR (₹)</strong></div>
+                </div>
+            </aside>
+
+            <!-- Main Content Form -->
+            <main class="flex-grow-1 p-4 bg-white overflow-y-auto" style="min-height: 0;">
+                <form id="settingsForm" class="nosubmit">
+                    <!-- 1. COMPANY PROFILE -->
+                    <div id="company-profile" class="settings-section active">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-building text-primary me-2"></i>Company Statutory Profile</h6>
+                            <span class="badge bg-primary-subtle text-primary border small font-mono">Invoice Identity</span>
+                        </div>
+                        <p class="text-muted small mb-4">Manage the business entity name, legal addresses, and tax identifiers printed on customer vouchers.</p>
+
+                        <div class="card border rounded-3 p-4 bg-light-subtle mb-4 shadow-sm">
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-0">Document Header Override</h6>
+                                    <small class="text-muted">Enable to override default company details on printed vouchers and reports.</small>
+                                </div>
+                                <div class="form-check form-switch fs-5">
+                                    <input class="form-check-input section-toggle" type="checkbox" name="enableCompanyInfo" data-target="companyFields" style="cursor: pointer;">
+                                </div>
+                            </div>
+
+                            <div id="companyFields" class="collapsible-fields">
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold">Legal Entity / Trade Name</label>
+                                        <input type="text" class="form-control form-control-sm fw-semibold" name="companyName" placeholder="e.g. NEXUS LEDGER SOLUTIONS PVT LTD">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">GSTIN (15 Digits)</label>
+                                        <input type="text" class="form-control form-control-sm font-mono text-uppercase" name="companyGST" placeholder="22AAAAA0000A1Z5" maxlength="15">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Permanent Account Number (PAN)</label>
+                                        <input type="text" class="form-control form-control-sm font-mono text-uppercase" name="companyPAN" placeholder="ABCDE1234F" maxlength="10">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold">Registered Business Address</label>
+                                        <textarea class="form-control form-control-sm" name="companyAddress" rows="3" placeholder="Suite 402, Financial Tech Park, Cyber City..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. BANKING DETAILS -->
+                    <div id="banking-settings" class="settings-section d-none">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-bank text-primary me-2"></i>Default Banking & Payment Destination</h6>
+                            <span class="badge bg-success-subtle text-success border small font-mono">Invoice Settlement</span>
+                        </div>
+                        <p class="text-muted small mb-4">Configure receiving bank account details and UPI identifier printed on Tax Invoices for customer remittances.</p>
+
+                        <div class="card border rounded-3 p-4 bg-light-subtle mb-4 shadow-sm">
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-0">Show Bank Details on Invoices</h6>
+                                    <small class="text-muted">When enabled, bank name, account number, IFSC code, and UPI ID are formatted on tax invoices.</small>
+                                </div>
+                                <div class="form-check form-switch fs-5">
+                                    <input class="form-check-input section-toggle" type="checkbox" name="enableBankingInfo" data-target="bankingFields" style="cursor: pointer;">
+                                </div>
+                            </div>
+
+                            <div id="bankingFields" class="collapsible-fields">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Bank Name</label>
+                                        <input type="text" class="form-control form-control-sm" name="bankName" placeholder="e.g. HDFC Bank Ltd">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Branch Name</label>
+                                        <input type="text" class="form-control form-control-sm" name="bankBranch" placeholder="e.g. Cyber City Branch">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Account Name (Beneficiary)</label>
+                                        <input type="text" class="form-control form-control-sm" name="bankAccountName" placeholder="e.g. NEXUS LEDGER SOLUTIONS PVT LTD">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Account Number</label>
+                                        <input type="text" class="form-control form-control-sm font-mono" name="bankAccountNumber" placeholder="50200012345678">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">IFSC Code</label>
+                                        <input type="text" class="form-control form-control-sm font-mono text-uppercase" name="bankIFSC" placeholder="HDFC0001234">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">UPI ID (VPA)</label>
+                                        <input type="text" class="form-control form-control-sm font-mono" name="upiid" placeholder="companyname@hdfcbank">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. FISCAL POSTING WINDOW  -->
+                    <div id="posting-controls" class="settings-section d-none">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-calendar2-range text-primary me-2"></i>Fiscal Posting Period Status </h6>
+                            <span class="badge bg-danger-subtle text-danger border small font-mono">Posting Gate</span>
+                        </div>
+                        <p class="text-muted small mb-4">Current open posting boundary enforced across all users and modules by your User Administrator.</p>
+
+                        <div class="card border rounded-3 p-4 bg-light-subtle mb-4 shadow-sm">
+                            <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
+                                <div class="bg-danger text-white p-3 rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; flex-shrink: 0;">
+                                    <i class="bi bi-lock-fill fs-5"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="fw-bold text-dark mb-0" id="setPostingStatusHeader">Active Posting Period: Loading...</h6>
+                                    <p class="text-muted small mb-0" id="setPostingStatusDesc">All vouchers saved across Sales, Purchases, Bank, and Journal modules must fall within this date range.</p>
+                                </div>
+                                <span class="badge bg-success-subtle text-success border px-3 py-2 font-mono" id="setPostingStatusBadge">Open</span>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted">Period Start Date (From)</label>
+                                    <input type="text" class="form-control form-control-sm font-mono bg-light" id="setDisplayPeriodFrom" readonly value="2026-04-01">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted">Period End Date (To)</label>
+                                    <input type="text" class="form-control form-control-sm font-mono bg-light" id="setDisplayPeriodTo" readonly value="2027-03-31">
+                                </div>
+                            </div>
+
+                            <div class="mt-3 p-2 bg-light border rounded small text-muted">
+                                <i class="bi bi-info-circle me-1"></i>To modify the global open posting window, navigate to <strong>Utilities &gt; User Admin Control Panel &gt; Global Posting Period</strong> (Administrator authority required).
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. PRINT SETTINGS -->
+                    <div id="print-settings" class="settings-section d-none">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-printer text-primary me-2"></i>Print & Voucher Layout Controls</h6>
+                            <span class="badge bg-info-subtle text-info border small font-mono">Invoice Generation</span>
+                        </div>
+                        <p class="text-muted small mb-4">Customize automated statutory declarations, signatory blocks, and terms printed on vouchers.</p>
+
+                        <!-- Terms & Conditions -->
+                        <div class="card border rounded-3 p-4 bg-light-subtle mb-3 shadow-sm">
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-0">Standard Terms & Conditions</h6>
+                                    <small class="text-muted">Print customized business terms and payment conditions on invoice footers.</small>
+                                </div>
+                                <div class="form-check form-switch fs-5">
+                                    <input class="form-check-input section-toggle" type="checkbox" name="enableTerms" data-target="termsFields" style="cursor: pointer;">
+                                </div>
+                            </div>
+                            <div id="termsFields" class="collapsible-fields">
+                                <textarea class="form-control form-control-sm" name="invoiceTerms" rows="3" placeholder="1. Goods once sold will not be accepted back.
+2. Interest @ 18% p.a. will be charged for overdue payments.
+3. Subject to local jurisdiction."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Print Switches -->
+                        <div class="card border rounded-3 p-3 bg-light-subtle shadow-sm">
+                            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                <div>
+                                    <span class="fw-bold text-dark small d-block">Print Authorized Signatory Block</span>
+                                    <small class="text-muted">Show company name and dedicated authorized signatory signature line.</small>
+                                </div>
+                                <div class="form-check form-switch fs-5">
+                                    <input class="form-check-input" type="checkbox" name="showSignatory">
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center py-2">
+                                <div>
+                                    <span class="fw-bold text-dark small d-block">Show Grand Total in Words (English)</span>
+                                    <small class="text-muted">Automatically convert rupee amount into words on invoices (e.g. INR Fifty Thousand Only).</small>
+                                </div>
+                                <div class="form-check form-switch fs-5">
+                                    <input class="form-check-input" type="checkbox" name="showAmountInWords">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. PREFERENCES & DISPLAY -->
+                    <div id="system-prefs" class="settings-section d-none">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-sliders text-primary me-2"></i>Theme & Display Preferences</h6>
+                            <span class="badge bg-warning-subtle text-warning border small font-mono">Workspace Theme</span>
+                        </div>
+                        <p class="text-muted small mb-4">Toggle between enterprise daytime light mode and billionaire midnight dark mode.</p>
+
+                        <div class="card border rounded-3 p-4 bg-light-subtle shadow-sm">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-1">
+                                        <i class="bi bi-moon-stars text-primary me-2"></i>Midnight Dark Mode
+                                    </h6>
+                                    <p class="text-muted small mb-0">High-contrast, eye-friendly billionaire dark aesthetic optimized for high-density ERP data entry.</p>
+                                </div>
+                                <div class="form-check form-switch fs-4">
+                                    <input class="form-check-input" type="checkbox" id="darkModeToggleset" style="cursor: pointer;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 6. PLATFORM UPDATES & TAX NOTIFICATIONS -->
+                    <div id="updates" class="settings-section d-none">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-megaphone text-primary me-2"></i>Platform Releases & Statutory Tax Notices</h6>
+                            <span class="badge bg-primary-subtle text-primary border small font-mono" id="updatesLiveBadge">Live Feed</span>
+                        </div>
+                        <p class="text-muted small mb-3">Live announcements, statutory circulars, and system releases broadcast by Master Admin from <code>admin.html</code>.</p>
+
+                        <!-- Updates Filter Bar -->
+                        <div class="d-flex justify-content-between align-items-center gap-2 mb-3 p-2 bg-light border rounded-2 flex-wrap">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-primary active fw-semibold" id="filterSetAll" onclick="UpdatesEngine.filterCat('ALL')">All Updates</button>
+                                <button type="button" class="btn btn-outline-secondary fw-semibold" id="filterSetTax" onclick="UpdatesEngine.filterCat('TAX')">Tax Notifications</button>
+                                <button type="button" class="btn btn-outline-secondary fw-semibold" id="filterSetRel" onclick="UpdatesEngine.filterCat('REL')">System Releases</button>
+                            </div>
+                            <input type="text" id="setSearchUpdates" class="form-control form-control-sm" style="max-width: 240px;" placeholder="Search updates..." oninput="UpdatesEngine.search(this.value)">
+                        </div>
+
+                        <!-- Updates Feed Container -->
+                        <div class="border rounded-3 bg-white overflow-hidden shadow-sm w-100 mb-4">
+                            <table class="table table-hover align-middle mb-0 w-100" style="table-layout: fixed; width: 100% !important; min-width: 100%;">
+                                <colgroup>
+                                    <col style="width: calc(100% - 180px);">
+                                    <col style="width: 180px;">
+                                </colgroup>
+                                <thead class="table-light text-muted small">
+                                    <tr class="border-bottom">
+                                        <th class="ps-3 py-2 text-uppercase fw-bold" style="letter-spacing: 0.5px;">Update / Circular Details</th>
+                                        <th class="text-end pe-4 py-2 text-uppercase fw-bold" style="letter-spacing: 0.5px;">Published</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="updatesContainer" class="w-100">
+                                    <tr><td colspan="2" class="text-center py-4 text-muted">Loading live updates...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Hidden Submit Button -->
+                    <button type="submit" id="settingsSaveTrigger" class="d-none">Submit</button>
+                </form>
+            </main>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    // 1. Tab Switching
+    const tabButtons = document.querySelectorAll('#settingsTabs button');
+    const sections = document.querySelectorAll('.settings-section');
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabButtons.forEach(b => b.classList.remove('active'));
+            sections.forEach(s => s.classList.add('d-none'));
+            btn.classList.add('active');
+
+            const targetId = btn.getAttribute('data-target');
+            if (targetId) {
+                const targetEl = document.getElementById(targetId);
+                if (targetEl) targetEl.classList.remove('d-none');
+            }
+        });
+    });
+
+    // 2. Section Enabler Logic (Show/Hide fields + Live Dynamic localStorage & App.State Save)
+    const toggleSwitches = document.querySelectorAll('.section-toggle');
+    toggleSwitches.forEach(sw => {
+        sw.addEventListener('change', (e) => {
+            const isChecked = e.target.checked;
+            const targetId = e.target.getAttribute('data-target');
+            if (targetId) {
+                const targetDiv = document.getElementById(targetId);
+                if (targetDiv) targetDiv.style.display = isChecked ? 'block' : 'none';
+            }
+
+            try {
+                let currentSettings = {};
+                const savedRaw = localStorage.getItem('ERP_Settings');
+                if (savedRaw) currentSettings = JSON.parse(savedRaw);
+
+                const settingName = e.target.name;
+                if (settingName) {
+                    currentSettings[settingName] = isChecked;
+                    localStorage.setItem('ERP_Settings', JSON.stringify(currentSettings));
+                    if (typeof window.App !== 'undefined') {
+                        window.App.State = window.App.State || {};
+                        window.App.State.Settings = currentSettings;
+                    }
+                }
+            } catch (err) {
+                console.error("Error during live dynamic setting save:", err);
+            }
+        });
+    });
+
+    // 3. Dark Mode Binding
+    const darkModeToggle = document.getElementById('darkModeToggleset');
+    if (darkModeToggle) {
+        darkModeToggle.addEventListener('change', (e) => {
+            const isEnabled = e.target.checked;
+            try {
+                if (window.App && window.App.UI && App.UI.ToggleDarkMode) {
+                    App.UI.ToggleDarkMode(isEnabled);
+                } else {
+                    document.body.classList.toggle('dark-mode', isEnabled);
+                    localStorage.setItem('darkMode', isEnabled ? 'enabled' : 'disabled');
+                }
+            } catch (err) {
+                document.body.classList.toggle('dark-mode', isEnabled);
+                localStorage.setItem('darkMode', isEnabled ? 'enabled' : 'disabled');
+            }
+        });
+    }
+
+    const form = document.getElementById('settingsForm');
+
+    // 4. Load Data & Initialize States
+    const loadSettings = () => {
+        try {
+            const wsUserId = localStorage.getItem('workspaceUserId') || localStorage.getItem('userloginid') || '---';
+            const wsEl = document.getElementById('setWsDisplay');
+            if (wsEl) wsEl.innerText = `#${wsUserId}`;
+
+            // Load Posting Period status
+            let periodConfig = null;
+            try {
+                const cachedP = localStorage.getItem('workspacePostingPeriod');
+                if (cachedP) periodConfig = JSON.parse(cachedP);
+            } catch(e) {}
+
+            const pBadge = document.getElementById('setPostingStatusBadge');
+            const pHeader = document.getElementById('setPostingStatusHeader');
+            const pFrom = document.getElementById('setDisplayPeriodFrom');
+            const pTo = document.getElementById('setDisplayPeriodTo');
+
+            if (periodConfig && periodConfig.from && periodConfig.to) {
+                if (pFrom) pFrom.value = periodConfig.from;
+                if (pTo) pTo.value = periodConfig.to;
+                if (pHeader) pHeader.innerText = `Active Posting Window: ${periodConfig.from} to ${periodConfig.to}`;
+                if (pBadge) {
+                    pBadge.innerText = periodConfig.enforce ? 'Strict Enforced' : 'Advisory Lock';
+                    pBadge.className = periodConfig.enforce ? 'badge bg-danger-subtle text-danger border px-3 py-2 font-mono' : 'badge bg-warning-subtle text-warning border px-3 py-2 font-mono';
+                }
+            } else {
+                if (pHeader) pHeader.innerText = 'Active Posting Window: Unrestricted';
+                if (pBadge) pBadge.innerText = 'Unrestricted';
+            }
+
+            if (form) {
+                const savedRaw = localStorage.getItem('ERP_Settings');
+                if (savedRaw) {
+                    const settings = JSON.parse(savedRaw);
+                    Object.keys(settings).forEach(key => {
+                        const input = form.elements[key];
+                        if (input) {
+                            if (input.type === 'checkbox') {
+                                input.checked = settings[key];
+                                if (input.classList.contains('section-toggle')) {
+                                    const targetId = input.getAttribute('data-target');
+                                    if (targetId) {
+                                        const targetDiv = document.getElementById(targetId);
+                                        if (targetDiv) targetDiv.style.display = input.checked ? 'block' : 'none';
+                                    }
+                                }
+                            } else {
+                                input.value = settings[key];
+                            }
+                        }
+                    });
+                }
+            }
+
+            if (darkModeToggle) {
+                darkModeToggle.checked = (localStorage.getItem('darkMode') === 'enabled');
+            }
+        } catch(e) {
+            console.error("Error loading settings", e);
+        }
+    };
+
+    loadSettings();
+
+    // 5. Save Logic
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const settingsObj = {};
+
+            form.querySelectorAll('input[type="checkbox"]').forEach(chk => {
+                if (chk.id !== 'darkModeToggleset') {
+                    settingsObj[chk.name] = chk.checked;
+                }
+            });
+
+            for (let [key, value] of formData.entries()) {
+                settingsObj[key] = value;
+            }
+
+            try {
+                localStorage.setItem('ERP_Settings', JSON.stringify(settingsObj));
+                if (typeof window.App !== 'undefined') {
+                    window.App.State = window.App.State || {};
+                    window.App.State.Settings = settingsObj;
+                }
+
+                // Also sync companyName to Firebase if user is admin
+                const wsUserId = localStorage.getItem('workspaceUserId') || localStorage.getItem('userloginid');
+                if (typeof firebase !== 'undefined' && firebase.database && wsUserId && settingsObj.companyName) {
+                    firebase.database().ref(`Users/${wsUserId}/workspace/WorkspaceSettings`).update({
+                        companyName: settingsObj.companyName,
+                        gstin: settingsObj.companyGST || '',
+                        pan: settingsObj.companyPAN || '',
+                        address: settingsObj.companyAddress || ''
+                    }).catch(() => {});
+                }
+
+                if (window.App && window.App.UI && typeof window.App.UI.Notify === 'function') {
+                    window.App.UI.Notify('Success', 'Enterprise settings successfully saved.', 'success');
+                }
+            } catch (error) {
+                console.error("Settings Save Error:", error);
+                if (window.App && window.App.UI && typeof window.App.UI.Notify === 'function') {
+                    window.App.UI.Notify('Error', 'Failed to save settings.', 'danger');
+                }
+            }
+        });
+    }
+})();
+
+// =============================================================
+// UPDATES ENGINE - Synchronizing PlatformMaster/Updates & Utilities/Updates
+// =============================================================
+const UpdatesEngine = {
+    updates: [],
+    filter: 'ALL',
+    searchQuery: '',
+    openRow: null,
+
+    Init: function() {
+        const container = document.getElementById('updatesContainer');
+        if (!container) return;
+
+        this.listenForUpdates();
+    },
+
+    listenForUpdates: function() {
+        const updateMap = {};
+
+        const processSnap = (data) => {
+            if (!data) return;
+            Object.entries(data).forEach(([id, update]) => {
+                if (!update || typeof update !== 'object') return;
+                updateMap[id] = {
+                    id: id,
+                    ...update,
+                    timestamp: update.timestamp || update.createdAt || Date.now(),
+                    narration: update.narration || update.notes || 'No description provided.',
+                    author: update.updatedBy || update.author || 'Platform Master'
+                };
+            });
+            this.updates = Object.values(updateMap);
+            this.updates.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+            const badge = document.getElementById('settingsUpdCount');
+            if (badge) badge.innerText = this.updates.length;
+
+            this.render();
+        };
+
+        if (typeof firebase !== 'undefined' && firebase.database) {
+            const db = firebase.database();
+            try {
+                db.ref('Utilities/Updates').limitToLast(50).on('value', snap => processSnap(snap.val() || {}));
+            } catch(e) {}
+            try {
+                db.ref('PlatformMaster/Updates').limitToLast(50).on('value', snap => processSnap(snap.val() || {}));
+            } catch(e) {}
+        }
+    },
+
+    filterCat: function(cat) {
+        this.filter = cat;
+        ['filterSetAll', 'filterSetTax', 'filterSetRel'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.className = 'btn btn-outline-secondary fw-semibold';
+        });
+        if (cat === 'ALL') document.getElementById('filterSetAll')?.classList.add('active', 'btn-primary');
+        else if (cat === 'TAX') document.getElementById('filterSetTax')?.classList.add('active', 'btn-primary');
+        else if (cat === 'REL') document.getElementById('filterSetRel')?.classList.add('active', 'btn-primary');
+
+        this.render();
+    },
+
+    search: function(q) {
+        this.searchQuery = (q || '').toLowerCase().trim();
+        this.render();
+    },
+
+    toggleRow: function(id) {
+        const detailEl = document.getElementById(`detail_${id}`);
+        const iconEl = document.getElementById(`icon_${id}`);
+        if (!detailEl) return;
+
+        const isHidden = detailEl.classList.contains('d-none');
+        if (isHidden) {
+            detailEl.classList.remove('d-none');
+            if (iconEl) iconEl.className = 'bi bi-chevron-up text-primary';
+        } else {
+            detailEl.classList.add('d-none');
+            if (iconEl) iconEl.className = 'bi bi-chevron-down text-muted';
+        }
+    },
+
+    render: function() {
+        const container = document.getElementById('updatesContainer');
+        if (!container) return;
+
+        let filtered = this.updates;
+        if (this.filter === 'TAX') {
+            filtered = filtered.filter(u => (u.category || '').toLowerCase().includes('tax') || (u.category || '').toLowerCase().includes('compliance'));
+        } else if (this.filter === 'REL') {
+            filtered = filtered.filter(u => !(u.category || '').toLowerCase().includes('tax') && !(u.category || '').toLowerCase().includes('compliance'));
+        }
+
+        if (this.searchQuery) {
+            filtered = filtered.filter(u => {
+                const combined = `${u.title || ''} ${u.narration || ''} ${u.version || ''}`.toLowerCase();
+                return combined.includes(this.searchQuery);
+            });
+        }
+
+        if (filtered.length === 0) {
+            container.innerHTML = `
+                <tr>
+                    <td colspan="2" class="text-center py-5 text-muted">
+                        <i class="bi bi-megaphone fs-3 d-block mb-2 opacity-25"></i>
+                        <p class="small mb-0">No updates matching your active criteria.</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        container.innerHTML = filtered.map((u, idx) => {
+            const dateStr = u.timestamp ? new Date(u.timestamp).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Recent';
+            const cat = u.category || 'Tax Notification';
+            const isTax = cat.toLowerCase().includes('tax') || cat.toLowerCase().includes('compliance');
+            const badgeClass = isTax ? 'bg-success-subtle text-success border fw-bold' : 'bg-primary-subtle text-primary border fw-bold';
+            const rowId = `upd_row_${u.id || idx}`;
+
+            return `
+                <tr style="cursor: pointer;" onclick="UpdatesEngine.toggleRow('${rowId}')">
+                    <td class="ps-3 py-3" style="width: calc(100% - 180px);">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <i class="bi bi-chevron-down text-muted" id="icon_${rowId}"></i>
+                            <span class="badge ${badgeClass} small font-mono">${cat}</span>
+                            ${u.version ? `<span class="badge bg-primary text-white font-mono small">${u.version}</span>` : ''}
+                            <span class="fw-bold text-dark text-break">${u.title || 'Platform Update'}</span>
+                        </div>
+                    </td>
+                    <td class="text-end pe-4 small font-mono text-muted text-nowrap" style="width: 180px;">${dateStr}</td>
+                </tr>
+                <tr id="detail_${rowId}" class="d-none">
+                    <td colspan="2" class="p-0 border-0">
+                        <div class="p-4 bg-light border-bottom">
+                            <div class="small text-muted mb-2 font-mono">
+                                <i class="bi bi-person me-1"></i>Published by: <strong>${u.author || 'Master Platform Admin'}</strong>
+                            </div>
+                            <div class="text-dark lh-base small mb-3"  width: 100%;">
+                                ${u.narration || 'No description provided.'}
+                            </div>
+                            ${u.link ? `<a href="${u.link}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2 fw-semibold" style="font-size: 11px;"><i class="bi bi-box-arrow-up-right me-1"></i>Official Circular Link</a>` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+};
+
+UpdatesEngine.Init();
+</script>

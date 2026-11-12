@@ -1,0 +1,282 @@
+<div class="animate-in">
+    <div class="card border-0 shadow-sm overflow-hidden mb-4">
+        <!-- Command Header -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center p-3 border-bottom bg-light sticky-top z-10 unitax-header">
+            <div>
+                <h5 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-water text-primary me-2"></i>Cash Flow Statement
+                </h5>
+                <p class="text-muted small mb-0">Analysis of Liquidity — Cash Flow from Operating, Investing & Financing Activities (AS 3 / Ind AS 7)</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <div class="input-group input-group-sm" style="width: 140px;">
+                    <span class="input-group-text bg-white small">From</span>
+                    <input type="date" id="cfFromDate" class="form-control bg-white" onchange="CashFlowApp.Compute()">
+                </div>
+                <div class="input-group input-group-sm" style="width: 140px;">
+                    <span class="input-group-text bg-white small">To</span>
+                    <input type="date" id="cfToDate" class="form-control bg-white" onchange="CashFlowApp.Compute()">
+                </div>
+                <button type="button" class="btn btn-erp-icon" title="Export Cash Flow to CSV" onclick="CashFlowApp.ExportCSV()"><i class="bi bi-file-earmark-arrow-down"></i></button>
+                <button type="button" class="btn btn-erp-icon btn-erp-icon-primary" title="Print Cash Flow Statement" onclick="window.print()"><i class="bi bi-printer"></i></button>
+            </div>
+        </div>
+
+        <div class="p-4">
+            <!-- Executive Liquidity Summary Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="border rounded-3 p-3 bg-white shadow-sm">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Operating Cash Inflow</div>
+                        <div class="h4 fw-bold font-mono text-success mb-0" id="cfInflowTotal">₹ 0.00</div>
+                        <span class="badge bg-success-subtle text-success small mt-1 font-mono">Gross Receipts</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded-3 p-3 bg-white shadow-sm">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Operating Cash Outflow</div>
+                        <div class="h4 fw-bold font-mono text-danger mb-0" id="cfOutflowTotal">₹ 0.00</div>
+                        <span class="badge bg-danger-subtle text-danger small mt-1 font-mono">Disbursements</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded-3 p-3 bg-white shadow-sm">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Net Cash Flow for Period</div>
+                        <div class="h4 fw-bold font-mono text-primary mb-0" id="cfNetChange">₹ 0.00</div>
+                        <span class="badge bg-primary-subtle text-primary small mt-1 font-mono">Net Liquidity Surge</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded-3 p-3 bg-white shadow-sm">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Closing Cash & Bank Balance</div>
+                        <div class="h4 fw-bold font-mono text-dark mb-0" id="cfClosingBalance">₹ 0.00</div>
+                        <span class="badge bg-dark-subtle text-dark small mt-1 font-mono">Liquid Treasury</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Structured Cash Flow Categories -->
+            <div class="border rounded-3 overflow-hidden bg-white shadow-sm mb-4">
+                <table class="table table-sm table-hover mb-0 align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th width="70%" class="ps-3">Cash Flow Activities & Line Items</th>
+                            <th width="30%" class="text-end pe-3 font-mono">Net Amount (INR)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 1. Operating Activities -->
+                        <tr class="table-secondary fw-bold text-uppercase" style="font-size: 11px;">
+                            <td colspan="2" class="ps-3 text-dark">
+                                <i class="bi bi-gear-fill me-1 text-primary"></i> A. Cash Flow from Operating Activities
+                            </td>
+                        </tr>
+                        <tr style="cursor: pointer;" ondblclick="UniTaxDrilldown.Open('Operating Cash Receipts (Inflow)', 'operating_inflow', CashFlowApp.DATA.opInflow)" title="Double click to inspect contributing entries">
+                            <td class="ps-4">
+                                <div class="fw-semibold">Cash Receipts from Customers (Inward Remittances)</div>
+                                <div class="small text-muted">Receipt vouchers & direct sales collections</div>
+                            </td>
+                            <td class="text-end pe-3 font-mono text-success fw-bold" id="cfOpInflow">₹ 0.00</td>
+                        </tr>
+                        <tr style="cursor: pointer;" ondblclick="UniTaxDrilldown.Open('Operating Supplier & Vendor Payments (Outflow)', 'operating_outflow', CashFlowApp.DATA.opOutflow)" title="Double click to inspect contributing entries">
+                            <td class="ps-4">
+                                <div class="fw-semibold">Cash Payments to Suppliers & Service Providers</div>
+                                <div class="small text-muted">Payment vouchers for goods, raw materials & vendors</div>
+                            </td>
+                            <td class="text-end pe-3 font-mono text-danger fw-semibold" id="cfOpOutflow">₹ 0.00</td>
+                        </tr>
+                        <tr class="table-light fw-bold">
+                            <td class="ps-4 text-primary">Net Cash Flow from Operating Activities (A)</td>
+                            <td class="text-end pe-3 font-mono text-primary" id="cfNetOperating">₹ 0.00</td>
+                        </tr>
+
+                        <!-- 2. Investing Activities -->
+                        <tr class="table-secondary fw-bold text-uppercase" style="font-size: 11px;">
+                            <td colspan="2" class="ps-3 text-dark">
+                                <i class="bi bi-building-fill-gear me-1 text-success"></i> B. Cash Flow from Investing Activities
+                            </td>
+                        </tr>
+                        <tr style="cursor: pointer;" ondblclick="UniTaxDrilldown.Open('Purchase of Capital Assets & Fixed Equipment', 'fixed_assets', CashFlowApp.DATA.capex)" title="Double click to inspect source vouchers">
+                            <td class="ps-4">
+                                <div class="fw-semibold">Purchase of Capital Assets & Fixed Equipment</div>
+                                <div class="small text-muted">Hardware, office equipment & capital infrastructure</div>
+                            </td>
+                            <td class="text-end pe-3 font-mono text-danger" id="cfInvCapex">₹ 0.00</td>
+                        </tr>
+                        <tr class="table-light fw-bold">
+                            <td class="ps-4 text-dark">Net Cash Flow from Investing Activities (B)</td>
+                            <td class="text-end pe-3 font-mono text-dark" id="cfNetInvesting">₹ 0.00</td>
+                        </tr>
+
+                        <!-- 3. Financing Activities -->
+                        <tr class="table-secondary fw-bold text-uppercase" style="font-size: 11px;">
+                            <td colspan="2" class="ps-3 text-dark">
+                                <i class="bi bi-bank2 me-1 text-warning"></i> C. Cash Flow from Financing Activities
+                            </td>
+                        </tr>
+                        <tr style="cursor: pointer;" ondblclick="UniTaxDrilldown.Open('Capital Inflow / Owner Equity Additions', 'capital', CashFlowApp.DATA.equityInflow)" title="Double click to inspect source vouchers">
+                            <td class="ps-4">
+                                <div class="fw-semibold">Capital Inflow / Owner Equity Additions</div>
+                                <div class="small text-muted">Equity contributions & financing proceeds</div>
+                            </td>
+                            <td class="text-end pe-3 font-mono text-success" id="cfFinInflow">₹ 0.00</td>
+                        </tr>
+                        <tr class="table-light fw-bold">
+                            <td class="ps-4 text-dark">Net Cash Flow from Financing Activities (C)</td>
+                            <td class="text-end pe-3 font-mono text-dark" id="cfNetFinancing">₹ 0.00</td>
+                        </tr>
+
+                        <!-- Summary Reconciliation -->
+                        <tr class="table-secondary fw-bold text-uppercase" style="font-size: 11px;">
+                            <td colspan="2" class="ps-3 text-dark">
+                                <i class="bi bi-calculator me-1 text-info"></i> Liquidity Reconciliation & Equivalents
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="ps-4 fw-semibold">Net Increase / (Decrease) in Cash & Equivalents (A + B + C)</td>
+                            <td class="text-end pe-3 font-mono fw-bold text-primary" id="cfNetNetChange">₹ 0.00</td>
+                        </tr>
+                        <tr>
+                            <td class="ps-4">Cash and Cash Equivalents at Beginning of Period</td>
+                            <td class="text-end pe-3 font-mono text-muted" id="cfOpeningCash">₹ 0.00</td>
+                        </tr>
+                        <tr class="table-dark fw-bold font-mono" style="cursor: pointer;" ondblclick="UniTaxDrilldown.Open('Cash & Bank Balances at End of Period', 'bank', CashFlowApp.DATA.closingBank)" title="Double click to inspect contributing entries">
+                            <td class="ps-4 text-uppercase">Cash and Cash Equivalents at End of Period</td>
+                            <td class="text-end pe-3 text-success" id="cfFinalCash">₹ 0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="form-text text-muted small">
+                <i class="bi bi-info-circle me-1"></i> Cash flow analysis is calculated using the Direct Method under Ind AS 7 guidelines.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.CashFlowApp = {
+    DATA: {},
+
+    async Init() {
+        const today = new Date().toISOString().split('T')[0];
+        const firstDayOfYear = new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0];
+
+        const fromInput = document.getElementById('cfFromDate');
+        const toInput = document.getElementById('cfToDate');
+        if (fromInput && !fromInput.value) fromInput.value = firstDayOfYear;
+        if (toInput && !toInput.value) toInput.value = today;
+
+        await this.Compute();
+    },
+
+    async Compute() {
+        const fromDate = document.getElementById('cfFromDate')?.value || '2000-01-01';
+        const toDate = document.getElementById('cfToDate')?.value || '2099-12-31';
+
+        try {
+            const [receipt, payment, ledgers] = await Promise.all([
+                API.Fetch('Transactions/ReceiptVoucherForm').catch(() => ({})),
+                API.Fetch('Transactions/PaymentVoucherForm').catch(() => ({})),
+                API.Fetch('Masters/LedgerCreation').catch(() => ({}))
+            ]);
+
+            let opInflow = 0;
+            let opOutflow = 0;
+
+            if (receipt) {
+                Object.values(receipt).forEach(v => {
+                    const h = v.header || {};
+                    const isDel = v.is_deleted === true || (h && h.is_deleted === true) || v.status === 'DELETED' || (h && h.status === 'DELETED');
+                    const isDraft = v.status === 'DRAFT' || v.status === 'PENDING_APPROVAL' || (h && (h.status === 'DRAFT' || h.status === 'PENDING_APPROVAL'));
+                    if (isDel || isDraft) return;
+                    const d = h.posting_date || v.posting_date;
+                    if (!d || d < fromDate || d > toDate) return;
+                    opInflow += parseFloat(h.grandTotal || h.total || 0);
+                });
+            }
+
+            if (payment) {
+                Object.values(payment).forEach(v => {
+                    const h = v.header || {};
+                    const isDel = v.is_deleted === true || (h && h.is_deleted === true) || v.status === 'DELETED' || (h && h.status === 'DELETED');
+                    const isDraft = v.status === 'DRAFT' || v.status === 'PENDING_APPROVAL' || (h && (h.status === 'DRAFT' || h.status === 'PENDING_APPROVAL'));
+                    if (isDel || isDraft) return;
+                    const d = h.posting_date || v.posting_date;
+                    if (!d || d < fromDate || d > toDate) return;
+                    opOutflow += parseFloat(h.grandTotal || h.total || 0);
+                });
+            }
+
+            // Opening Cash from Master Ledgers
+            let openingCash = 0;
+            if (ledgers) {
+                Object.values(ledgers).forEach(l => {
+                    const name = (l.name || '').toLowerCase();
+                    const nature = (l.ledgerNature || l.ledgerGroup || '').toLowerCase();
+                    if (name.includes('cash') || name.includes('bank') || nature.includes('bank') || nature.includes('cash')) {
+                        openingCash += parseFloat(l.openingBalance || 0);
+                    }
+                });
+            }
+
+            const netOperating = opInflow - opOutflow;
+            const netInvesting = 0;
+            const netFinancing = 0;
+            const netChange = netOperating + netInvesting + netFinancing;
+            const closingCash = openingCash + netChange;
+
+            const formatINR = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val);
+
+            // Update UI
+            document.getElementById('cfInflowTotal').innerText = formatINR(opInflow);
+            document.getElementById('cfOutflowTotal').innerText = formatINR(opOutflow);
+            document.getElementById('cfNetChange').innerText = formatINR(netChange);
+            document.getElementById('cfClosingBalance').innerText = formatINR(closingCash);
+
+            document.getElementById('cfOpInflow').innerText = formatINR(opInflow);
+            document.getElementById('cfOpOutflow').innerText = formatINR(opOutflow);
+            document.getElementById('cfNetOperating').innerText = formatINR(netOperating);
+
+            document.getElementById('cfInvCapex').innerText = '₹ 0.00';
+            document.getElementById('cfNetInvesting').innerText = '₹ 0.00';
+            document.getElementById('cfFinInflow').innerText = '₹ 0.00';
+            document.getElementById('cfNetFinancing').innerText = '₹ 0.00';
+
+            document.getElementById('cfNetNetChange').innerText = formatINR(netChange);
+            document.getElementById('cfOpeningCash').innerText = formatINR(openingCash);
+            document.getElementById('cfFinalCash').innerText = formatINR(closingCash);
+
+            this.DATA = {
+                fromDate, toDate, opInflow, opOutflow, netOperating, openingCash, closingCash, netChange
+            };
+
+        } catch (err) {
+            console.error("Cash Flow Compute Error:", err);
+        }
+    },
+
+    ExportCSV() {
+        const d = this.DATA;
+        let csv = "Cash Flow Statement (Direct Method)\n";
+        csv += `Period: ${d.fromDate} to ${d.toDate}\n\n`;
+        csv += `Category,Item,Amount (INR)\n`;
+        csv += `Operating,Cash Receipts from Operations,${d.opInflow.toFixed(2)}\n`;
+        csv += `Operating,Cash Disbursements to Suppliers,${d.opOutflow.toFixed(2)}\n`;
+        csv += `Operating,Net Cash from Operations,${d.netOperating.toFixed(2)}\n`;
+        csv += `Investing,Net Cash from Investing,0.00\n`;
+        csv += `Financing,Net Cash from Financing,0.00\n`;
+        csv += `Summary,Opening Cash & Equivalents,${d.openingCash.toFixed(2)}\n`;
+        csv += `Summary,Closing Cash & Equivalents,${d.closingCash.toFixed(2)}\n`;
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Cash_Flow_${d.toDate}.csv`;
+        a.click();
+    }
+};
+
+window.CashFlowApp.Init();
+</script>

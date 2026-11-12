@@ -1,0 +1,1445 @@
+/**
+ * UNITAX PRO - Enterprise CSS Framework
+ * Design System: Modern ERP (High Density, Minimalist)
+ */
+
+ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+:root {
+    /* Color Palette - Refined for better contrast and modern feel */
+    --primary-color: #4f46e5;
+    --primary-dark: #4f46e5;
+    --primary-bg-subtle: #eff5ff;
+    
+    --sidebar-bg: #111827;
+    --sidebar-hover: #1f2937;
+    
+    --bg-light: #f8fafc;
+    --bg-surface: #ffffff;
+    
+    --border-color: #e2e8f0;
+    --header: #EAEFEF;
+    --border-strong: #cbd5e1;
+    
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    
+    /* Shadows & Transitions */
+    --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+    --focus-ring: 0 0 0 3px rgba(13, 110, 253, 0.25);
+    --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 1. Global Resets & Typography */
+*, *::before, *::after { box-sizing: border-box; }
+
+
+
+.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+.dropdown-item:active {
+    background-color: var(--bg-surface) !important;
+    color: var(--primary-bg-subtle) !important;
+}
+
+.btn-primary{
+    background-color: var(--primary-color) !important;
+
+}
+html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+body {
+    font-family: var(--font-sans);
+    font-size: var(--font-size-base);
+    font-weight: 400;
+    letter-spacing: -0.006em;
+    color: var(--text-main);
+    background-color: var(--bg-light);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    margin: 0;
+    line-height: var(--line-height-base);
+    font-feature-settings: "cv02" 1, "cv03" 1, "cv04" 1, "tnum" 1;
+}
+
+::selection { background: rgba(0, 82, 234, 0.18); }
+
+/* Unified heading / control scale */
+h1, .h1 { font-size: var(--font-size-3xl); line-height: var(--line-height-tight); font-weight: var(--font-weight-extrabold); letter-spacing: -0.02em; color: var(--text-main); }
+h2, .h2 { font-size: var(--font-size-2xl); line-height: var(--line-height-tight); font-weight: var(--font-weight-bold); letter-spacing: -0.018em; color: var(--text-main); }
+h3, .h3 { font-size: var(--font-size-xl); line-height: var(--line-height-tight); font-weight: var(--font-weight-semibold); letter-spacing: -0.012em; color: var(--text-main); }
+h4, .h4 { font-size: var(--font-size-lg); line-height: var(--line-height-base); font-weight: var(--font-weight-semibold); letter-spacing: -0.008em; color: var(--text-main); }
+h5, .h5, h6, .h6 { font-size: var(--font-size-base); line-height: var(--line-height-base); font-weight: var(--font-weight-semibold); letter-spacing: -0.006em; color: var(--text-main); }
+p { font-size: var(--font-size-base); line-height: var(--line-height-base); }
+.small, small { font-size: var(--font-size-sm) !important; }
+.font-mono { font-family: var(--font-mono) !important; font-size: 0.95em; }
+
+label, .form-label { font-size: var(--font-size-md); line-height: var(--line-height-base); }
+.form-control, .form-select, .input-group-text { font-family: var(--font-sans); font-size: var(--font-size-md); line-height: var(--line-height-base); }
+.form-control:focus, .form-select:focus { font-size: var(--font-size-md); }
+.btn { font-family: var(--font-sans); font-size: var(--font-size-base); line-height: var(--line-height-base); font-weight: var(--font-weight-semibold); letter-spacing: -0.004em; }
+.btn-sm { font-size: var(--font-size-sm); }
+.btn-lg { font-size: var(--font-size-lg); }
+.table { font-size: var(--font-size-md); }
+.table thead th { font-size: var(--font-size-sm); }
+.badge { letter-spacing: 0.01em; }
+.form-text, .help-block, .text-body-secondary { font-size: var(--font-size-xs); line-height: var(--line-height-base); }
+
+/* Enterprise type-scale utilities (replace ad-hoc px sizes) */
+.fs-2xs { font-size: var(--font-size-2xs) !important; }
+.fs-xs  { font-size: var(--font-size-xs) !important; }
+.fs-sm  { font-size: var(--font-size-sm) !important; }
+.fs-md  { font-size: var(--font-size-md) !important; }
+.fs-base{ font-size: var(--font-size-base) !important; }
+.fs-lg  { font-size: var(--font-size-lg) !important; }
+.fs-xl  { font-size: var(--font-size-xl) !important; }
+.fs-2xl { font-size: var(--font-size-2xl) !important; }
+.fs-3xl { font-size: var(--font-size-3xl) !important; }
+.fs-4xl { font-size: var(--font-size-4xl) !important; }
+.lh-tight { line-height: var(--line-height-tight) !important; }
+.lh-base-set { line-height: var(--line-height-base) !important; }
+.lh-relaxed { line-height: var(--line-height-relaxed) !important; }
+.tnum { font-feature-settings: "tnum" 1, "cv02" 1; font-variant-numeric: tabular-nums; }
+
+/* Elegant Scrollbars */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+*::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* 2. Professional Loader Overlay */
+.loader-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.3s ease;
+}
+
+/* 3. ERP Layout Engine */
+.main-wrapper {
+    display: flex;
+    width: 100%;
+    height: calc(100dvh - var(--topbar-height, 56px));
+    height: calc(100vh - var(--topbar-height, 56px));
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    position: relative;
+    background-color: var(--bg-light, #f8fafc);
+}
+
+.sidebar-desktop {
+    width: 280px;
+    min-width: 280px;
+    max-width: 280px;
+    background: #0f172a;
+    color: #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    flex-shrink: 0;
+    border-right: 1px solid #1e293b;
+    z-index: 1020;
+}
+
+.content-viewport {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden !important;
+    background-color: var(--bg-light, #f8fafc);
+    min-width: 0;
+    min-height: 0;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.content-viewport #main-content,
+#main-content {
+    flex: 1 1 auto;
+    display: block;
+    height: 100%;
+    max-height: 100%;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 0;
+    box-sizing: border-box;
+    background-color: var(--bg-light, #f8fafc);
+    min-height: 0;
+    min-width: 0;
+    width: 100% !important;
+    scrollbar-gutter: auto;
+    overscroll-behavior: contain;
+}
+#main-content > * {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+#systemLogging{
+
+    max-height: 150px;
+    min-height: 150px;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+
+.gstr-master-table td{
+        color: var(--text-muted) !important;
+    }
+    .gstr-master-table .badge{
+        /* color: var(--text-muted) !important; */
+        color: var(--text-muted) !important;
+        padding: 0px !important;
+        background: none !important;
+    }
+
+
+/* 4. Sidebar (Offcanvas) */
+.offcanvas {
+    width: 280px !important;
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid #1f2937;
+    color: white !important;
+}
+
+.offcanvas-body { scrollbar-width: none;  }
+
+.offcanvas h6{
+    color: white !important;
+}
+
+.offcanvas .nav-item button {
+    display: flex; align-items: center; justify-content: center;
+    margin: 0; border-radius: 0; border: none; padding: 0; background: transparent;
+}
+
+.offcanvas .nav-link {
+    color: #9ca3af !important;
+    padding: 0.75rem 1rem; border-radius: 6px; margin: 0.25rem 0.75rem;
+    display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 500;
+    transition: var(--transition); 
+}
+
+.offcanvas .nav-link:hover { background-color: var(--sidebar-hover); color: white !important; }
+.offcanvas .nav-link.active { color: white !important; background-color: var(--primary-color) !important; }
+.offcanvas .nav-link i { font-size: 1.1rem; width: 28px; text-align: center; }
+
+/* 5. Professional Accounting Tables */
+.table-wrapper {
+    border: 1px solid var(--border-color); border-radius: 8px; overflow: scroll;
+}
+
+.table-sm { font-size: 0.8125rem; margin-bottom: 0; }
+
+.table thead th {
+    background-color: #f8fafc; text-transform: uppercase; font-size: 0.7rem; font-weight: 600;
+    letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 1px solid var(--border-strong);
+    padding: 10px 12px; position: sticky; top: 0; z-index: 10;
+}
+
+.table tbody td {
+    padding: 10px 12px; vertical-align: middle; border-bottom: 1px solid var(--border-color); color: var(--text-main);
+}
+
+.card .print-table-container {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 195px) !important;
+    width: 100% !important;
+    min-width: 100% !important;
+}
+
+/* Multiple dropdown menu selectors - Force dropdown above everything */
+.dropdown-menu,
+.dropdown-menu.show,
+.dropdown-menu-end,
+.dropdown-menu-start {
+    position: absolute !important;
+    z-index: 9999 !important;
+    will-change: transform, opacity; /* Performance optimization */
+}
+
+/* Ensure dropdown container has proper stacking context */
+.dropdown {
+    position: relative !important;
+    z-index: 9998 !important;
+}
+
+/* Ensure standard cards and card-bodies behave cleanly */
+.card {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-surface);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1rem;
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+/* The rest of the content (scrollable) */
+.scrollable-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background: #fff;
+}
+
+
+/* Ensure table doesn't clip dropdown */
+.table {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Ensure table headers are below dropdown */
+.table th,
+.table thead th,
+.table thead tr {
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Force dropdown to render above tables */
+.dropdown-menu.show {
+    display: block !important;
+    z-index: 9999 !important;
+    position: absolute !important;
+    transform: translateZ(0) !important; /* Force GPU layer */
+}
+
+/* logger section */
+
+/* Custom class to control visibility */
+.dropdown-menu.show-custom {
+    display: block !important;
+}
+
+#taskSection{
+    min-height:30%;
+    max-height:30%;
+    overflow-y:auto;
+}
+
+/* Chrome, Edge, Safari */
+#taskSection::-webkit-scrollbar{
+    width:8px;
+}
+
+#taskSection::-webkit-scrollbar-track{
+    background:transparent;
+}
+
+#taskSection::-webkit-scrollbar-thumb{
+    background:transparent;
+    border-radius:20px;
+}
+
+#taskSection:hover::-webkit-scrollbar-thumb{
+    background:rgba(0,0,0,.25);
+}
+
+#taskSection::-webkit-scrollbar-thumb:hover{
+    background:rgba(0,0,0,.45);
+}
+
+/* Firefox */
+#taskSection{
+    scrollbar-width:thin;
+    scrollbar-color:transparent transparent;
+}
+
+#taskSection:hover{
+    scrollbar-color:rgba(0,0,0,.25) transparent;
+}
+
+#taskTableBody td{
+    border-bottom:1px solid var(--border-strong);
+}
+
+#taskSection .card{
+    border:none!important;
+    box-shadow:none;
+}
+
+
+
+/* i display */
+
+.table-hover tbody tr { transition: background-color 0.15s ease; }
+.table-hover tbody tr:hover { background-color: var(--primary-bg-subtle) !important; cursor: pointer; }
+
+/* 6. Form Styling */
+.form-control-sm, .form-select-sm {
+    border-radius: 6px; border: 1px solid var(--border-strong);
+    padding: 0.35rem 0.75rem; font-size: 0.875rem; background-color: var(--bg-surface); color: var(--text-main);
+}
+/* Remove shadows during validation focus states */
+.form-control.is-valid:focus, 
+.form-select.is-valid:focus,
+.form-control.is-invalid:focus, 
+.form-control,
+.form-select.is-invalid:focus {
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Ensure Dark Mode validation focus states also remain flat */
+body.dark-mode .form-control.is-valid:focus, 
+body.dark-mode .form-select.is-valid:focus,
+body.dark-mode .form-control.is-invalid:focus, 
+body.dark-mode .form-select.is-invalid:focus {
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+label.form-label {
+    font-weight: 600; font-size: 0.8125rem; color: var(--text-main); margin-bottom: 0.25rem;
+}
+
+/* 7. Components & Widgets */
+.card {
+    border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-surface);
+    box-shadow: var(--card-shadow); transition: var(--transition);
+}
+.badge-xs {
+    font-size: 0.65rem; font-weight: 600; padding: 0.25em 0.6em; border-radius: 4px; text-transform: uppercase;
+}
+
+.bi {
+    display: inline-block !important;
+    vertical-align: middle;
+}
+body.dark-mode .border-bottom,
+body.dark-mode .border { 
+    border-color: var(--border-color) !important;
+}
+/* --- 8. DARK MODE SYSTEM (Heavily updated for Contrast Fixes) --- */
+body.dark-mode {
+    --bg-light: #0b1121;       /* Deepest Slate for main background */
+    --bg-surface: #1e293b;     /* Lighter Slate for Cards to create depth */
+    --text-main: #f8fafc;      /* Crisp White for main text */
+    --text-muted: #94a3b8;     /* Light Grey for labels */
+    --border-color: #334155;   /* Subtle borders */
+    --border-strong: #475569;
+    --primary-bg-subtle: rgba(13, 110, 253, 0.15);
+    background-color: var(--bg-light);
+    color: var(--text-main);
+}
+
+/* Forcing Backgrounds on Cards (Fixes the white 'Tasks' box and Quick Actions) */
+body.dark-mode .card,
+body.dark-mode .navbar,
+body.dark-mode .bento-grid,
+body.dark-mode .unitax-exec-os,
+body.dark-mode .bento-card,
+body.dark-mode .tbl-reconcile ,
+body.dark-mode .left-info-bar,
+body.dark-mode .modal-content,
+body.dark-mode .list-group-item {
+    background-color: var(--bg-surface) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-main) !important;
+}
+
+/* Forcing Text Colors in Cards (Fixes the invisible Metric numbers) */
+body.dark-mode .card h1,
+body.dark-mode .card h2,
+body.dark-mode .card h3,
+body.dark-mode .card h4,
+body.dark-mode .card h5,
+body.dark-mode .card h6,
+body.dark-mode .card .display-4,
+body.dark-mode .card .display-5 {
+    color: var(--text-main) !important;
+}
+body.dark-mode .bento-card , 
+body.dark-mode .bento-card .card-label, 
+body.dark-mode .bento-card ,
+body.dark-mode .bento-card .text-muted {
+    
+    border-color: var(--border-color) !important;
+    color: var(--text-muted) !important;
+}
+body.dark-mode .bento-card .kpi-value {
+    color: #f2f2f2;
+}
+
+body.dark-mode .text-muted,
+body.dark-mode .card-subtitle {
+    color: var(--text-muted) !important;
+}
+
+/* ============================================
+   UNIVERSAL DARK MODE TABLE FIX
+   Works with: .table, .table-striped, .table-hover, and any custom tables
+   ============================================ */
+
+/* Base Dark Mode Table Styles */
+body.dark-mode .table,
+body.dark-mode .table-striped,
+body.dark-mode .table-bordered,
+body.dark-mode .table-hover,
+body.dark-mode table:not([class*="bg-"]) {
+    color: var(--text-main);
+    background-color: transparent !important;
+}
+
+/* Remove ALL background colors from table elements */
+body.dark-mode .table *,
+body.dark-mode .table-striped *,
+body.dark-mode .table-bordered *,
+body.dark-mode .table-hover *,
+body.dark-mode table:not([class*="bg-"]) * {
+    background-color: transparent !important;
+}
+
+/* Table Header (thead) */
+body.dark-mode .table thead th,
+body.dark-mode .table-striped thead th,
+body.dark-mode .table-bordered thead th,
+body.dark-mode .table-hover thead th,
+body.dark-mode table:not([class*="bg-"]) thead th {
+    background-color: #151e2e !important;
+    color: #cbd5e1 !important;
+    border-bottom: 2px solid var(--border-strong) !important;
+}
+
+/* Table Body Rows & Cells */
+body.dark-mode .table tbody tr,
+body.dark-mode .table-striped tbody tr,
+body.dark-mode .table-bordered tbody tr,
+body.dark-mode .table-hover tbody tr,
+body.dark-mode table:not([class*="bg-"]) tbody tr {
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+body.dark-mode .table tbody td,
+body.dark-mode .table-striped tbody td,
+body.dark-mode .table-bordered tbody td,
+body.dark-mode .table-hover tbody td,
+body.dark-mode table:not([class*="bg-"]) tbody td {
+    color: var(--text-main) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+/* ===== STRIPED TABLE FIX (Most Important) ===== */
+/* Override Bootstrap's .table-striped > tbody > tr:nth-of-type(odd) */
+body.dark-mode .table-striped > tbody > tr:nth-of-type(odd),
+body.dark-mode .table-striped > tbody > tr:nth-of-type(odd) > *,
+body.dark-mode .table-striped tbody tr:nth-child(odd),
+body.dark-mode .table-striped tbody tr:nth-child(odd) td {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Even rows in striped tables - keep transparent */
+body.dark-mode .table-striped > tbody > tr:nth-of-type(even),
+body.dark-mode .table-striped > tbody > tr:nth-of-type(even) > *,
+body.dark-mode .table-striped tbody tr:nth-child(even),
+body.dark-mode .table-striped tbody tr:nth-child(even) td {
+    background-color: transparent !important;
+}
+
+/* ===== HOVER EFFECT ===== */
+/* Hover on regular tables */
+body.dark-mode .table-hover tbody tr:hover,
+body.dark-mode .table-hover tbody tr:hover td,
+body.dark-mode .table-hover tbody tr:hover th {
+    background-color: var(--primary-bg-subtle) !important;
+}
+
+/* Hover on striped tables (override Bootstrap's default) */
+body.dark-mode .table-striped.table-hover tbody tr:hover,
+body.dark-mode .table-striped.table-hover tbody tr:hover td,
+body.dark-mode .table-striped.table-hover tbody tr:hover th {
+    background-color: var(--primary-bg-subtle) !important;
+}
+
+/* ===== BORDERED TABLES ===== */
+body.dark-mode .table-bordered,
+body.dark-mode .table-bordered td,
+body.dark-mode .table-bordered th {
+    border: 1px solid var(--border-color) !important;
+}
+
+/* ===== ACTIVE/PRIMARY ROWS ===== */
+body.dark-mode .table .table-active,
+body.dark-mode .table .table-primary,
+body.dark-mode .table-striped .table-active,
+body.dark-mode .table-striped .table-primary {
+    background-color: var(--primary-bg-subtle) !important;
+}
+
+/* ===== DROPDOWNS INSIDE TABLES ===== */
+body.dark-mode .table .dropdown-menu,
+body.dark-mode .table-striped .dropdown-menu {
+    background-color: var(--bg-surface) !important;
+    border-color: var(--border-color) !important;
+    /* z-index: 9999 !important; */
+}
+
+/* ===== BADGES & BUTTONS INSIDE TABLES ===== */
+body.dark-mode .table .badge,
+body.dark-mode .table-striped .badge {
+    background-color: var(--bg-elevated) !important;
+    color: var(--text-main) !important;
+}
+
+body.dark-mode .table .btn,
+body.dark-mode .table-striped .btn {
+    background-color: var(--bg-elevated) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-main) !important;
+}
+
+/* body.dark-mode .table .btn:hover,
+body.dark-mode .table-striped .btn:hover {
+    background-color: var(--primary-bg-subtle) !important;
+} */
+
+/* Billionaire-tier Dark Mode Buttons with High Semantic Contrast */
+body.dark-mode .btn-primary {
+    background-color: #2563eb !important;
+    border-color: #3b82f6 !important;
+    color: #ffffff !important;
+}
+body.dark-mode .btn-primary:hover {
+    background-color: #1d4ed8 !important;
+    border-color: #60a5fa !important;
+}
+body.dark-mode .btn-success {
+    background-color: #059669 !important;
+    border-color: #10b981 !important;
+    color: #ffffff !important;
+}
+body.dark-mode .btn-success:hover {
+    background-color: #047857 !important;
+}
+body.dark-mode .btn-danger {
+    background-color: #dc2626 !important;
+    border-color: #ef4444 !important;
+    color: #ffffff !important;
+}
+body.dark-mode .btn-white,
+body.dark-mode .btn-outline-secondary {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #cbd5e1 !important;
+}
+body.dark-mode .btn-white:hover,
+body.dark-mode .btn-outline-secondary:hover {
+    background-color: #334155 !important;
+    color: #ffffff !important;
+}
+body.dark-mode .viewport-footer-breadcrumb {
+    background-color: #0f172a !important;
+    border-top-color: #1e293b !important;
+}
+body.dark-mode .viewport-footer-breadcrumb .breadcrumb-item a,
+body.dark-mode .viewport-footer-breadcrumb .breadcrumb-item {
+    color: #94a3b8 !important;
+}
+body.dark-mode .viewport-footer-breadcrumb .breadcrumb-item.active {
+    color: #60a5fa !important;
+}
+body.dark-mode #greeting .card{
+    background-color: var(--primary-dark) !important;
+}
+
+body.dark-mode .dropdown-item,
+body.dark-mode .dropdown-menu{
+    color: #fff !important;
+    background-color: var(--sidebar-hover);
+}
+body.dark-mode .dropdown-item:hover{
+    background-color: var(--sidebar-bg) !important;
+}
+
+/* Inputs & Form Fields */
+body.dark-mode .form-control,
+body.dark-mode .form-select,
+body.dark-mode .input-group-text {
+    background-color: #0b1121 !important;
+    border-color: var(--border-strong) !important;
+    color: var(--text-main) !important;
+}
+/* CORRECTED: Notice the space before ::placeholder */
+body.dark-mode ::placeholder {
+    color: var(--text-muted) !important; /* Muted slate grey (e.g., #94a3b8) */
+    opacity: 1; /* CRITICAL: Firefox automatically fades placeholders, this overrides it */
+}
+
+/* If you want to be extra safe and target ONLY form inputs */
+body.dark-mode .form-control::placeholder,
+body.dark-mode .form-select::placeholder {
+    color: #94a3b8 !important; 
+    opacity: 1; 
+}
+body.dark-mode .form-control:focus { border-color: var(--primary-color) !important; box-shadow: var(--focus-ring); }
+
+/* Utility Overrides for Dark Mode */
+body.dark-mode .text-dark { color: #f8fafc !important; }
+body.dark-mode .bg-light,
+body.dark-mode .bg-white { background-color: var(--bg-surface) !important; }
+body.dark-mode .sticky-top { background-color: var(--bg-surface) !important; z-index: 1020; }
+
+
+/* 9. Utility Classes */
+.font-monospace { font-family: var(--font-mono) !important; font-size: 0.875em; }
+.grow { flex-grow: 1; }
+.hidden { display: none !important; }
+
+/* Custom Modal Animation */
+#customModalOverlay:not(.hidden) { display: flex; animation: fadeIn 0.15s ease-out forwards; }
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+
+/* Mobile Responsive Tweaks */
+@media (max-width: 991px) {
+    /* .left-info-bar { display: none; } */
+    .content-viewport { width: 100%; padding: 0px 1rem; }
+}
+
+/* --- Professional Bottom Notification Bar --- */
+.error-notification-bar {
+    position: fixed;
+    bottom: -60px; /* Hidden below the screen initially */
+    left: 0;
+    width: 100%;
+    height: auto;
+    display: flex;
+    align-items: center;
+    padding: 0 30px;
+    z-index: 10000; /* Highest priority layer */
+    font-size: 14px;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Slide Up Animation */
+.error-notification-bar.slide-up {
+    transform: translateY(-60px); /* Moves up into view */
+}
+
+/* Slide Down Animation */
+.error-notification-bar.slide-down {
+    transform: translateY(60px); /* Moves back down */
+}
+
+/* SAP-Style Color Overrides */
+.error-notification-bar.bg-success { background-color: #10b981 !important; }
+.error-notification-bar.bg-danger { background-color: #ef4444 !important; }
+.error-notification-bar.bg-warning { background-color: #f59e0b !important; color: #000 !important; }
+.error-notification-bar.bg-info { background-color: #3b82f6 !important; }
+
+/* Content Spacing */
+.notify-content {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#notificationList li .dropdown-item {
+    overflow: hidden;         /* Clips content that breaks the box */
+    text-overflow: ellipsis;  /* Adds '...' if text is too long */
+    white-space: normal;      /* Allows wrapping while respecting bounds */
+    /* background-color: #10b981; */
+    
+}
+.notification-items{
+    padding: 1px 0;
+    /* min-height: 90px */
+}
+
+#realUser{
+    font-size: 9px !important;
+}
+
+#notificationList{
+    margin: 5px 0;
+    padding: 0px 5px;
+    overflow-y: auto !important;
+    max-height: 280px;
+    min-height: auto;
+}
+
+.notification-anchor-item {
+    transition: background-color 0.15s ease, opacity 0.15s ease;
+    border-radius: 6px;
+    margin-bottom: 2px;
+    height: 72px;
+    min-height: 72px;
+    max-height: 72px;
+    overflow: hidden;
+    display: block;
+}
+.notification-anchor-item:hover {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+.access-denied-page {
+    margin: -10px;
+    width: calc(100% + 20px);
+    height: calc(100% + 20px);
+    min-height: 320px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    border-radius: 0;
+}
+
+/* Header bell: red emphasis appears ONLY when unread items exist */
+#notificationDropdown.is-unread {
+    background-color: #fef2f2 !important;
+    border-color: #fecaca !important;
+    box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.25), 0 1px 2px rgba(239, 68, 68, 0.12);
+}
+#notificationDropdown.is-unread i {
+    animation: notif-bell-shake 1.4s ease-in-out infinite;
+    transform-origin: top center;
+}
+@keyframes notif-bell-shake {
+    0%, 88%, 100% { transform: rotate(0deg); }
+    90% { transform: rotate(18deg); }
+    92% { transform: rotate(-16deg); }
+    94% { transform: rotate(12deg); }
+    96% { transform: rotate(-10deg); }
+    98% { transform: rotate(6deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+    #notificationDropdown.is-unread i { animation: none; }
+}
+.notification-anchor-subtitle {
+    font-size: 11px;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: normal;
+}
+
+.brand{
+    line-height: 1;
+}
+
+@media (max-width: 767px) {
+    /* Ensure the Right Side flex container doesn't push the brand */
+    .navbar .container-fluid {
+        flex-wrap: nowrap !important;
+    }
+
+    /* Force the right-side icons to vanish, leaving only user-profile */
+    .search-box, 
+    .dropdown:has(#notificationDropdown) {
+        display: none !important;
+    }
+
+    /* Optional: If you want to force the brand name to stay on mobile */
+    .brand {
+        white-space: nowrap;
+    }
+}
+
+/* Fix for the User Profile dropdown position on mobile */
+.dropdown-menu-end {
+    right: 0 !important;
+    left: auto !important;
+}
+/* Extra small devices (iPhone SE/Mini) */
+@media (max-width: 575px) {
+    .card-body { padding: 1rem !important; }
+    
+    .table td, .table th {
+        font-size: 12px !important;
+        padding: 8px 4px !important;
+    }
+    
+    /* Shrink the Broadcast action buttons on very small screens */
+    .btn-xs {
+        padding: 0.2rem 0.4rem !important;
+        font-size: 10px !important;
+    }
+}
+
+/* Fix for Dark Mode specific mobile issues */
+body.dark-mode .navbar-collapse {
+    background: #1e1e1e !important;
+    border-top-color: #3c3c3c !important;
+}
+
+/* ==========================================================================
+   MASTER ENTERPRISE DESIGN SYSTEM (SAP / ZOHO / ORACLE TIER)
+   ========================================================================== */
+
+/* Universal Form & Viewport Containers */
+.erp-module-wrapper,
+.gl-statement-wrapper,
+.unitax-exec-os,
+.unitax-reconcile-os,
+.inventory-return-wrapper,
+.gstr1-wrapper,
+.main-task-manager {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-height: 0;
+    box-sizing: border-box;
+}
+
+/* About Us Viewport Architecture */
+.about-us-wrapper,
+.about-us-container {
+    width: 100% !important;
+    max-width: 1200px !important;
+    margin: 0 auto !important;
+    display: block !important;
+    flex: none !important;
+    min-height: auto !important;
+    height: auto !important;
+    box-sizing: border-box;
+    padding-bottom: 3.5rem !important;
+}
+
+.icon-box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+}
+
+.hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+}
+
+.erp-card,
+.main-card-wrapper,
+.card:not(.stat-box):not(.bento-card):not(.modal .card):not(.card-body .card) {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.erp-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.erp-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+/* Command Header */
+.unitax-header, .erp-page-header {
+    background: #ffffff !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    padding: 0.85rem 1.25rem !important;
+}
+
+.unitax-header h5, .erp-page-header h5 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+}
+
+.erp-doc-badge {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.55rem;
+    border-radius: 4px;
+}
+
+/* Form Controls & Inputs */
+.form-label {
+    font-size: 0.775rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+}
+
+.form-control-sm, .form-select-sm {
+    height: 33px;
+    border-radius: 6px;
+    border: 1px solid var(--border-strong);
+    padding: 0.35rem 0.65rem;
+    font-size: 0.8125rem;
+    color: var(--text-primary);
+    background-color: #ffffff;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-control-sm:focus, .form-select-sm:focus {
+    border-color: var(--brand-primary);
+    box-shadow: var(--focus-ring);
+    outline: none;
+}
+
+.form-control-sm[readonly], .form-select-sm:disabled {
+    background-color: #f8fafc;
+    color: #475569;
+    cursor: default;
+}
+
+/* Compulsory Posting Date Accent */
+.posting-date-field {
+    border-left: 3px solid var(--brand-primary) !important;
+    background: #f0f7ff !important;
+    font-weight: 600;
+}
+
+.posting-date-label {
+    color: var(--brand-primary) !important;
+    font-weight: 700 !important;
+}
+
+/* Line Item Tables & Accounting Grids */
+.table-erp, #salesItemTable, #PurchaseItemTable, #paymentTable, #receiptTable, #rpTable, #salesReturnItemTable, #purchaseReturnItemTable, #glTable {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table-erp thead th, 
+#salesItemTable thead th, 
+#PurchaseItemTable thead th, 
+#paymentTable thead th, 
+#receiptTable thead th, 
+#rpTable thead th, 
+#salesReturnItemTable thead th, 
+#purchaseReturnItemTable thead th,
+#glTable thead th {
+    background: #0f172a !important;
+    color: #f8fafc !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    padding: 0.6rem 0.75rem !important;
+    border: none !important;
+    vertical-align: middle;
+}
+
+.table-erp tbody td, 
+#salesItemTable tbody td, 
+#PurchaseItemTable tbody td, 
+#paymentTable tbody td, 
+#receiptTable tbody td, 
+#rpTable tbody td, 
+#salesReturnItemTable tbody td, 
+#purchaseReturnItemTable tbody td,
+#glTable tbody td {
+    padding: 0.45rem 0.65rem;
+    font-size: 0.8125rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.table-erp tbody tr:hover,
+#salesItemTable tbody tr:hover, 
+#PurchaseItemTable tbody tr:hover, 
+#paymentTable tbody tr:hover, 
+#receiptTable tbody tr:hover, 
+#rpTable tbody tr:hover, 
+#salesReturnItemTable tbody tr:hover, 
+#purchaseReturnItemTable tbody tr:hover,
+#glTable tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+/* Totals Box */
+.erp-totals-box {
+    background: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1rem 1.25rem;
+}
+
+.erp-grand-total {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--brand-primary);
+    font-family: var(--font-mono);
+}
+
+/* Master Buttons */
+.btn-erp-primary, .btn-primary {
+    background-color: var(--brand-primary) !important;
+    border-color: var(--brand-primary) !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(0, 82, 234, 0.2);
+    transition: all 0.15s ease-in-out;
+}
+
+.btn-erp-primary:hover, .btn-primary:hover {
+    background-color: var(--brand-primary-hover) !important;
+    border-color: var(--brand-primary-hover) !important;
+    box-shadow: 0 2px 4px rgba(0, 82, 234, 0.3);
+}
+
+.btn-erp-success, .btn-success {
+    background-color: var(--status-success) !important;
+    border-color: var(--status-success) !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    border-radius: 6px;
+}
+
+.btn-erp-secondary {
+    background-color: #ffffff;
+    border: 1px solid var(--border-strong);
+    color: #334155;
+    font-weight: 600;
+    border-radius: 6px;
+}
+
+.btn-erp-secondary:hover {
+    background-color: #f1f5f9;
+    color: #0f172a;
+}
+
+/* GL Granular Search Panel */
+.gl-search-container {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+}
+
+.gl-toggle-bar {
+    background: #f8fafc;
+    border-bottom: 1px solid var(--border-color);
+    padding: 0.6rem 1.25rem;
+}
+
+.gl-granular-panel {
+    background: #fcfdfe;
+    border-top: 1px dashed var(--border-strong);
+    padding: 1.25rem;
+    transition: all 0.25s ease;
+}
+
+/* Status Badges */
+.badge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.25rem 0.6rem;
+    border-radius: 9999px;
+}
+
+.badge-status-posted {
+    background-color: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+}
+
+.badge-status-pending {
+    background-color: #fffbeb;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+
+/* Dark Mode Overrides for Master Template */
+body.dark-mode .erp-card,
+body.dark-mode .gl-search-container {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+body.dark-mode .unitax-header,
+body.dark-mode .erp-page-header,
+body.dark-mode .gl-toggle-bar {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+}
+
+body.dark-mode .unitax-header h5,
+body.dark-mode .erp-page-header h5,
+body.dark-mode .form-label {
+    color: #f1f5f9 !important;
+}
+
+body.dark-mode .form-control-sm,
+body.dark-mode .form-select-sm {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+}
+
+body.dark-mode .form-control-sm[readonly] {
+    background-color: #1e293b !important;
+    color: #94a3b8 !important;
+}
+
+body.dark-mode .posting-date-field {
+    background: #1e293b !important;
+    border-left-color: #3b82f6 !important;
+    color: #60a5fa !important;
+}
+
+body.dark-mode .erp-totals-box,
+body.dark-mode .gl-granular-panel {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+}
+
+body.dark-mode .table-erp tbody tr:hover,
+body.dark-mode #salesItemTable tbody tr:hover,
+body.dark-mode #PurchaseItemTable tbody tr:hover,
+body.dark-mode #glTable tbody tr:hover {
+    background-color: #334155 !important;
+}
+
+
+/* Master Index Layout Styles */
+body { overflow: hidden; background-color: var(--bg-app); }
+        .erp-category-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #64748b; padding: 12px 16px 4px 16px; margin: 0; }
+        .sidebar-link { display: flex; align-items: center; padding: 8px 16px; color: #94a3b8; text-decoration: none; font-size: 0.85rem; font-weight: 500; border-radius: 6px; margin: 2px 8px; transition: all 0.15s ease; }
+        .sidebar-link:hover { color: #ffffff; background-color: rgba(255, 255, 255, 0.08); }
+        .sidebar-link.active { color: #ffffff; background-color: #0052ea; font-weight: 600; }
+        .sidebar-link i { font-size: 1rem; width: 24px; margin-right: 8px; }
+        .font-mono { font-family: var(--font-mono) !important; font-size: 0.95em; }
+        .master-print-table th, .master-print-table td { font-size: 0.84rem; padding: 6px 10px; }
+
+/* ==========================================================================
+   UNIVERSAL FULL-WIDTH TABLES & ERP COMPACT BUTTONS
+   ========================================================================== */
+.table, 
+.table-erp, 
+.table-responsive table, 
+.statement-table, 
+.master-print-table,
+#glTable,
+#salesItemTable,
+#PurchaseItemTable,
+#journalTable,
+#tbTable,
+#balanceSheetTable,
+#adminUsersTable {
+    width: 100% !important;
+    min-width: 100% !important;
+}
+
+.table-responsive {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Space-Saving ERP Icon Buttons (Palette Aligned: #0052ea / #0f172a) */
+.btn-erp-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    color: #0f172a;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    transition: all 0.15s ease-in-out;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.btn-erp-icon:hover {
+    background: #f1f5f9;
+    color: #0052ea;
+    border-color: #94a3b8;
+}
+.btn-erp-icon.btn-erp-icon-primary {
+    background: #0052ea !important;
+    color: #ffffff !important;
+    border-color: #0052ea !important;
+}
+.btn-erp-icon.btn-erp-icon-primary:hover {
+    background: #0043c2 !important;
+    border-color: #0043c2 !important;
+    color: #ffffff !important;
+}
+.btn-erp-icon.btn-erp-icon-danger {
+    background: #ffffff;
+    color: #dc2626;
+    border-color: #fecaca;
+}
+.btn-erp-icon.btn-erp-icon-danger:hover {
+    background: #fee2e2;
+    color: #b91c1c;
+    border-color: #f87171;
+}
+body.dark-mode .btn-erp-icon {
+    background: #1e293b;
+    color: #f8fafc;
+    border-color: #334155;
+}
+body.dark-mode .btn-erp-icon:hover {
+    background: #334155;
+    color: #60a5fa;
+}
+
+/* ==========================================================================
+   ENTERPRISE CONTAINER BOUNDARY & OVERFLOW SCROLL (ROBUST & RESILIENT)
+   ========================================================================== */
+/* responsive d-none handled natively by Bootstrap */
+
+#main-content > .animate-in,
+#main-content > form,
+#main-content > div:not(.modal) {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.card:not(.d-none) {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.table-responsive,
+.print-table-container,
+.master-print-table-wrapper {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+/* ==========================================================================
+   DESKTOP SIDEBAR & NAVBAR SEARCH COMMAND BAR VISIBILITY GUARANTEE
+   ========================================================================== */
+@media (min-width: 992px) {
+    .sidebar-desktop {
+        display: flex !important;
+        width: 280px !important;
+        min-width: 280px !important;
+        flex-shrink: 0 !important;
+    }
+}
+
+.search-box {
+    display: flex !important;
+}
+
+
+/* ==========================================================================
+   UNIVERSAL PRINT & A4 PDF ISOLATION ENGINE
+   ========================================================================== */
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 8mm 8mm 8mm 8mm;
+    }
+
+    /* Force absolute hiding of navigation, sidebars, headers, floating widgets */
+    .sidebar-desktop,
+    .sidebar,
+    .top-navbar,
+    .unitax-navbar,
+    header,
+    nav,
+    aside,
+    .no-print,
+    .screen-only,
+    .btn-erp-icon,
+    .action-bar,
+    .breadcrumb-wrapper,
+    #notificationDropdown,
+    #errorNotificationBox,
+    .modal-backdrop,
+    .toast-container,
+    .dropdown-menu,
+    .btn:not(.btn-print-preserve),
+    .offcanvas,
+    #glFilterFormWrapper,
+    #statementSummary {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        min-width: 0 !important;
+        max-width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        visibility: hidden !important;
+    }
+
+    /* Expand workspace container to 100% full width */
+    body, html, #root, #app, .app-container, .main-layout, .main-wrapper, #main-content, .content-viewport, .container-fluid, .card, .card-body, .animate-in {
+        display: block !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 100% !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
+
+    .table-responsive, .print-table-wrapper, .master-print-table-wrapper {
+        overflow: visible !important;
+        display: block !important;
+        width: 100% !important;
+    }
+
+    table {
+        width: 100% !important;
+        page-break-inside: auto;
+    }
+
+    tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+
+    thead {
+        display: table-header-group;
+    }
+
+    tfoot {
+        display: table-footer-group;
+    }
+}

@@ -1,0 +1,707 @@
+<div class="animate-in erp-module-wrapper">
+    <form id="PurchaseInvoiceForm" data-category="Transactions">
+        <input type="hidden" name="documentType" value="PURCHASE">
+
+        <!-- ===================================================================
+             1. ENTERPRISE COMMAND HEADER
+             =================================================================== -->
+        <div class="card erp-card border-0 mb-3 overflow-hidden shadow-sm">
+            <div class="unitax-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-3" style="width: 42px; height: 42px;">
+                        <i class="bi bi-cart-check fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <h5 class="fw-bold mb-0 text-dark">Purchase Voucher</h5>
+                            <span class="badge bg-danger text-white erp-doc-badge">AP-INVOICE</span>
+                            <span class="badge bg-light text-muted border small" id="purchDocStatus">Inward Bill</span>
+                        </div>
+                        <p class="text-muted small mb-0">Domestic Inward Supply &bull; Import &bull; Reverse Charge (RCM) &bull; SEZ Inward</p>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-erp-secondary btn-sm shadow-sm" data-bs-toggle="offcanvas" data-bs-target="#additionalDetails" title="Logistics & Inward Details">
+                        <i class="bi bi-truck me-1 text-primary"></i> Logistics
+                    </button>
+                    <button type="button" class="btn btn-erp-secondary btn-sm shadow-sm" onclick="window.printCurrentForm('purchase-inv')" title="Print / Save PDF"><i class="bi bi-printer me-1 text-primary"></i> Print / PDF</button>
+                    <button type="button" class="btn btn-erp-secondary btn-sm shadow-sm" onclick="App.Router('transactions/purchase-inv')" title="Reset Form">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                    </button>
+                    <button type="submit" title="Post Document to General Ledger" class="btn btn-erp-primary btn-sm px-4 fw-bold shadow-sm">
+                        <i class="bi bi-check2-circle me-1"></i> Post Document
+                    </button>
+                </div>
+            </div>
+
+            <!-- Real-Time Financial Metric Ribbon -->
+            <div class="row g-0 border-top bg-light text-center py-2 px-3 small border-bottom">
+                <div class="col-6 col-md-3 border-end">
+                    <span class="text-muted text-uppercase fw-semibold" style="font-size: 11px;">Supplier Bill No.</span>
+                    <div class="fw-bold font-mono text-dark" id="ribbonBillNo">BILL-REF</div>
+                </div>
+                <div class="col-6 col-md-3 border-end">
+                    <span class="text-muted text-uppercase fw-semibold" style="font-size: 11px;">Assessable Value</span>
+                    <div class="fw-bold font-mono text-dark">₹ <span id="purch-taxable-ribbon">0.00</span></div>
+                </div>
+                <div class="col-6 col-md-3 border-end">
+                    <span class="text-muted text-uppercase fw-semibold" style="font-size: 11px;">Input Tax Credit (ITC)</span>
+                    <div class="fw-bold font-mono text-danger">₹ <span id="purch-gst-ribbon">0.00</span></div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <span class="text-muted text-uppercase fw-semibold" style="font-size: 11px;">Invoice Total</span>
+                    <div class="fw-bold font-mono text-success fs-6">₹ <span id="purch-grand-ribbon">0.00</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================================================
+             2. DUAL-ZONE ENTERPRISE METADATA (SUPPLIER + FISCAL AUDIT)
+             =================================================================== -->
+        <div class="row g-3 mb-3">
+            <!-- Left: Supplier Profile -->
+            <div class="col-lg-6">
+                <div class="card erp-card h-100 p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                        <span class="fw-bold small text-uppercase text-danger">
+                            <i class="bi bi-building me-1"></i> Vendor / Supplier (Bill From)
+                        </span>
+                        <span class="badge bg-danger-subtle text-danger border-0 small">Creditor Ledger</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Supplier Account <span class="text-danger">*</span></label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                            <input type="text" name="customer_ledger" 
+                                   class="form-control form-control-sm" 
+                                   placeholder="Search vendor by name or ledger code..." 
+                                   data-fetch_column data-sheet_name="LedgerCreation" data-column_name="name & ledgerCode" 
+                                   list="supplierList" required>
+                        </div>
+                        <datalist id="supplierList"></datalist>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">Supplier GSTIN</label>
+                            <input type="text" name="auto_customer_ledger_GST" class="form-control form-control-sm bg-light font-mono" readonly placeholder="GSTIN / UIN">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">Source State (POS)</label>
+                            <input type="text" list="indian-states" name="auto_customer_ledger_state" class="form-control form-control-sm bg-light" placeholder="Select Vendor State...">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Fiscal Audit & Dimension Control -->
+            <div class="col-lg-6">
+                <div class="card erp-card h-100 p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                        <span class="fw-bold small text-uppercase text-secondary">
+                            <i class="bi bi-shield-check me-1"></i> Audit & Dimension Parameters
+                        </span>
+                        <span class="badge bg-success-subtle text-success border-0 small">Eligible for ITC</span>
+                    </div>
+
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Supplier Bill No. <span class="text-danger">*</span></label>
+                            <input type="text" name="Invoice" id="invNoDisplay" class="form-control form-control-sm font-mono fw-bold" placeholder="INV/2026/..." required oninput="document.getElementById('ribbonBillNo').innerText = this.value || 'BILL-REF';">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Vendor Bill Date <span class="text-danger">*</span></label>
+                            <input type="date" name="voucher_date" id="invDate" class="form-control form-control-sm" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold posting-date-label">
+                                <i class="bi bi-calendar-check me-1"></i>Posting Date <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" name="posting_date" id="postingDate" class="form-control form-control-sm posting-date-field" required>
+                        </div>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Profit Center / PC</label>
+                            <input type="text" name="project" list="Projectlist" class="form-control form-control-sm upper-case" 
+                                   data-fetch_column data-sheet_name="Projects" data-column_name="ProjectName & ProjectCode" placeholder="General">
+                            <datalist id="Projectlist"></datalist>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Supply Classification</label>
+                            <select name="pos" class="form-select form-select-sm">
+                                <optgroup label="Domestic Inward Supply">
+                                    <option value="REGULAR" selected>Regular Taxable Purchase</option>
+                                    <option value="RCM">Reverse Charge (RCM Inward)</option>
+                                </optgroup>
+                                <optgroup label="Imports">
+                                    <option value="IMPORT_GOODS">Import of Goods (Customs Port)</option>
+                                    <option value="IMPORT_SERVICES">Import of Services</option>
+                                </optgroup>
+                                <optgroup label="SEZ Inward">
+                                    <option value="SEZ_INWARD">Supplies from SEZ Unit</option>
+                                </optgroup>
+                                <optgroup label="Exempt / Non-GST">
+                                    <option value="NIL">Nil Rated Inward</option>
+                                    <option value="EXEMPT">Exempted Purchase</option>
+                                    <option value="NONGST">Non-GST Inward</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Company Code</label>
+                            <input type="text" name="CompanyName" list="compListPurch" class="form-control form-control-sm"
+                                   data-fetch_column data-sheet_name="Companies" data-column_name="companyName & CompanyCode" placeholder="Primary Co.">
+                            <datalist id="compListPurch"></datalist>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================================================
+             3. HIGH-CAPABILITY ITEM / SERVICE ACCOUNTING GRID
+             =================================================================== -->
+        <div class="card erp-card border-0 mb-3 overflow-hidden shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0 align-middle table-erp" id="PurchaseItemTable">
+                    <thead>
+                        <tr>
+                            <th class="ps-3" width="4%">#</th>
+                            <th width="42%">Item / SKU Description</th>
+                            <th width="12%" class="text-center">Qty</th>
+                            <th width="14%" class="text-end">Unit Rate (₹)</th>
+                            <th width="10%" class="text-center">Tax %</th>
+                            <th width="14%" class="text-end pe-3">Line Amount (₹)</th>
+                            <th width="4%" class="text-center"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="PurchaseItemBody">
+                        <tr>
+                            <td class="sr-no ps-3 fw-bold text-muted">1</td>
+                            <td>
+                                <input type="text" name="item_name[]" 
+                                       class="form-control form-control-sm itemName border-0 bg-transparent fw-semibold" 
+                                       placeholder="Type SKU name or stock code..." 
+                                       data-fetch_column data-sheet_name="Stock" data-column_name="itemName & Stock_Code" 
+                                       list="stockList" data-form-path="masters/stock-cw" required>
+                                
+                                <div class="d-flex align-items-center gap-3 px-1 mt-1 text-muted" style="font-size: 11px;">
+                                    <span>HSN/SAC: <input type="text" name="auto_item_name_itemHSN" class="border-0 bg-transparent p-0 text-muted font-mono" style="width:75px" readonly placeholder="----"></span>
+                                    <span>GST Rate: <input type="text" name="auto_item_name_ItemTax" class="border-0 bg-transparent p-0 tax-val text-danger fw-bold font-mono" style="width:25px" readonly value="18">%</span>
+                                </div>
+                            </td>
+                            <td>
+                                <input type="number" name="qty[]" class="form-control form-control-sm qty text-center border-0 bg-light" placeholder="1" min="0" step="any" value="1">
+                            </td>
+                            <td>
+                                <input type="number" name="rate[]" class="form-control form-control-sm rate text-end border-0 bg-light font-mono" placeholder="0.00" min="0" step="any">
+                            </td>
+                            <td>
+                                <input type="text" class="form-control form-control-sm text-center tax-display border-0 bg-transparent font-mono fw-bold text-danger" readonly value="18%">
+                            </td>
+                            <td class="text-end pe-3 font-mono fw-bold text-dark">
+                                ₹ <span class="line-total">0.00</span>
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-link text-danger btn-sm p-0 delete-row-button" onclick="removeRow(this)" title="Delete Row">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <datalist id="stockList"></datalist>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center p-2 bg-light border-top">
+                <button type="button" class="btn btn-erp-secondary btn-sm shadow-sm px-3" onclick="addNewRow()">
+                    <i class="bi bi-plus-lg me-1 text-danger"></i> Add Line Item
+                </button>
+                <span class="text-muted small">Input Tax Credit (ITC) will auto-map to GSTR-2B ledger</span>
+            </div>
+        </div>
+
+        <!-- ===================================================================
+             4. SETTLEMENT, REMARKS & FINANCIAL SUMMARY PANEL
+             =================================================================== -->
+        <div class="row g-3 mb-3">
+            <div class="col-lg-7">
+                <div class="card erp-card p-3 h-100">
+                    <label class="form-label small fw-bold">
+                        <i class="bi bi-card-text me-1"></i>Narration / Inward Remarks
+                    </label>
+                    <textarea name="narration" class="form-control form-control-sm mb-3" rows="3" placeholder="Enter purchase order reference, material receipt notes, gate pass no, or invoice remarks..."></textarea>
+                    
+                    <div class="p-2 rounded bg-light border text-muted small">
+                        <i class="bi bi-info-circle me-1 text-danger"></i>
+                        <span>Double-entry debit will post to <strong>Purchase Account</strong> and credit to <strong>Supplier Account</strong> with automated input GST claim.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="card erp-card erp-totals-box p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                        <span class="text-muted small text-uppercase fw-semibold">Taxable Subtotal</span>
+                        <span class="font-mono fw-bold text-dark fs-6">₹ <span id="taxable-total">0.00</span></span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                        <span class="text-muted small text-uppercase fw-semibold">Input GST Claim</span>
+                        <span class="font-mono fw-bold text-danger fs-6">₹ <span id="gst-total">0.00</span></span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center pt-2">
+                        <div>
+                            <span class="text-dark fw-bold text-uppercase d-block" style="font-size: 11px;">Total Payable (INR)</span>
+                            <small class="text-muted" style="font-size: 10px;">Net liability to vendor</small>
+                        </div>
+                        <div class="erp-grand-total text-danger">
+                            ₹ <span id="grand-total">0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================================================
+             5. LOGISTICS & TRANSPORT DRAWER (OFFCANVAS)
+             =================================================================== -->
+        <!-- ===================================================================
+             ENTERPRISE LOGISTICS & E-WAY BILL DISPATCH DRAWER (OFFCANVAS)
+             =================================================================== -->
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="additionalDetails" aria-labelledby="additionalDetailsLabel" style="width: 440px;">
+            <div class="offcanvas-header border-bottom bg-light py-3 px-3">
+                <div>
+                    <h6 class="offcanvas-title fw-bold text-dark mb-0" id="additionalDetailsLabel">
+                        <i class="bi bi-truck me-2 text-primary"></i>Logistics & Transport Controls
+                    </h6>
+                    <span class="text-muted" style="font-size: 11px;">E-Way bill, carrier dispatch, multi-modal & statutory freight</span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body p-3 font-sans">
+                <!-- SECTION 1: TRANSPORT & CARRIER -->
+                <div class="mb-3">
+                    <span class="small fw-bold text-uppercase text-primary d-block mb-2">
+                        <i class="bi bi-geo-alt me-1"></i> 1. Carrier & Multi-Modal Vehicle
+                    </span>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold mb-1">Mode of Transport</label>
+                        <select name="transport_mode" class="form-select form-select-sm">
+                            <option value="Road">Road (Truck / LCV / Multi-Axle)</option>
+                            <option value="Rail">Rail (Freight / Container Train)</option>
+                            <option value="Air">Air Cargo (Domestic / International)</option>
+                            <option value="Ship">Sea / Ocean Vessel (FCL / LCL)</option>
+                            <option value="Courier">Courier / Express 3PL Logistics</option>
+                            <option value="Ex-Works">Customer Pickup (Ex-Works / Self)</option>
+                            <option value="Pipeline">Pipeline / Direct Bulk Conveyor</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold mb-1">Transporter / 3PL Partner Name</label>
+                        <input type="text" name="transporter_name" class="form-control form-control-sm" placeholder="e.g. VRL / TCI / Blue Dart / Safechem / DHL">
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-7">
+                            <label class="form-label small fw-semibold mb-1">Transporter GSTIN / Carrier ID</label>
+                            <input type="text" name="transporter_id" class="form-control form-control-sm font-mono upper-case" placeholder="15-digit GSTIN / Transporter ID" maxlength="15">
+                        </div>
+                        <div class="col-5">
+                            <label class="form-label small fw-semibold mb-1">Vehicle Type</label>
+                            <select name="vehicle_type" class="form-select form-select-sm">
+                                <option value="Regular">Regular LCV / Heavy Truck</option>
+                                <option value="ODC">ODC (Over-Dimensional)</option>
+                                <option value="Refrigerated">Refrigerated (Cold Chain)</option>
+                                <option value="Container">Containerized (20ft / 40ft)</option>
+                                <option value="Tanker">Tanker / Liquid Bulk</option>
+                                <option value="Flatbed">Flatbed / Heavy Trailer</option>
+                                <option value="ParcelVan">Parcel Van / Delivery Bike</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold mb-1">Vehicle / Reg. Number</label>
+                        <input type="text" name="vehicle_no" class="form-control form-control-sm font-mono upper-case" placeholder="e.g. MH-12-AB-1234">
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Driver Name</label>
+                            <input type="text" name="driver_name" class="form-control form-control-sm proper-case" placeholder="Driver Full Name">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Driver Phone / Mobile</label>
+                            <input type="text" name="driver_phone" class="form-control form-control-sm font-mono" placeholder="+91 98765 43210">
+                        </div>
+                    </div>
+                    <div class="mb-1">
+                        <label class="form-label small fw-semibold mb-1">Driver License Number</label>
+                        <input type="text" name="driver_license" class="form-control form-control-sm font-mono upper-case" placeholder="DL-0000000000000">
+                    </div>
+                </div>
+
+                <hr class="my-3">
+
+                <!-- SECTION 2: CONSIGNMENT, E-WAY BILL & CONTRACT -->
+                <div class="mb-3">
+                    <span class="small fw-bold text-uppercase text-primary d-block mb-2">
+                        <i class="bi bi-file-earmark-ruled me-1"></i> 2. Statutory E-Way Bill & Consignment
+                    </span>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">LR / RR / AWB / BL No.</label>
+                            <input type="text" name="lr_no" class="form-control form-control-sm font-mono upper-case" placeholder="LR-00000">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Consignment Date</label>
+                            <input type="date" name="lr_date" class="form-control form-control-sm">
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold mb-1">E-Way Bill Number (12 Digits)</label>
+                        <input type="text" name="eway_bill_no" class="form-control form-control-sm font-mono" placeholder="1234 5678 9012" maxlength="12">
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">E-Way Bill Date</label>
+                            <input type="date" name="eway_bill_date" class="form-control form-control-sm">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Validity Upto</label>
+                            <input type="date" name="eway_valid_upto" class="form-control form-control-sm">
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Delivery Challan No.</label>
+                            <input type="text" name="delivery_note_no" class="form-control form-control-sm font-mono" placeholder="DC-001">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Challan Date</label>
+                            <input type="date" name="delivery_note_date" class="form-control form-control-sm">
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Buyer PO / Contract Ref</label>
+                            <input type="text" name="po_reference_no" class="form-control form-control-sm font-mono" placeholder="PO-2026-000">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">PO Date</label>
+                            <input type="date" name="po_reference_date" class="form-control form-control-sm">
+                        </div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Security Gate Pass No.</label>
+                            <input type="text" name="gate_pass_no" class="form-control form-control-sm font-mono" placeholder="GP-999">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">FASTag / RFID Tag</label>
+                            <input type="text" name="rfid_tag_id" class="form-control form-control-sm font-mono upper-case" placeholder="RFID-HEX">
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-3">
+
+                <!-- SECTION 3: ROUTE, DISPATCH & DESTINATION -->
+                <div class="mb-3">
+                    <span class="small fw-bold text-uppercase text-primary d-block mb-2">
+                        <i class="bi bi-pin-map me-1"></i> 3. Route, Warehousing & Delivery Site
+                    </span>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Dispatch Plant / Warehouse</label>
+                            <input type="text" name="dispatch_warehouse" class="form-control form-control-sm" placeholder="e.g. WH-BHIWANDI-01">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Place of Supply (State)</label>
+                            <input type="text" name="destination_state" class="form-control form-control-sm proper-case" placeholder="e.g. Maharashtra" list="indian-states">
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold mb-1">Dispatch Origin Address</label>
+                        <input type="text" name="dispatch_from" class="form-control form-control-sm" placeholder="Origin Plant / Factory / Bonded Depot">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold mb-1">Ship-To / Final Delivery Address</label>
+                        <input type="text" name="ship_to_address" class="form-control form-control-sm" placeholder="Destination Site / Buyer Yard / Warehouse">
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Dest. Pincode</label>
+                            <input type="text" name="destination_pincode" class="form-control form-control-sm font-mono" placeholder="6-digit PIN" maxlength="6">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Distance (km)</label>
+                            <input type="number" name="transport_distance_km" class="form-control form-control-sm font-mono" placeholder="e.g. 240">
+                        </div>
+                    </div>
+                    <div class="mb-1">
+                        <label class="form-label small fw-semibold mb-1">Expected Delivery Date / ETA</label>
+                        <input type="date" name="expected_delivery_date" class="form-control form-control-sm">
+                    </div>
+                </div>
+
+                <hr class="my-3">
+
+                <!-- SECTION 4: PACKAGING, WEIGHT & FREIGHT TERMS -->
+                <div class="mb-3">
+                    <span class="small fw-bold text-uppercase text-primary d-block mb-2">
+                        <i class="bi bi-box-seam me-1"></i> 4. Packaging, Cargo Nature & Freight
+                    </span>
+                    <div class="row g-2 mb-2">
+                        <div class="col-7">
+                            <label class="form-label small fw-semibold mb-1">Incoterms / Freight Terms</label>
+                            <select name="freight_terms" class="form-select form-select-sm">
+                                <option value="Paid">Prepaid by Consignor</option>
+                                <option value="To-Pay">To-Pay (Consignee)</option>
+                                <option value="Billed">Billed on Invoice</option>
+                                <option value="FOR">FOR Destination</option>
+                                <option value="Ex-Works">Ex-Works</option>
+                                <option value="FOB">FOB (Free on Board)</option>
+                                <option value="CIF">CIF (Cost, Insurance, Freight)</option>
+                                <option value="CFR">CFR (Cost & Freight)</option>
+                                <option value="DDP">DDP (Delivered Duty Paid)</option>
+                                <option value="CIP">CIP (Carriage & Insurance Paid)</option>
+                            </select>
+                        </div>
+                        <div class="col-5">
+                            <label class="form-label small fw-semibold mb-1">Freight (₹)</label>
+                            <input type="number" step="0.01" name="freight_charges" class="form-control form-control-sm font-mono" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Total Packages</label>
+                            <input type="number" name="total_packages" class="form-control form-control-sm font-mono" placeholder="e.g. 50">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Package Type</label>
+                            <select name="package_type" class="form-select form-select-sm">
+                                <option value="Cartons">Cartons / Boxes</option>
+                                <option value="Pallets">Wooden / Plastic Pallets</option>
+                                <option value="Bags">Bags / HDPE Sacks</option>
+                                <option value="Drums">Drums / Barrels (200L)</option>
+                                <option value="Bundles">Steel / Wire Bundles</option>
+                                <option value="Containers">ISO Freight Containers</option>
+                                <option value="Crates">Wooden Crates</option>
+                                <option value="Loose">Loose Bulk Cargo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-4">
+                            <label class="form-label small fw-semibold mb-1">Gross Wt (kg)</label>
+                            <input type="number" step="0.01" name="gross_weight" class="form-control form-control-sm font-mono" placeholder="Gross kg">
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small fw-semibold mb-1">Net Wt (kg)</label>
+                            <input type="number" step="0.01" name="net_weight" class="form-control form-control-sm font-mono" placeholder="Net kg">
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small fw-semibold mb-1">Tare Wt (kg)</label>
+                            <input type="number" step="0.01" name="tare_weight" class="form-control form-control-sm font-mono" placeholder="Tare kg">
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Volume (CBM)</label>
+                            <input type="number" step="0.001" name="volumetric_cbm" class="form-control form-control-sm font-mono" placeholder="Volume in m³">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Cargo Handling Nature</label>
+                            <select name="cargo_nature" class="form-select form-select-sm">
+                                <option value="General">General Dry Cargo</option>
+                                <option value="Hazardous">Hazardous / Hazmat (UN)</option>
+                                <option value="Temperature">Temperature-Sensitive Cold</option>
+                                <option value="Fragile">Fragile Electronics / Glass</option>
+                                <option value="HighValue">High-Value Insured</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Batch / Lot / Heat Range</label>
+                            <input type="text" name="batch_lot_no" class="form-control form-control-sm font-mono" placeholder="LOT-2026-X">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Transit Insurance Policy</label>
+                            <input type="text" name="insurance_policy_no" class="form-control form-control-sm font-mono" placeholder="POL-000000">
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-3">
+
+                <!-- SECTION 5: CUSTOMS, PORT & OVERSEAS EXPORT -->
+                <div class="mb-2">
+                    <span class="small fw-bold text-uppercase text-primary d-block mb-2">
+                        <i class="bi bi-globe2 me-1"></i> 5. Customs, Port & Overseas Export
+                    </span>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold mb-1">Supply / Export Classification</label>
+                        <select name="export_type" class="form-select form-select-sm">
+                            <option value="Domestic">Domestic Supply (Standard GST)</option>
+                            <option value="LUT_Bond">Export Under LUT / Bond (Without IGST)</option>
+                            <option value="Export_Tax">Export With Payment of IGST</option>
+                            <option value="SEZ_With_Tax">SEZ Supply (With Payment of Tax)</option>
+                            <option value="SEZ_Without_Tax">SEZ Supply (Under LUT / Bond)</option>
+                            <option value="Deemed_Export">Deemed Export</option>
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Port Code</label>
+                            <input type="text" name="port_code" class="form-control form-control-sm font-mono upper-case" placeholder="e.g. INBOM1">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Port of Loading</label>
+                            <input type="text" name="port_loading" class="form-control form-control-sm proper-case" placeholder="e.g. Nhava Sheva (JNPT)">
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Port of Discharge</label>
+                            <input type="text" name="port_discharge" class="form-control form-control-sm proper-case" placeholder="Destination Port">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Shipping Bill No.</label>
+                            <input type="text" name="shipping_bill_no" class="form-control form-control-sm font-mono upper-case" placeholder="SB-0000000">
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Shipping Bill Date</label>
+                            <input type="date" name="shipping_bill_date" class="form-control form-control-sm">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Shipping Container No.</label>
+                            <input type="text" name="container_no" class="form-control form-control-sm font-mono upper-case" placeholder="MSCU1234567">
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Container Custom Seal</label>
+                            <input type="text" name="container_seal_no" class="form-control form-control-sm font-mono upper-case" placeholder="SEAL-9999">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">Destination Country</label>
+                            <input type="text" name="destination_country" class="form-control form-control-sm proper-case" placeholder="e.g. United States">
+                        </div>
+                    </div>
+                    <div class="mb-1">
+                        <label class="form-label small fw-semibold mb-1">Billing / Foreign Currency</label>
+                        <select name="foreign_currency" class="form-select form-select-sm font-mono">
+                            <option value="INR">INR (₹) - Indian Rupee</option>
+                            <option value="USD">USD ($) - US Dollar</option>
+                            <option value="EUR">EUR (€) - Euro</option>
+                            <option value="GBP">GBP (£) - British Pound</option>
+                            <option value="AED">AED (د.إ) - UAE Dirham</option>
+                            <option value="SGD">SGD ($) - Singapore Dollar</option>
+                            <option value="JPY">JPY (¥) - Japanese Yen</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="offcanvas-footer p-3 bg-light border-top text-end">
+                <button type="button" class="btn btn-sm btn-primary px-3 shadow-sm" data-bs-dismiss="offcanvas">
+                    <i class="bi bi-check-lg me-1"></i> Apply Logistics Details
+                </button>
+            </div>
+        </div>
+
+                <hr>
+
+                <h6 class="small fw-bold text-uppercase text-muted mb-2">Customs & Inward Bill Details</h6>
+                <div class="mb-2">
+                    <label class="form-label small">Customs Port Code</label>
+                    <input type="text" name="port_code" class="form-control form-control-sm upper-case" placeholder="e.g. INMAA1">
+                </div>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <label class="form-label small">Bill of Entry / SB No.</label>
+                        <input type="text" name="shipping_bill_no" class="form-control form-control-sm font-mono" placeholder="BOE-000">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small">BOE / SB Date</label>
+                        <input type="date" name="shipping_bill_date" class="form-control form-control-sm">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    (function InitPurchaseVoucher() {
+        const today = new Date();
+        const invDateEl = document.getElementById('invDate');
+        const postDateEl = document.getElementById('postingDate');
+        if (invDateEl) invDateEl.valueAsDate = today;
+        if (postDateEl) postDateEl.valueAsDate = today;
+
+        window.addNewRow = function() {
+            const tr = Utils.AddGridRow('PurchaseItemTable');
+            if (tr) {
+                const taxInput = tr.querySelector('.tax-val');
+                const taxDisp = tr.querySelector('.tax-display');
+                if (taxInput && !taxInput.value) taxInput.value = "18";
+                if (taxDisp) taxDisp.value = (taxInput?.value || "18") + "%";
+            }
+            window.recalculateVoucher();
+        };
+
+        window.removeRow = function(btn) {
+            if (document.querySelectorAll('#PurchaseItemBody tr').length > 1) {
+                btn.closest('tr').remove();
+                Utils.UpdateSerialNumbers(document.getElementById('PurchaseItemBody'));
+                window.recalculateVoucher();
+            }
+        };
+
+        window.recalculateVoucher = function() {
+            let taxable = 0;
+            let totalGst = 0;
+            document.querySelectorAll('#PurchaseItemBody tr').forEach(row => {
+                const q = parseFloat(row.querySelector('.qty')?.value) || 0;
+                const r = parseFloat(row.querySelector('.rate')?.value) || 0;
+                const t = parseFloat(row.querySelector('.tax-val')?.value) || 0;
+
+                const line = Utils.CalculateLine(q, r, t);
+                const lineTotalEl = row.querySelector('.line-total');
+                const taxDispEl = row.querySelector('.tax-display');
+                if (lineTotalEl) lineTotalEl.innerText = line.total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                if (taxDispEl) taxDispEl.value = t + "%";
+
+                taxable += line.base;
+                totalGst += line.tax;
+            });
+
+            const grand = taxable + totalGst;
+            const fmt = (n) => n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            const taxEl = document.getElementById('taxable-total');
+            const gstEl = document.getElementById('gst-total');
+            const grandEl = document.getElementById('grand-total');
+
+            const taxRib = document.getElementById('purch-taxable-ribbon');
+            const gstRib = document.getElementById('purch-gst-ribbon');
+            const grandRib = document.getElementById('purch-grand-ribbon');
+
+            if (taxEl) taxEl.innerText = fmt(taxable);
+            if (gstEl) gstEl.innerText = fmt(totalGst);
+            if (grandEl) grandEl.innerText = fmt(grand);
+
+            if (taxRib) taxRib.innerText = fmt(taxable);
+            if (gstRib) gstRib.innerText = fmt(totalGst);
+            if (grandRib) grandRib.innerText = fmt(grand);
+        };
+
+        const itemBody = document.getElementById('PurchaseItemBody');
+        if (itemBody) itemBody.addEventListener('input', window.recalculateVoucher);
+    })();
+</script>

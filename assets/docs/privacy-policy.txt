@@ -1,0 +1,56 @@
+PRIVACY POLICY
+Last Updated: July 11, 2026
+
+1. INTRODUCTION
+Welcome to UniTax Pro ("Application", "Service", "we", "us", or "our"), available at https://krshnaunitax05.github.io/UniTaxPro/. UniTax Pro is a browser-based Enterprise Resource Planning (ERP) and cloud accounting application designed to provide ledger management, inventory tracking, financial auditing, and taxation workspace solutions for businesses.
+
+We are committed to protecting the privacy, confidentiality, and security of the financial, corporate, and personal data you process through our Service. This Privacy Policy explains how we collect, use, share, isolate, and protect your information when you access or use the Application. By creating an account or using the Service, you consent to the data practices described in this policy.
+
+2. DATA ISOLATION AND THE MULTI-TENANT ARCHITECTURE
+UniTax Pro operates on a secure, multi-tenant workspace architecture. 
+- "Administrator Accounts" have the authority to provision, manage, or revoke access for secondary users ("Staff", "Editors", "Viewers") within their isolated Workspace ID namespace.
+- All transactional, ledger, and master accounting data uploaded to a specific Workspace ID is completely isolated at the database level.
+- No user outside of an explicit Workspace ID has authorization to read, modify, or interact with the financial data contained therein.
+
+3. INFORMATION WE COLLECT
+To provide a secure cloud ERP environment, we collect information across the following categories:
+
+A. Account Registration & User Metadata:
+When an Administrator provisions an account, we collect corporate identifiers including name, email address, assigned system role (e.g., administrator, editor, viewer), and unique security authentication tokens.
+
+B. Business & Financial Records (Tenant Data):
+We store and process data entered programmatically into the platform, including but not limited to: Sales Invoices, Purchase Invoices, Receipt Vouchers, Payment Vouchers, Debit/Credit Notes, Tax calculations (including GST metrics), Client/Vendor Masters, and Inventory records.
+
+C. Network, System, & Security Audit Logs:
+For security validation, fraud prevention, and system auditing, the Application automatically captures ambient connectivity data upon authentication or data submission:
+- IP Address (used to derive approximate access location like City, Region, and Country without explicit GPS tracking).
+- Browser and Operating System User-Agent strings.
+- Timestamps of transactions, login attempts, and structural modifications (the "Audit Log").
+
+4. HOW WE USE YOUR INFORMATION
+We process data strictly to fulfill our contractual obligations as an ERP software provider. Specific uses include:
+- Operating and maintaining the functional modules of the accounting software.
+- Securing your data against unauthorized access, malicious breaches, and overlapping tenant queries via custom backend database rules.
+- Maintaining the Organization Chat System, allowing real-time secure communication strictly between users associated with the same Workspace ID.
+- Generating security logs to allow Administrators to audit who modified specific financial nodes within their workspace.
+
+5. DATA SHARING AND DISCLOSURE
+We do not sell, rent, trade, or distribute your corporate financial data or user information to third-party advertisers or data brokers. Data is only disclosed under the following circumstances:
+- Cloud Infrastructure Providers: Data is securely synchronized and stored via authorized cloud database systems (including Firebase Realtime Database) under strict encryption protocols.
+- Legal Obligations: If required by law, subpoena, or government tax regulatory bodies, we may disclose account metadata if strictly necessary to comply with legal actions.
+
+6. DATA SECURITY AND ENCRYPTION
+UniTax Pro implements rigorous security safeguards to protect sensitive financial records:
+- All communications between the client browser and the database infrastructure are encrypted via Secure Socket Layer / Transport Layer Security (SSL/TLS) protocols.
+- Core database architectures implement programmatic server-side path rules ensuring that a user’s authentication unique identifier (UID) matches the authorized tenant Workspace ID before access is granted.
+
+7. USER RIGHTS AND CHOICES
+Administrators maintain complete control over their Workspace environment and may:
+- Manage, modify, or completely revoke the accounts, permissions, and passwords of any staff member assigned to their workspace.
+- Export transaction ledgers and financial matrices at any time via standard formats (e.g., CSV, JSON, PDF).
+
+8. CHANGES TO THIS PRIVACY POLICY
+We reserve the right to modify this Privacy Policy at any time. Changes take effect immediately upon posting to the Application interface. Continued use of the platform constitutes acknowledgment of the updated terms.
+
+9. CONTACT INFORMATION
+For questions regarding data isolation, multi-tenant rules, or security compliance, please contact your systems administrator or submit a inquiry via the official GitHub repository structure.

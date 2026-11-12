@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniTax Pro | Enterprise Access</title>
+    <link rel="icon" type="image/png" href="assets/img/logo-circle.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+    :root { 
+        --brand-color: #0052ea; 
+        --brand-hover: #003eb3;
+        --text-dark: #1e293b;
+        --text-muted: #64748b;
+        --bg-body: #f8fafc;
+        --bg-input: #f1f5f9;
+        --border-color: #e2e8f0;
+    }
+
+    body { 
+        font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+        font-feature-settings: "tnum" 1, "cv02" 1, "cv03" 1, "cv04" 1;
+        line-height: 1.45;
+        -webkit-font-smoothing: antialiased;
+        background: var(--bg-body); 
+        background-image: radial-gradient(circle at top right, rgba(0, 82, 234, 0.05), transparent 40%),
+                          radial-gradient(circle at bottom left, rgba(0, 82, 234, 0.05), transparent 40%);
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        min-height: 100vh; 
+        margin: 0;
+    }
+    
+    .auth-container { 
+        width: 100%; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        padding: 20px; 
+    }
+
+    .auth-card { 
+        display: flex; 
+        width: 100%; 
+        max-width: 1000px; 
+        height: 650px; 
+        max-height: 90vh;
+        background: white; 
+        border-radius: 24px; 
+        overflow: hidden; 
+        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.08), 0 0 10px rgba(0,0,0,0.02);
+        border: 1px solid rgba(255,255,255,0.6);
+    }
+
+    /* Branding Side */
+    .auth-side-brand { 
+        width: 45%; 
+        background: linear-gradient(145deg, var(--brand-color) 0%, #001e60 100%); 
+        padding: 48px; 
+        display: flex; 
+        flex-direction: column; 
+        justify-content: space-between; 
+        color: white;
+        position: relative;
+    }
+
+    /* Form Side */
+    .auth-side-form { 
+        width: 55%;
+        height: auto; 
+        padding: 30px 60px; 
+        position: relative; 
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+    }
+
+    .auth-side-form::-webkit-scrollbar { width: 6px; }
+    .auth-side-form::-webkit-scrollbar-track { background: transparent; }
+    .auth-side-form::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+
+    .nav-pills-custom { display: flex; gap: 10px; margin-bottom: 30px; }
+    .nav-pills-custom .nav-link { 
+        color: var(--text-muted); font-weight: 600; border-radius: 12px; 
+        padding: 12px 24px; transition: all 0.3s ease; border: 1px solid transparent; cursor: pointer;
+    }
+    .nav-pills-custom .nav-link.active { 
+        background: var(--bg-body); color: var(--brand-color); border-color: var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    .form-label { font-weight: 600; color: var(--text-dark); font-size: 0.875rem; margin-bottom: 8px; display: block; }
+    .form-control { 
+        border-radius: 12px; padding: 14px 16px; border: 1px solid var(--border-color); font-size: 0.95rem; 
+        transition: all 0.25s ease; background: var(--bg-input); width: 100%; box-sizing: border-box; color: var(--text-dark);
+    }
+    .form-control::placeholder { color: #94a3b8; }
+    .form-control:focus { background: white; border-color: var(--brand-color); box-shadow: 0 0 0 4px rgba(0, 82, 234, 0.1); outline: none; }
+
+    .btn-auth { 
+        background: var(--brand-color); color: white; border: none; border-radius: 12px; padding: 15px; 
+        font-weight: 600; font-size: 1rem; width: 100%; transition: all 0.3s ease; margin-top: 10px; cursor: pointer;
+    }
+    .btn-auth:hover { background: var(--brand-hover); transform: translateY(-2px); box-shadow: 0 8px 20px -6px rgba(0, 82, 234, 0.4); }
+    .btn-auth:active { transform: translateY(0); }
+
+    .input-icon-wrapper { position: relative; margin-bottom: 20px; }
+    .input-icon-wrapper i { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; cursor: pointer; transition: color 0.2s ease; }
+    .input-icon-wrapper i:hover { color: var(--brand-color); }
+
+    @media (max-width: 900px) {
+        .auth-card { flex-direction: column; height: auto; max-height: 95vh; }
+        .auth-side-brand { width: 100%; flex: 0 0 160px; padding: 24px; justify-content: center; align-items: center; text-align: center; }
+        .auth-side-form { width: 100%; flex: 1; padding: 30px 24px; }
+    }
+</style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <!-- Left Branding -->
+            <div class="auth-side-brand">
+                <div>
+                    <h2 class="fw-bold mb-1">UniTax <span class="text-info">Pro</span></h2>
+                    <p class="opacity-75">Intelligence for Modern Enterprise</p>
+                </div>
+                <div>
+                    <h1 class="display-6 fw-bold mb-4">Simplify your <br>Accounting lifecycle.</h1>
+                    <div class="d-flex gap-3 mb-4">
+                        <div class="bg-white bg-opacity-10 p-2 rounded-3"><i class="bi bi-shield-check fs-4"></i></div>
+                        <div class="bg-white bg-opacity-10 p-2 rounded-3"><i class="bi bi-lightning-charge fs-4"></i></div>
+                        <div class="bg-white bg-opacity-10 p-2 rounded-3"><i class="bi bi-cloud-arrow-up fs-4"></i></div>
+                    </div>
+                </div>
+                <p class="small opacity-50 mb-0">© 2026 UniTax Technologies Global</p>
+            </div>
+
+            <!-- Right Forms -->
+            <div class="auth-side-form">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <ul class="nav nav-pills nav-pills-custom">
+                        <li class="nav-item"><a class="nav-link active" id="login-trigger" href="javascript:void(0)" onclick="switchView('login')">Sign In</a></li>
+                        <li class="nav-item"><a class="nav-link" id="signup-trigger" href="javascript:void(0)" onclick="switchView('signup')">Register</a></li>
+                    </ul>
+                </div>
+
+                <!-- Login View -->
+                <div id="login-section">
+                    <h3 class="fw-bold text-dark mb-1">Welcome Back</h3>
+                    <p class="text-muted small mb-4">Enter your credentials to access your workspace.</p>
+
+                    <form onsubmit="handleAuth(event, 'login')">
+                        <div class="mb-3">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" name="email" class="form-control" placeholder="name@company.com" autocomplete="email" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Password</label>
+                            <div class="input-icon-wrapper">
+                                <input type="password" name="password" class="form-control pass-field" placeholder="••••••••" autocomplete="current-password" required>
+                                <i class="bi bi-eye-slash toggle-pass" onclick="togglePass(this)"></i>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <div class="form-check mb-0">
+                                    <input class="form-check-input" type="checkbox" id="keepSignedIn" name="keepSignedIn">
+                                    <label class="form-check-label small text-muted" for="keepSignedIn">Keep me signed in</label>
+                                </div>
+                                <a href="javascript:void(0)" onclick="switchView('forgot')" class="small text-primary text-decoration-none fw-semibold">Forgot Password?</a>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-auth" id="loginBtn">Sign In to Dashboard</button>
+                    </form>
+                </div>
+
+                <!-- Signup View -->
+                <div id="signup-section" class="d-none">
+                    <h3 class="fw-bold text-dark mb-1">Get Started</h3>
+                    <p class="text-muted small mb-4">Create your unified accounting profile.</p>
+
+                    <form onsubmit="handleAuth(event, 'signup')">
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g. Rahul Sharma" autocomplete="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" name="email" class="form-control" placeholder="name@company.com" autocomplete="email" required>
+                        </div>
+                        <div class="row g-2 mb-4">
+                            <div class="col-6">
+                                <label class="form-label">Password</label>
+                                <input type="password" name="password" id="regPass" class="form-control" autocomplete="new-password" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Confirm Password</label>
+                                <input type="password" id="regConfirm" class="form-control" autocomplete="new-password" required>
+                            </div>
+                        </div>
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="policyAccept" required>
+                            <label class="form-check-label small text-muted" for="policyAccept">
+                                I accept the <a href="terms.html" target="_blank" class="text-primary text-decoration-none fw-semibold">Terms of Service</a> and <a href="privacy.html" target="_blank" class="text-primary text-decoration-none fw-semibold">Privacy Policy</a>.
+                            </label>
+                        </div>
+                        <button type="submit" class="btn-auth" id="signupBtn">Create My Account</button>
+                    </form>
+                </div>
+
+                <!-- Forgot Password View -->
+                <div id="forgot-section" class="d-none">
+                    <h3 class="fw-bold text-dark mb-1">Reset Password</h3>
+                    <p class="text-muted small mb-4">Enter your registered email to receive a one-time password for verification.</p>
+
+                    <form onsubmit="handleForgotPassword(event)">
+                        <div class="mb-3">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" name="email" class="form-control" placeholder="name@company.com" autocomplete="email" required>
+                        </div>
+                        <button type="submit" class="btn-auth" id="forgotBtn">Send OTP</button>
+                    </form>
+                </div>
+
+                <!-- OTP Verification View (shared across flows) -->
+                <div id="otp-section" class="d-none">
+                    <h3 class="fw-bold text-dark mb-1">Verify OTP</h3>
+                    <p class="text-muted small mb-4" id="otpHint">Enter the 6-digit code sent to your email.</p>
+
+                    <form onsubmit="handleOtpVerify(event)">
+                        <div class="mb-3">
+                            <label class="form-label">One-Time Password</label>
+                            <input type="text" id="otpInput" class="form-control text-center font-mono fs-4 py-2" placeholder="••••••" maxlength="6" autocomplete="one-time-code" required autofocus>
+                        </div>
+                        <button type="submit" class="btn-auth" id="otpVerifyBtn">Verify & Continue</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm w-100 mt-2" onclick="cancelOtpFlow()">Cancel</button>
+                    </form>
+                </div>
+
+                <!-- Reset New Password View -->
+                <div id="reset-section" class="d-none">
+                    <h3 class="fw-bold text-dark mb-1">Set New Password</h3>
+                    <p class="text-muted small mb-4">Choose a strong new password for your account.</p>
+
+                    <form onsubmit="handleResetPassword(event)">
+                        <div class="mb-3">
+                            <label class="form-label">New Password</label>
+                            <div class="input-icon-wrapper">
+                                <input type="password" name="newPassword" id="resetNewPass" class="form-control pass-field" placeholder="••••••••" autocomplete="new-password" required>
+                                <i class="bi bi-eye-slash toggle-pass" onclick="togglePass(this)"></i>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Confirm New Password</label>
+                            <div class="input-icon-wrapper">
+                                <input type="password" name="confirmPassword" id="resetConfirmPass" class="form-control pass-field" placeholder="••••••••" autocomplete="new-password" required>
+                                <i class="bi bi-eye-slash toggle-pass" onclick="togglePass(this)"></i>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-auth" id="resetPassBtn">Update Password</button>
+                    </form>
+                </div>
+
+                <div id="error-alert" class="alert alert-danger mt-4 d-none small py-2 px-3 border-0 rounded-3"></div>
+            </div>
+        </div>
+    </div>
+
+        <!-- Master Admin 2FA Security Gateway Modal -->
+    <div class="modal fade" id="master2faModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="master2faModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header bg-dark text-white p-4 border-0 position-relative" style="background: radial-gradient(circle at top right, #1e293b, #090d16) !important;">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-warning text-dark fw-bold font-mono small"><i class="bi bi-shield-lock-fill me-1"></i>2FA GATEWAY</span>
+                            <span id="master2faRoleBadge" class="badge bg-primary-subtle text-primary border small">Master Admin</span>
+                        </div>
+                        <h5 class="modal-title fw-bold text-white mb-0" id="master2faModalLabel">Security Challenge</h5>
+                        <small class="text-white-50" style="font-size: 11px;">Restricted Platform Governance Access</small>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" onclick="closeMaster2faModal()"></button>
+                </div>
+                <div class="modal-body p-4 bg-white">
+                    <div class="text-center mb-3">
+                        <div class="bg-primary-subtle text-primary rounded-circle d-inline-flex p-3 mb-2">
+                            <i class="bi bi-key-fill fs-3"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1" id="master2faAdminName">Master Administrator</h6>
+                        <p class="text-muted small mb-0 font-mono" id="master2faAdminEmail">admin@unitax.pro</p>
+                    </div>
+
+                    <form id="master2faForm" onsubmit="verifyMaster2fa(event)">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase tracking-wide">6-Digit Security PIN</label>
+                            <input type="password" id="master2faPinInput" class="form-control text-center font-mono fs-4 py-2" placeholder="••••••" maxlength="6" autocomplete="one-time-code" required autofocus>
+                            <div class="form-text small text-muted text-center mt-1">Enter Master Cryptographic Key to establish SuperAdmin session.</div>
+                        </div>
+
+                        <div id="master2faAlert" class="alert alert-danger py-2 px-3 small border-0 rounded-3 d-none"></div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" id="master2faVerifyBtn" class="btn btn-primary py-2 fw-bold shadow-sm">
+                                <i class="bi bi-shield-check me-1"></i> Verify & Open Master Console
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm py-2" onclick="closeMaster2faModal()">
+                                Cancel & Back to Sign In
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // 1. Initialize Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyB2iNWYkj_lIWwOtLNmZjBtfKgTYKrjAQU",
+        authDomain: "unitax-8d2e2.firebaseapp.com",
+        databaseURL: "https://unitax-8d2e2-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "unitax-8d2e2"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.database();
+
+    // Secure SHA-256 password hash generator
+    async function hashPassword(password) {
+        try {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(String(password) + "_unitax_enterprise_salt_2026");
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        } catch (e) {
+            let hash = 0;
+            const str = String(password) + "_unitax_enterprise_salt_2026";
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash |= 0;
+            }
+            return 'h_' + Math.abs(hash).toString(16);
+        }
+    }
+
+    function generateUserId(length = 10) {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+    }
+
+    function switchView(mode) {
+        const views = ['login', 'signup', 'forgot', 'otp', 'reset'];
+        views.forEach(v => {
+            const el = document.getElementById(v + '-section');
+            if (el) el.classList.toggle('d-none', v !== mode);
+        });
+        document.getElementById('login-trigger').classList.toggle('active', mode === 'login');
+        document.getElementById('signup-trigger').classList.toggle('active', mode === 'signup');
+        const forgotTrigger = document.getElementById('forgot-trigger');
+        if (forgotTrigger) forgotTrigger.classList.toggle('active', mode === 'forgot');
+        document.getElementById('error-alert').classList.add('d-none');
+    }
+
+    function togglePass(icon) {
+        const input = icon.parentElement.querySelector('input');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.replace('bi-eye-slash', 'bi-eye');
+        } else {
+            input.type = 'password';
+            icon.classList.replace('bi-eye', 'bi-eye-slash');
+        }
+    }
+
+    async function findUserByEmail(email) {
+        try {
+            const cleanEmail = email.trim().toLowerCase();
+            // 1. Direct query in Users node
+            const userSnap = await db.ref('Users').orderByChild('email').equalTo(cleanEmail).once('value');
+            if (userSnap.exists()) {
+                let foundUser = null;
+                let foundUserId = null;
+                userSnap.forEach(child => {
+                    foundUser = child.val();
+                    foundUserId = child.key;
+                });
+                return { user: foundUser, userId: foundUserId, source: 'users', workspaceId: null };
+            }
+
+            // 2. Member search in workspaces
+            const workspacesSnap = await db.ref('Users').once('value');
+            const allUsers = workspacesSnap.val() || {};
+
+            for (const [ownerId, ownerData] of Object.entries(allUsers)) {
+                const members = ownerData?.workspace?.Members || {};
+                for (const [memberId, memberData] of Object.entries(members)) {
+                    if (memberData.email && memberData.email.toLowerCase() === cleanEmail) {
+                        const wsStatus = ownerData?.workspace?.WorkspaceSettings?.workspaceStatus || ownerData?.workspaceStatus || 'active';
+                        const mergedUser = {
+                            ...memberData,
+                            workspaceId: ownerData?.workspaceId || ownerId,
+                            workspaceStatus: wsStatus,
+                            workspaceCreator: false,
+                            isWorkspaceMember: true,
+                            workspaceOwnerId: ownerId,
+                            workspaceOwnerName: ownerData?.name || 'Workspace Owner',
+                            status: memberData.status || 'active'
+                        };
+                        return { user: mergedUser, userId: memberId, source: 'workspace_member', workspaceId: ownerId };
+                    }
+                }
+            }
+            return null;
+        } catch (err) {
+            console.error("User lookup error:", err);
+            return null;
+        }
+    }
+
+    let pendingMasterSession = null;
+    let master2faModalInstance = null;
+    let pendingLoginData = null;
+    let pendingSignupData = null;
+    let pendingForgotEmail = null;
+    let otpPurpose = null;
+    let sharedOTP = null;
+
+    function closeMaster2faModal() {
+        if (master2faModalInstance) master2faModalInstance.hide();
+        pendingMasterSession = null;
+        const btn = document.getElementById('loginBtn');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = 'Sign In to Dashboard';
+        }
+    }
+
+    /**
+ * Fetches the OTP from the Google Apps Script Web App.
+ * @param {string} scriptUrl - Your deployed /exec URL.
+ * @param {string} email - The email address to send the OTP to.
+ * @returns {Promise<string>} The 6-digit OTP as a string.
+ */
+    async function getOtp(email, purpose) {
+        // console.log(email, "running")
+    try {
+        scriptUrl = "https://script.google.com/macros/s/AKfycbw9AxLoo-l07exf-7dD8ZDB8Zfp_Lwy1_7aC4UU0CejUGsTmzfTnrn0d8-H53zB2j83/exec"
+        // 1. Construct the URL with the email parameter and purpose query
+        const url = `${scriptUrl}?email=${encodeURIComponent(email)}&purpose=${encodeURIComponent(purpose || 'User/Useradmin login')}`;
+        // console.log(url)
+        // 2. Fetch the data from your script
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        // 3. Parse the JSON response
+        const data = await response.json();
+
+        // 4. Check if the script returned an error (like invalid email or mail quota exceeded)
+        if (data.status === "error") {
+        throw new Error(data.message);
+        }
+
+        // 5. Return the OTP string
+        // console.log(data.otp)
+        return data.otp;
+
+    } catch (error) {
+        console.error("Failed to get OTP:", error);
+        // You can choose to return null, throw the error, or return an error string depending on how you want to handle it in your UI.
+        throw error; 
+    }
+    }
+
+    async function verifyMaster2fa(e) {
+        e.preventDefault();
+        const pin = document.getElementById('master2faPinInput').value.trim();
+        const alertBox = document.getElementById('master2faAlert');
+        const btn = document.getElementById('master2faVerifyBtn');
+
+        if (!pin) return;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Verifying PIN...';
+        alertBox.classList.add('d-none');
+
+        try {
+            let targetPin = await sharedOTP;
+            // console.log(pin, sharedOTP)
+            try {
+                const pinSnap = await db.ref('PlatformMaster/Settings/pin').once('value');
+                if (pinSnap.exists() && pinSnap.val()) targetPin = String(pinSnap.val()).trim();
+            } catch(e) {}
+
+            if (pin !== targetPin) {
+                // console.log(sharedOTP, pin)
+                throw new Error("Invalid 2FA Verification PIN. Access Denied.");
+            }
+
+            const sessionData = {
+                authenticated: true,
+                role: 'super_administrator',
+                isMasterAdmin: true,
+                isRoot: pendingMasterSession.isRoot,
+                isCoPilot: pendingMasterSession.isCoPilot,
+                email: pendingMasterSession.email,
+                name: pendingMasterSession.name,
+                adminId: pendingMasterSession.adminId,
+                timestamp: Date.now()
+            };
+
+            sessionStorage.setItem('unitax_master_session', JSON.stringify(sessionData));
+            localStorage.setItem('unitax_master_session', JSON.stringify(sessionData));
+            localStorage.setItem('unitax_master_2fa_verified', 'true');
+            localStorage.setItem('unitax_admin_2fa_pass', 'true');
+
+            btn.innerHTML = '<i class="bi bi-check2-all me-1"></i> Authorized! Redirecting...';
+            btn.className = 'btn btn-success py-2 fw-bold shadow-sm';
+
+            setTimeout(() => {
+                window.location.href = 'admin.html';
+            }, 400);
+
+        } catch (err) {
+            alertBox.innerText = err.message || "2FA verification failure.";
+            alertBox.classList.remove('d-none');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-shield-check me-1"></i> Verify & Open Master Console';
+        }
+    }
+
+    async function handleForgotPassword(event) {
+        event.preventDefault();
+        const btn = event.submitter || event.target.querySelector('button[type="submit"]');
+        const alertBox = document.getElementById('error-alert');
+        const formData = new FormData(event.target);
+        const data = Object.fromEntries(formData.entries());
+        const email = (data.email || '').trim().toLowerCase();
+
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Sending OTP...`;
+        alertBox.classList.add('d-none');
+
+        try {
+            // Verify the email exists
+            const result = await findUserByEmail(email);
+            if (!result) {
+                throw new Error("This email is not registered with UniTax Pro.");
+            }
+            sharedOTP = await getOtp(email, 'forgot password login');
+            pendingForgotEmail = email;
+            otpPurpose = 'forgot password login';
+            document.getElementById('otpHint').innerText = `Enter the 6-digit code sent to ${email} to reset your password.`;
+            const otpInputForgot = document.getElementById('otpInput');
+            if (otpInputForgot) otpInputForgot.value = '';
+            switchView('otp');
+        } catch (err) {
+            alertBox.innerText = err.message || "Failed to send OTP.";
+            alertBox.classList.remove('d-none');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'Send OTP';
+        }
+    }
+
+    async function handleOtpVerify(event) {
+        event.preventDefault();
+        const btn = event.submitter || event.target.querySelector('button[type="submit"]');
+        const alertBox = document.getElementById('error-alert');
+        const otp = document.getElementById('otpInput').value.trim();
+
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Verifying...`;
+        alertBox.classList.add('d-none');
+
+        try {
+            if (!sharedOTP || String(otp) !== String(sharedOTP)) {
+                throw new Error("Invalid OTP. Please try again.");
+            }
+
+            // Route based on purpose
+            if (otpPurpose === 'User/Useradmin login') {
+                if (pendingLoginData) {
+                    const { userId, userData, source } = pendingLoginData;
+                    pendingLoginData = null;
+                    await completeLogin(userId, userData, source, null);
+                    return;
+                } else if (pendingSignupData) {
+                    const { name, email, password } = pendingSignupData;
+                    pendingSignupData = null;
+                    // Create account
+                    const newUserId = generateUserId(10);
+                    const passHash = await hashPassword(password);
+                    const newUserData = {
+                        userId: newUserId,
+                        name: name,
+                        email: email,
+                        passwordHash: passHash,
+                        role: "user",
+                        designation: "owner",
+                        status: "active",
+                        masterControl: "operations",
+                        workspaceId: newUserId,
+                        workspaceOwnerId: newUserId,
+                        canPostDirect: true,
+                        canBackdate: true,
+                        allowedProfitCenter: "*",
+                        allowedLedger: "*",
+                        postingLimit: 0,
+                        created_at: firebase.database.ServerValue.TIMESTAMP,
+                        userType: "standalone"
+                    };
+                    await db.ref(`Users/${newUserId}`).set(newUserData);
+                    await db.ref(`Users/${newUserId}/workspace/WorkspaceSettings`).set({
+                        workspaceName: name ? `${name}'s Workspace` : "Main Workspace",
+                        workspaceStatus: "active",
+                        created_at: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    alert("Account created successfully! Please sign in.");
+                    switchView('login');
+                }
+            } else if (otpPurpose === 'forgot password login') {
+                // Move to reset password view
+                switchView('reset');
+            }
+        } catch (err) {
+            alertBox.innerText = err.message || "OTP verification failed.";
+            alertBox.classList.remove('d-none');
+        } finally {
+            const otpInputEl = document.getElementById('otpInput');
+            if (otpInputEl) otpInputEl.value = '';
+            btn.disabled = false;
+            btn.innerText = 'Verify & Continue';
+        }
+    }
+
+    async function handleResetPassword(event) {
+        event.preventDefault();
+        const btn = event.submitter || event.target.querySelector('button[type="submit"]');
+        const alertBox = document.getElementById('error-alert');
+        const formData = new FormData(event.target);
+        const data = Object.fromEntries(formData.entries());
+        const newPassword = data.newPassword;
+        const confirmPassword = data.confirmPassword;
+
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Updating...`;
+        alertBox.classList.add('d-none');
+
+        try {
+            if (newPassword !== confirmPassword) {
+                throw new Error("Passwords do not match.");
+            }
+            if (newPassword.length < 6) {
+                throw new Error("Password must be at least 6 characters in length.");
+            }
+            const email = pendingForgotEmail;
+            if (!email) throw new Error("No pending password reset. Please restart.");
+            const result = await findUserByEmail(email);
+            if (!result) throw new Error("Account not found.");
+            const { userId, source, workspaceId } = result;
+            const upgradePath = source === 'workspace_member' && workspaceId
+                ? `Users/${workspaceId}/workspace/Members/${userId}`
+                : `Users/${userId}`;
+            const newHash = await hashPassword(newPassword);
+            await db.ref(upgradePath).update({ passwordHash: newHash });
+            alert("Password updated successfully! Please sign in.");
+            pendingForgotEmail = null;
+            otpPurpose = null;
+            switchView('login');
+        } catch (err) {
+            alertBox.innerText = err.message || "Password reset failed.";
+            alertBox.classList.remove('d-none');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'Update Password';
+        }
+    }
+
+    function cancelOtpFlow() {
+        pendingLoginData = null;
+        pendingSignupData = null;
+        pendingForgotEmail = null;
+        otpPurpose = null;
+        sharedOTP = null;
+        const otpInputEl = document.getElementById('otpInput');
+        if (otpInputEl) otpInputEl.value = '';
+        switchView('login');
+    }
+
+    async function handleAuth(event, action) {
+        event.preventDefault();
+        const btn = event.submitter || event.target.querySelector('button[type="submit"]');
+        const alertBox = document.getElementById('error-alert');
+        const originalText = btn.innerText;
+
+        const formData = new FormData(event.target);
+        const data = Object.fromEntries(formData.entries());
+        const email = (data.email || '').trim().toLowerCase();
+        const password = data.password;
+
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Authenticating...`;
+        alertBox.classList.add('d-none');
+
+        try {
+            if (action === 'login') {
+                // --- MASTER ADMIN & CO-PILOT DETECTION ---
+                let isMaster = false;
+                let masterAdminObj = null;
+
+                // 1. Root Master Admin built-in credential match
+                if ((email === 'universaltechz786@gmail.com' || email === 'admin') && 
+                    (password === 'admin@2026' || password === 'Admin@2026' || password === 'admin' || password === 'Admin')) {
+                    isMaster = true;
+                    masterAdminObj = {
+                        adminId: 'ROOT_MASTER',
+                        name: 'Master SuperAdministrator (Root)',
+                        email: email,
+                        isRoot: true,
+                        isCoPilot: false,
+                        role: 'super_administrator'
+                    };
+                }
+
+                // 1b. Built-in Master Co-Pilot credential match
+                if (!isMaster && (email === 'copilot@unitax.pro' || email === 'copilot') && 
+                    (password === 'UniTax@Copilot2026' || password === 'copilot@2026' || password === 'Copilot@2026' || password === 'copilot' || password === 'Copilot')) {
+                    isMaster = true;
+                    masterAdminObj = {
+                        adminId: 'COPILOT_MASTER',
+                        name: 'Master Co-Pilot Admin',
+                        email: 'copilot@unitax.pro',
+                        isRoot: false,
+                        isCoPilot: true,
+                        role: 'super_administrator'
+                    };
+                }
+
+                // 2. Query PlatformMaster/Admins for registered master admins & co-pilots
+                if (!isMaster) {
+                    try {
+                        const masterSnap = await db.ref('PlatformMaster/Admins').orderByChild('email').equalTo(email).once('value');
+                        if (masterSnap.exists()) {
+                            let foundAdmin = null;
+                            let foundId = null;
+                            masterSnap.forEach(c => { foundAdmin = c.val(); foundId = c.key; });
+
+                            if (foundAdmin) {
+                                const computedHash = await hashPassword(password);
+                                const isValid = foundAdmin.passwordHash ? (foundAdmin.passwordHash === computedHash) : (foundAdmin.password === password);
+                                if (isValid) {
+                                    isMaster = true;
+                                    masterAdminObj = {
+                                        adminId: foundId,
+                                        name: foundAdmin.name || 'Master Co-Pilot Admin',
+                                        email: foundAdmin.email || email,
+                                        isRoot: foundAdmin.isRoot === true,
+                                        isCoPilot: foundAdmin.isMasterCoPilot === true,
+                                        role: 'super_administrator'
+                                    };
+                                }
+                            }
+                        }
+                    } catch(e) {}
+                }
+
+                // 3. Query Users node for administrator, super_administrator, or isMasterAdmin
+                if (!isMaster) {
+                    const testResult = await findUserByEmail(email);
+                    if (testResult && testResult.user) {
+                        const u = testResult.user;
+                        const computedHash = await hashPassword(password);
+                        const isValid = u.passwordHash ? (u.passwordHash === computedHash) : (u.password === password);
+                        // Change this line (Line 511):
+                        const isRoleAdmin = u.isMasterAdmin === true || u.isMasterCoPilot === true;
+                        if (isValid && isRoleAdmin) {
+                            isMaster = true;
+                            masterAdminObj = {
+                                adminId: testResult.userId,
+                                name: u.name || 'Platform Administrator',
+                                email: u.email || email,
+                                isRoot: u.isRootMaster === true || email === email || u.role === 'administrator' || u.role === 'super_administrator',
+                                isCoPilot: u.isMasterCoPilot === true,
+                                role: u.role || 'super_administrator'
+                            };
+                        }
+                    }
+                }
+
+                // If Master Admin or Co-Pilot: Check if already verified 2FA, else Open Modal
+                if (isMaster && masterAdminObj) {
+                    pendingMasterSession = masterAdminObj;
+                    document.getElementById('master2faAdminName').innerText = masterAdminObj.name;
+                    document.getElementById('master2faAdminEmail').innerText = masterAdminObj.email;
+                    document.getElementById('master2faRoleBadge').innerText = masterAdminObj.isRoot ? 'Root SuperAdmin' : 'Master Co-Pilot';
+                    document.getElementById('master2faRoleBadge').className = masterAdminObj.isRoot ? 'badge bg-warning text-dark border small' : 'badge bg-info-subtle text-info border small';
+                    document.getElementById('master2faPinInput').value = '';
+                    document.getElementById('master2faAlert').classList.add('d-none');
+
+                    if (!master2faModalInstance) {
+                        master2faModalInstance = new bootstrap.Modal(document.getElementById('master2faModal'));
+                        sharedOTP = getOtp(masterAdminObj.email, 'Admin login')
+                    }
+                    master2faModalInstance.show();
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                    return;
+                }
+
+                // Standard Client / Workspace User Flow
+                const result = await findUserByEmail(email);
+                if (!result) {
+                    throw new Error("This email is not registered with UniTax Pro.");
+                }
+
+                const { user: userData, userId, source, workspaceId } = result;
+
+                // Secure password check (support both hashed and legacy plaintext with auto-upgrade)
+                const computedHash = await hashPassword(password);
+                const isPasswordValid = userData.passwordHash
+                    ? userData.passwordHash === computedHash
+                    : userData.password === password;
+
+                if (!isPasswordValid) {
+                    throw new Error("The password you entered is incorrect.");
+                }
+
+                // Seamlessly upgrade legacy plaintext to secure hash
+                if (!userData.passwordHash && userData.password === password) {
+                    const upgradePath = source === 'workspace_member' && workspaceId
+                        ? `Users/${workspaceId}/workspace/Members/${userId}`
+                        : `Users/${userId}`;
+                    db.ref(upgradePath).update({
+                        passwordHash: computedHash
+                    }).catch(e => console.warn("Password upgrade notice:", e));
+                }
+
+                // Status verification
+                const userStatus = userData.status || 'active';
+                const wsStatus = userData.workspaceStatus || 'active';
+                if (userStatus === 'inactive' || userStatus === 'suspended') {
+                    throw new Error("Access Denied: Your account has been suspended or deactivated.");
+                }
+                if (wsStatus === 'suspended' || wsStatus === 'deleted') {
+                    throw new Error("Access Denied: The associated workspace is currently suspended.");
+                }
+
+                // Send OTP for verification (User/Useradmin login)
+                const keepSignedIn = document.getElementById('keepSignedIn')?.checked === true;
+                localStorage.setItem('keepSignedIn', keepSignedIn ? 'true' : 'false');
+                if (!keepSignedIn) {
+                    sessionStorage.setItem('unitax_session_active', '1');
+                } else {
+                    sessionStorage.removeItem('unitax_session_active');
+                }
+
+                btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Sending OTP...`;
+                sharedOTP = await getOtp(email, 'User/Useradmin login');
+                pendingLoginData = { userId, userData, source, btn, originalText };
+                otpPurpose = 'User/Useradmin login';
+                document.getElementById('otpHint').innerText = `Enter the 6-digit code sent to ${email}.`;
+                const otpInputLogin = document.getElementById('otpInput');
+                if (otpInputLogin) otpInputLogin.value = '';
+                switchView('otp');
+                btn.disabled = false;
+                btn.innerText = originalText;
+                return;
+
+            } else {
+                // Register
+                const confirmPass = document.getElementById('regConfirm').value;
+                if (password !== confirmPass) {
+                    throw new Error("Passwords do not match.");
+                }
+                if (password.length < 6) {
+                    throw new Error("Password must be at least 6 characters in length.");
+                }
+
+                const existing = await findUserByEmail(email);
+                if (existing) {
+                    throw new Error("This email is already registered. Please sign in instead.");
+                }
+
+                // Send OTP for signup verification (User/Useradmin login)
+                btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Sending OTP...`;
+                sharedOTP = await getOtp(email, 'User/Useradmin login');
+                pendingSignupData = { name: (data.name || '').trim(), email, password };
+                otpPurpose = 'User/Useradmin login';
+                document.getElementById('otpHint').innerText = `Enter the 6-digit code sent to ${email} to verify your registration.`;
+                const otpInputSignup = document.getElementById('otpInput');
+                if (otpInputSignup) otpInputSignup.value = '';
+                switchView('otp');
+                btn.disabled = false;
+                btn.innerText = originalText;
+                return;
+            }
+        } catch (err) {
+            alertBox.innerText = err.message || "An authentication error occurred.";
+            alertBox.classList.remove('d-none');
+            btn.disabled = false;
+            btn.innerText = originalText;
+        }
+    }
+
+    async function completeLogin(userId, userData, source, btn) {
+        const effectiveWsOwnerId = userData.workspaceOwnerId || userData.workspaceId || userId;
+        const effectiveWsId = userData.workspaceId || effectiveWsOwnerId;
+        const effectiveRole = (userData.role || "administrator").toLowerCase();
+        const effectiveMaster = userData.masterControl || (effectiveRole === 'administrator' || effectiveRole === 'super_administrator' || effectiveRole === 'co_useradmin' || effectiveRole === 'co_admin' ? "administration" : "operations");
+
+        localStorage.setItem('userloginid', userId);
+        localStorage.setItem('userName', userData.name || 'User');
+        localStorage.setItem('useremail_we', userData.email || '');
+        localStorage.setItem('designation', userData.designation || (effectiveRole === 'administrator' ? "Workspace Owner" : "Staff Member"));
+        localStorage.setItem('userrole', effectiveRole);
+        localStorage.setItem('workspaceId', effectiveWsId);
+        localStorage.setItem('workspaceUserId', effectiveWsOwnerId);
+        localStorage.setItem('workspaceOwnerName', userData.workspaceOwnerName || 'Workspace Owner');
+        // For member sessions, proactively resolve real workspace owner name
+        if (effectiveWsOwnerId && effectiveWsOwnerId !== userId && (!userData.workspaceOwnerName || userData.workspaceOwnerName === 'Workspace Owner')) {
+            db.ref(`Users/${effectiveWsOwnerId}`).once('value').then(snap => {
+                if (snap.exists()) {
+                    const oData = snap.val() || {};
+                    const realOwner = oData.name || oData.workspaceName || 'Workspace Owner';
+                    localStorage.setItem('workspaceOwnerName', realOwner);
+                }
+            }).catch(() => {});
+        }
+        localStorage.setItem('masterControl', effectiveMaster);
+        localStorage.setItem('userType', userData.userType || "standalone");
+        localStorage.setItem('userSource', source || 'users');
+        localStorage.setItem('postingLimit', userData.postingLimit || 0);
+        localStorage.setItem('canPostDirect', userData.canPostDirect !== undefined ? userData.canPostDirect : (effectiveRole === 'administrator' || effectiveRole === 'manager'));
+        localStorage.setItem('canBackdate', userData.canBackdate !== undefined ? userData.canBackdate : (effectiveRole === 'administrator' || effectiveRole === 'manager'));
+        localStorage.setItem('allowedProfitCenter', userData.allowedProfitCenter || '*');
+        localStorage.setItem('allowedLedger', userData.allowedLedger || '*');
+        localStorage.setItem('assignedManagerId', userData.assignedManagerId || '');
+        localStorage.setItem('assignedManagerName', userData.assignedManagerName || '');
+        if (userData.voucherApprovalFlow && Array.isArray(userData.voucherApprovalFlow)) {
+            localStorage.setItem('userVoucherApprovalFlow', JSON.stringify(userData.voucherApprovalFlow));
+        } else {
+            localStorage.removeItem('userVoucherApprovalFlow');
+        }
+        if (userData.permissions) {
+            localStorage.setItem('userPermissionsOverride', JSON.stringify(userData.permissions));
+        } else {
+            localStorage.removeItem('userPermissionsOverride');
+        }
+
+        // Fetch and cache workspace posting period (SAP OB52)
+        try {
+            const wsSnap = await db.ref(`Users/${effectiveWsOwnerId}/workspace/WorkspaceSettings`).once('value');
+            const wsData = wsSnap.val() || {};
+            if (wsData.postingPeriod) {
+                localStorage.setItem('workspacePostingPeriod', JSON.stringify(wsData.postingPeriod));
+            }
+        } catch(e) {}
+
+        if (btn) {
+            btn.innerHTML = `<i class="bi bi-check2-all me-2"></i> Authorized`;
+            btn.className = "btn-auth bg-success";
+        }
+
+        setTimeout(() => {
+            window.location.href = 'index.html#/dashboard';
+        }, 400);
+    }
+</script>
+</body>
+</html>

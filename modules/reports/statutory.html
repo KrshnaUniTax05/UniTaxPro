@@ -1,0 +1,262 @@
+<div class="animate-in">
+    <div class="card border-0 shadow-sm overflow-hidden mb-4">
+        <!-- Command Header -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center p-3 border-bottom bg-light sticky-top z-10 unitax-header">
+            <div>
+                <h5 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-file-earmark-ruled text-primary me-2"></i>Statutory & Tax Compliance Statement
+                </h5>
+                <p class="text-muted small mb-0">GST Return Summary (GSTR-1 vs GSTR-3B), Input Tax Credit (ITC) Reconciliation & TDS Ledger</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <div class="input-group input-group-sm" style="width: 140px;">
+                    <span class="input-group-text bg-white small">From</span>
+                    <input type="date" id="statFromDate" class="form-control bg-white" onchange="StatutoryApp.Compute()">
+                </div>
+                <div class="input-group input-group-sm" style="width: 140px;">
+                    <span class="input-group-text bg-white small">To</span>
+                    <input type="date" id="statToDate" class="form-control bg-white" onchange="StatutoryApp.Compute()">
+                </div>
+                <button type="button" class="btn btn-erp-icon" title="Export Statutory Report to CSV" onclick="StatutoryApp.ExportCSV()"><i class="bi bi-file-earmark-arrow-down"></i></button>
+                <button type="button" class="btn btn-erp-icon btn-erp-icon-primary" title="Print Cash Flow Statement" onclick="window.print()"><i class="bi bi-printer"></i></button>
+            </div>
+        </div>
+
+        <div class="p-4">
+            <!-- Statutory Tax Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="border rounded-3 p-3 bg-white shadow-sm">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Output Tax Liability (Sales)</div>
+                        <div class="h4 fw-bold font-mono text-danger mb-0" id="statOutputTax">₹ 0.00</div>
+                        <span class="badge bg-danger-subtle text-danger small mt-1 font-mono">Gross Payable</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded-3 p-3 bg-white shadow-sm">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Input Tax Credit (ITC Purchases)</div>
+                        <div class="h4 fw-bold font-mono text-success mb-0" id="statInputTax">₹ 0.00</div>
+                        <span class="badge bg-success-subtle text-success small mt-1 font-mono">Eligible Credit</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded-3 p-3 bg-white shadow-sm" id="statNetPayableCard">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Net GST Liability / (Credit)</div>
+                        <div class="h4 fw-bold font-mono text-primary mb-0" id="statNetGst">₹ 0.00</div>
+                        <span class="badge bg-primary-subtle text-primary small mt-1 font-mono" id="statNetStatus">Cash Ledger Dues</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded-3 p-3 bg-white shadow-sm">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Total Taxable Turnover</div>
+                        <div class="h4 fw-bold font-mono text-dark mb-0" id="statTaxableTurnover">₹ 0.00</div>
+                        <span class="badge bg-light text-muted small mt-1 font-mono">Aggregate Supplies</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tax Breakup Table: CGST, SGST, IGST -->
+            <div class="border rounded-3 overflow-hidden bg-white shadow-sm mb-4">
+                <div class="bg-light px-3 py-2 border-bottom fw-bold text-uppercase small text-dark d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-receipt me-2 text-primary"></i>GST Tax Component Breakdown (CGST, SGST & IGST)</span>
+                    <span class="font-mono text-muted" id="statPeriodDisplay">Period</span>
+                </div>
+                <table class="table table-sm table-hover mb-0 align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th width="30%" class="ps-3">Tax Classification</th>
+                            <th width="18%" class="text-end font-mono">Taxable Base (INR)</th>
+                            <th width="17%" class="text-end font-mono">CGST (INR)</th>
+                            <th width="17%" class="text-end font-mono">SGST (INR)</th>
+                            <th width="18%" class="text-end pe-3 font-mono">IGST (INR)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="cursor: pointer;" ondblclick="UniTaxDrilldown.Open('GST Outward Taxable Supplies', 'sales', StatutoryApp.DATA.outTaxable)" title="Double click to inspect contributing entries">
+                            <td class="ps-3 fw-semibold">
+                                <span class="badge bg-primary me-2">OUT</span>
+                                Outward Supplies (Tax on Invoices)
+                            </td>
+                            <td class="text-end font-mono fw-bold" id="statOutTaxable">₹ 0.00</td>
+                            <td class="text-end font-mono text-danger" id="statOutCgst">₹ 0.00</td>
+                            <td class="text-end font-mono text-danger" id="statOutSgst">₹ 0.00</td>
+                            <td class="text-end pe-3 font-mono text-danger" id="statOutIgst">₹ 0.00</td>
+                        </tr>
+                        <tr style="cursor: pointer;" ondblclick="UniTaxDrilldown.Open('GST Inward Input Tax Credit (ITC)', 'purchases', StatutoryApp.DATA.inTaxable)" title="Double click to inspect contributing entries">
+                            <td class="ps-3 fw-semibold">
+                                <span class="badge bg-success me-2">IN</span>
+                                Inward Supplies (Eligible Input Tax Credit)
+                            </td>
+                            <td class="text-end font-mono fw-bold" id="statInTaxable">₹ 0.00</td>
+                            <td class="text-end font-mono text-success" id="statInCgst">₹ 0.00</td>
+                            <td class="text-end font-mono text-success" id="statInSgst">₹ 0.00</td>
+                            <td class="text-end pe-3 font-mono text-success" id="statInIgst">₹ 0.00</td>
+                        </tr>
+                    </tbody>
+                    <tfoot class="table-light fw-bold font-mono border-top">
+                        <tr>
+                            <td class="ps-3 text-uppercase">Net Cash Payment Required / (Excess ITC)</td>
+                            <td class="text-end text-muted">-</td>
+                            <td class="text-end font-mono" id="statNetCgst">₹ 0.00</td>
+                            <td class="text-end font-mono" id="statNetSgst">₹ 0.00</td>
+                            <td class="text-end pe-3 font-mono" id="statNetIgst">₹ 0.00</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Regulatory Guidelines Notice -->
+            <div class="alert alert-light border rounded-3 p-3 small text-muted">
+                <h6 class="fw-bold text-dark small mb-1"><i class="bi bi-shield-lock me-1 text-primary"></i>Statutory Compliance Audit Log</h6>
+                Ensure all monthly tax returns (GSTR-1 before 11th and GSTR-3B before 20th of the succeeding month) match these aggregated totals. Cross-verify with the GSTR-1 module for JSON payload download.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.StatutoryApp = {
+    DATA: {},
+
+    async Init() {
+        const today = new Date().toISOString().split('T')[0];
+        const firstDayOfYear = new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0];
+
+        const fromInput = document.getElementById('statFromDate');
+        const toInput = document.getElementById('statToDate');
+        if (fromInput && !fromInput.value) fromInput.value = firstDayOfYear;
+        if (toInput && !toInput.value) toInput.value = today;
+
+        await this.Compute();
+    },
+
+    async Compute() {
+        const fromDate = document.getElementById('statFromDate')?.value || '2000-01-01';
+        const toDate = document.getElementById('statToDate')?.value || '2099-12-31';
+
+        const pEl = document.getElementById('statPeriodDisplay');
+        if (pEl) pEl.innerText = `${fromDate} to ${toDate}`;
+
+        try {
+            const [sales, purchase] = await Promise.all([
+                API.Fetch('Transactions/SalesInvoiceForm').catch(() => ({})),
+                API.Fetch('Transactions/PurchaseInvoiceForm').catch(() => ({}))
+            ]);
+
+            let outTaxable = 0, outCgst = 0, outSgst = 0, outIgst = 0;
+            if (sales) {
+                Object.values(sales).forEach(v => {
+                    const h = v.header || {};
+                    const isDel = v.is_deleted === true || h.is_deleted === true || v.status === 'DELETED' || h.status === 'DELETED';
+                    const isPending = v.status === 'DRAFT' || v.status === 'PENDING_APPROVAL' || h.status === 'DRAFT' || h.status === 'PENDING_APPROVAL';
+                    if (isDel || isPending) return;
+                    const d = h.date || h.voucher_date || '';
+                    if (d && (d < fromDate || d > toDate)) return;
+
+                    const total = parseFloat(h.grandTotal || h.total_amount || 0);
+                    const subtotal = parseFloat(h.subtotal || h.taxable_value || total * 0.8475);
+                    const taxAmt = total - subtotal;
+
+                    outTaxable += subtotal;
+                    const isInterstate = (h.state || '').toLowerCase() !== 'delhi' && (h.isInterstate === true);
+                    if (isInterstate) {
+                        outIgst += taxAmt;
+                    } else {
+                        outCgst += taxAmt / 2;
+                        outSgst += taxAmt / 2;
+                    }
+                });
+            }
+
+            let inTaxable = 0, inCgst = 0, inSgst = 0, inIgst = 0;
+            if (purchase) {
+                Object.values(purchase).forEach(v => {
+                    const h = v.header || {};
+                    const d = h.date || h.voucher_date || '';
+                    if (d && (d < fromDate || d > toDate)) return;
+
+                    const total = parseFloat(h.grandTotal || h.total_amount || 0);
+                    const subtotal = parseFloat(h.subtotal || h.taxable_value || total * 0.8475);
+                    const taxAmt = total - subtotal;
+
+                    inTaxable += subtotal;
+                    const isInterstate = (h.isInterstate === true);
+                    if (isInterstate) {
+                        inIgst += taxAmt;
+                    } else {
+                        inCgst += taxAmt / 2;
+                        inSgst += taxAmt / 2;
+                    }
+                });
+            }
+
+            const totalOutputTax = outCgst + outSgst + outIgst;
+            const totalInputTax = inCgst + inSgst + inIgst;
+            const netGst = totalOutputTax - totalInputTax;
+
+            const netCgst = outCgst - inCgst;
+            const netSgst = outSgst - inSgst;
+            const netIgst = outIgst - inIgst;
+
+            const formatINR = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val);
+
+            // Update UI
+            document.getElementById('statOutputTax').innerText = formatINR(totalOutputTax);
+            document.getElementById('statInputTax').innerText = formatINR(totalInputTax);
+            document.getElementById('statNetGst').innerText = formatINR(Math.abs(netGst));
+            document.getElementById('statTaxableTurnover').innerText = formatINR(outTaxable);
+
+            const netStatus = document.getElementById('statNetStatus');
+            const netEl = document.getElementById('statNetGst');
+            if (netGst >= 0) {
+                netStatus.innerText = 'Payable via Cash Ledger';
+                netStatus.className = 'badge bg-danger-subtle text-danger small mt-1 font-mono';
+                netEl.className = 'h4 fw-bold font-mono text-danger mb-0';
+            } else {
+                netStatus.innerText = 'ITC Carried Forward';
+                netStatus.className = 'badge bg-success-subtle text-success small mt-1 font-mono';
+                netEl.className = 'h4 fw-bold font-mono text-success mb-0';
+            }
+
+            document.getElementById('statOutTaxable').innerText = formatINR(outTaxable);
+            document.getElementById('statOutCgst').innerText = formatINR(outCgst);
+            document.getElementById('statOutSgst').innerText = formatINR(outSgst);
+            document.getElementById('statOutIgst').innerText = formatINR(outIgst);
+
+            document.getElementById('statInTaxable').innerText = formatINR(inTaxable);
+            document.getElementById('statInCgst').innerText = formatINR(inCgst);
+            document.getElementById('statInSgst').innerText = formatINR(inSgst);
+            document.getElementById('statInIgst').innerText = formatINR(inIgst);
+
+            document.getElementById('statNetCgst').innerText = formatINR(netCgst);
+            document.getElementById('statNetSgst').innerText = formatINR(netSgst);
+            document.getElementById('statNetIgst').innerText = formatINR(netIgst);
+
+            this.DATA = {
+                fromDate, toDate, outTaxable, inTaxable, totalOutputTax, totalInputTax, netGst
+            };
+
+        } catch (err) {
+            console.error("Statutory Compute Error:", err);
+        }
+    },
+
+    ExportCSV() {
+        const d = this.DATA;
+        let csv = "Statutory & Tax Compliance Statement\n";
+        csv += `Period: ${d.fromDate} to ${d.toDate}\n\n`;
+        csv += `Tax Stream,Taxable Value (INR),Output Tax (INR),Input Tax Credit (INR),Net Liability (INR)\n`;
+        csv += `GST Outward Supplies,${d.outTaxable.toFixed(2)},${d.totalOutputTax.toFixed(2)},0,${d.totalOutputTax.toFixed(2)}\n`;
+        csv += `GST Inward Supplies,${d.inTaxable.toFixed(2)},0,${d.totalInputTax.toFixed(2)},-${d.totalInputTax.toFixed(2)}\n`;
+        csv += `Net Position,,${d.totalOutputTax.toFixed(2)},${d.totalInputTax.toFixed(2)},${d.netGst.toFixed(2)}\n`;
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Statutory_Tax_Statement_${d.toDate}.csv`;
+        a.click();
+    }
+};
+
+window.StatutoryApp.Init();
+</script>

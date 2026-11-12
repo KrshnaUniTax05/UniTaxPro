@@ -1,0 +1,502 @@
+<!-- modules/help/article.html - UniTax Pro Knowledge Base & Tutorial Reader (support.google.com Style) -->
+<div class="container-fluid py-2 px-1 px-sm-2 animate-in help-center-wrapper">
+    <!-- Breadcrumb & Navigation Bar -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 pb-2 border-bottom">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="#/dashboard" class="text-decoration-none"><i class="bi bi-house-door me-1"></i>Home</a></li>
+                <li class="breadcrumb-item"><a href="javascript:void(0)" onclick="window.navigateToArticle('')" class="text-decoration-none">Help Center</a></li>
+                <li class="breadcrumb-item active text-truncate" id="kb_article_breadcrumb_cat" style="max-width: 200px;">Tutorial</li>
+            </ol>
+        </nav>
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-sm btn-outline-secondary" onclick="window.printArticle()"><i class="bi bi-printer me-1"></i>Print</button>
+            <button class="btn btn-sm btn-outline-primary" onclick="window.copyArticleLink()"><i class="bi bi-link-45deg me-1"></i>Copy Link</button>
+            <a href="#/dashboard" class="btn btn-sm btn-light border"><i class="bi bi-arrow-left me-1"></i>Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="row g-2 justify-content-center">
+        <!-- Article Container -->
+        <div class="col-12 w-100 px-0">
+            <!-- Article Card -->
+            <div class="card border-0 shadow-sm rounded-3 overflow-hidden bg-white mb-4">
+                <!-- Header Banner -->
+                <div class="px-2 px-sm-3 py-3 border-bottom bg-light bg-gradient">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge bg-primary text-white font-mono" id="kb_reader_category">Help & Guidance</span>
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25" id="kb_reader_verified"><i class="bi bi-shield-check me-1"></i>Verified Resolution</span>
+                    </div>
+                    <h1 class="h2 fw-bold text-dark mb-3" id="kb_reader_title">Loading Support Article...</h1>
+                    <div class="d-flex flex-wrap align-items-center gap-3 text-muted small">
+                        <span><i class="bi bi-person-circle me-1 text-primary"></i> <span id="kb_reader_author">UniTax Support Team</span></span>
+                        <span>•</span>
+                        <span><i class="bi bi-clock-history me-1"></i> Last updated: <span id="kb_reader_updated">Today</span></span>
+                        <span>•</span>
+                        <span><i class="bi bi-stopwatch me-1"></i> <span id="kb_reader_readtime">3 min read</span></span>
+                    </div>
+                </div>
+
+                <!-- Article Body Container -->
+                <div class="px-2 px-sm-3 py-3">
+                    <!-- Loading Spinner -->
+                    <div id="kb_loading_state" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="text-muted small mt-2">Connecting to Knowledge Base Server...</p>
+                    </div>
+
+                    <!-- Injected HTML Content Area -->
+                    <div id="kb_reader_content" class="google-support-content" style="display: none; line-height: 1.7; font-size: 15px; color: #1e293b;">
+                        <!-- Server HTML injected here -->
+                    </div>
+
+                    <!-- Fallback / Articles List if no ID or not found -->
+                    <div id="kb_fallback_list" style="display: none;">
+                        <div class="text-center py-4 mb-4">
+                            <div class="display-6 text-primary mb-2"><i class="bi bi-book-half"></i></div>
+                            <h4 class="fw-bold">Knowledge Base & System Tutorials</h4>
+                            <p class="text-muted">Browse published step-by-step resolution guides and documentation.</p>
+                        </div>
+                        <div class="list-group list-group-flush border rounded-3 overflow-hidden" id="kb_directory_list">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Helpful Feedback Widget -->
+                    <div class="mt-5 pt-4 border-top" id="kb_feedback_widget">
+                        <div class="p-3 bg-light rounded-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                            <div>
+                                <h6 class="fw-bold mb-1 text-dark">Was this article helpful?</h6>
+                                <p class="text-muted small mb-0">Your feedback helps us continuously refine UniTax Pro support documentation.</p>
+                            </div>
+                            <div class="d-flex align-items-center gap-2" id="kb_feedback_buttons">
+                                <button class="btn btn-sm btn-outline-success px-3" onclick="window.submitArticleFeedback(true)">
+                                    <i class="bi bi-hand-thumbs-up me-1"></i> Yes
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary px-3" onclick="window.submitArticleFeedback(false)">
+                                    <i class="bi bi-hand-thumbs-down me-1"></i> No
+                                </button>
+                            </div>
+                            <div id="kb_feedback_thanks" class="text-success small fw-bold" style="display: none;">
+                                <i class="bi bi-check-circle-fill me-1"></i> Thank you for your feedback!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Google Support Article Styles (Compact X-Axis Margins) */
+.help-center-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-sizing: border-box !important;
+}
+.google-support-content {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+.google-support-content h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+.google-support-content h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+.google-support-content p {
+    margin-bottom: 1rem;
+}
+.google-support-content ul, .google-support-content ol {
+    margin-bottom: 1.25rem;
+    padding-left: 1.5rem;
+}
+.google-support-content li {
+    margin-bottom: 0.5rem;
+}
+.google-support-content .kb-step-card {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 16px 20px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+.google-support-content .kb-step-num {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    background: #0052ea;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 14px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.google-support-content .kb-step-body h5 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: #0f172a;
+}
+.google-support-content .kb-alert {
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+.google-support-content .kb-alert-info {
+    background-color: #eff6ff;
+    border-left: 4px solid #3b82f6;
+    color: #1e40af;
+}
+.google-support-content .kb-alert-warning {
+    background-color: #fffbeb;
+    border-left: 4px solid #f59e0b;
+    color: #92400e;
+}
+.google-support-content .kb-alert-success {
+    background-color: #f0fdf4;
+    border-left: 4px solid #22c55e;
+    color: #166534;
+}
+.google-support-content .kb-code {
+    font-family: monospace;
+    background: #e2e8f0;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: #0f172a;
+}
+.google-support-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+    font-size: 14px;
+}
+.google-support-content th {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    padding: 10px 14px;
+    font-weight: 600;
+    text-align: left;
+}
+.google-support-content td {
+    border: 1px solid #cbd5e1;
+    padding: 10px 14px;
+}
+.google-support-content tr:nth-child(even) {
+    background-color: #f8fafc;
+}
+</style>
+
+<script>
+(function() {
+    function getArticleIdFromUrl() {
+        let id = '';
+        if (window.UniTaxRouter && window.UniTaxRouter.currentParams) {
+            id = window.UniTaxRouter.currentParams.id || window.UniTaxRouter.currentParams.slug || '';
+        }
+        if (!id) {
+            const hash = window.location.hash || '';
+            if (hash.includes('?')) {
+                const queryStr = hash.split('?')[1];
+                const params = new URLSearchParams(queryStr);
+                id = params.get('id') || params.get('slug') || '';
+            }
+        }
+        if (!id && window.location.search) {
+            const params = new URLSearchParams(window.location.search);
+            id = params.get('id') || params.get('slug') || '';
+        }
+        return (id ? decodeURIComponent(id) : '').trim();
+    }
+
+    let articleId = getArticleIdFromUrl();
+
+    const titleEl = document.getElementById('kb_reader_title');
+    const catEl = document.getElementById('kb_reader_category');
+    const authorEl = document.getElementById('kb_reader_author');
+    const updatedEl = document.getElementById('kb_reader_updated');
+    const readtimeEl = document.getElementById('kb_reader_readtime');
+    const contentEl = document.getElementById('kb_reader_content');
+    const loadingEl = document.getElementById('kb_loading_state');
+    const breadcrumbCat = document.getElementById('kb_article_breadcrumb_cat');
+    const fallbackList = document.getElementById('kb_fallback_list');
+    const feedbackWidget = document.getElementById('kb_feedback_widget');
+
+    window.printArticle = function() {
+        window.print();
+    };
+
+    window.copyArticleLink = function() {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+                App.UI.Notify('Link Copied', 'Article link copied to clipboard.', 'success');
+            } else {
+                alert("Article link copied to clipboard!");
+            }
+        }).catch(() => {
+            prompt("Copy this article URL:", window.location.href);
+        });
+    };
+
+    window.submitArticleFeedback = function(isPositive) {
+        const btns = document.getElementById('kb_feedback_buttons');
+        const thanks = document.getElementById('kb_feedback_thanks');
+        if (btns) btns.style.display = 'none';
+        if (thanks) thanks.style.display = 'block';
+    };
+
+    window.navigateToArticle = function(id) {
+        articleId = (id || '').trim();
+        const targetHash = articleId ? `#/help/article?id=${encodeURIComponent(articleId)}` : '#/help/article';
+        if (window.location.hash !== targetHash) {
+            window.location.hash = targetHash;
+        }
+        loadArticle();
+    };
+
+    window.addEventListener('hashchange', function() {
+        const currentHash = window.location.hash || '';
+        if (currentHash.includes('help')) {
+            const newId = getArticleIdFromUrl();
+            if (newId !== articleId) {
+                articleId = newId;
+                loadArticle();
+            }
+        }
+    });
+
+    async function loadArticle() {
+        if (typeof firebase === 'undefined' || !firebase.database) {
+            setTimeout(loadArticle, 150);
+            return;
+        }
+
+        const db = firebase.database();
+
+        if (!articleId) {
+            loadDirectory(db);
+            return;
+        }
+
+        if (loadingEl) loadingEl.style.display = 'block';
+        if (contentEl) contentEl.style.display = 'none';
+        if (fallbackList) fallbackList.style.display = 'none';
+        if (feedbackWidget) feedbackWidget.style.display = 'none';
+        if (titleEl) titleEl.innerText = "Loading Support Article...";
+        if (catEl) catEl.innerText = "Help & Guidance";
+
+        try {
+            let data = null;
+
+            // 1. Direct fetch from PlatformMaster/KnowledgeBase
+            try {
+                const snap = await db.ref(`PlatformMaster/KnowledgeBase/${articleId}`).once('value');
+                data = snap.val();
+            } catch (e) {}
+
+            // 2. Direct fetch with/without leading hyphen
+            if (!data) {
+                try {
+                    const altId = articleId.startsWith('-') ? articleId.substring(1) : ('-' + articleId);
+                    const snap = await db.ref(`PlatformMaster/KnowledgeBase/${altId}`).once('value');
+                    data = snap.val();
+                } catch (e) {}
+            }
+
+            // 3. Direct fetch from HelpCenter/Articles
+            if (!data) {
+                try {
+                    const snap = await db.ref(`HelpCenter/Articles/${articleId}`).once('value');
+                    data = snap.val();
+                } catch (e) {}
+            }
+            if (!data) {
+                try {
+                    const altId = articleId.startsWith('-') ? articleId.substring(1) : ('-' + articleId);
+                    const snap = await db.ref(`HelpCenter/Articles/${altId}`).once('value');
+                    data = snap.val();
+                } catch (e) {}
+            }
+
+            // 4. Comprehensive scan across PlatformMaster/KnowledgeBase by id, slug, key or title
+            if (!data) {
+                try {
+                    const allSnap = await db.ref('PlatformMaster/KnowledgeBase').once('value');
+                    const all = allSnap.val() || {};
+                    const cleanQuery = articleId.replace(/^-/, '').toLowerCase();
+                    for (const [k, v] of Object.entries(all)) {
+                        if (!v) continue;
+                        const kClean = k.replace(/^-/, '').toLowerCase();
+                        const vId = (v.id || '').replace(/^-/, '').toLowerCase();
+                        const vSlug = (v.slug || '').toLowerCase();
+                        const vTitle = (v.title || '').toLowerCase();
+                        if (k === articleId || kClean === cleanQuery || vId === cleanQuery || vSlug === cleanQuery || vSlug === articleId.toLowerCase() || vTitle === articleId.toLowerCase()) {
+                            data = v;
+                            break;
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            // 5. Comprehensive scan across HelpCenter/Articles
+            if (!data) {
+                try {
+                    const allSnap2 = await db.ref('HelpCenter/Articles').once('value');
+                    const all2 = allSnap2.val() || {};
+                    const cleanQuery = articleId.replace(/^-/, '').toLowerCase();
+                    for (const [k, v] of Object.entries(all2)) {
+                        if (!v) continue;
+                        const kClean = k.replace(/^-/, '').toLowerCase();
+                        const vId = (v.id || '').replace(/^-/, '').toLowerCase();
+                        const vSlug = (v.slug || '').toLowerCase();
+                        const vTitle = (v.title || '').toLowerCase();
+                        if (k === articleId || kClean === cleanQuery || vId === cleanQuery || vSlug === cleanQuery || vSlug === articleId.toLowerCase() || vTitle === articleId.toLowerCase()) {
+                            data = v;
+                            break;
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            if (!data) {
+                if (loadingEl) loadingEl.style.display = 'none';
+                if (titleEl) titleEl.innerText = "Support Article Not Found";
+                if (catEl) catEl.innerText = "Notice";
+                if (breadcrumbCat) breadcrumbCat.innerText = "Not Found";
+                if (contentEl) {
+                    contentEl.innerHTML = `
+                        <div class="alert alert-warning py-4 my-2">
+                            <h5><i class="bi bi-exclamation-triangle-fill me-2"></i>Article Not Located</h5>
+                            <p class="mb-3">The requested support tutorial (ID: <code>${articleId}</code>) could not be located on the server. It may have been updated or relocated.</p>
+                            <button class="btn btn-primary btn-sm" onclick="window.navigateToArticle('')"><i class="bi bi-arrow-left me-1"></i>Back to Knowledge Base Directory</button>
+                        </div>
+                    `;
+                    contentEl.style.display = 'block';
+                }
+                if (fallbackList) fallbackList.style.display = 'none';
+                if (feedbackWidget) feedbackWidget.style.display = 'none';
+                return;
+            }
+
+            // Populate metadata
+            if (titleEl) titleEl.innerText = data.title || 'UniTax Pro Support Article';
+            if (catEl) catEl.innerText = data.category || 'General Guidance';
+            if (breadcrumbCat) breadcrumbCat.innerText = data.category || data.title || 'Tutorial';
+            if (authorEl) authorEl.innerText = data.author || 'Master Platform Admin';
+            if (readtimeEl) readtimeEl.innerText = data.readTime || '3 min read';
+
+            const d = data.updatedAt || data.publishedAt;
+            if (updatedEl) updatedEl.innerText = d ? new Date(d).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'Recently Verified';
+
+            // Inject Authored HTML Content
+            if (contentEl) {
+                contentEl.innerHTML = data.htmlContent || '<p class="text-muted">No content authored for this article.</p>';
+                contentEl.style.display = 'block';
+            }
+            
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (fallbackList) fallbackList.style.display = 'none';
+            if (feedbackWidget) feedbackWidget.style.display = 'block';
+
+        } catch (e) {
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (titleEl) titleEl.innerText = "Knowledge Base Connection Error";
+            if (contentEl) {
+                contentEl.innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
+                contentEl.style.display = 'block';
+            }
+            if (fallbackList) fallbackList.style.display = 'none';
+        }
+    }
+
+    async function loadDirectory(db) {
+        if (loadingEl) loadingEl.style.display = 'block';
+        if (contentEl) contentEl.style.display = 'none';
+        if (fallbackList) fallbackList.style.display = 'none';
+        if (feedbackWidget) feedbackWidget.style.display = 'none';
+
+        try {
+            let snap = await db.ref('PlatformMaster/KnowledgeBase').once('value');
+            let articles = snap.val() || {};
+
+            if (Object.keys(articles).length === 0) {
+                let snap2 = await db.ref('HelpCenter/Articles').once('value');
+                articles = snap2.val() || {};
+            }
+
+            const list = Object.entries(articles).reverse();
+
+            if (loadingEl) loadingEl.style.display = 'none';
+            if (contentEl) contentEl.style.display = 'none';
+            if (fallbackList) fallbackList.style.display = 'block';
+            if (feedbackWidget) feedbackWidget.style.display = 'none';
+
+            if (titleEl) titleEl.innerText = "Help Center & Knowledge Base";
+            if (catEl) catEl.innerText = "Directory";
+            if (breadcrumbCat) breadcrumbCat.innerText = "Directory";
+
+            const dirListEl = document.getElementById('kb_directory_list');
+            if (!dirListEl) return;
+
+            if (list.length === 0) {
+                dirListEl.innerHTML = `
+                    <div class="text-center py-4 text-muted">
+                        No articles published yet. Master Admin can publish new tutorials from the Admin Control Center.
+                    </div>
+                `;
+                return;
+            }
+
+            dirListEl.innerHTML = list.map(([id, art]) => {
+                const targetKey = id;
+                return `
+                    <a href="#/help/article?id=${encodeURIComponent(targetKey)}" onclick="window.navigateToArticle('${targetKey}'); return false;" class="list-group-item list-group-item-action p-3 d-flex justify-content-between align-items-center cursor-pointer">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="badge bg-light text-primary border">${art.category || 'Guide'}</span>
+                                <span class="fw-bold text-dark">${art.title || 'Untitled Article'}</span>
+                            </div>
+                            <div class="text-muted small">${art.slug || art.id || id} • ${art.readTime || '3 min'} read</div>
+                        </div>
+                        <span class="text-muted small font-mono"><i class="bi bi-chevron-right"></i></span>
+                    </a>
+                `;
+            }).join('');
+
+        } catch (err) {
+            if (loadingEl) loadingEl.style.display = 'none';
+            console.warn("Directory load error:", err);
+        }
+    }
+
+    loadArticle();
+})();
+</script>

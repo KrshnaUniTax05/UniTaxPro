@@ -1,0 +1,351 @@
+<div class="animate-in">
+    <div class="card border-0 shadow-sm overflow-hidden mb-4">
+        <!-- Command Header -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center p-3 border-bottom bg-light sticky-top z-10 unitax-header">
+            <div>
+                <h5 class="fw-bold mb-0 text-dark">
+                    <i class="bi bi-scale text-primary me-2"></i>Trial Balance
+                </h5>
+                <p class="text-muted small mb-0">Dual-column debit and credit reconciliation across all organizational ledgers</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <div class="input-group input-group-sm" style="width: 220px;">
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" id="tbSearchInput" class="form-control bg-white border-start-0" placeholder="Filter ledgers..." oninput="TrialBalanceApp.FilterTable()">
+                </div>
+                <div class="input-group input-group-sm" style="width: 150px;">
+                    <span class="input-group-text bg-white small">As on</span>
+                    <input type="date" id="tbAsOnDate" class="form-control bg-white" onchange="TrialBalanceApp.Compute()">
+                </div>
+                <button type="button" class="btn btn-erp-icon" title="Export CSV" onclick="TrialBalanceApp.ExportCSV()"><i class="bi bi-file-earmark-arrow-down"></i></button>
+                <button type="button" class="btn btn-erp-icon btn-erp-icon-primary" title="Print Trial Balance" onclick="window.print()"><i class="bi bi-printer"></i></button>
+            </div>
+        </div>
+
+        <div class="p-4">
+            <!-- Reconciliation Proof Strip -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="border rounded-3 p-3 bg-white shadow-sm">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Total Debit Balance</div>
+                        <div class="h4 fw-bold font-mono text-primary mb-0" id="tbTotalDebit">₹ 0.00</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded-3 p-3 bg-white shadow-sm">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Total Credit Balance</div>
+                        <div class="h4 fw-bold font-mono text-dark mb-0" id="tbTotalCredit">₹ 0.00</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded-3 p-3 bg-white shadow-sm" id="tbDiffCard">
+                        <div class="text-muted small text-uppercase fw-bold mb-1">Reconciliation Difference</div>
+                        <div class="h4 fw-bold font-mono text-success mb-0" id="tbDifference">₹ 0.00 (Balanced)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ledger Balances Table -->
+            <div class="table-responsive border rounded-3 bg-white shadow-sm">
+                <table class="table table-sm table-hover mb-0 align-middle master-print-table" id="tbTable" style="width: 100% !important;">
+                    <thead class="table-dark">
+                        <tr>
+                            <th width="15%" class="ps-3">Ledger Code</th>
+                            <th width="35%">Account Title</th>
+                            <th width="20%">Account Group / Nature</th>
+                            <th width="15%" class="text-end">Debit (INR)</th>
+                            <th width="15%" class="text-end pe-3">Credit (INR)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbTableBody">
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                <span class="spinner-border spinner-border-sm me-2 text-primary"></span>
+                                Computing ledger balances from enterprise journals...
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot class="table-light fw-bold font-mono border-top">
+                        <tr>
+                            <td colspan="3" class="ps-3 text-uppercase">Total Ledger Balances</td>
+                            <td class="text-end text-primary" id="tbFootDebit">₹ 0.00</td>
+                            <td class="text-end pe-3 text-dark" id="tbFootCredit">₹ 0.00</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="form-text mt-2 text-muted small">
+                <i class="bi bi-info-circle me-1"></i> Double-click any ledger row to open its General Ledger Statement drilldown.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.TrialBalanceApp = {
+    LEDGERS: [],
+    BALANCES: [],
+
+    async Init() {
+        const today = new Date().toISOString().split('T')[0];
+        const dateInput = document.getElementById('tbAsOnDate');
+        if (dateInput && !dateInput.value) dateInput.value = today;
+
+        await this.Compute();
+    },
+
+    async Compute() {
+        const asOnDate = document.getElementById('tbAsOnDate')?.value || new Date().toISOString().split('T')[0];
+        const tbody = document.getElementById('tbTableBody');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2 text-primary"></span> Computing ledger balances...</td></tr>`;
+
+        try {
+            // 1. Fetch Master Ledgers
+            const ledgersData = await API.Fetch('Masters/LedgerCreation') || {};
+            
+            // 2. Fetch Vouchers
+            const [sales, purchase, receipt, payment] = await Promise.all([
+                API.Fetch('Transactions/SalesInvoiceForm').catch(() => ({})),
+                API.Fetch('Transactions/PurchaseInvoiceForm').catch(() => ({})),
+                API.Fetch('Transactions/ReceiptVoucherForm').catch(() => ({})),
+                API.Fetch('Transactions/PaymentVoucherForm').catch(() => ({}))
+            ]);
+
+            // Accumulate debits and credits per ledger
+            const ledgerSums = {};
+
+            // Initialize masters
+            Object.values(ledgersData).forEach(l => {
+                if (!l || !l.name) return;
+                const nameKey = l.name.trim().toLowerCase();
+                const opBal = parseFloat(l.openingBalance || 0);
+                const opType = (l.balanceType || l.openingBalanceType || 'Dr').toUpperCase();
+                
+                ledgerSums[nameKey] = {
+                    code: l.ledgerCode || 'GL-' + nameKey.substring(0, 4).toUpperCase(),
+                    name: l.name,
+                    group: l.ledgerGroup || l.ledgerNature || l.ledgerType || 'General Account',
+                    debit: opType.startsWith('D') ? opBal : 0,
+                    credit: opType.startsWith('C') ? opBal : 0
+                };
+            });
+
+            // Process Sales (Credit Sales Account, Debit Customer)
+            if (sales) {
+                Object.values(sales).forEach(v => {
+                    const h = v.header || {};
+                    const isDel = v.is_deleted === true || (h && h.is_deleted === true) || v.status === 'DELETED' || (h && h.status === 'DELETED');
+                    const isDraft = v.status === 'DRAFT' || v.status === 'PENDING_APPROVAL' || (h && (h.status === 'DRAFT' || h.status === 'PENDING_APPROVAL'));
+                    if (isDel || isDraft) return;
+                    const vDate = h.posting_date || v.posting_date || h.date || v.date || h.voucher_date;
+                    if (!vDate || vDate > asOnDate) return;
+                    const amt = parseFloat(h.grandTotal || h.total_amount || 0);
+                    if (!amt) return;
+
+                    const party = (h.party_ledger || h.entity || 'Sundry Debtors').trim();
+                    const salesAcct = 'Sales Account';
+
+                    this.AddEntry(ledgerSums, party, amt, 0, 'Sundry Debtors');
+                    this.AddEntry(ledgerSums, salesAcct, 0, amt, 'Revenue / Sales');
+                });
+            }
+
+            // Process Purchase (Debit Purchase Account, Credit Vendor)
+            if (purchase) {
+                Object.values(purchase).forEach(v => {
+                    const h = v.header || {};
+                    const isDel = v.is_deleted === true || (h && h.is_deleted === true) || v.status === 'DELETED' || (h && h.status === 'DELETED');
+                    const isDraft = v.status === 'DRAFT' || v.status === 'PENDING_APPROVAL' || (h && (h.status === 'DRAFT' || h.status === 'PENDING_APPROVAL'));
+                    if (isDel || isDraft) return;
+                    const vDate = h.posting_date || v.posting_date || h.date || v.date || h.voucher_date;
+                    if (!vDate || vDate > asOnDate) return;
+                    const amt = parseFloat(h.grandTotal || h.total_amount || 0);
+                    if (!amt) return;
+
+                    const vendor = (h.supplier_name || h.entity || 'Sundry Creditors').trim();
+                    const purchAcct = 'Purchase Account';
+
+                    this.AddEntry(ledgerSums, purchAcct, amt, 0, 'Direct Expenses');
+                    this.AddEntry(ledgerSums, vendor, 0, amt, 'Sundry Creditors');
+                });
+            }
+
+            // Process Receipt (Debit Bank/Cash, Credit Offsetting Account)
+            if (receipt) {
+                Object.values(receipt).forEach(v => {
+                    const h = v.header || {};
+                    const isDel = v.is_deleted === true || (h && h.is_deleted === true) || v.status === 'DELETED' || (h && h.status === 'DELETED');
+                    const isDraft = v.status === 'DRAFT' || v.status === 'PENDING_APPROVAL' || (h && (h.status === 'DRAFT' || h.status === 'PENDING_APPROVAL'));
+                    if (isDel || isDraft) return;
+                    const vDate = h.posting_date || v.posting_date || h.date || v.date || h.voucher_date;
+                    if (!vDate || vDate > asOnDate) return;
+                    const bank = (h.gl_account || 'Bank Account').trim();
+                    const amt = parseFloat(h.grandTotal || h.total || 0);
+                    if (!amt) return;
+
+                    this.AddEntry(ledgerSums, bank, amt, 0, 'Bank / Cash');
+
+                    // Offset
+                    const items = v.items || [];
+                    if (items.length) {
+                        items.forEach(it => {
+                            const offsetName = (it.offset_account || it.account || 'Customer Ledger').trim();
+                            const itemAmt = parseFloat(it.amount || 0);
+                            this.AddEntry(ledgerSums, offsetName, 0, itemAmt, 'Current Assets / Debtors');
+                        });
+                    } else {
+                        const offsetName = (h.entity || 'Offsetting Account').trim();
+                        this.AddEntry(ledgerSums, offsetName, 0, amt, 'Current Assets / Debtors');
+                    }
+                });
+            }
+
+            // Process Payment (Credit Bank/Cash, Debit Vendor/Expense)
+            if (payment) {
+                Object.values(payment).forEach(v => {
+                    const h = v.header || {};
+                    const isDel = v.is_deleted === true || (h && h.is_deleted === true) || v.status === 'DELETED' || (h && h.status === 'DELETED');
+                    const isDraft = v.status === 'DRAFT' || v.status === 'PENDING_APPROVAL' || (h && (h.status === 'DRAFT' || h.status === 'PENDING_APPROVAL'));
+                    if (isDel || isDraft) return;
+                    const vDate = h.posting_date || v.posting_date || h.date || v.date || h.voucher_date;
+                    if (!vDate || vDate > asOnDate) return;
+                    const bank = (h.gl_account || 'Bank Account').trim();
+                    const amt = parseFloat(h.grandTotal || h.total || 0);
+                    if (!amt) return;
+
+                    this.AddEntry(ledgerSums, bank, 0, amt, 'Bank / Cash');
+
+                    const items = v.items || [];
+                    if (items.length) {
+                        items.forEach(it => {
+                            const offsetName = (it.offset_account || it.account || 'Expense / Creditor').trim();
+                            const itemAmt = parseFloat(it.amount || 0);
+                            this.AddEntry(ledgerSums, offsetName, itemAmt, 0, 'Current Liabilities / Creditors');
+                        });
+                    } else {
+                        const offsetName = (h.entity || 'Expense / Creditor').trim();
+                        this.AddEntry(ledgerSums, offsetName, amt, 0, 'Current Liabilities / Creditors');
+                    }
+                });
+            }
+
+            // Compute Net Balances
+            const rows = [];
+            let totalDebit = 0;
+            let totalCredit = 0;
+
+            Object.values(ledgerSums).forEach(l => {
+                const diff = l.debit - l.credit;
+                if (Math.abs(diff) < 0.001) return; // Skip zero balances
+
+                const netDebit = diff > 0 ? diff : 0;
+                const netCredit = diff < 0 ? Math.abs(diff) : 0;
+
+                totalDebit += netDebit;
+                totalCredit += netCredit;
+
+                rows.push({
+                    code: l.code,
+                    name: l.name,
+                    group: l.group,
+                    debit: netDebit,
+                    credit: netCredit
+                });
+            });
+
+            // Sort alphabetically by account name
+            rows.sort((a, b) => a.name.localeCompare(b.name));
+            this.BALANCES = rows;
+
+            // Render Rows
+            this.RenderRows(rows);
+
+            // Update Summaries
+            const diff = Math.abs(totalDebit - totalCredit);
+            const formatINR = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(val);
+
+            document.getElementById('tbTotalDebit').innerText = formatINR(totalDebit);
+            document.getElementById('tbTotalCredit').innerText = formatINR(totalCredit);
+            document.getElementById('tbFootDebit').innerText = formatINR(totalDebit);
+            document.getElementById('tbFootCredit').innerText = formatINR(totalCredit);
+
+            const diffEl = document.getElementById('tbDifference');
+            const diffCard = document.getElementById('tbDiffCard');
+            if (diff < 0.01) {
+                diffEl.innerText = '₹ 0.00 (Balanced)';
+                diffEl.className = 'h4 fw-bold font-mono text-success mb-0';
+            } else {
+                diffEl.innerText = formatINR(diff) + ' (Imbalance)';
+                diffEl.className = 'h4 fw-bold font-mono text-danger mb-0';
+            }
+
+        } catch (err) {
+            console.error("Trial Balance Error:", err);
+            if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-danger"><i class="bi bi-exclamation-triangle me-1"></i> Failed to compute Trial Balance: ${err.message}</td></tr>`;
+        }
+    },
+
+    AddEntry(map, name, debit, credit, defaultGroup) {
+        if (!name) return;
+        const key = name.trim().toLowerCase();
+        if (!map[key]) {
+            map[key] = {
+                code: 'GL-' + key.substring(0, 4).toUpperCase(),
+                name: name.trim(),
+                group: defaultGroup,
+                debit: 0,
+                credit: 0
+            };
+        }
+        map[key].debit += debit;
+        map[key].credit += credit;
+    },
+
+    RenderRows(rows) {
+        const tbody = document.getElementById('tbTableBody');
+        if (!tbody) return;
+
+        if (rows.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">No transactions found for the specified period.</td></tr>`;
+            return;
+        }
+
+        const formatINR = (val) => val > 0 ? new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2 }).format(val) : '-';
+
+        tbody.innerHTML = rows.map(r => `
+            <tr style="cursor: pointer;" ondblclick="App.Router('reports/gl-statement?ledger=${encodeURIComponent(r.name)}')">
+                <td class="ps-3 font-mono text-muted small">${Utils.EscapeHTML(r.code)}</td>
+                <td class="fw-semibold text-dark">${Utils.EscapeHTML(r.name)}</td>
+                <td><span class="badge bg-light text-secondary border">${Utils.EscapeHTML(r.group)}</span></td>
+                <td class="text-end font-mono ${r.debit > 0 ? 'fw-bold text-primary' : 'text-muted'}">${formatINR(r.debit)}</td>
+                <td class="text-end pe-3 font-mono ${r.credit > 0 ? 'fw-bold text-dark' : 'text-muted'}">${formatINR(r.credit)}</td>
+            </tr>
+        `).join('');
+    },
+
+    FilterTable() {
+        const q = (document.getElementById('tbSearchInput')?.value || '').toLowerCase();
+        const filtered = this.BALANCES.filter(r => 
+            r.name.toLowerCase().includes(q) || 
+            r.code.toLowerCase().includes(q) || 
+            r.group.toLowerCase().includes(q)
+        );
+        this.RenderRows(filtered);
+    },
+
+    ExportCSV() {
+        if (!this.BALANCES.length) return;
+        let csv = "Ledger Code,Account Title,Account Group,Debit (INR),Credit (INR)\n";
+        this.BALANCES.forEach(r => {
+            csv += `"${r.code}","${r.name}","${r.group}",${r.debit.toFixed(2)},${r.credit.toFixed(2)}\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Trial_Balance_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+    }
+};
+
+window.TrialBalanceApp.Init();
+</script>

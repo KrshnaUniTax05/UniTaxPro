@@ -1,0 +1,1115 @@
+<div class="premium-workflow-app animate-in d-flex flex-column h-100">
+    <!-- HEADER -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center px-3 py-2 border-bottom bg-light">
+        <div>
+            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-shield-check text-primary me-2"></i>Executive Approval Center</h5>
+            <p class="text-muted small mb-0" style="font-size: 11px;">End-to-end requisition & voucher governance: submission → review → rejection/return → resubmit → ledger posting</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <div id="connectionStatus" class="small text-muted font-mono me-2"><span class="spinner-border spinner-border-sm me-1"></span>Live</div>
+            <div class="btn-group btn-group-sm bg-white border rounded p-1 shadow-sm" role="tablist">
+                <button class="btn btn-sm px-3 fw-semibold active" data-bs-toggle="tab" data-bs-target="#vouchers-view" onclick="window.renderVoucherApprovalsTab()" id="tabBtnVoucher"><i class="bi bi-receipt-cutoff me-1 text-warning"></i>Vouchers <span class="badge bg-warning text-dark rounded-pill ms-1" id="tabBadgeVouchers">0</span></button>
+                <button class="btn btn-sm px-3 fw-semibold text-muted" data-bs-toggle="tab" data-bs-target="#inbox-view" onclick="window.renderInboxList()" id="tabBtnInbox"><i class="bi bi-inbox me-1 text-info"></i>Review <span class="badge bg-primary-subtle text-primary rounded-pill ms-1" id="tabBadgeInbox">0</span></button>
+                <button class="btn btn-sm px-3 fw-semibold text-muted" data-bs-toggle="tab" data-bs-target="#creator-view" onclick="window.renderCreatorDashboard()" id="tabBtnCreator"><i class="bi bi-person-workspace me-1 text-success"></i>My Requests <span class="badge bg-success-subtle text-success rounded-pill ms-1" id="tabBadgeCreator">0</span></button>
+                <button class="btn btn-sm px-3 fw-semibold text-muted" data-bs-toggle="tab" data-bs-target="#create-view" id="tabBtnCreate"><i class="bi bi-plus-circle me-1 text-primary"></i>New Request</button>
+            </div>
+            <button class="btn btn-erp-icon" onclick="App.goBack()" title="Back"><i class="bi bi-arrow-left"></i></button>
+            <button class="btn btn-erp-icon" onclick="window.printCurrentDoc()" title="Print document"><i class="bi bi-printer"></i></button>
+        </div>
+    </div>
+
+    <!-- BODY -->
+    <div class="tab-content flex-grow-1 d-flex flex-column overflow-hidden bg-white">
+
+        <!-- ════ VOUCHERS & REQUISITIONS (queue) ════ -->
+        <div class="tab-pane fade show active h-100 pane-flex flex-column p-2 bg-light overflow-hidden" id="vouchers-view">
+            <div class="d-flex flex-wrap gap-2 align-items-center p-2 bg-white border rounded-3 mb-2">
+                <input type="text" class="form-control form-control-sm" style="max-width: 220px;" id="voucherSearch" placeholder="Search doc no, party, initiator..." oninput="window.renderVoucherApprovalsTab()">
+                <select class="form-select form-select-sm" style="max-width: 170px;" id="voucherTypeFilter" onchange="window.renderVoucherApprovalsTab()">
+                    <option value="ALL">All Voucher Types</option>
+                    <option value="SalesInvoiceForm">Sales Tax Invoice</option>
+                    <option value="PurchaseInvoiceForm">Purchase Voucher</option>
+                    <option value="ReceiptVoucherForm">Receipt Voucher</option>
+                    <option value="PaymentVoucherForm">Payment Voucher</option>
+                    <option value="JournalVoucherForm">Journal Voucher</option>
+                    <option value="CreditNoteForm">Credit Note</option>
+                    <option value="DebitNoteForm">Debit Note</option>
+                </select>
+                <select class="form-select form-select-sm" style="max-width: 160px;" id="voucherStatusFilter" onchange="window.renderVoucherApprovalsTab()">
+                    <option value="ALL">Status: All</option>
+                    <option value="PENDING">Status: Pending</option>
+                    <option value="APPROVED">Status: Approved</option>
+                    <option value="RETURNED">Status: Returned / Rejected</option>
+                    <option value="DELETED">Status: Deleted</option>
+                </select>
+                <select class="form-select form-select-sm" style="max-width: 150px;" id="voucherSourceFilter" onchange="window.renderVoucherApprovalsTab()">
+                    <option value="ALL">Source: All</option>
+                    <option value="VOUCHER">Source: Vouchers</option>
+                    <option value="REQUISITION">Source: Requisitions</option>
+                </select>
+                <button class="btn btn-sm btn-outline-primary fw-semibold ms-auto" onclick="window.refreshAllVouchers()"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+                <span class="badge bg-white text-dark border py-2 px-3 font-mono" id="voucherCount">0 records</span>
+            </div>
+            <div class="table-responsive flex-grow-1 bg-white border rounded-3 overflow-auto">
+                <table class="table table-hover table-sm align-middle mb-0">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th class="ps-3">Type</th><th>Doc No</th><th>Date</th><th>Party / Subject</th>
+                            <th class="text-end">Amount (₹)</th><th>Initiator</th><th>Next Approver</th><th>State</th><th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="voucherApprovalsBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ════ APPROVER REVIEW ════ -->
+        <div class="tab-pane fade h-100 p-0 pane-flex" id="inbox-view">
+            <div class="border-end bg-white d-flex flex-column h-100" style="width: 340px; min-width: 340px;">
+                <div class="p-2 border-bottom">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold small text-muted text-uppercase" style="font-size: 10px;">Queue Filter</span>
+                        <span id="queueCount" class="badge bg-primary-subtle text-primary">0</span>
+                    </div>
+                    <select class="form-select form-select-sm" id="inboxFilter" onchange="window.renderInboxList()">
+                        <option value="ACTION_REQUIRED">Pending My Action</option>
+                        <option value="ALL">All Visible</option>
+                        <option value="APPROVED">Completed / Approved</option>
+                        <option value="RETURNED">Returned for Revision</option>
+                    </select>
+                </div>
+                <div id="inboxList" class="flex-grow-1 overflow-y-auto"></div>
+            </div>
+            <div class="flex-grow-1 overflow-y-auto bg-white position-relative" id="inboxDetailWrap">
+                <div id="empty-state" class="d-flex flex-column align-items-center justify-content-center h-100 text-center text-muted">
+                    <i class="bi bi-shield-lock display-3 opacity-25 mb-3"></i>
+                    <h6 class="fw-bold">Select a document to review</h6>
+                    <p class="small">Pick a requisition from the left pane. The Approve &amp; Advance and Return for Correction buttons appear at the bottom of the detail pane, below the line items and approval hierarchy.</p>
+                </div>
+                <div id="doc-viewer" class="d-none h-100 flex-column">
+                    <div class="d-flex justify-content-between align-items-center p-3 border-bottom sticky-top bg-white z-10">
+                        <div>
+                            <h6 class="fw-bold mb-0" id="docViewerTitle">Document</h6>
+                            <small class="text-muted" id="docViewerMeta">—</small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-secondary" id="btnDocActionPrint" onclick="window.printCurrentDoc()"><i class="bi bi-printer me-1"></i>Print</button>
+                            <button class="btn btn-sm btn-outline-danger d-none" id="btn-reassign-initiator" onclick="window.reassignToInitiator()"><i class="bi bi-arrow-return-left me-1"></i>Return to Initiator</button>
+                        </div>
+                    </div>
+                    <div class="p-3 overflow-auto flex-grow-1" id="docViewerBody"></div>
+                    <div class="p-2 border-top bg-light">
+                        <div class="small text-muted mb-2" id="docRoleHint" style="font-size: 10px; display: none;"></div>
+                        <div class="mb-2" id="docRemarkArea" style="display: none;">
+                            <label class="form-label small fw-bold text-muted mb-1">Remark / Reason (mandatory for Return)</label>
+                            <textarea class="form-control form-control-sm" id="docRemarkInput" rows="2" placeholder="Enter approval or rejection remarks..."></textarea>
+                        </div>
+                        <div class="d-flex gap-2 justify-content-end">
+                            <button class="btn btn-outline-danger fw-semibold" id="btn-reject" onclick="window.processAction('RETURNED')"><i class="bi bi-x-circle me-1"></i>Return for Correction</button>
+                            <button class="btn btn-success fw-semibold text-white" id="btn-approve" onclick="window.processAction('APPROVED')"><i class="bi bi-check-circle me-1"></i>Approve &amp; Advance</button>
+                            <button class="btn btn-primary fw-semibold d-none" id="btn-resubmit" onclick="window.startEditingRequisition(currentDoc && currentDoc.id)"><i class="bi bi-pencil-square me-1"></i>Edit &amp; Resubmit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ MY REQUESTS (Initiator Hub) ════ -->
+        <div class="tab-pane fade h-100 overflow-auto p-3 bg-light" id="creator-view">
+            <div class="row g-2 mb-3">
+                <div class="col-6 col-md-3"><div class="card border-0 shadow-sm p-3"><div class="small text-muted fw-bold">TOTAL</div><div class="fs-4 fw-bold" id="kpiTotal">0</div></div></div>
+                <div class="col-6 col-md-3"><div class="card border-0 shadow-sm p-3"><div class="small text-muted fw-bold">PENDING</div><div class="fs-4 fw-bold text-warning" id="kpiPending">0</div></div></div>
+                <div class="col-6 col-md-3"><div class="card border-0 shadow-sm p-3"><div class="small text-muted fw-bold">APPROVED</div><div class="fs-4 fw-bold text-success" id="kpiApproved">0</div></div></div>
+                <div class="col-6 col-md-3"><div class="card border-0 shadow-sm p-3"><div class="small text-muted fw-bold">RETURNED</div><div class="fs-4 fw-bold text-danger" id="kpiReturned">0</div></div></div>
+            </div>
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+                    <span class="fw-bold small text-muted text-uppercase" style="font-size: 10px;">My Submissions</span>
+                    <select class="form-select form-select-sm w-auto" id="creatorFilter" onchange="window.renderCreatorDashboard()">
+                        <option value="ALL">All</option>
+                        <option value="PENDING">Pending</option>
+                        <option value="APPROVED">Completed</option>
+                        <option value="RETURNED">Returned</option>
+                    </select>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm align-middle mb-0"><thead class="table-light"><tr><th class="ps-3">Request</th><th>Category</th><th>Submitted</th><th>Current Step</th><th>State</th><th></th></tr></thead><tbody id="creatorRequestsBody"></tbody></table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ NEW REQUEST ════ -->
+        <div class="tab-pane fade h-100 overflow-auto p-3" id="create-view">
+            <form id="requisitionForm" class="row g-3">
+                <div class="col-lg-7">
+                    <div class="card border-0 shadow-sm p-3">
+                        <h6 class="fw-bold text-uppercase text-muted" style="font-size: 11px;">Requisition Details</h6>
+                        <div class="row g-2">
+                            <div class="col-12"><label class="form-label small fw-bold">Title <span class="text-danger">*</span></label><input class="form-control form-control-sm" id="reqTitle" required placeholder="e.g. Client dinner expense approval"></div>
+                            <div class="col-6"><label class="form-label small fw-bold">Category</label><select class="form-select form-select-sm" id="reqCategory"><option>Operational Expense</option><option>Capital Expenditure</option><option>Travel & Conveyance</option><option>Vendor Payment</option><option>Client Reimbursement</option></select></div>
+                            <div class="col-6"><label class="form-label small fw-bold">Amount (₹) <span class="text-danger">*</span></label><input type="number" min="0" step="0.01" class="form-control form-control-sm" id="reqAmount" required></div>
+                            <div class="col-12"><label class="form-label small fw-bold">Vendor / Purpose</label><input class="form-control form-control-sm" id="reqVendor" placeholder="Vendor, ledger or purpose"></div>
+                            <div class="col-12"><label class="form-label small fw-bold">Line Items</label>
+                                <table class="table table-sm align-middle mb-2" id="reqLineItemsTable"><thead><tr><th>Description</th><th class="text-end">Qty</th><th class="text-end">Rate</th><th class="text-end">Amount</th><th></th></tr></thead><tbody id="reqLineItemsBody"></tbody></table>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="window.addReqLineItem()"><i class="bi bi-plus me-1"></i>Add Line Item</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="card border-0 shadow-sm p-3 mb-3">
+                        <h6 class="fw-bold text-uppercase text-muted" style="font-size: 11px;">Approval Routing <span class="text-danger">*</span></h6>
+                        <div id="approvalRoutingContainer"></div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="window.addNewRank()"><i class="bi bi-plus me-1"></i>Add Rank</button>
+                    </div>
+                    <div class="card border-0 shadow-sm p-3">
+                        <h6 class="fw-bold text-uppercase text-muted" style="font-size: 11px;">Compliance Declaration</h6>
+                        <div class="form-check"><input class="form-check-input" type="checkbox" id="complianceVat" checked><label class="form-check-label small" for="complianceVat">GST / TDS declarations checked</label></div>
+                        <div class="form-check"><input class="form-check-input" type="checkbox" id="complianceBudget" checked><label class="form-check-label small" for="complianceBudget">Within approved budget</label></div>
+                        <div class="form-check"><input class="form-check-input" type="checkbox" id="compliancePolicy" checked><label class="form-check-label small" for="compliancePolicy">Corporate policy compliant</label></div>
+                        <button type="submit" class="btn btn-primary w-100 fw-bold mt-3" id="submitRequisitionBtn"><i class="bi bi-send-check me-1"></i>Initiate Approval Workflow</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: DELETE remark -->
+<div class="modal fade" id="modalDeleteRemark" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-light"><h6 class="modal-title fw-bold text-danger"><i class="bi bi-trash me-1"></i>Confirm Deletion</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <p class="small text-muted">Deletion is removed from EVERY user's queue across the workspace. A remark is mandatory for audit compliance.</p>
+                <label class="form-label small fw-bold">Deletion Remark</label>
+                <textarea class="form-control" id="deleteRemarkInput" rows="3" placeholder="Reason for deletion..." required></textarea>
+            </div>
+            <div class="modal-footer bg-light py-2">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-sm btn-danger fw-bold" id="confirmDeleteBtn"><i class="bi bi-trash me-1"></i>Delete for All Users</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="assets/js/approval-engine.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, get, push, set, onValue, update, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyB2iNWYkj_lIWwOtLNmZjBtfKgTYKrjAQU",
+    authDomain: "unitax-8d2e2.firebaseapp.com",
+    databaseURL: "https://unitax-8d2e2-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "unitax-8d2e2"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const currentUserId = String((typeof App !== 'undefined' && App.State && (App.State.currentuserId || App.State.currentUserId)) || localStorage.getItem('userloginid') || '').trim().replace(/^#/, '');
+const wsScopeId = String((typeof App !== 'undefined' && App.State && App.State.userId) || localStorage.getItem('workspaceUserId') || localStorage.getItem('userloginid') || '').trim().replace(/^#/, '');
+const currentUserName = (typeof App !== 'undefined' && App.State && App.State.userName) || localStorage.getItem('userName') || 'Approver';
+const currentRole = String((typeof App !== 'undefined' && App.State && (App.State.userRole || App.State.role)) || localStorage.getItem('userrole') || '').trim().toLowerCase();
+const masterControl = String(localStorage.getItem('masterControl') || '').trim().toLowerCase();
+const isAdmin = ['administrator','super_administrator','admin','co_useradmin','co_admin','workspaceowner','owner','master_admin','platform_admin'].includes(currentRole) || masterControl === 'administration' || masterControl === 'master' || (currentUserId && wsScopeId && currentUserId === wsScopeId);
+
+const me = () => ({ wsId: wsScopeId, userId: currentUserId, userName: currentUserName, isAdmin });
+const esc = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+const $ = (id) => document.getElementById(id);
+const APPROVAL_KINDS = { asn: 'approval-asn-', rej: 'approval-rej-', appr: 'approval-appr-' };
+const kindOfType = (t) => (t === 'error' || t === 'warning') ? 'rej' : (t === 'success' ? 'appr' : 'asn');
+const notifId = (kind, reqId) => `${APPROVAL_KINDS[kindOfType(kind)] || 'approval-asn-'}${reqId}`;
+
+const T = (v) => window.ApprovalEngine ? window.ApprovalEngine.me() : me();
+const E = () => window.ApprovalEngine;
+
+let allRequests = [];
+let allTransactions = [];
+let currentDoc = null;
+const globalRequestMap = new Map();
+const wsRequestMap = new Map();
+const txnRequestMap = new Map();
+let pendingDeleteTarget = null;
+const FORM_LABELS = { SalesInvoiceForm:'Sales Invoice', PurchaseInvoiceForm:'Purchase Voucher', ReceiptVoucherForm:'Receipt', PaymentVoucherForm:'Payment', JournalVoucherForm:'Journal', CreditNoteForm:'Credit Note', DebitNoteForm:'Debit Note', InventoryReturnForm:'Inventory Return', PurchaseReturnForm:'Purchase Return', SalesReturnForm:'Sales Return' };
+
+/* ═══════════════ STATE & MERGE ═══════════════ */
+function normalizeVoucher(form, key, vch) {
+    const hdr = vch.header || vch;
+    const isDraft = vch.status === 'PENDING_APPROVAL' || vch.status === 'DRAFT' || hdr.status === 'PENDING_APPROVAL' || hdr.status === 'DRAFT' || vch.is_draft === true || hdr.is_draft === true;
+    const isDeleted = vch.is_deleted === true || hdr.is_deleted === true || String(vch.status || hdr.status || '').toUpperCase() === 'DELETED';
+    const rawAmount = hdr.grand_total || hdr.grandTotal || hdr.amount || hdr.total_amount || 0;
+    const docNo = hdr.doc_no || key;
+    const requesterId = hdr.created_by || hdr.posted_by || '';
+    const requesterName = hdr.posted_by_name || hdr.user_name || requesterId || 'Staff';
+    const entity = hdr.party_name || hdr.customer_name || hdr.supplier_name || hdr.ledger_name || hdr.entity || 'Counterparty';
+    const assignedMgrId = hdr.assigned_manager_id || hdr.assignedManagerId || '';
+    const assignedMgrName = hdr.assigned_manager_name || hdr.assignedManagerName || 'Workspace Administrator';
+    const isPending = !isDeleted && (isDraft || String(vch.status || hdr.status || '').toUpperCase() === 'PENDING_APPROVAL' || vch.is_draft === true || hdr.is_draft === true);
+    const hierarchy = assignedMgrId ? [{
+        level: 1,
+        levelIndex: 0,
+        userId: assignedMgrId,
+        userName: assignedMgrName,
+        role: 'Approver',
+        status: isPending ? 'PENDING' : (isDeleted ? 'REJECTED' : 'APPROVED')
+    }] : [];
+    return {
+        id: `VCH-${key}`,
+        recordKey: key,
+        transactionKey: key,
+        formId: form,
+        voucherType: form,
+        docNo,
+        amount: parseFloat(rawAmount) || 0,
+        requesterId,
+        requesterName,
+        assignedManagerId: assignedMgrId,
+        assignedManagerName: assignedMgrName,
+        entity,
+        state: isDeleted ? 'DELETED' : (isDraft ? 'PENDING' : 'POSTED'),
+        status: isDeleted ? 'DELETED' : (isDraft ? 'PENDING_APPROVAL' : 'POSTED'),
+        createdAt: hdr.timestamp || hdr.created_at || Date.now(),
+        title: `${FORM_LABELS[form] || form}: ${docNo}`,
+        details: `Voucher ${docNo} for ${entity} (₹${(parseFloat(rawAmount)||0).toLocaleString('en-IN')}).`,
+        header: hdr,
+        hierarchy,
+        currentLevelIndex: 0,
+        isVoucherStub: true
+    };
+}
+
+function rebuildMerged() {
+    const merged = new Map();
+    globalRequestMap.forEach((v,k) => merged.set(k, v));
+    wsRequestMap.forEach((v,k) => merged.set(k, v));
+    txnRequestMap.forEach((v,k) => {
+        const e = merged.get(k);
+        if (!e) merged.set(k, v);
+        else if (!e.transactionKey && v.transactionKey) Object.assign(e, v);
+    });
+
+    // Rebuild hierarchy from real requisition records for voucher stubs lacking one
+    const byTxnKey = new Map();
+    merged.forEach((v) => {
+        if (!v) return;
+        if (Array.isArray(v.hierarchy) && v.hierarchy.length) {
+            if (v.transactionKey) byTxnKey.set(String(v.transactionKey), v);
+        }
+    });
+    merged.forEach((v) => {
+        if (!v || !v.isVoucherStub) return;
+        if (Array.isArray(v.hierarchy) && v.hierarchy.length) return;
+        const match = v.transactionKey ? byTxnKey.get(String(v.transactionKey)) : null;
+        if (match && Array.isArray(match.hierarchy)) {
+            v.hierarchy = match.hierarchy;
+            v.currentLevelIndex = match.currentLevelIndex || 0;
+            v.assignedManagerId = match.assignedManagerId || v.assignedManagerId;
+            v.assignedManagerName = match.assignedManagerName || v.assignedManagerName;
+            v.state = match.state || v.state;
+            v.status = match.status || v.status;
+            v.rejectionReason = match.rejectionReason || v.rejectionReason;
+            v.rejectedByLevelIndex = match.rejectedByLevelIndex;
+            v.rejectedByUserId = match.rejectedByUserId;
+            v.rejectedByUserName = match.rejectedByUserName;
+            v.id = match.id; // unify under the requisition id so updates target the same record
+        }
+    });
+    const normalize = (r) => {
+        if (!r) return r;
+        r.hierarchy = window.ApprovalEngine ? window.ApprovalEngine.toHierarchyArray(r.hierarchy) : (Array.isArray(r.hierarchy) ? r.hierarchy : Object.values(r.hierarchy || {}));
+        const idx = parseInt(r.currentLevelIndex, 10);
+        r.currentLevelIndex = Number.isInteger(idx) && idx >= 0 ? Math.min(idx, Math.max(0, r.hierarchy.length - 1)) : 0;
+        return r;
+    };
+    merged.forEach((v,k) => normalize(v));
+    allRequests = Array.from(merged.values()).sort((a,b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0));
+    allTransactions = allRequests;
+}
+
+const isDeletedRec = (r) => r && (r.is_deleted === true || String(r.status||'').toUpperCase()==='DELETED' || String(r.state||'').toUpperCase()==='DELETED');
+const lifecycle = (r) => window.ApprovalEngine ? window.ApprovalEngine.lifecycleOf(r) : (() => {
+    if (isDeletedRec(r)) return 'DELETED';
+    const s = String(r.status||'').toUpperCase(); const st = String(r.state||'').toUpperCase();
+    if (['POSTED','APPROVED'].includes(s) || st==='APPROVED') return 'APPROVED';
+    if (['REJECTED','RETURNED','RETURNED_TO_CREATOR'].includes(s) || st==='RETURNED_TO_CREATOR' || st==='REJECTED') return 'RETURNED';
+    return 'PENDING';
+})();
+
+const userMatches = (id, name) => {
+    const tId = String(id||'').trim().toLowerCase(); const tName = String(name||'').trim().toLowerCase();
+    const mId = currentUserId.toLowerCase(); const mWs = wsScopeId.toLowerCase(); const mName = currentUserName.trim().toLowerCase();
+    return (tId && (tId === mId || tId === mWs)) || (tName && mName && tName === mName);
+};
+const isMySubmission = (r) => (r.requesterId && userMatches(r.requesterId, r.requesterName)) || (r.posted_by && userMatches(r.posted_by, r.posted_by_name));
+const isAssignedToMe = (r) => Array.isArray(r.hierarchy) && r.hierarchy[r.currentLevelIndex] && userMatches(r.hierarchy[r.currentLevelIndex].userId, r.hierarchy[r.currentLevelIndex].userName || r.hierarchy[r.currentLevelIndex].name);
+const isAdminUser = () => isAdmin;
+const canSee = (r) => isAdminUser() || isMySubmission(r) || (Array.isArray(r.hierarchy) && r.hierarchy.some(h => userMatches(h.userId, h.userName || h.name)));
+const liveReqs = () => allRequests.filter(r => !isDeletedRec(r));
+
+async function boot() {
+    const statusEl = $('connectionStatus');
+    try {
+        const [globalSnap, wsSnap] = await Promise.all([
+            get(ref(db, 'Utilities/Requests')).catch(() => null),
+            wsScopeId ? get(ref(db, `${wsScopeId}/Utilities/Requests`)).catch(() => null) : Promise.resolve(null)
+        ]);
+        const fill = (map, snap, scope) => {
+            if (!snap || !snap.exists()) return;
+            const val = snap.val();
+            Object.entries(val).forEach(([key, rec]) => {
+                if (!rec || typeof rec !== 'object') return;
+                const obj = { id: key, key, ...rec };
+                map.set(key, obj);
+            });
+        };
+        fill(globalRequestMap, globalSnap, 'global');
+        fill(wsRequestMap, wsSnap, 'ws');
+        const txnForms = ['SalesInvoiceForm','PurchaseInvoiceForm','ReceiptVoucherForm','PaymentVoucherForm','JournalVoucherForm','CreditNoteForm','DebitNoteForm','PurchaseReturnForm','SalesReturnForm','InventoryReturnForm'];
+        const txns = await Promise.all(txnForms.map(f => get(ref(db, `Transactions/${f}`)).then(s => ({form:f, snap:s})).catch(() => null)));
+        for (const { form, snap } of txns || []) {
+            if (snap && snap.exists()) Object.entries(snap.val()||{}).forEach(([k,v]) => { if (v && typeof v === 'object') txnRequestMap.set(`VCH-${k}`, normalizeVoucher(form, k, v)); });
+        }
+        if (wsScopeId) {
+            const wtx = await Promise.all(txnForms.map(f => get(ref(db, `${wsScopeId}/Transactions/${f}`)).then(s => ({form:f, snap:s})).catch(() => null)));
+            for (const { form, snap } of wtx || []) {
+                if (snap && snap.exists()) Object.entries(snap.val()||{}).forEach(([k,v]) => { if (v && typeof v === 'object') txnRequestMap.set(`VCH-${k}`, normalizeVoucher(form, k, v)); });
+            }
+        }
+        rebuildMerged();
+        renderAll();
+        if (statusEl) statusEl.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Synced';
+
+        // Deep link
+        const hashId = new URLSearchParams((window.location.hash.split('?')[1] || '')).get('id') || new URLSearchParams(window.location.search).get('id');
+        if (hashId) {
+            document.querySelector('[data-bs-target="#inbox-view"]')?.click();
+            setTimeout(() => window.loadApprovalDoc(hashId), 400);
+        }
+    } catch (e) {
+        console.error('[Approval Center] boot failed', e);
+        if (statusEl) statusEl.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i> Offline';
+    }
+}
+
+function renderAll() {
+    window.renderVoucherApprovalsTab();
+    window.renderInboxList();
+    window.renderCreatorDashboard();
+}
+
+// Delegated handler for the voucher approvals table (avoids inline-JS injection).
+const voucherTbody = () => document.getElementById('voucherApprovalsBody');
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('#voucherApprovalsBody [data-action]');
+    if (!btn) return;
+    const { action, form, key, req } = btn.dataset || {};
+    if (action === 'view') window.viewLinkedEntry(form, key);
+    else if (action === 'print') window.printTransaction(form, key);
+    else if (action === 'approve') window.quickApproveTransaction(form, key, req);
+    else if (action === 'reject') window.quickRejectTransaction(form, key, req);
+    else if (action === 'edit') window.editReturnedDoc(req);
+    else if (action === 'resubmit') window.resubmitReturnedDoc(req);
+});
+window.refreshAllVouchers = async () => { await boot(); };
+window.renderCreatorDashboard = renderCreatorDashboard;
+window.renderVoucherApprovalsTab = renderVoucherApprovalsTab;
+window.renderInboxList = renderInboxList;
+
+/* ═══════════════ VOUCHERS TAB ═══════════════ */
+function renderVoucherApprovalsTab() {
+    const tbody = $('voucherApprovalsBody');
+    const countEl = $('voucherCount');
+    if (!tbody) return;
+    const q = ($('voucherSearch')?.value || '').trim().toLowerCase();
+    const typeFilter = $('voucherTypeFilter')?.value || 'ALL';
+    const statusFilter = $('voucherStatusFilter')?.value || 'ALL';
+    const sourceFilter = $('voucherSourceFilter')?.value || 'ALL';
+    // Voucher tab = voucher/transaction approvals ONLY (requisitions live in the Review tab).
+    let rows = allRequests.filter(r => r && r.isVoucherStub);
+    // Apply remaining filters (cannot reuse requisition-only filter chain)
+    rows = rows.filter(r => {
+        const lc = lifecycle(r);
+        if (typeFilter !== 'ALL' && r.formId !== typeFilter) return false;
+        if (statusFilter === 'PENDING' && lc !== 'PENDING') return false;
+        else if (statusFilter === 'APPROVED' && lc !== 'APPROVED') return false;
+        else if (statusFilter === 'RETURNED' && lc !== 'RETURNED') return false;
+        else if (statusFilter === 'DELETED' && lc !== 'DELETED') return false;
+        if (q) {
+            const blob = [r.docNo, r.entity, r.requesterName, r.assignedManagerName, r.title, r.details].join(' ').toLowerCase();
+            if (!blob.includes(q)) return false;
+        }
+        return canSee(r);
+    });
+    countEl.textContent = `${rows.length} record${rows.length === 1 ? '' : 's'}`;
+    const badge = $('tabBadgeVouchers');
+    if (badge) badge.textContent = rows.filter(r => lifecycle(r) === 'PENDING' && isAssignedToMe(r)).length;
+    if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center text-muted py-5"><i class="bi bi-inbox d-block fs-2 mb-2 opacity-50"></i>No records match the filters.</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = rows.slice(0, 250).map(r => {
+        const lc = lifecycle(r);
+        const statusBadge = lc === 'APPROVED' ? '<span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-check2 me-1"></i>Approved</span>'
+            : lc === 'RETURNED' ? '<span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-arrow-return-left me-1"></i>Returned</span>'
+            : lc === 'DELETED' ? '<span class="badge bg-dark-subtle text-dark border border-dark-subtle">Deleted</span>'
+            : '<span class="badge bg-warning-subtle text-warning border border-warning-subtle"><i class="bi bi-clock me-1"></i>Pending</span>';
+        const canAct = isAssignedToMe(r) && lc === 'PENDING' && !isMySubmission(r);
+        const docNo = esc(r.docNo || r.id || '—');
+        const assignedName = r.hierarchy && r.hierarchy[r.currentLevelIndex] ? (r.hierarchy[r.currentLevelIndex].userName || r.hierarchy[r.currentLevelIndex].name || '—') : (r.assignedManagerName || '—');
+        return `<tr data-id="${esc(r.id)}">
+            <td class="ps-3"><span class="badge bg-light text-dark border font-mono">${esc(r.isVoucherStub ? (FORM_LABELS[r.formId] || 'Voucher') : 'Requisition')}</span></td>
+            <td class="font-mono fw-semibold">${docNo}</td>
+            <td class="text-muted small">${new Date(r.createdAt || Date.now()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' })}</td>
+            <td class="text-truncate" style="max-width: 200px;" title="${esc(r.entity || r.title || '')}">${esc(r.entity || r.title || '—')}</td>
+            <td class="text-end font-mono fw-bold text-primary">₹${Number(r.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+            <td class="small">${esc(r.requesterName || '—')}</td>
+            <td class="small text-muted">${esc(assignedName)}</td>
+            <td>${statusBadge}</td>
+            <td class="text-center">
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" data-action="view" data-form="${esc(r.formId || 'REQUISITION')}" data-key="${esc(r.transactionKey || r.id)}" title="Open entry"><i class="bi bi-eye"></i></button>
+                    <button class="btn btn-outline-secondary" data-action="print" data-form="${esc(r.formId || 'REQUISITION')}" data-key="${esc(r.transactionKey || r.id)}" title="Print voucher"><i class="bi bi-printer"></i></button>
+                    ${canAct ? `<button class="btn btn-success text-white" data-action="approve" data-form="${esc(r.formId || 'REQUISITION')}" data-key="${esc(r.transactionKey || r.id)}" data-req="${esc(r.id)}" title="Approve & Advance"><i class="bi bi-check-lg"></i></button>` : ''}
+                    ${canAct ? `<button class="btn btn-outline-danger" data-action="reject" data-form="${esc(r.formId || 'REQUISITION')}" data-key="${esc(r.transactionKey || r.id)}" data-req="${esc(r.id)}" title="Return to initiator"><i class="bi bi-x-lg"></i></button>` : ''}
+                    ${isMySubmission(r) && lc === 'RETURNED' ? `<button class="btn btn-primary" data-action="edit" data-form="${esc(r.formId || 'REQUISITION')}" data-key="${esc(r.transactionKey || r.id)}" data-req="${esc(r.id)}" title="Edit & Resubmit"><i class="bi bi-pencil-square"></i></button>` : ''}
+                    ${isMySubmission(r) && lc === 'RETURNED' ? `<button class="btn btn-outline-success" data-action="resubmit" data-req="${esc(r.id)}" title="Resubmit to rejecting approver"><i class="bi bi-arrow-up-circle"></i></button>` : ''}
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+/* ═══════════════ APPROVER REVIEW (inbox) ═══════════════ */
+function renderInboxList() {
+    const container = $('inboxList');
+    if (!container) return;
+    const filter = ($('inboxFilter')?.value || 'ACTION_REQUIRED');
+    const queueCount = $('queueCount');
+    // Review tab = requisition approvals ONLY (this morning's task).
+    let rows = liveReqs().filter(r => canSee(r) && !r.isVoucherStub);
+    if (filter === 'ACTION_REQUIRED') rows = rows.filter(r => isAssignedToMe(r) && lifecycle(r) === 'PENDING');
+    else if (filter === 'APPROVED') rows = rows.filter(r => lifecycle(r) === 'APPROVED');
+    else if (filter === 'RETURNED') rows = rows.filter(r => lifecycle(r) === 'RETURNED');
+    if (queueCount) queueCount.textContent = rows.length;
+    const tabBadge = $('tabBadgeInbox');
+    if (tabBadge) tabBadge.textContent = allRequests.filter(r => isAssignedToMe(r) && lifecycle(r) === 'PENDING').length;
+
+    if (rows.length === 0) {
+        container.innerHTML = `<div class="p-4 text-center text-muted small"><i class="bi bi-inbox d-block fs-4 mb-2 opacity-50"></i>Nothing in this queue.</div>`;
+        return;
+    }
+    container.innerHTML = rows.slice(0, 100).map(r => {
+        const lc = lifecycle(r);
+        const assignedName = r.hierarchy && r.hierarchy[r.currentLevelIndex] ? (r.hierarchy[r.currentLevelIndex].userName || r.hierarchy[r.currentLevelIndex].name || '—') : '—';
+        return `<button class="list-group-item list-group-item-action text-start border-bottom py-2 px-3" data-id="${esc(r.id)}" onclick="window.loadApprovalDoc('${esc(r.id)}')">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+                <div class="min-w-0">
+                    <div class="fw-semibold text-dark text-truncate" style="font-size: 12px;">${esc(r.title || r.docNo || 'Request')}</div>
+                    <div class="text-muted" style="font-size: 11px;">₹${Number(r.amount || 0).toLocaleString('en-IN')} · ${esc(r.requesterName || '—')}</div>
+                    <div class="text-muted" style="font-size: 10px;">Next: ${esc(assignedName)}</div>
+                </div>
+                <span class="badge ${lc==='APPROVED'?'bg-success-subtle text-success':lc==='RETURNED'?'bg-danger-subtle text-danger':'bg-warning-subtle text-warning'}">${lc==='APPROVED'?'Approved':lc==='RETURNED'?'Returned':'Pending'}</span>
+            </div>
+        </button>`;
+    }).join('');
+}
+
+window.loadApprovalDoc = function(id) {
+    const req = allRequests.find(r => r.id === id);
+    if (!req) return;
+    currentDoc = window.ApprovalEngine ? window.ApprovalEngine.normalizeRequest(req) : req;
+    $('empty-state').classList.add('d-none');
+    const viewer = $('doc-viewer');
+    viewer.classList.remove('d-none');
+    viewer.classList.add('d-flex');
+    viewer.classList.remove('flex-column'); viewer.classList.add('d-flex');
+    $('docViewerTitle').textContent = currentDoc.title || currentDoc.docNo || 'Request';
+    $('docViewerMeta').textContent = `${currentDoc.isVoucherStub ? 'Voucher' : 'Requisition'} · ${currentDoc.docNo || currentDoc.id} · ${new Date(currentDoc.createdAt || Date.now()).toLocaleString('en-IN')} · Requested by ${currentDoc.requesterName || '—'}`;
+    $('docViewerBody').innerHTML = renderDocBody(currentDoc);
+    updateActionButtons(currentDoc);
+};
+function renderDocBody(req) {
+    const lc = lifecycle(req);
+    const hierarchy = window.ApprovalEngine ? window.ApprovalEngine.toHierarchyArray(req.hierarchy) : (Array.isArray(req.hierarchy) ? req.hierarchy : Object.keys(req.hierarchy || {}).sort((a,b) => Number(a)-Number(b)).map(k => req.hierarchy[k]));
+    const items = Array.isArray(req.items) ? req.items : (req.items ? Object.values(req.items) : []);
+    const statusBadge = lc==='APPROVED' ? '<span class="badge bg-success">Approved</span>' : lc==='RETURNED' ? '<span class="badge bg-danger">Returned to Initiator</span>' : '<span class="badge bg-warning text-dark">Pending</span>';
+    return `
+        <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">${statusBadge}<span class="text-muted small font-mono">ID: ${esc(req.id)}</span></div>
+        <div class="row g-3 mb-3">
+            <div class="col-sm-4"><div class="small text-muted fw-bold">AMOUNT</div><div class="fs-5 fw-bold text-primary">₹${Number(req.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div></div>
+            <div class="col-sm-4"><div class="small text-muted fw-bold">VENDOR / PURPOSE</div><div class="fw-semibold">${esc(req.details || req.entity || '—')}</div></div>
+            <div class="col-sm-4"><div class="small text-muted fw-bold">CURRENT LEVEL</div><div class="fw-semibold">${(req.currentLevelIndex || 0) + 1} / ${hierarchy.length}</div></div>
+        </div>
+        <h6 class="fw-bold text-uppercase text-muted" style="font-size: 10px; letter-spacing:.05em;">Line Items</h6>
+        ${items.length ? `<table class="table table-sm table-bordered"><thead class="table-light"><tr><th>Description</th><th class="text-end">Qty</th><th class="text-end">Rate</th><th class="text-end">Amount</th></tr></thead><tbody>${items.map(i => `<tr><td>${esc(i.description || i.item || i.name || '—')}</td><td class="text-end">${i.qty ?? '—'}</td><td class="text-end">${i.rate ?? '—'}</td><td class="text-end">${i.amount ?? '—'}</td></tr>`).join('')}</tbody></table>` : `<p class="text-muted small">No line items recorded.</p>`}
+        <h6 class="fw-bold text-uppercase text-muted mt-3" style="font-size: 10px; letter-spacing:.05em;">Approval Routing</h6>
+        <ul class="list-group list-group-flush">${hierarchy.map((h,i) => {
+            const st = String(h.status||'PENDING').toUpperCase();
+            const badge = st==='APPROVED' ? '<span class="badge bg-success-subtle text-success">Approved</span>' : st==='REJECTED' ? '<span class="badge bg-danger-subtle text-danger">Rejected</span>' : '<span class="badge bg-light text-secondary border">Pending</span>';
+            return `<li class="list-group-item d-flex justify-content-between align-items-center"><span><strong>Level ${i+1}</strong> — ${esc(h.userName || h.name || '—')} ${i === (req.currentLevelIndex||0) ? '<span class="badge bg-primary-subtle text-primary ms-1">Current</span>' : ''}</span><span>${badge}</span></li>`;
+        }).join('')}</ul>`;
+}
+function updateActionButtons(req) {
+    const lc = lifecycle(req);
+    const assigned = isAssignedToMe(req);
+    const approveBtn = $('btn-approve');
+    const rejectBtn = $('btn-reject');
+    const resubmitBtn = $('btn-resubmit');
+    const reassignBtn = $('btn-reassign-initiator');
+    const hint = $('docRoleHint');
+
+    if (approveBtn) approveBtn.classList.toggle('d-none', !(assigned && lc === 'PENDING' && !isMySubmission(req)));
+    if (rejectBtn) rejectBtn.classList.toggle('d-none', !(assigned && lc === 'PENDING' && !isMySubmission(req)));
+    if (resubmitBtn) resubmitBtn.classList.toggle('d-none', !(isMySubmission(req) && lc === 'RETURNED'));
+    if (reassignBtn) reassignBtn.classList.toggle('d-none', !(isAdminUser() && lc !== 'DELETED'));
+
+    const remarkArea = $('docRemarkArea');
+    if (remarkArea) remarkArea.style.display = (assigned && lc === 'PENDING') ? 'block' : 'none';
+
+    if (hint) {
+        let message = '';
+        if (isMySubmission(req)) {
+            if (lc === 'RETURNED') message = 'Returned to you for correction. Click "Edit & Resubmit" to make changes and resend it to the approver.';
+            else if (lc === 'PENDING') message = 'Awaiting approval. You can track progress below.';
+            else if (lc === 'APPROVED') message = 'Approved and posted. Nothing more for you to action.';
+            else if (lc === 'DELETED') message = 'This document has been deleted.';
+        } else if (assigned) {
+            if (lc === 'PENDING') message = 'Level ' + ((req.currentLevelIndex || 0) + 1) + ' is assigned to you. Review the items and line items, then Approve & Advance or Return for Correction.';
+            else if (lc === 'APPROVED') message = 'Approved and posted to the ledger.';
+            else if (lc === 'RETURNED') message = 'Returned to the initiator for correction. Waiting on them to resubmit.';
+        } else if (isAdminUser()) {
+            if (lc === 'PENDING') message = 'Admin mode — you may action this document even though you are not the assigned level-' + ((req.currentLevelIndex || 0) + 1) + ' approver.';
+        } else {
+            message = 'This document is with Level ' + ((req.currentLevelIndex || 0) + 1) + ' — ' + (hierarchyUserName(req) || 'another approver') + '. You do not have sign-off authority for this step.';
+        }
+        hint.textContent = message;
+        hint.style.display = message ? 'block' : 'none';
+    }
+}
+function hierarchyUserName(req) {
+    const h = Array.isArray(req.hierarchy) ? req.hierarchy : Object.values(req.hierarchy || {});
+    const idx = Number.isInteger(parseInt(req.currentLevelIndex, 10)) ? parseInt(req.currentLevelIndex, 10) : 0;
+    const cur = h[idx];
+    return cur ? (cur.userName || cur.name || '') : '';
+}
+
+/* ═══════════════ ACTIONS ═══════════════ */
+async function writeRequestUpdates(reqId, updates, reqBasesList) {
+    const bases = reqBasesList || (['Utilities/Requests'].concat(wsScopeId ? [`${wsScopeId}/Utilities/Requests`] : []));
+    const ops = [];
+    bases.forEach(base => ops.push(update(ref(db, `${base}/${reqId}`), updates).catch(() => {})));
+    await Promise.allSettled(ops);
+}
+async function notifyTarget(targetUserId, payload) {
+    if (!window.ApprovalEngine || !window.ApprovalEngine.notify) return;
+    await window.ApprovalEngine.notify(targetUserId, payload);
+}
+const idForKind = (kind, reqId) => `${kind === 'error' || kind === 'warning' ? 'approval-rej-' : kind === 'success' ? 'approval-appr-' : 'approval-asn-'}${reqId}`;
+
+window.processAction = async function(action) {
+    if (!currentDoc) return;
+    const reqId = currentDoc.id;
+    const hierarchy = window.ApprovalEngine ? window.ApprovalEngine.toHierarchyArray(currentDoc.hierarchy) : (currentDoc.hierarchy || []);
+    const curIdx = Number.isInteger(parseInt(currentDoc.currentLevelIndex, 10)) ? parseInt(currentDoc.currentLevelIndex, 10) : 0;
+    const wsId = wsScopeId;
+    const targetCreatorId = currentDoc.requesterId || currentDoc.posted_by || '';
+    const reqBases = ['Utilities/Requests']; if (wsId) reqBases.push(`${wsId}/Utilities/Requests`);
+    const updates = {};
+    const timestamp = Date.now();
+
+    if (window.UniTaxOperations && !window.UniTaxOperations.AssertWrite('update', 'approval document')) return;
+
+    if (action === 'APPROVED') {
+        if (!isAssignedToMe(currentDoc)) { alert('Only the assigned approver may approve this document.'); return; }
+        if (hierarchy[curIdx]) {
+            hierarchy[curIdx] = { ...hierarchy[curIdx], status: 'APPROVED', approvedAt: timestamp, approvedBy: currentUserId, approvedByName: currentUserName, remarks: 'Approved' };
+        }
+        const isLast = hierarchy.length === 0 || curIdx >= hierarchy.length - 1;
+        if (isLast) {
+            updates['hierarchy'] = hierarchy;
+            updates['state'] = 'APPROVED';
+            updates['status'] = currentDoc.isVoucherStub ? 'POSTED' : 'APPROVED';
+            updates['is_draft'] = false;
+            updates['currentLevelIndex'] = Math.max(0, hierarchy.length - 1);
+            updates['updatedAt'] = timestamp;
+            updates['assignedManagerId'] = ''; updates['assignedManagerName'] = '';
+            updates['currentApproverId'] = ''; updates['currentApproverName'] = '';
+            // Promote voucher transaction to POSTED
+            if (currentDoc.transactionKey && currentDoc.formId && currentDoc.formId !== 'REQUISITION') {
+                const txnBases = [`Transactions/${currentDoc.formId}`]; if (wsId) { txnBases.unshift(`${wsId}/Transactions/${currentDoc.formId}`); txnBases.push(`Users/${wsId}/Transactions/${currentDoc.formId}`); }
+                const txnUpdates = { status: 'POSTED', is_draft: false, is_deleted: false, 'header/status': 'POSTED', 'header/is_draft': false, 'header/is_deleted': false, 'header/approved_by': currentUserId, 'header/approved_by_name': currentUserName, 'header/approved_at': timestamp };
+                await Promise.allSettled(txnBases.map(base => firebase.database().ref(`${base}/${currentDoc.transactionKey}`).update(txnUpdates).catch(() => {})));
+            }
+            if (targetCreatorId) {
+                await notifyTarget(targetCreatorId, { title: `Application Fully Approved: ${currentDoc.docNo || currentDoc.id}`, message: `"${currentDoc.title || currentDoc.docNo}" was verified and fully approved by all hierarchy levels.`, link: 'reports/approvalmanagementsystem', tab: 'creator-view', typeoft: 'success', dedupeKey: idForKind('success', reqId) });
+            }
+        } else {
+            const nextLevel = curIdx + 1;
+            const nextApprover = hierarchy[nextLevel];
+            updates['hierarchy'] = hierarchy;
+            updates['currentLevelIndex'] = nextLevel;
+            updates['assignedManagerId'] = nextApprover?.userId || ''; updates['assignedManagerName'] = nextApprover?.userName || '';
+            updates['currentApproverId'] = nextApprover?.userId || ''; updates['currentApproverName'] = nextApprover?.userName || '';
+            updates['state'] = 'PENDING'; updates['status'] = 'PENDING_APPROVAL'; updates['updatedAt'] = timestamp;
+            if (nextApprover?.userId) {
+                await notifyTarget(nextApprover.userId, { title: `Action Required: Level ${nextLevel + 1} Authorization — ${currentDoc.docNo || reqId}`, message: `"${currentDoc.title || currentDoc.docNo}" awaits your sequential authorization.`, link: 'reports/approvalmanagementsystem', tab: 'inbox-view', typeoft: 'task', dedupeKey: idForKind('task', reqId) });
+            }
+        }
+        await writeRequestUpdates(reqId, updates, reqBases);
+        await notifySelfAfterAction(currentDoc, 'Voucher Approved', 'success');
+    } else if (action === 'RETURNED') {
+        if (!isAssignedToMe(currentDoc)) { alert('Only the assigned approver may return this document.'); return; }
+        const reason = String($('docRemarkInput')?.value || '').trim();
+        if (!reason) { alert('A remark is mandatory to return this document.'); $('docRemarkInput')?.focus(); return; }
+        // ANY hierarchy rejector → ALWAYS back to the initiator to edit & resubmit
+        if (hierarchy[curIdx]) {
+            hierarchy[curIdx] = { ...hierarchy[curIdx], status: 'REJECTED', rejectedAt: timestamp, rejectedBy: currentUserId, rejectedByName: currentUserName, remarks: String(reason).trim() };
+        }
+        updates['hierarchy'] = hierarchy;
+        updates['state'] = 'RETURNED_TO_CREATOR';
+        updates['status'] = 'REJECTED';
+        updates['is_draft'] = true;
+        updates['rejectedByLevelIndex'] = curIdx;
+        updates['rejectedByUserId'] = currentUserId;
+        updates['rejectedByUserName'] = currentUserName;
+        updates['rejectionReason'] = String(reason).trim();
+        updates['currentLevelIndex'] = curIdx; // initiator edits; flow resumes from THIS level
+        updates['assignedManagerId'] = hierarchy[curIdx]?.userId || '';
+        updates['assignedManagerName'] = hierarchy[curIdx]?.userName || '';
+        updates['currentApproverId'] = hierarchy[curIdx]?.userId || '';
+        updates['currentApproverName'] = hierarchy[curIdx]?.userName || '';
+        updates['updatedAt'] = timestamp;
+        // Don't post ANY line items / ledger entries — rejection only flips the request record.
+        if (currentDoc.transactionKey && currentDoc.formId && currentDoc.formId !== 'REQUISITION') {
+            const txnBases = [`Transactions/${currentDoc.formId}`]; if (wsId) { txnBases.unshift(`${wsId}/Transactions/${currentDoc.formId}`); txnBases.push(`Users/${wsId}/Transactions/${currentDoc.formId}`); }
+            const txnUpdates = { status: 'REJECTED', is_draft: true, 'header/status': 'REJECTED', 'header/is_draft': true, 'header/rejection_reason': String(reason).trim(), 'header/rejected_by': currentUserId, 'header/rejected_at': timestamp };
+            await Promise.allSettled(txnBases.map(base => firebase.database().ref(`${base}/${currentDoc.transactionKey}`).update(txnUpdates).catch(() => {})));
+        }
+        if (targetCreatorId) {
+            await notifyTarget(targetCreatorId, { title: `Approval Rejected: ${currentDoc.docNo || reqId}`, message: `"${currentDoc.title || currentDoc.docNo}" was rejected by ${currentUserName} at Level ${curIdx + 1}. Remarks: ${String(reason).trim()}`, link: 'reports/approvalmanagementsystem', tab: 'creator-view', typeoft: 'error', dedupeKey: idForKind('error', reqId) });
+        }
+        if (curIdx > 0) {
+            // Below-level approvers who already approved are notified the item bounced back
+            for (let i = 0; i < curIdx; i++) {
+                const lower = hierarchy[i];
+                if (lower?.userId && lower.userId !== currentUserId) {
+                    await notifyTarget(lower.userId, { title: `Escalation: Rejection at Level ${curIdx + 1} — ${currentDoc.docNo || reqId}`, message: `Request "${currentDoc.title || currentDoc.docNo}" previously approved by you was rejected at Level ${curIdx + 1} by ${currentUserName}.`, link: 'reports/approvalmanagementsystem', tab: 'inbox-view', typeoft: 'warning', dedupeKey: idForKind('warning', reqId) });
+                }
+            }
+        }
+        await writeRequestUpdates(reqId, updates, reqBases);
+    } else if (action === 'RESUBMITTED') {
+        if (!isMySubmission(currentDoc)) { alert('Only the initiator may resubmit.'); return; }
+        const resumeLevel = (currentDoc.rejectedByLevelIndex !== undefined) ? currentDoc.rejectedByLevelIndex : 0;
+        const h = hierarchy.map((l, i) => {
+            if (String(l.status || '').toUpperCase() === 'REJECTED' || String(l.status || '').toUpperCase() === 'RETURNED') {
+                return { ...l, status: 'PENDING', rejectedAt: null, rejectedBy: null, rejectedByName: null, remarks: null };
+            }
+            return l;
+        });
+        updates['hierarchy'] = h;
+        updates['state'] = 'PENDING'; updates['status'] = 'PENDING_APPROVAL';
+        updates['is_draft'] = true;
+        updates['currentLevelIndex'] = resumeLevel;
+        updates['assignedManagerId'] = h[resumeLevel]?.userId || '';
+        updates['assignedManagerName'] = h[resumeLevel]?.userName || '';
+        updates['currentApproverId'] = h[resumeLevel]?.userId || '';
+        updates['currentApproverName'] = h[resumeLevel]?.userName || '';
+        updates['rejectionReason'] = null; updates['rejectedByLevelIndex'] = null; updates['rejectedByUserId'] = null; updates['rejectedByUserName'] = null;
+        updates['updatedAt'] = timestamp;
+        if (h[resumeLevel]?.userId) {
+            await notifyTarget(h[resumeLevel].userId, { title: `Requisition Resubmitted — ${currentDoc.docNo || reqId}`, message: `"${currentDoc.title || currentDoc.docNo}" was corrected by the initiator and is awaiting your re-review.`, link: 'reports/approvalmanagementsystem', tab: 'inbox-view', typeoft: 'task', dedupeKey: idForKind('task', reqId) });
+        }
+        await writeRequestUpdates(reqId, updates, reqBases);
+    }
+
+    await boot();
+    window.loadApprovalDoc(reqId);
+};
+async function notifySelfAfterAction(req, title, typeoft) {
+    // The creator already receives the success/rejected notifications from the action paths;
+    // this helper exists for local toast feedback only.
+    const AppUI = typeof App !== 'undefined' && App.UI;
+    if (AppUI && AppUI.Notify) AppUI.Notify('Approval', 'Document advanced.', 'success');
+}
+
+let editingRequisitionId = null;
+window.startEditingRequisition = function(id) {
+    const req = allRequests.find(r => r.id === id);
+    if (!req) { alert('Record not found.'); return; }
+    editingRequisitionId = id;
+    const set = (field, value) => { const el = $(field); if (el) el.value = value ?? ''; };
+    set('reqTitle', req.title);
+    set('reqCategory', req.category);
+    set('reqAmount', req.amount);
+    set('reqVendor', req.vendor || req.details || '');
+    // Pre-populate routing with the rejected level as active approver
+    const container = $('approvalRoutingContainer');
+    if (container) container.innerHTML = '';
+    const hierarchy = window.ApprovalEngine ? window.ApprovalEngine.toHierarchyArray(req.hierarchy) : (req.hierarchy || []);
+    hierarchy.forEach((level, idx) => {
+        const row = document.createElement('div');
+        row.className = 'input-group input-group-sm mb-2';
+        row.setAttribute('data-rank', String(idx + 1));
+        row.innerHTML = `<span class="input-group-text">${idx + 1}</span><select class="form-select" name="approver[]"><option value="${esc(level.userId || '')}" selected>${esc(level.userName || level.name || level.userId || '')}</option></select><button type="button" class="btn btn-outline-secondary" onclick="this.closest('[data-rank]').remove()"><i class="bi bi-dash"></i></button>`;
+        container.appendChild(row);
+    });
+    // Pre-populate line items
+    const tbody = $('reqLineItemsBody');
+    if (tbody) tbody.innerHTML = '';
+    const items = Array.isArray(req.items) ? req.items : (req.items ? Object.values(req.items) : []);
+    items.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><input class="form-control form-control-sm" name="itemDesc" value="${esc(item.description || item.item || item.name || '')}"></td><td><input class="form-control form-control-sm text-end" name="itemQty" type="number" min="0" step="0.01" value="${Number(item.qty || 0)}" oninput="window.recalcLineTotal(this)"></td><td><input class="form-control form-control-sm text-end" name="itemRate" type="number" min="0" step="0.01" value="${Number(item.rate || 0)}" oninput="window.recalcLineTotal(this)"></td><td class="text-end font-mono fw-semibold" name="itemAmount">${Number(item.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td><td><button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="this.closest('tr').remove()"><i class="bi bi-trash"></i></button></td>`;
+        tbody.appendChild(tr);
+    });
+    $('submitRequisitionBtn').innerHTML = '<i class="bi bi-pencil-square me-1"></i>Save Changes & Resubmit';
+    document.querySelector('[data-bs-target="#create-view"]')?.click();
+    if (window.App && App.UI && App.UI.Notify) App.UI.Notify('Edit Requisition', 'Correct the fields and click Save & Resubmit.', 'info');
+};
+window.reassignToInitiator = async function() {
+    if (!currentDoc) return;
+    const reason = prompt('Reason for returning this document to the initiator (mandatory):');
+    if (reason === null) return;
+    if (!String(reason).trim()) { alert('A remark is mandatory.'); return; }
+    const reqId = currentDoc.id;
+    const hierarchy = window.ApprovalEngine ? window.ApprovalEngine.toHierarchyArray(currentDoc.hierarchy) : (currentDoc.hierarchy || []);
+    const curIdx = Number.isInteger(parseInt(currentDoc.currentLevelIndex, 10)) ? parseInt(currentDoc.currentLevelIndex, 10) : 0;
+    if (hierarchy[curIdx]) hierarchy[curIdx] = { ...hierarchy[curIdx], status: 'REJECTED', rejectedAt: Date.now(), rejectedBy: currentUserId, rejectedByName: currentUserName, remarks: String(reason).trim() };
+    const updates = {
+        hierarchy, state: 'RETURNED_TO_CREATOR', status: 'REJECTED', is_draft: true,
+        rejectedByLevelIndex: curIdx, rejectedByUserId: currentUserId, rejectedByUserName: currentUserName,
+        rejectionReason: String(reason).trim(), currentLevelIndex: curIdx,
+        assignedManagerId: hierarchy[curIdx]?.userId || '', assignedManagerName: hierarchy[curIdx]?.userName || '',
+        currentApproverId: hierarchy[curIdx]?.userId || '', currentApproverName: hierarchy[curIdx]?.userName || '',
+        updatedAt: Date.now()
+    };
+    const reqBases = ['Utilities/Requests']; if (wsScopeId) reqBases.push(`${wsScopeId}/Utilities/Requests`);
+    await writeRequestUpdates(reqId, updates, reqBases);
+    const target = currentDoc.requesterId || '';
+    if (target) await notifyTarget(target, { title: `Approval Rejected: ${currentDoc.docNo || reqId}`, message: `"${currentDoc.title || currentDoc.docNo}" was returned by ${currentUserName}. Remarks: ${String(reason).trim()}`, link: 'reports/approvalmanagementsystem', tab: 'creator-view', typeoft: 'error', dedupeKey: `approval-rej-${reqId}` });
+    await boot();
+};
+
+window.askDeleteEverywhereById = function(id) {
+    const req = allRequests.find(r => r.id === id);
+    if (!req) { alert('Record not found.'); return; }
+    pendingDeleteTarget = {
+        formId: req.formId || 'REQUISITION',
+        txnKey: req.transactionKey || req.id,
+        reqId: req.id,
+        docNo: req.docNo || req.id
+    };
+    $('deleteRemarkInput').value = '';
+    new bootstrap.Modal($('modalDeleteRemark')).show();
+};
+window.askDeleteEverywhere = window.askDeleteEverywhereById;
+$('confirmDeleteBtn')?.addEventListener('click', async () => {
+    const reason = String($('deleteRemarkInput').value || '').trim();
+    if (!reason) { alert('Remark mandatory'); return; }
+    const t = pendingDeleteTarget; if (!t) return;
+    const timestamp = Date.now();
+    const keys = Array.from(new Set([t.txnKey].filter(Boolean).map(String)));
+    const txnBases = [`Transactions/${t.formId}`]; if (wsScopeId) { txnBases.unshift(`${wsScopeId}/Transactions/${t.formId}`); txnBases.push(`Users/${wsScopeId}/Transactions/${t.formId}`); }
+    const foundKeys = new Set();
+    for (const base of txnBases.concat()) {
+        try { const snap = await firebase.database().ref(base).once('value'); const val = snap && snap.val(); if (val && typeof val === 'object') Object.entries(val).forEach(([k,v]) => { if (keys.includes(k) || String((v && v.header && (v.header.doc_no || v.header.docNo)) || '') === t.docNo) foundKeys.add(k); }); } catch(e) {}
+    }
+    if (foundKeys.size) keys.splice(0, keys.length, ...foundKeys);
+    const reqBases = ['Utilities/Requests']; if (wsScopeId) reqBases.push(`${wsScopeId}/Utilities/Requests`);
+    const reqIds = new Set([t.reqId].filter(Boolean));
+    const txnKeys = keys.slice();
+    for (const base of reqBases) {
+        try { const snap = await firebase.database().ref(base).once('value'); const val = snap && snap.val(); if (val && typeof val === 'object') Object.entries(val).forEach(([k,v]) => { if (!v) return; const matches = String(v.transactionKey || '') === String(t.txnKey) || (t.reqId && k === t.reqId) || (v.formId === t.formId && v.transactionKey && txnKeys.includes(String(v.transactionKey))); if (matches) reqIds.add(k); }); } catch(e) {}
+    }
+    const txnUpdates = {};
+    txnBases.forEach(base => keys.forEach(k => { if (!window.ApprovalEngine || !window.ApprovalEngine.isValidKey(k)) return; txnUpdates[`${base}/${k}/status`] = 'DELETED'; txnUpdates[`${base}/${k}/is_deleted`] = true; txnUpdates[`${base}/${k}/is_draft`] = false; txnUpdates[`${base}/${k}/deleted_by`] = `${currentUserName} (${currentUserId})`; txnUpdates[`${base}/${k}/deleted_at`] = timestamp; txnUpdates[`${base}/${k}/deletion_remark`] = reason; txnUpdates[`${base}/${k}/header/status`] = 'DELETED'; txnUpdates[`${base}/${k}/header/is_deleted`] = true; txnUpdates[`${base}/${k}/header/is_draft`] = false; txnUpdates[`${base}/${k}/header/deletion_remark`] = reason; }));
+    reqBases.forEach(base => reqIds.forEach(id => { if (!window.ApprovalEngine || !window.ApprovalEngine.isValidKey(id)) return; txnUpdates[`${base}/${id}/is_deleted`] = true; txnUpdates[`${base}/${id}/state`] = 'DELETED'; txnUpdates[`${base}/${id}/status`] = 'DELETED'; txnUpdates[`${base}/${id}/deleted_by`] = `${currentUserName} (${currentUserId})`; txnUpdates[`${base}/${id}/deleted_at`] = timestamp; txnUpdates[`${base}/${id}/deletedAt`] = timestamp; txnUpdates[`${base}/${id}/deletionRemark`] = reason; txnUpdates[`${base}/${id}/updatedAt`] = timestamp; }));
+    await firebase.database().ref().update(txnUpdates);
+    const modal = bootstrap.Modal.getInstance($('modalDeleteRemark')); if (modal) modal.hide();
+    if (window.App && App.UI && App.UI.Notify) App.UI.Notify('Deleted', 'Document removed from all queues.', 'success');
+    await boot();
+});
+window.quickApproveTransaction = async function(formId, txnKey, reqId) {
+    const req = allRequests.find(r => r.id === reqId);
+    if (req && isAssignedToMe(req)) {
+        currentDoc = window.ApprovalEngine ? window.ApprovalEngine.normalizeRequest(req) : req;
+        await window.processAction('APPROVED');
+        return;
+    }
+    const confirmed = confirm(`Quick-approve ${req ? (req.docNo || reqId) : txnKey}? Only the assigned approver may approve.`);
+    if (!confirmed) return;
+    if (!isAdminUser()) { alert('Only the assigned approver or an administrator may approve.'); return; }
+    const timestamp = Date.now();
+    const bases = [`Transactions/${formId}`]; if (wsScopeId) bases.unshift(`${wsScopeId}/Transactions/${formId}`);
+    const updates = {};
+    bases.forEach(base => { updates[`${base}/${txnKey}/status`] = 'POSTED'; updates[`${base}/${txnKey}/is_draft`] = false; updates[`${base}/${txnKey}/header/status`] = 'POSTED'; updates[`${base}/${txnKey}/header/is_draft`] = false; updates[`${base}/${txnKey}/header/approved_by`] = currentUserId; updates[`${base}/${txnKey}/header/approved_by_name`] = currentUserName; updates[`${base}/${txnKey}/header/approved_at`] = timestamp; });
+    if (reqId) {
+        const reqBases = ['Utilities/Requests']; if (wsScopeId) reqBases.push(`${wsScopeId}/Utilities/Requests`);
+        reqBases.forEach(base => { updates[`${base}/${reqId}/state`] = 'APPROVED'; updates[`${base}/${reqId}/status`] = formId === 'REQUISITION' ? 'APPROVED' : 'POSTED'; updates[`${base}/${reqId}/updatedAt`] = timestamp; });
+    }
+    await firebase.database().ref().update(updates);
+    const creator = req ? (req.requesterId || '') : '';
+    if (creator) await notifyTarget(creator, { title: `Application Fully Approved: ${req?.docNo || reqId || txnKey}`, message: `Your document was verified and fully approved by ${currentUserName}.`, link: 'reports/approvalmanagementsystem', tab: 'creator-view', typeoft: 'success', dedupeKey: `approval-appr-${reqId || txnKey}` });
+    await boot();
+    if (window.App && App.UI && App.UI.Notify) App.UI.Notify('Approved', 'Document approved and posted.', 'success');
+};
+window.quickRejectTransaction = async function(formId, txnKey, reqId) {
+    const req = allRequests.find(r => r.id === reqId);
+    if (req && isAssignedToMe(req)) {
+        currentDoc = window.ApprovalEngine ? window.ApprovalEngine.normalizeRequest(req) : req;
+        await window.processAction('RETURNED');
+        return;
+    }
+    if (!isAdminUser()) { alert('Only the assigned approver or an administrator may return this document.'); return; }
+    const reason = prompt('Reason for returning to initiator:');
+    if (reason === null) return;
+    if (!String(reason).trim()) { alert('Remark mandatory.'); return; }
+    const timestamp = Date.now();
+    const bases = [`Transactions/${formId}`]; if (wsScopeId) bases.unshift(`${wsScopeId}/Transactions/${formId}`);
+    const updates = {};
+    bases.forEach(base => { updates[`${base}/${txnKey}/status`] = 'REJECTED'; updates[`${base}/${txnKey}/is_draft`] = true; updates[`${base}/${txnKey}/header/status`] = 'REJECTED'; updates[`${base}/${txnKey}/header/is_draft`] = true; updates[`${base}/${txnKey}/header/rejection_reason`] = String(reason).trim(); updates[`${base}/${txnKey}/header/rejected_by`] = currentUserId; });
+    if (reqId) {
+        const reqBases = ['Utilities/Requests']; if (wsScopeId) reqBases.push(`${wsScopeId}/Utilities/Requests`);
+        reqBases.forEach(base => { updates[`${base}/${reqId}/state`] = 'RETURNED_TO_CREATOR'; updates[`${base}/${reqId}/status`] = 'REJECTED'; updates[`${base}/${reqId}/rejectedByUserId`] = currentUserId; updates[`${base}/${reqId}/rejectedByUserName`] = currentUserName; updates[`${base}/${reqId}/rejectionReason`] = String(reason).trim(); updates[`${base}/${reqId}/updatedAt`] = timestamp; });
+    }
+    await firebase.database().ref().update(updates);
+    const creator = req ? (req.requesterId || '') : '';
+    if (creator) await notifyTarget(creator, { title: `Approval Rejected: ${req?.docNo || reqId || txnKey}`, message: `Returned by ${currentUserName}. Remarks: ${String(reason).trim()}`, link: 'reports/approvalmanagementsystem', tab: 'creator-view', typeoft: 'error', dedupeKey: `approval-rej-${reqId || txnKey}` });
+    await boot();
+    if (window.App && App.UI && App.UI.Notify) App.UI.Notify('Returned', 'Document returned to initiator for revision.', 'warning');
+};
+
+window.printCurrentDoc = function() {
+    const doc = window.currentDoc;
+    if (!doc) { alert('Open a document first (click a row to preview it).'); return; }
+    if (doc.isVoucherStub) {
+        // Voucher / transaction document print
+        if (window.printTransaction && doc.formId && doc.transactionKey) {
+            window.printTransaction(doc.formId, doc.transactionKey);
+            return;
+        }
+        const printEngine = window.UniTaxPrintEngine;
+        if (printEngine && printEngine.PrintTransaction && doc.formId && doc.transactionKey) {
+            printEngine.PrintTransaction(doc.formId, doc.transactionKey);
+            return;
+        }
+        window.print();
+        return;
+    }
+    // Requisition (REQ-*) print
+    if (typeof window.printApprovalDoc === 'function') {
+        window.printApprovalDoc(doc.id);
+        return;
+    }
+    if (window.UniTaxPrintEngine && typeof window.UniTaxPrintEngine.PrintApprovalDoc === 'function') {
+        window.UniTaxPrintEngine.PrintApprovalDoc(doc.id);
+        return;
+    }
+    window.print();
+};
+window.editReturnedDoc = function(reqId) {
+    const req = allRequests.find(r => r.id === reqId);
+    if (!req) { alert('Record not found.'); return; }
+    if (!isMySubmission(req)) { alert('Only the initiator may edit this document.'); return; }
+    if (lifecycle(req) !== 'RETURNED') { alert('This document is not in a returned state.'); return; }
+    if (req.isVoucherStub) {
+        // Voucher: open the voucher editor; after saving, initiator resubmits from the approval center
+        localStorage.setItem('editContext', JSON.stringify({ type: req.formId, key: req.transactionKey, returnRoute: 'reports/approvalmanagementsystem' }));
+        if (typeof App !== 'undefined' && typeof App.Router === 'function') App.Router(`transactions/edit?type=${req.formId}&key=${req.transactionKey}`);
+        else window.location.hash = `#/transactions/edit?type=${req.formId}&key=${req.transactionKey}`;
+        return;
+    }
+    window.startEditingRequisition(reqId);
+};
+window.resubmitReturnedDoc = async function(reqId) {
+    const req = allRequests.find(r => r.id === reqId);
+    if (!req) { alert('Record not found.'); return; }
+    if (!isMySubmission(req)) { alert('Only the initiator may resubmit.'); return; }
+    if (lifecycle(req) !== 'RETURNED') { alert('This document is not in a returned state.'); return; }
+    const timestamp = Date.now();
+    const resumeLevel = (req.rejectedByLevelIndex !== undefined) ? req.rejectedByLevelIndex : 0;
+    const hierarchy = window.ApprovalEngine ? window.ApprovalEngine.toHierarchyArray(req.hierarchy) : (req.hierarchy || []);
+    const h = hierarchy.map((l, i) => {
+        if (String(l.status || '').toUpperCase() === 'REJECTED' || String(l.status || '').toUpperCase() === 'RETURNED') {
+            return { ...l, status: 'PENDING', rejectedAt: null, rejectedBy: null, rejectedByName: null, remarks: null };
+        }
+        return l;
+    });
+    const updates = {
+        hierarchy: h, state: 'PENDING', status: 'PENDING_APPROVAL', is_draft: true,
+        currentLevelIndex: resumeLevel,
+        assignedManagerId: h[resumeLevel]?.userId || '', assignedManagerName: h[resumeLevel]?.userName || '',
+        currentApproverId: h[resumeLevel]?.userId || '', currentApproverName: h[resumeLevel]?.userName || '',
+        rejectionReason: null, rejectedByLevelIndex: null, rejectedByUserId: null, rejectedByUserName: null,
+        updatedAt: timestamp
+    };
+    const reqBases = ['Utilities/Requests']; if (wsScopeId) reqBases.push(`${wsScopeId}/Utilities/Requests`);
+    await writeRequestUpdates(reqId, updates, reqBases);
+    if (h[resumeLevel]?.userId) {
+        await notifyTarget(h[resumeLevel].userId, { title: `Resubmitted for Re-review — ${req.docNo || reqId}`, message: `"${req.title || req.docNo}" was corrected by ${currentUserName} and awaits your re-review.`, link: 'reports/approvalmanagementsystem', tab: 'inbox-view', typeoft: 'task', dedupeKey: `approval-asn-${reqId}` });
+    }
+    await boot();
+    if (window.App && App.UI && App.UI.Notify) App.UI.Notify('Resubmitted', 'Document sent back to the rejecting approver.', 'success');
+};
+window.viewLinkedEntry = function(formId, key) {
+    if (!formId || formId === 'REQUISITION' || formId === 'REQUISITION') {
+        const req = allRequests.find(r => r.id === key || r.transactionKey === key);
+        if (req) window.loadApprovalDoc(req.id);
+        return;
+    }
+    localStorage.setItem('editContext', JSON.stringify({ type: formId, key, returnRoute: 'reports/approvalmanagementsystem' }));
+    if (typeof App !== 'undefined' && typeof App.Router === 'function') App.Router(`transactions/edit?type=${formId}&key=${key}`);
+    else window.location.hash = `#/transactions/edit?type=${formId}&key=${key}`;
+};
+
+/* ═══════════════ CREATOR ═══════════════ */
+function renderCreatorDashboard() {
+    const tbody = $('creatorRequestsBody');
+    if (!tbody) return;
+    const filter = $('creatorFilter')?.value || 'ALL';
+    let rows = allRequests.filter(r => isMySubmission(r));
+    const total = rows.length;
+    const pending = rows.filter(r => lifecycle(r) === 'PENDING').length;
+    const approved = rows.filter(r => lifecycle(r) === 'APPROVED').length;
+    const returned = rows.filter(r => lifecycle(r) === 'RETURNED').length;
+    $('kpiTotal').textContent = total; $('kpiPending').textContent = pending; $('kpiApproved').textContent = approved; $('kpiReturned').textContent = returned;
+    const tabBadge = $('tabBadgeCreator'); if (tabBadge) tabBadge.textContent = pending + returned;
+    if (filter !== 'ALL') rows = rows.filter(r => lifecycle(r) === filter);
+    if (rows.length === 0) { tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">No requests yet.</td></tr>`; return; }
+    tbody.innerHTML = rows.slice(0, 120).map(r => {
+        const lc = lifecycle(r);
+        const assignedName = r.hierarchy && r.hierarchy[r.currentLevelIndex] ? (r.hierarchy[r.currentLevelIndex].userName || r.hierarchy[r.currentLevelIndex].name || '—') : (r.assignedManagerName || '—');
+        const badge = lc==='APPROVED' ? '<span class="badge bg-success-subtle text-success">Approved</span>' : lc==='RETURNED' ? '<span class="badge bg-danger-subtle text-danger">Returned</span>' : lc==='DELETED' ? '<span class="badge bg-dark-subtle text-dark">Deleted</span>' : '<span class="badge bg-warning-subtle text-warning">Pending</span>';
+        return `<tr><td class="ps-3"><a href="#" class="text-decoration-none fw-semibold text-dark" onclick="window.loadApprovalDoc('${esc(r.id)}'); return false;">${esc(r.title || r.docNo || 'Request')}</a><div class="small text-muted font-mono">${esc(r.docNo || r.id)}</div></td><td class="small">${esc(r.category || '—')}</td><td class="small text-muted">${new Date(r.createdAt || Date.now()).toLocaleString('en-GB', { day:'2-digit', month:'short', year:'2-digit' })}</td><td class="small">${esc(assignedName)}</td><td>${badge}</td><td><button class="btn btn-sm btn-outline-primary" onclick="window.loadApprovalDoc('${esc(r.id)}')"><i class="bi bi-eye"></i></button></td></tr>`;
+    }).join('');
+}
+
+/* ═══════════════ CREATE REQUEST ═══════════════ */
+window.addReqLineItem = function() {
+    const tbody = $('reqLineItemsBody');
+    const row = document.createElement('tr');
+    row.innerHTML = `<td><input class="form-control form-control-sm" name="itemDesc" placeholder="Item description"></td><td><input class="form-control form-control-sm text-end" name="itemQty" type="number" min="0" step="0.01" value="1" oninput="window.recalcLineTotal(this)"></td><td><input class="form-control form-control-sm text-end" name="itemRate" type="number" min="0" step="0.01" value="0" oninput="window.recalcLineTotal(this)"></td><td class="text-end font-mono fw-semibold" name="itemAmount">0.00</td><td><button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="this.closest('tr').remove()"><i class="bi bi-trash"></i></button></td>`;
+    tbody.appendChild(row);
+};
+window.recalcLineTotal = function(input) {
+    const row = input.closest('tr');
+    const qty = parseFloat(row.querySelector('[name=itemQty]').value) || 0;
+    const rate = parseFloat(row.querySelector('[name=itemRate]').value) || 0;
+    const amountCell = row.querySelector('[name=itemAmount]');
+    amountCell.textContent = (qty * rate).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+(function seedLineItem() { const b = $('reqLineItemsBody'); if (b) window.addReqLineItem(); })();
+
+let routingCounter = 0;
+window.addNewRank = function() {
+    routingCounter++;
+    const wrap = $('approvalRoutingContainer');
+    const row = document.createElement('div');
+    row.className = 'input-group input-group-sm mb-2';
+    row.setAttribute('data-rank', String(routingCounter));
+    row.innerHTML = `<span class="input-group-text">${routingCounter}</span>
+        <select class="form-select" name="approver[]"><option value="">Select approver...</option></select>
+        <button type="button" class="btn btn-outline-secondary" onclick="this.closest('[data-rank]').remove()"><i class="bi bi-dash"></i></button>`;
+    wrap.appendChild(row);
+    populateApproverSelect(row.querySelector('select'));
+};
+window.applyMatrixPreset = function() {};
+async function populateApproverSelect(selectEl) {
+    try {
+        const snap = await get(ref(db, 'Users'));
+        if (snap && snap.exists()) {
+            Object.entries(snap.val()).forEach(([id, u]) => {
+                const name = u.legalName || u.name || u.displayName || '';
+                if (id && name) { const o = document.createElement('option'); o.value = id; o.textContent = `${name} (${id})`; selectEl.appendChild(o); }
+            });
+        }
+    } catch (e) { console.warn('Users load failed', e); }
+}
+(function bootRouting() {
+    const container = $('approvalRoutingContainer');
+    if (container && container.children.length === 0) window.addNewRank();
+})();
+
+$('requisitionForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const title = $('reqTitle').value.trim();
+    const amount = parseFloat($('reqAmount').value);
+    if (!title || !(amount >= 0)) { window.App && App.UI && App.UI.Notify('Missing', 'Title and a valid amount are required.', 'warning'); return; }
+    const complianceChecked = ['complianceVat','complianceBudget','compliancePolicy'].every(id => $(id).checked);
+    if (!complianceChecked) { window.App && App.UI && App.UI.Notify('Compliance', 'Please certify all compliance declarations.', 'warning'); return; }
+    const hierarchy = Array.from(document.querySelectorAll('select[name="approver[]"]')).map((s,i) => {
+        const id = s.value; const name = s.selectedOptions[0]?.textContent?.split(' (')[0] || '';
+        return id ? { level: i + 1, levelIndex: i, userId: id, userName: name, role: 'Approver', status: 'PENDING' } : null;
+    }).filter(Boolean);
+    if (hierarchy.length === 0) { window.App && App.UI && App.UI.Notify('Routing', 'Add at least one approver in the routing path.', 'warning'); return; }
+    const items = Array.from(document.querySelectorAll('#reqLineItemsBody tr')).map(tr => ({
+        description: tr.querySelector('[name=itemDesc]')?.value || '', qty: Number(tr.querySelector('[name=itemQty]')?.value || 0), rate: Number(tr.querySelector('[name=itemRate]')?.value || 0), amount: Number(String(tr.querySelector('[name=itemAmount]')?.textContent || '0').replace(/,/g,'')) || 0
+    })).filter(i => i.description);
+
+    const isEditing = !!editingRequisitionId;
+    if (isEditing) {
+        const reqBases = ['Utilities/Requests']; if (wsScopeId) reqBases.push(`${wsScopeId}/Utilities/Requests`);
+        // Resume from the rejecting level so the initiator's correction goes back to the rejecting approver
+        const resumeLevel = (currentDoc && currentDoc.rejectedByLevelIndex !== undefined) ? currentDoc.rejectedByLevelIndex : 0;
+        const existing = allRequests.find(r => r.id === editingRequisitionId);
+        const originalHierarchy = existing && Array.isArray(existing.hierarchy) ? existing.hierarchy : hierarchy.map((h, i) => ({ ...h, status: 'PENDING' }));
+        const h = hierarchy.map((h, i) => ({ ...(originalHierarchy[i] || h), userId: h.userId, userName: h.userName, status: i === resumeLevel ? 'PENDING' : (originalHierarchy[i]?.status || 'PENDING') }));
+        const updates = {
+            title, category: $('reqCategory').value, amount,
+            vendor: $('reqVendor').value.trim(), details: $('reqVendor').value.trim(),
+            items, state: 'PENDING', status: 'PENDING_APPROVAL', is_draft: true,
+            currentLevelIndex: resumeLevel, hierarchy: h,
+            assignedManagerId: h[resumeLevel]?.userId || '', assignedManagerName: h[resumeLevel]?.userName || '',
+            currentApproverId: h[resumeLevel]?.userId || '', currentApproverName: h[resumeLevel]?.userName || '',
+            rejectionReason: null, rejectedByLevelIndex: null, rejectedByUserId: null, rejectedByUserName: null,
+            updatedAt: Date.now()
+        };
+        await Promise.allSettled(reqBases.map(base => firebase.database().ref(`${base}/${editingRequisitionId}`).update(updates).catch(() => {})));
+        if (h[resumeLevel]?.userId) await window.ApprovalEngine.notify(h[resumeLevel].userId, { title: `Requisition Resubmitted — ${editingRequisitionId}`, message: `"${title}" was corrected by ${currentUserName} and awaits your re-review.`, link: 'reports/approvalmanagementsystem', tab: 'inbox-view', typeoft: 'task', dedupeKey: `approval-asn-${editingRequisitionId}` });
+        window.App && App.UI && App.UI.Notify('Resubmitted', `Request ${editingRequisitionId} resubmitted for approval.`, 'success');
+        editingRequisitionId = null;
+        $('submitRequisitionBtn').innerHTML = '<i class="bi bi-send-check me-1"></i>Initiate Approval Workflow';
+        $('requisitionForm').reset();
+        $('reqLineItemsBody').innerHTML = '';
+        window.addReqLineItem();
+        await boot();
+        document.querySelector('[data-bs-target="#creator-view"]')?.click();
+        return;
+    }
+
+    const seqId = 'REQ-' + Math.random().toString(36).slice(2, 8).toUpperCase() + '-' + Date.now().toString().slice(-6);
+    const payload = {
+        id: seqId, requesterId: currentUserId, requesterName: currentUserName,
+        title, category: $('reqCategory').value, amount, vendor: $('reqVendor').value.trim(),
+        details: $('reqVendor').value.trim(), state: 'PENDING', status: 'PENDING_APPROVAL',
+        currentLevelIndex: 0, hierarchy, items, createdAt: Date.now(), updatedAt: Date.now(),
+        assignedManagerId: hierarchy[0].userId, assignedManagerName: hierarchy[0].userName,
+        currentApproverId: hierarchy[0].userId, currentApproverName: hierarchy[0].userName
+    };
+    const reqBases = ['Utilities/Requests']; if (wsScopeId) reqBases.push(`${wsScopeId}/Utilities/Requests`);
+    await Promise.allSettled(reqBases.map(base => set(ref(db, `${base}/${seqId}`), payload).catch(() => {})));
+    await window.ApprovalEngine && window.ApprovalEngine.notify(hierarchy[0].userId, { title: `New Requisition Assigned — ${seqId}`, message: `${currentUserName} initiated "${title}" (₹${amount.toLocaleString('en-IN')}). Your authorization is requested.`, link: 'reports/approvalmanagementsystem', tab: 'inbox-view', typeoft: 'task', dedupeKey: `approval-asn-${seqId}` });
+    window.App && App.UI && App.UI.Notify('Submitted', `Request ${seqId} routed for approval.`, 'success');
+    $('requisitionForm').reset();
+    $('reqLineItemsBody').innerHTML = '';
+    window.addReqLineItem();
+    await boot();
+    document.querySelector('[data-bs-target="#creator-view"]')?.click();
+});
+
+boot();
+</script>
+<style>
+.premium-workflow-app { height: 100%; display: flex; flex-direction: column; }
+.premium-workflow-app .tab-content { min-height: 0; }
+/* Hidden tab panes must stay hidden until activated (Bootstrap override) */
+.tab-pane.pane-flex { display: none; }
+.tab-pane.pane-flex.active { display: flex; }
+.premium-workflow-app .table-sm td, .premium-workflow-app .table-sm th { padding: 0.35rem 0.5rem; font-size: 12px; }
+.premium-workflow-app .min-w-0 { min-width: 0; }
+.premium-workflow-app .list-group-item { border-left: 3px solid transparent; }
+.premium-workflow-app .list-group-item:hover { border-left-color: #0052ea; }
+.premium-workflow-app .list-group-item.active { border-left-color: #0052ea; background: #eff5ff; }
+</style>
