@@ -84,6 +84,25 @@
         return '₹ ' + num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
+    // Short, fixed-width document type codes (fit the Type column; never wrap or misalign)
+    function ShortDocType(formId, type) {
+        const raw = String(formId || type || 'TXN');
+        const map = {
+            'SalesInvoiceForm': 'SALES', 'SALES': 'SALES', 'SalesInvoice': 'SALES', 'sales-inv': 'SALES', 'tax-invoice': 'SALES',
+            'PurchaseInvoiceForm': 'PURCHASE', 'PURCHASE': 'PURCHASE', 'PurchaseInvoice': 'PURCHASE', 'purchase-inv': 'PURCHASE',
+            'SalesReturnForm': 'CR NOTE', 'CreditNoteForm': 'CR NOTE', 'CREDITNOTE': 'CR NOTE', 'salesret': 'CR NOTE', 'salesret-inv': 'CR NOTE',
+            'PurchaseReturnForm': 'DB NOTE', 'DebitNoteForm': 'DB NOTE', 'DEBITNOTE': 'DB NOTE', 'purchaseret': 'DB NOTE', 'purchaseret-inv': 'DB NOTE',
+            'ReceiptVoucherForm': 'RECEIPT', 'RECEIPT': 'RECEIPT', 'ReceiptVoucher': 'RECEIPT', 'receipt-vch': 'RECEIPT',
+            'PaymentVoucherForm': 'PAYMENT', 'PAYMENT': 'PAYMENT', 'PaymentVoucher': 'PAYMENT', 'payment-vch': 'PAYMENT',
+            'ReceiptPayForm': 'CONTRA', 'receipt-pay': 'CONTRA',
+            'JournalVoucherForm': 'JOURNAL', 'JOURNAL': 'JOURNAL', 'JournalVoucher': 'JOURNAL', 'journal-vch': 'JOURNAL', 'jv': 'JOURNAL',
+            'GeneralLedger': 'LEDGER', 'statement': 'LEDGER', 'ledger': 'LEDGER'
+        };
+        const mapped = map[raw] || map[String(type || '')] || '';
+        if (mapped) return mapped;
+        return String(type || raw).replace(/Form$/, '').replace(/[^A-Za-z0-9]/g, ' ').trim().toUpperCase().split(/\s+/)[0].slice(0, 7) || 'TXN';
+    }
+
     // Helper: Format raw date to DD-MMM-YYYY
     function FormatDate(dateStr) {
         if (!dateStr) return '---';
@@ -1848,8 +1867,7 @@
             let runningBal = Math.abs(opBal) * (opType === 'CR' ? -1 : 1);
 
             let rowsHtml = `
-                <tr style="background: #f8fafc; font-weight: bold;">
-                    <td class="text-center font-mono nowrap">${FormatDate(fromDate)}</td>
+                <tr class="item-row" style="background: #f8fafc; font-weight: bold;">
                     <td class="text-center font-mono nowrap">${FormatDate(fromDate)}</td>
                     <td class="font-mono text-center">---</td>
                     <td class="text-center"><span class="badge" style="background:#f1f5f9; color:#475569;">OPENING</span></td>
@@ -1868,12 +1886,11 @@
                 runningBal += (dr - cr);
 
                 rowsHtml += `
-                    <tr>
+                    <tr class="item-row">
                         <td class="text-center font-mono nowrap">${FormatDate(txn.date || txn.postingDate)}</td>
-                        <td class="text-center font-mono nowrap">${FormatDate(txn.valueDate || txn.date)}</td>
                         <td class="font-mono text-center nowrap"><strong>${txn.doc_no || txn.voucher_no || '---'}</strong></td>
                         <td class="text-center">
-                            <span class="badge" style="background:#e2e8f0; color:#334155; font-size:6.5pt;">${txn.formId || txn.type || 'TXN'}</span>
+                            <span class="badge" style="background:#e2e8f0; color:#334155; font-size:6pt; padding:1px 3px; letter-spacing:0.3px;">${ShortDocType(txn.formId, txn.type)}</span>
                         </td>
                         <td>
                             <strong>${txn.particulars || txn.entity || 'Counterparty Entry'}</strong>
@@ -1914,6 +1931,28 @@
                         font-size: 9pt;
                         font-weight: 800;
                         color: #0f172a;
+                    }
+                    /* Ledger grid — fixed layout so columns align perfectly across all rows */
+                    .ledger-grid {
+                        table-layout: fixed !important;
+                        border-collapse: collapse !important;
+                        width: 100% !important;
+                    }
+                    .ledger-grid th, .ledger-grid td {
+                        vertical-align: middle !important;
+                    }
+                    .ledger-grid td {
+                        padding: 3px 6px !important;
+                        font-size: 7pt !important;
+                    }
+                    .ledger-grid .item-row td {
+                        height: 24px;
+                    }
+                    .ledger-grid tbody tr.item-row:nth-child(even) {
+                        background: #fcfdfe;
+                    }
+                    .ledger-grid tfoot td {
+                        vertical-align: middle !important;
                     }
                 </style>
             </head>
@@ -1977,18 +2016,17 @@
                         </tr>
                     </table>
 
-                    <!-- 8-Column Ledger Grid (Proportioned so no text or Dr/Cr ever wraps) -->
-                    <table class="items-table" style="font-size: 7pt;">
+                    <!-- 7-Column Ledger Grid (Fixed layout, aligned across all rows) -->
+                    <table class="items-table ledger-grid" style="font-size: 7pt;">
                         <thead>
                             <tr>
-                                <th style="width: 9%; text-align: center;">Post Date</th>
-                                <th style="width: 9%; text-align: center;">Value Date</th>
-                                <th style="width: 12%; text-align: center;">Doc / Ref No</th>
-                                <th style="width: 8%; text-align: center;">Type</th>
-                                <th style="width: 28%;">Particulars & Counterparty / Narration</th>
+                                <th style="width: 10%; text-align: center;">Post Date</th>
+                                <th style="width: 13%; text-align: center;">Doc / Ref No</th>
+                                <th style="width: 10%; text-align: center;">Type</th>
+                                <th style="width: 30%;">Particulars & Counterparty / Narration</th>
                                 <th style="width: 11%; text-align: right;">Debit (₹)</th>
                                 <th style="width: 11%; text-align: right;">Credit (₹)</th>
-                                <th style="width: 12%; text-align: right;">Balance (₹)</th>
+                                <th style="width: 15%; text-align: right;">Balance (₹)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1996,7 +2034,7 @@
                         </tbody>
                         <tfoot>
                             <tr style="background: #f1f5f9; font-weight: bold; border-top: 2px solid #cbd5e1;">
-                                <td colspan="5" class="text-right" style="padding: 6px 8px; text-transform: uppercase;">Total Period Turnover:</td>
+                                <td colspan="4" class="text-right" style="padding: 6px 8px; text-transform: uppercase;">Total Period Turnover:</td>
                                 <td class="text-right font-mono nowrap" style="padding: 6px 8px;">${FormatCurrency(totalDr).replace('₹ ', '')}</td>
                                 <td class="text-right font-mono nowrap" style="padding: 6px 8px;">${FormatCurrency(totalCr).replace('₹ ', '')}</td>
                                 <td class="text-right font-mono fw-bold nowrap" style="padding: 6px 8px; color: #1e3a8a;">${FormatCurrency(closingBal).replace('₹ ', '')} ${closingType}</td>

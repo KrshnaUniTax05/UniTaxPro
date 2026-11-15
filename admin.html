@@ -884,7 +884,7 @@
                                     <div class="mb-4">
                                         <label class="form-label small fw-bold">Access Password</label>
                                         <div class="input-group input-group-sm">
-                                            <input type="text" id="copilot_pass" class="form-control font-mono" value="UniTax@Copilot2026" required>
+                                            <input type="text" id="copilot_pass" class="form-control font-mono" value="" placeholder="Use the shuffle button or type a strong password" required>
                                             <button class="btn btn-outline-secondary" type="button" onclick="generateRandomCopilotPass()"><i class="bi bi-shuffle"></i></button>
                                         </div>
                                     </div>
@@ -1774,6 +1774,7 @@
     <!-- ================================================================= -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="assets/js/paths.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
@@ -1849,35 +1850,7 @@
                 let authorized = false;
                 let adminUserData = null;
 
-                // 1. Direct Master Administrator Credentials Check (ALWAYS PRIORITIZE)
-                if ((email === 'admin@unitax.pro' || email === 'admin') && 
-                    (pass === 'admin@2026' || pass === 'Admin@2026' || pass === 'admin' || pass === 'Admin')) {
-                    authorized = true;
-                    adminUserData = {
-                        name: 'Master Administrator (Root)',
-                        email: 'admin@unitax.pro',
-                        role: 'super_administrator',
-                        isRoot: true,
-                        isCoPilot: false,
-                        adminId: 'ROOT_MASTER'
-                    };
-                }
-
-                // 2. Direct Built-in Master Co-Pilot Check (ALWAYS SUPPORT)
-                if (!authorized && (email === 'copilot@unitax.pro' || email === 'copilot') && 
-                    (pass === 'UniTax@Copilot2026' || pass === 'copilot@2026' || pass === 'Copilot@2026' || pass === 'copilot' || pass === 'Copilot')) {
-                    authorized = true;
-                    adminUserData = {
-                        name: 'Master Co-Pilot Admin',
-                        email: 'copilot@unitax.pro',
-                        role: 'super_administrator',
-                        isRoot: false,
-                        isCoPilot: true,
-                        adminId: 'COPILOT_MASTER'
-                    };
-                }
-
-                // 3. Check PlatformMaster/Admins in Firebase (Registered Co-Pilots & Master Admins)
+                // 1. Check PlatformMaster/Admins in Firebase (Registered Co-Pilots & Master Admins)
                 if (!authorized) {
                     try {
                         const adminSnap = await db.ref('PlatformMaster/Admins').orderByChild('email').equalTo(email).once('value');

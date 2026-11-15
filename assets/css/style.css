@@ -1443,3 +1443,66 @@ body.dark-mode .btn-erp-icon:hover {
         display: table-footer-group;
     }
 }
+
+/* ============================================================
+   UniTax PRO — Professional Loader System (Enterprise Grade)
+   Palette: #0f172a slate · #0052ea brand · #38bdf8 accent
+   ============================================================ */
+
+/* ---------- 1. Application Loader — Minimal, theme-matched ---------- */
+.ut-loader {
+    position: fixed; inset: 0; z-index: 9999;
+    background: #ffffff;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+}
+.ut-loader-brand { line-height: 0; }
+.ut-loader-brand img { width: 52px; height: 52px; object-fit: contain; }
+.ut-loader-word {
+    margin-top: 16px; font-size: 16px; font-weight: 800;
+    color: #0f172a; letter-spacing: .02em;
+}
+.ut-loader-word span { color: #0052ea; font-weight: 800; }
+.ut-loader-line {
+    margin-top: 14px; width: 132px; height: 2px;
+    border-radius: 2px; background: #e2e8f0; overflow: hidden;
+}
+.ut-loader-line span {
+    display: block; height: 100%; width: 38%;
+    background: #0052ea;
+    animation: utLineSweep 1.35s cubic-bezier(.4,0,.2,1) infinite;
+}
+@keyframes utLineSweep {
+    0%   { transform: translateX(-110%); }
+    100% { transform: translateX(320%); }
+}
+.ut-loader-sub {
+    margin-top: 12px; font-size: 9px; font-weight: 600;
+    letter-spacing: .24em; text-transform: uppercase; color: #94a3b8;
+}
+.ut-loader-banner {
+    position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+    max-width: 420px; padding: 9px 16px; z-index: 2;
+    background: #fffbeb; color: #92400e;
+    border: 1px solid #fde68a; border-radius: 8px;
+    font-size: 11px; line-height: 1.45; text-align: center;
+}
+
+/* ---------- 2. Module transition loader (routed viewport) ---------- */
+#section-loader {
+    position: absolute; inset: 0; z-index: 100;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: rgba(255,255,255,.88);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    opacity: 0; pointer-events: none; transition: opacity .2s ease;
+}
+#section-loader.is-visible { opacity: 1; pointer-events: auto; }
+.ut-section-line { margin: 0 auto; }
+.ut-section-title {
+    margin-top: 12px; font-size: 12px; font-weight: 600;
+    color: #0f172a; letter-spacing: .01em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ut-loader-line span { animation: none; }
+}

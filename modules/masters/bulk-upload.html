@@ -1,0 +1,625 @@
+<div class="animate-in p-0 m-0">
+    <div class="card border-0 shadow-sm overflow-hidden">
+        <div class="card-body p-0">
+            <!-- Header -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center p-3 border-bottom bg-light unitax-header gap-2">
+                <div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-primary-subtle text-primary border font-mono small">MASTER DATA</span>
+                        <h5 class="fw-bold mb-0 text-dark">Bulk Master Import</h5>
+                    </div>
+                    <p class="text-muted small mb-0">Upload a JSON file — every row is validated against the registry exactly like the creation forms. <b>Nothing is written unless every record passes every check.</b></p>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="button" class="btn btn-outline-secondary btn-sm fw-semibold" onclick="UniTaxRouter.Navigate('masters/ledger-list')"><i class="bi bi-journal-bookmark me-1"></i>Ledgers</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm fw-semibold" onclick="UniTaxRouter.Navigate('masters/stock-list')"><i class="bi bi-boxes me-1"></i>Stock</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm fw-semibold" onclick="UniTaxRouter.Navigate('masters/project-list')"><i class="bi bi-diagram-3 me-1"></i>Profit Centers</button>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="bg-white px-3 pt-3 border-bottom">
+                <ul class="nav nav-pills nav-fill gap-2 pb-3" id="bulkTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active fw-bold small py-2" id="bulk-tab-ledger" data-bulk-tab="ledger" type="button" role="tab"><i class="bi bi-journal-bookmark me-2"></i>Ledgers (COA)</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-bold small py-2" id="bulk-tab-stock" data-bulk-tab="stock" type="button" role="tab"><i class="bi bi-boxes me-2"></i>Stock Items</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-bold small py-2" id="bulk-tab-project" data-bulk-tab="project" type="button" role="tab"><i class="bi bi-diagram-3 me-2"></i>Profit Centers</button>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="p-4">
+                <div class="row g-4">
+                    <!-- LEFT: format reference -->
+                    <div class="col-lg-4">
+                        <div class="bg-light rounded-3 p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-bold text-dark small text-uppercase mb-0"><i class="bi bi-braces me-2 text-primary"></i>JSON Format — <span id="bulkSpecTitle">Ledger</span></h6>
+                                <button type="button" class="btn btn-sm btn-outline-primary fw-semibold" id="bulkSampleBtn"><i class="bi bi-download me-1"></i>Sample JSON</button>
+                            </div>
+                            <p class="small text-muted mb-2">Field names are identical to the <span id="bulkFormName">Ledger Creation</span> form. <span class="text-danger fw-semibold">*</span> = required.</p>
+                            <div class="table-responsive" style="max-height: 340px; overflow-y:auto;">
+                                <table class="table table-sm table-bordered align-middle small mb-2">
+                                    <thead class="table-light"><tr><th>Field</th><th>Rule (same as the form)</th></tr></thead>
+                                    <tbody id="bulkSpecTable"></tbody>
+                                </table>
+                            </div>
+                            <div class="small text-muted" id="bulkSpecFooter"></div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT: steps -->
+                    <div class="col-lg-8">
+                        <!-- Step 1 -->
+                        <div class="border rounded-3 p-3 mb-3 bg-white">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <span class="badge bg-primary rounded-pill">1</span>
+                                <h6 class="fw-bold mb-0 small text-uppercase">Choose JSON File</h6>
+                            </div>
+                            <div id="bulkDropZone" class="text-center border border-2 border-dashed rounded-3 p-4" style="border-style:dashed !important; cursor:pointer;">
+                                <i class="bi bi-filetype-json fs-2 text-primary"></i>
+                                <p class="fw-semibold mb-1 mt-2">Drop your .json file here or click to browse</p>
+                                <p class="small text-muted mb-0">Array of objects, a single object, or a wrapper like <code>{"records": [...]}</code>. Max 100 records per file. Excel support can reuse the same validator.</p>
+                                <input type="file" id="bulkFileInput" accept=".json,application/json" class="d-none">
+                            </div>
+                            <div class="small text-muted mt-2 d-none" id="bulkFileName"><i class="bi bi-file-earmark-check me-1 text-success"></i><span id="bulkFileNameText"></span></div>
+
+                            <details class="mt-3">
+                                <summary class="small fw-semibold text-muted" style="cursor:pointer;">Or paste JSON directly</summary>
+                                <textarea id="bulkPasteArea" class="form-control form-control-sm font-mono mt-2" rows="5" placeholder='[{"ledgerCode":"ARGBA001", "name":"HDFC Current A/c", ...}]'></textarea>
+                                <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="bulkPasteParseBtn"><i class="bi bi-check2-square me-1"></i>Parse Pasted JSON</button>
+                            </details>
+                        </div>
+
+                        <!-- Step 2 : validation (format + registry) -->
+                        <div class="border rounded-3 p-3 mb-3 bg-white">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-primary rounded-pill">2</span>
+                                    <h6 class="fw-bold mb-0 small text-uppercase">Validate — Format &amp; Registry</h6>
+                                </div>
+                                <div class="d-flex gap-2 small flex-wrap">
+                                    <span class="badge bg-secondary-subtle text-dark border">Total: <b id="bulkCountTotal">0</b></span>
+                                    <span class="badge bg-success-subtle text-success border">Ready: <b id="bulkCountReady">0</b></span>
+                                    <span class="badge bg-danger-subtle text-danger border">Errors: <b id="bulkCountError">0</b></span>
+                                </div>
+                            </div>
+
+                            <!-- Registry checklist -->
+                            <div id="bulkRegistryPanel" class="small mb-2 d-none">
+                                <div class="d-flex align-items-center gap-2 text-muted" id="bulkRegistrySpinner"><span class="spinner-border spinner-border-sm"></span> Checking companies, profit centers, ledgers &amp; uniqueness against the registry…</div>
+                                <ul class="list-unstyled mb-0" id="bulkRegistryChecklist"></ul>
+                            </div>
+
+                            <div id="bulkBlockBanner" class="alert alert-danger py-2 px-3 small fw-semibold rounded-3 d-none mb-2"><i class="bi bi-shield-exclamation me-2"></i><span id="bulkBlockText"></span></div>
+                            <div id="bulkOkBanner" class="alert alert-success py-2 px-3 small fw-semibold rounded-3 d-none mb-2"><i class="bi bi-shield-check me-2"></i>All records passed format, registry and security validation. Saving is one atomic operation — every record lands or none does.</div>
+
+                            <div class="table-responsive" style="max-height: 300px; overflow-y:auto;">
+                                <table class="table table-sm table-striped align-middle small mb-0">
+                                    <thead class="table-light"><tr><th>#</th><th>Code</th><th>Name</th><th>Status</th><th>Issues</th></tr></thead>
+                                    <tbody id="bulkPreviewBody">
+                                        <tr><td colspan="5" class="text-center text-muted py-4">No file loaded yet. Upload a JSON file to preview records.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="small text-muted mt-1 d-none" id="bulkPreviewNote">Preview limited to first 50 rows.</div>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="border rounded-3 p-3 bg-white">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-primary rounded-pill">3</span>
+                                    <h6 class="fw-bold mb-0 small text-uppercase">Append to Workspace — Atomic</h6>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-dark btn-sm fw-semibold" id="bulkReportBtn" disabled><i class="bi bi-file-earmark-arrow-down me-1"></i>Download Report</button>
+                                    <button type="button" class="btn btn-success btn-sm px-3 fw-bold shadow-sm" id="bulkImportBtn" disabled><i class="bi bi-cloud-arrow-up me-1"></i><span id="bulkImportBtnText">Import 0 Records</span></button>
+                                </div>
+                            </div>
+                            <div class="progress mb-2 d-none" id="bulkProgressWrap" style="height: 8px;"><div class="progress-bar progress-bar-striped progress-bar-animated bg-success" id="bulkProgressBar" role="progressbar" style="width: 0%"></div></div>
+                            <div id="bulkResultSummary" class="fw-semibold small mb-2 d-none"></div>
+                            <div class="border rounded-3 bg-light p-2" id="bulkLogWrap" style="max-height: 220px; overflow-y:auto; display:none;">
+                                <ul class="list-unstyled small mb-0 font-mono" id="bulkLogList"></ul>
+                            </div>
+                            <p class="small text-muted mb-0 mt-2"><i class="bi bi-shield-check me-1"></i>Every rule runs before anything is saved: datalist-backed fields (Company, Profit Center, Default Ledger, UOM, State) must match the registry exactly like the forms; select enums must equal real option values; duplicates against the registry are rejected; security policy (GRC) is enforced per row. <b>If anything is wrong, the whole file is rejected — zero records are uploaded.</b> On import, all records are written in ONE atomic update.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="assets/js/bulk-validate.js"></script>
+<script>
+(function () {
+    'use strict';
+
+    var LEDGER_GROUPS = ['Capital Account', 'Reserves & Surplus', 'Bank Accounts', 'Cash-in-Hand', 'Sundry Debtors', 'Sundry Creditors', 'Fixed Assets', 'Current Assets', 'Current Liabilities', 'Duties & Taxes', 'Secured Loans', 'Unsecured Loans', 'Investments', 'Direct Incomes', 'Indirect Incomes', 'Direct Expenses', 'Indirect Expenses'];
+
+    var BULK_CONFIG = {
+        ledger: {
+            label: 'Ledger', formName: 'Ledger Creation', formId: 'LedgerCreation',
+            codeField: 'ledgerCode', nameField: 'name',
+            required: ['ledgerCode', 'name', 'ledgerType', 'CompanyName', 'ProfitCenter'],
+            known: ['ledgerCode','name','ledgerType','ledgerNature','CompanyName','ProfitCenter','address1','address2','state','pin','email','GST','Mobile','website','openingBalance','balanceType','bankName','accountNumber','ifscCode','branchName','SwiftCode','creditLimit','creditDays','contactPerson','panNumber','vendorCode','creditPeriod','tdsApplicable','incomeCategory','taxRate','sacCode','assetType','depreciationRate','purchaseDate','purchaseValue'],
+            spec: [
+                ['ledgerCode', 'Exactly 8 characters, e.g. ARGBA001', true],
+                ['name', 'Account display name — must NOT already exist in the registry', true],
+                ['ledgerType', 'Ledger Group — one of the 17 groups (unknown = warning)', true],
+                ['ledgerNature', 'Debit | Credit (auto-derived from group when omitted)', false],
+                ['CompanyName', 'MUST match a company in the registry, e.g. ARDENTA GLOBAL INDUSTRIES LIMITED (1000)', true],
+                ['ProfitCenter', 'MUST match a profit center in the registry, e.g. ARG CONSUMER PRODUCTS (ARG-CP)', true],
+                ['address1', 'Address line 1', false],
+                ['address2', 'Address line 2', false],
+                ['state', 'Indian state (exact list, as the form)', false],
+                ['pin', 'PIN code', false],
+                ['email', 'Valid email (form enforces email type)', false],
+                ['GST', 'GSTIN / GST number (15-char pattern)', false],
+                ['Mobile', 'Mobile number', false],
+                ['website', 'Website URL', false],
+                ['openingBalance', 'Numeric, e.g. "250000.00" (default 0.00)', false],
+                ['balanceType', 'Dr | Cr (auto-derived from ledgerNature if omitted)', false],
+                ['bankName', 'Bank Accounts group — bank name (required for that group)', false],
+                ['accountNumber', 'Bank Accounts group — account number (required for that group)', false],
+                ['ifscCode', 'Bank Accounts group — IFSC code (required for that group)', false],
+                ['branchName', 'Bank Accounts group — branch (optional)', false],
+                ['SwiftCode', 'Bank Accounts group — SWIFT code (optional)', false],
+                ['creditLimit', 'Sundry Debtors — numeric (required for that group)', false],
+                ['creditDays', 'Sundry Debtors — numeric (required for that group)', false],
+                ['contactPerson', 'Debtors/Creditors — contact person', false],
+                ['panNumber', 'Debtors/Creditors — PAN', false],
+                ['vendorCode', 'Sundry Creditors — vendor code (required for that group)', false],
+                ['creditPeriod', 'Sundry Creditors — days, numeric (required for that group)', false],
+                ['tdsApplicable', 'Sundry Creditors — "yes" | "no"', false],
+                ['incomeCategory', 'Direct Incomes — Commission | Interest | Rent | Royalty | Dividend', false],
+                ['taxRate', 'Direct Incomes — numeric % (required for that group)', false],
+                ['sacCode', 'Direct Incomes — SAC code', false],
+                ['assetType', 'Fixed Assets — Building | Machinery | Vehicles | Furniture | Computers | Other', false],
+                ['depreciationRate', 'Fixed Assets — numeric % (required for that group)', false],
+                ['purchaseDate', 'Fixed Assets — YYYY-MM-DD', false],
+                ['purchaseValue', 'Fixed Assets — numeric', false]
+            ],
+            footer: 'CompanyName and ProfitCenter are verified against the live registry — they are canonicalized to the exact "NAME (CODE)" value the form stores. Duplicates in the file and in the registry are rejected.',
+            sample: [
+                { ledgerCode: 'ARGBA001', name: 'HDFC Current A/c — Nariman Point', ledgerType: 'Bank Accounts', ledgerNature: 'Debit', CompanyName: 'ARDENTA GLOBAL INDUSTRIES LIMITED (1000)', ProfitCenter: 'ARG CONSUMER PRODUCTS (ARG-CP)', bankName: 'HDFC BANK', accountNumber: '40112233445566', ifscCode: 'HDFC0004011', branchName: 'NARIMAN POINT, MUMBAI', openingBalance: '250000.00', balanceType: 'Dr' },
+                { ledgerCode: 'ARGST002', name: 'Shree Ganesh Traders Co.', ledgerType: 'Sundry Debtors', ledgerNature: 'Debit', CompanyName: 'ARDENTA GLOBAL INDUSTRIES LIMITED (1000)', ProfitCenter: 'ARG CONSUMER PRODUCTS (ARG-CP)', creditLimit: '500000', creditDays: '45', contactPerson: 'Shree Ganesh Traders Co.', panNumber: 'ABCPK1234E', openingBalance: '128000.00', balanceType: 'Dr' }
+            ]
+        },
+        stock: {
+            label: 'Stock Item', formName: 'Stock Master', formId: 'Stock',
+            codeField: 'Stock_Code', nameField: 'itemName',
+            required: ['Stock_Code', 'itemName', 'itemHSN', 'ItemUnit', 'CompanyName'],
+            known: ['Stock_Code','stockCode','itemName','Description','itemGroup','category','itemHSN','hsnCode','StockType','ItemUnit','unit','ItemTax','minLevel','CompanyName','openingQty','openingAmount','openingQuantity','companyName & CompanyCode'],
+            spec: [
+                ['Stock_Code', 'Exactly 5 characters (SKU). Must NOT already exist in the registry', true],
+                ['itemName', 'Item display name', true],
+                ['Description', 'Item description', false],
+                ['itemGroup', 'Item group / category (free text)', false],
+                ['itemHSN', 'HSN/SAC code — 4–8 digits', true],
+                ['StockType', 'Goods (default) | Services', false],
+                ['ItemUnit', 'MUST match a UOM from the form list, e.g. BOX-BOX, BAG-BAGS', true],
+                ['ItemTax', '0 | 5 | 12 | 18 (default) | 28', false],
+                ['minLevel', 'Numeric reorder level (default 0)', false],
+                ['CompanyName', 'MUST match a company in the registry, e.g. ARDENTA GLOBAL INDUSTRIES LIMITED (1000)', true],
+                ['openingQty', 'Numeric opening quantity (default 0)', false],
+                ['openingAmount', 'Numeric opening value (default 0)', false]
+            ],
+            footer: 'itemUnit / ItemTax / StockType must be real option values exactly as in the form. Aliases (stockCode, unit, hsnCode, openingQuantity, category) are normalized automatically.',
+            sample: [
+                { Stock_Code: 'TEA-2', itemName: 'Ardenta Chai — CTC Premium 1 kg', Description: 'CTC black tea, consumer pack', itemGroup: 'TEA', itemHSN: '0902', StockType: 'Goods', ItemUnit: 'BAG-BAGS', ItemTax: '5', minLevel: '2000', CompanyName: 'ARDENTA GLOBAL INDUSTRIES LIMITED (1000)', openingQty: '0', openingAmount: '0' },
+                { Stock_Code: 'SALT2', itemName: 'Ardenta Salt — Vacuum Iodised 1 kg', Description: 'Iodised vacuum salt, consumer pack', itemGroup: 'SALT', itemHSN: '2501', StockType: 'Goods', ItemUnit: 'BAG-BAGS', ItemTax: '5', minLevel: '1500', CompanyName: 'ARDENTA GLOBAL INDUSTRIES LIMITED (1000)', openingQty: '0', openingAmount: '0' }
+            ]
+        },
+        project: {
+            label: 'Profit Center', formName: 'Profit Center & Cost Segment Setup', formId: 'Projects',
+            codeField: 'ProjectCode', nameField: 'ProjectName',
+            required: ['ProjectCode', 'ProjectName', 'CompanyName'],
+            known: ['ProjectCode','ProjectName','CompanyName','BusinessUnit','Segment','ParentProject','ManagerName','ManagerEmail','ManagerPhone','CenterType','Location','GSTIN','AnnualRevenueTarget','AnnualBudgetCap','TargetMarginPct','Currency','AllocationBase','VarianceThreshold','DefaultBankLedger','EffectiveDate','SunsetDate','Status','RequireTagging','Narration'],
+            spec: [
+                ['ProjectCode', 'Up to 12 characters. Must NOT already exist in the registry', true],
+                ['ProjectName', 'Profit center name. Must NOT already exist in the registry', true],
+                ['CompanyName', 'MUST match a company in the registry', true],
+                ['BusinessUnit', 'Must equal a form option, e.g. Commercial Retail', false],
+                ['Segment', 'Must equal a form option, e.g. Consumer Products & FMCG', false],
+                ['ParentProject', 'Parent profit center code (blank = top level)', false],
+                ['ManagerName', 'Center head / controlling manager', false],
+                ['ManagerEmail', 'Valid email format', false],
+                ['ManagerPhone', 'Manager contact number', false],
+                ['CenterType', 'Must equal a form option (Profit/Cost/Investment/Revenue Center)', false],
+                ['Location', 'City / physical hub', false],
+                ['GSTIN', 'Max 15 chars; GSTIN pattern recommended', false],
+                ['AnnualRevenueTarget', 'Numeric (₹)', false],
+                ['AnnualBudgetCap', 'Numeric (₹)', false],
+                ['TargetMarginPct', 'Numeric 0–100', false],
+                ['Currency', 'INR (default) | USD | EUR | GBP | AED', false],
+                ['AllocationBase', 'Must equal a form option', false],
+                ['VarianceThreshold', 'Numeric % (default 10)', false],
+                ['DefaultBankLedger', 'MUST be an existing ledger name from the registry', false],
+                ['EffectiveDate', 'YYYY-MM-DD', false],
+                ['SunsetDate', 'YYYY-MM-DD', false],
+                ['Status', 'ACTIVE (default) | UNDER_REVIEW | SUSPENDED | DECOMMISSIONED', false],
+                ['RequireTagging', 'Yes (default) | No', false],
+                ['Narration', 'Operational charter & strategic scope', false]
+            ],
+            footer: 'Enum fields are canonicalized to the exact form option (case-insensitive input accepted). DefaultBankLedger must be an existing ledger name. Duplicates in the file and in the registry are rejected.',
+            sample: [
+                { ProjectCode: 'ARG-PC', ProjectName: 'ARG PAINTS & CHEMICALS', CompanyName: 'ARDENTA GLOBAL INDUSTRIES LIMITED (1000)', BusinessUnit: 'Manufacturing & Plant Operations', Segment: 'Consumer Products & FMCG', ManagerName: 'Rohit Malhotra', ManagerEmail: 'r.malhotra@ardentaglobal.com', Location: 'Ardenta Works, Plot 44, Bhosari, Pune 411039', GSTIN: '27AALCA9810K1Z4', Currency: 'INR', Status: 'ACTIVE', RequireTagging: 'Yes', EffectiveDate: '2026-04-01' },
+                { ProjectCode: 'ARG-LGX', ProjectName: 'ARDENTA LOGISTICS & EXPORTS', CompanyName: 'ARDENTA GLOBAL INDUSTRIES LIMITED (1000)', BusinessUnit: 'Logistics & Supply Chain', Segment: 'Commercial & Retail Trade', ManagerName: 'Meera Iyer', ManagerEmail: 'm.iyer@ardentaglobal.com', Currency: 'INR', Status: 'ACTIVE', RequireTagging: 'Yes' }
+            ]
+        }
+    };
+
+    var MAX_ROWS = 100;
+    var state = { key: 'ledger', rows: [], refs: null, checking: false, engineReady: false, results: [] };
+
+    function $(sel, root) { return (root || document).querySelector(sel); }
+    function $$(sel, root) { return Array.from((root || document).querySelectorAll(sel)); }
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+    // ================= SPEC PANEL =================
+    function renderSpec() {
+        var cfg = BULK_CONFIG[state.key];
+        $('#bulkSpecTitle').textContent = cfg.label;
+        $('#bulkFormName').textContent = cfg.formName;
+        $('#bulkSpecFooter').textContent = cfg.footer;
+        $('#bulkSpecTable').innerHTML = cfg.spec.map(function (r) {
+            return '<tr><td class="font-mono fw-semibold">' + (r[2] ? '<span class="text-danger">*</span> ' : '') + esc(r[0]) + '</td><td>' + esc(r[1]) + '</td></tr>';
+        }).join('');
+    }
+
+    // ================= RESET / RENDER =================
+    function resetPreview() {
+        state.rows = [];
+        state.refs = null;
+        state.results = [];
+        state.refsChecked = false;
+        state.checking = false;
+        $('#bulkPreviewBody').innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No file loaded yet. Upload a JSON file to preview records.</td></tr>';
+        $('#bulkCountTotal').textContent = '0';
+        $('#bulkCountReady').textContent = '0';
+        $('#bulkCountError').textContent = '0';
+        $('#bulkImportBtn').disabled = true;
+        $('#bulkImportBtnText').textContent = 'Import 0 Records';
+        $('#bulkPreviewNote').classList.add('d-none');
+        $('#bulkLogWrap').style.display = 'none';
+        $('#bulkLogList').innerHTML = '';
+        $('#bulkResultSummary').classList.add('d-none');
+        $('#bulkProgressWrap').classList.add('d-none');
+        $('#bulkProgressBar').style.width = '0%';
+        $('#bulkReportBtn').disabled = true;
+        $('#bulkRegistryPanel').classList.add('d-none');
+        $('#bulkRegistryChecklist').innerHTML = '';
+        $('#bulkBlockBanner').classList.add('d-none');
+        $('#bulkOkBanner').classList.add('d-none');
+    }
+
+    function totals() {
+        var ready = 0, error = 0;
+        state.rows.forEach(function (r) { if (r.ready) ready++; else error++; });
+        return { ready: ready, error: error };
+    }
+
+    function render() {
+        var cfg = BULK_CONFIG[state.key];
+        var t = totals();
+        var rowsHtml = state.rows.slice(0, 50).map(function (item, idx) {
+            var code = esc(item.row[cfg.codeField] || '—');
+            var name = esc(item.row[cfg.nameField] || '—');
+            var allErr = item.errors;
+            var status = allErr.length === 0
+                ? '<span class="badge bg-success-subtle text-success border">READY</span>'
+                : '<span class="badge bg-danger-subtle text-danger border">ERROR</span>';
+            var issues = [];
+            allErr.forEach(function (e) { issues.push('[' + (e.stage || 'format') + '] ' + e.field + ': ' + e.message); });
+            item.warnings.forEach(function (w) { issues.push('⚠ [' + (w.stage || 'format') + '] ' + w.field + ': ' + w.message); });
+            return '<tr class="' + (allErr.length ? 'table-danger' : '') + '"><td>' + (idx + 1) + '</td><td class="font-mono">' + code + '</td><td>' + name + '</td><td>' + status + '</td><td class="text-muted">' + esc(issues.join(' | ')) + '</td></tr>';
+        }).join('');
+        $('#bulkPreviewBody').innerHTML = rowsHtml || '<tr><td colspan="5" class="text-center text-muted py-4">No records found in that file.</td></tr>';
+        $('#bulkCountTotal').textContent = String(state.rows.length);
+        $('#bulkCountReady').textContent = String(t.ready);
+        $('#bulkCountError').textContent = String(t.error);
+        $('#bulkPreviewNote').classList.toggle('d-none', state.rows.length <= 50);
+
+        var allValid = state.rows.length > 0 && t.error === 0 && !state.checking && state.engineReady && state.refsChecked;
+        $('#bulkImportBtn').disabled = !allValid;
+        if (state.checking) {
+            $('#bulkImportBtnText').textContent = 'Checking Registry…';
+        } else if (t.error === 0 && state.rows.length > 0 && state.refsChecked) {
+            $('#bulkImportBtnText').textContent = 'Import All ' + t.ready + ' Record' + (t.ready === 1 ? '' : 's');
+        } else if (t.error > 0) {
+            $('#bulkImportBtnText').textContent = 'Upload Blocked — Fix ' + t.error + ' Row' + (t.error === 1 ? '' : 's');
+        } else {
+            $('#bulkImportBtnText').textContent = 'Import 0 Records';
+        }
+
+        var blocked = state.rows.length > 0 && t.error > 0 && !state.checking && state.refsChecked;
+        $('#bulkBlockBanner').classList.toggle('d-none', !blocked);
+        $('#bulkOkBanner').classList.toggle('d-none', !(state.rows.length > 0 && t.error === 0 && !state.checking && state.refsChecked));
+        if (blocked) $('#bulkBlockText').textContent = 'UPLOAD BLOCKED — ' + t.error + ' of ' + state.rows.length + ' row(s) failed validation. NOTHING has been or will be uploaded until every row passes.';
+    }
+
+    function renderRegistryPanel(refs) {
+        var ul = $('#bulkRegistryChecklist');
+        $('#bulkRegistrySpinner').classList.add('d-none');
+        if (!refs) {
+            ul.innerHTML = '<li class="text-danger"><i class="bi bi-x-circle-fill me-1"></i>Registry unreachable (Companies/Projects/Ledgers/Stock could not be read). Upload is impossible — nothing will be saved.</li>';
+            $('#bulkRegistryPanel').classList.remove('d-none');
+            return;
+        }
+        var checks = [];
+        var total = state.rows.length;
+        var coBad = 0, pcBad = 0, ledgerBad = 0, dupBad = 0, policyBad = 0;
+        state.rows.forEach(function (item) {
+            item.errors.forEach(function (e) {
+                if (e.stage !== 'registry' && e.stage !== 'policy') return;
+                if (e.field === 'CompanyName') coBad++;
+                else if (e.field === 'ProfitCenter') pcBad++;
+                else if (e.field === 'DefaultBankLedger') ledgerBad++;
+                else if (/already exists/i.test(e.message)) dupBad++;
+                if (e.stage === 'policy') policyBad++;
+            });
+        });
+        checks.push(['Companies loaded: ' + refs.companyOptions.length + ' in registry', true]);
+        checks.push(['Profit centers loaded: ' + refs.projectOptions.length + ' in registry', true]);
+        checks.push(['CompanyName valid against registry', coBad === 0, coBad]);
+        checks.push(['ProfitCenter valid against registry', pcBad === 0, pcBad]);
+        if (state.key === 'project') checks.push(['DefaultBankLedger valid against registry', ledgerBad === 0, ledgerBad]);
+        checks.push(['No duplicates vs registry (uniqueness)', dupBad === 0, dupBad]);
+        checks.push(['Security policy (GRC) satisfied', policyBad === 0, policyBad]);
+        ul.innerHTML = checks.map(function (c) {
+            return '<li class="' + (c[1] ? 'text-success' : 'text-danger') + '"><i class="bi ' + (c[1] ? 'bi-check-circle-fill' : 'bi-x-circle-fill') + ' me-1"></i>' + esc(c[0]) + (c[2] ? ' — <b>' + c[2] + ' row(s)</b>' : '') + '</li>';
+        }).join('');
+        $('#bulkRegistryPanel').classList.remove('d-none');
+    }
+
+    // ================= PIPELINE =================
+    async function runPreflight() {
+        if (!state.engineReady) return;
+        state.checking = true;
+        state.refsChecked = false;
+        $('#bulkRegistryPanel').classList.remove('d-none');
+        $('#bulkRegistrySpinner').classList.remove('d-none');
+        $('#bulkRegistryChecklist').innerHTML = '';
+        render();
+        try {
+            state.refs = await BulkImport.loadReferenceSets();
+            var preResults = await BulkImport.preflight(state.key, state.rows.map(function (r) { return r.row; }));
+            state.rows.forEach(function (item, i) {
+                var pre = (preResults && preResults[i]) || { errors: [], warnings: [] };
+                item.errors = item.errors.concat(pre.errors || []);
+                item.warnings = item.warnings.concat(pre.warnings || []);
+                item.ready = item.errors.length === 0;
+            });
+            renderRegistryPanel(state.refs);
+        } catch (e) {
+            console.error('Registry pre-flight failed:', e);
+            state.rows.forEach(function (item) {
+                item.errors = item.errors.concat([{ field: 'registry', message: 'Registry check failed: ' + (e && e.message ? e.message : e), stage: 'registry' }]);
+                item.ready = false;
+            });
+            renderRegistryPanel(null);
+        } finally {
+            state.checking = false;
+            state.refsChecked = true;
+            render();
+        }
+    }
+
+    async function ingest(text) {
+        resetPreview();
+        if (!state.engineReady) { alert('Validation engine failed to load. Reload the page.'); return; }
+        var json;
+        try { json = JSON.parse(text); }
+        catch (e) { alert('Invalid JSON: ' + e.message); return; }
+        var records = BulkImport.extractRecords(json).map(BulkImport.trimRow).filter(function (r) { return r && typeof r === 'object' && !Array.isArray(r); });
+        if (records.length === 0) { alert('No records found in that JSON.'); return; }
+        if (records.length > MAX_ROWS) {
+            alert('That file contains ' + records.length + ' records. The maximum is ' + MAX_ROWS + ' per upload — please split the file.');
+            records = records.slice(0, MAX_ROWS);
+        }
+        var seenCodes = {};
+        state.rows = records.map(function (row) {
+            var v = BulkImport.validateFormat(row, state.key, seenCodes);
+            return { row: row, errors: v.errors, warnings: v.warnings, ready: v.errors.length === 0 };
+        });
+        render();
+        await runPreflight();
+    }
+
+    function handleFile(file) {
+        if (!file) return;
+        if (!/\.json$/i.test(file.name) && file.type !== 'application/json') {
+            alert('Please choose a .json file.');
+            return;
+        }
+        var reader = new FileReader();
+        reader.onload = function () {
+            $('#bulkFileName').classList.remove('d-none');
+            $('#bulkFileNameText').textContent = file.name + ' (' + Math.round(file.size / 1024) + ' KB)';
+            ingest(String(reader.result || ''));
+        };
+        reader.onerror = function () { alert('Could not read that file.'); };
+        reader.readAsText(file);
+    }
+
+    // ================= IMPORT (atomic, all-or-nothing) =================
+    async function runImport() {
+        var t = totals();
+        if (!(state.rows.length > 0 && t.error === 0 && state.refsChecked)) return;
+
+        var btn = $('#bulkImportBtn');
+        btn.disabled = true;
+        $('#bulkReportBtn').disabled = true;
+        $('#bulkProgressWrap').classList.remove('d-none');
+        $('#bulkProgressBar').classList.remove('bg-danger');
+        $('#bulkProgressBar').style.width = '0%';
+        $('#bulkResultSummary').classList.add('d-none');
+        $('#bulkLogWrap').style.display = 'block';
+        $('#bulkLogList').innerHTML = '';
+
+        if (!(window.API && typeof API._AssertWriteAllowed === 'function')) {
+            // Final write gate if the API is present
+            logLine('⚠', 'API._AssertWriteAllowed not available — proceeding under the engine\'s own checks.', 'text-warning');
+        } else {
+            var allowed = await API._AssertWriteAllowed('create', 'master record (bulk import)');
+            if (!allowed) {
+                logLine('✗', 'Bulk import blocked by your organization\'s write policy — NOTHING was uploaded.', 'text-danger');
+                finishImport(false, 0, 'Blocked by write policy.');
+                return;
+            }
+        }
+
+        try {
+            var records = state.rows.map(function (r) { return r.row; });
+            $('#bulkProgressBar').style.width = '40%';
+            var keys = await BulkImport.commitAtomic(state.key, records);
+            $('#bulkProgressBar').style.width = '100%';
+            state.results = keys.map(function (k, i) {
+                var row = records[i];
+                var codeField = BULK_CONFIG[state.key].codeField;
+                return { key: k, code: String(row[codeField] || ''), name: String(row[BULK_CONFIG[state.key].nameField] || ''), ok: true, message: 'Created' };
+            });
+            state.results.forEach(function (r) { logLine('✓', r.code + ' — created (' + r.key + ')', 'text-success'); });
+            logLine('✓', 'Atomic commit succeeded: ' + keys.length + ' record(s) appended in one operation.', 'text-success');
+            finishImport(true, keys.length, null);
+        } catch (e) {
+            console.error('Atomic commit failed:', e);
+            state.results = state.rows.map(function (item) {
+                return { code: String(item.row[BULK_CONFIG[state.key].codeField] || ''), ok: false, message: (e && e.message) || String(e) };
+            });
+            logLine('✗', 'ATOMIC COMMIT FAILED — NOTHING was uploaded: ' + ((e && e.message) || e), 'text-danger');
+            $('#bulkImportBtn').disabled = false;
+            $('#bulkImportBtnText').textContent = 'Retry Import (Nothing Saved Yet)';
+            $('#bulkResultSummary').classList.remove('d-none');
+            $('#bulkResultSummary').innerHTML = '<span class="text-danger">Atomic commit failed — <b>0 records were written</b>. Fix the cause and retry.</span>';
+            $('#bulkProgressBar').classList.add('bg-danger');
+            if (window.App && App.UI && App.UI.Notify) App.UI.Notify('Bulk Import Failed', 'Nothing was saved. ' + ((e && e.message) || e), 'danger');
+        }
+    }
+
+    function finishImport(ok, count, failNote) {
+        $('#bulkResultSummary').classList.remove('d-none');
+        $('#bulkResultSummary').innerHTML = ok
+            ? '<span class="text-success">Created: <b>' + count + '</b> — all records appended atomically.</span>'
+            : '<span class="text-danger">Failed: <b>' + esc(failNote || 'see log') + '</b> — nothing was written.</span>';
+        if (window.App && App.UI && App.UI.Notify) {
+            App.UI.Notify('Bulk Import', ok ? (count + ' record(s) appended successfully.') : ('Failed — nothing written. ' + (failNote || '')), ok ? 'success' : 'danger');
+        }
+        $('#bulkReportBtn').disabled = false;
+        $('#bulkImportBtn').disabled = true;
+        $('#bulkImportBtnText').textContent = ok ? 'Import Complete' : 'Import Blocked';
+    }
+
+    function logLine(icon, text, cls) {
+        var li = document.createElement('li');
+        li.className = cls || '';
+        li.innerHTML = '<span class="me-1">' + icon + '</span>' + esc(text);
+        $('#bulkLogList').appendChild(li);
+    }
+
+    function downloadReport() {
+        var cfg = BULK_CONFIG[state.key];
+        var payload = {
+            generated_at: new Date().toISOString(),
+            workspaceId: localStorage.getItem('workspaceId') || '',
+            imported_by: localStorage.getItem('useremail_we') || localStorage.getItem('userName') || 'unknown',
+            master_type: state.key,
+            validation: state.rows.map(function (item, i) {
+                return {
+                    row: i + 1,
+                    code: item.row[cfg.codeField],
+                    name: item.row[cfg.nameField],
+                    errors: item.errors,
+                    warnings: item.warnings,
+                    record: item.row
+                };
+            }),
+            results: state.results
+        };
+        var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'unitax-bulk-import-report-' + state.key + '-' + Date.now() + '.json';
+        a.click();
+        URL.revokeObjectURL(a.href);
+    }
+
+    function downloadSample() {
+        var blob = new Blob([JSON.stringify(BULK_CONFIG[state.key].sample, null, 2)], { type: 'application/json' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'unitax-sample-' + state.key + '.json';
+        a.click();
+        URL.revokeObjectURL(a.href);
+    }
+
+    // ================= Wiring =================
+    var wired = false;
+    function init() {
+        if (wired) return;
+        wired = true;
+
+        $$('#bulkTabs [data-bulk-tab]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                state.key = btn.getAttribute('data-bulk-tab');
+                $$('#bulkTabs [data-bulk-tab]').forEach(function (b) { b.classList.toggle('active', b === btn); });
+                $('#bulkFileInput').value = '';
+                $('#bulkPasteArea').value = '';
+                $('#bulkFileName').classList.add('d-none');
+                renderSpec();
+                resetPreview();
+            });
+        });
+
+        $('#bulkSampleBtn').addEventListener('click', downloadSample);
+        $('#bulkReportBtn').addEventListener('click', downloadReport);
+        $('#bulkImportBtn').addEventListener('click', runImport);
+        $('#bulkPasteParseBtn').addEventListener('click', function () {
+            var text = ($('#bulkPasteArea').value || '').trim();
+            if (!text) { alert('Paste some JSON first.'); return; }
+            $('#bulkFileName').classList.add('d-none');
+            ingest(text);
+        });
+
+        var drop = $('#bulkDropZone');
+        $('#bulkFileInput').addEventListener('change', function (e) { handleFile(e.target.files[0]); });
+        drop.addEventListener('click', function () { $('#bulkFileInput').click(); });
+        ['dragenter', 'dragover'].forEach(function (evt) {
+            drop.addEventListener(evt, function (e) { e.preventDefault(); drop.classList.add('border-primary', 'bg-primary-subtle'); });
+        });
+        ['dragleave', 'drop'].forEach(function (evt) {
+            drop.addEventListener(evt, function (e) { e.preventDefault(); drop.classList.remove('border-primary', 'bg-primary-subtle'); });
+        });
+        drop.addEventListener('drop', function (e) { handleFile(e.dataTransfer.files[0]); });
+
+        renderSpec();
+        resetPreview();
+
+        // bulk-validate.js may execute after this inline script (dynamic injection is async) — poll for it
+        var attempts = 0;
+        (function waitForEngine() {
+            if (window.BulkImport) {
+                state.engineReady = true;
+                render();
+                return;
+            }
+            attempts++;
+            if (attempts > 60) {
+                $('#bulkBlockBanner').classList.remove('d-none');
+                $('#bulkBlockText').textContent = 'Validation engine (assets/js/bulk-validate.js) failed to load. Reload the workspace.';
+                return;
+            }
+            setTimeout(waitForEngine, 50);
+        })();
+    }
+
+    init();
+    document.addEventListener('DOMContentLoaded', init);
+})();
+</script>

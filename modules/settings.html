@@ -406,7 +406,9 @@
             if (form) {
                 const savedRaw = localStorage.getItem('ERP_Settings');
                 if (savedRaw) {
-                    const settings = JSON.parse(savedRaw);
+                    let settings = {};
+                    try { settings = JSON.parse(savedRaw) || {}; } catch (parseErr) { console.warn('ERP_Settings malformed — ignoring saved settings.', parseErr); }
+                    if (settings && typeof settings === 'object') {
                     Object.keys(settings).forEach(key => {
                         const input = form.elements[key];
                         if (input) {
@@ -424,6 +426,7 @@
                             }
                         }
                     });
+                    }
                 }
             }
 

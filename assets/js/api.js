@@ -115,6 +115,19 @@ const API = {
                     }
                 }
 
+                // Resilient ledger-register fallback: some tenants use "Ledgers"
+                // (or a legacy singular sheet) instead of "LedgerCreation".
+                if (sheet === 'LedgerCreation' && (!data || (typeof data === 'object' && Object.keys(data).length === 0))) {
+                    for (const altSheet of ['Ledgers', 'Ledger', 'Accounts']) {
+                        const alt = await this.Fetch(`Masters/${altSheet}`);
+                        const altData = alt?.data || alt?.result || alt;
+                        if (altData && typeof altData === 'object' && Object.keys(altData).length > 0) {
+                            data = altData;
+                            break;
+                        }
+                    }
+                }
+
                 // Resilient Stock Catalog Fallback if master is empty
                 if (sheet === 'Stock' && (!data || (typeof data === 'object' && Object.keys(data).length === 0))) {
                     data = [
@@ -339,8 +352,12 @@ const API = {
      */
     SetupCascadingCompanyFilter(form) {
         if (!form) return;
+        // Attach the cascade listeners exactly once per form instance; repeated
+        // datalist population (e.g. adding grid rows) must not multiply handlers.
+        if (form._cascadeFilterWired) return;
         const compInput = form.querySelector('input[name="CompanyName"], input[name="company"], input[data-sheet_name="Companies"], input[list="compListSales"], input[list="compList_led"], input[list="compList"]');
         if (!compInput) return;
+        form._cascadeFilterWired = true;
 
         const getMasterArray = (sheet) => {
             const d = this._MasterCache[sheet];
@@ -693,15 +710,31 @@ const API = {
         } catch (e) {}
     },
 
-    _AssertWriteAllowed(operation, label = 'document') {
+    async _AssertWriteAllowed(operation, label = 'document', ctx = {}) {
+        const ops = Array.isArray(operation) ? operation : [operation];
+        const suspensionOp = ops[0] || 'update';
+
         if (window.UniTaxOperations && typeof UniTaxOperations.AssertWrite === 'function') {
-            if (!UniTaxOperations.AssertWrite(operation, label)) return false;
+            if (!UniTaxOperations.AssertWrite(suspensionOp, label)) return false;
         }
 
+        // SERVER-AUTHORITATIVE GATE
+        // Re-reads the signed-in identity, role and permission matrix from the
+        // server before the write. A browser-modified role cannot pass this.
+        if (window.UniTaxAuthZ && typeof UniTaxAuthZ.Require === 'function') {
+            const verdict = await UniTaxAuthZ.Require(ops, Object.assign({
+                label,
+                module: (window.UniTaxRouter && UniTaxRouter.currentRoute) || '',
+                recordId: ctx.recordId || ''
+            }, ctx));
+            return verdict && verdict.ok === true;
+        }
+
+        // Legacy fallback (only reached when authz.js is not loaded).
         if (window.UniTaxAuth && typeof UniTaxAuth.CanPerformAction === 'function') {
             const actionMap = { create: 'create', post: 'post', update: 'update', delete: 'delete', approve: 'approve', reject: 'reject', restore: 'update' };
-            const required = actionMap[operation] || operation;
-            if (!UniTaxAuth.CanPerformAction(required)) {
+            const required = actionMap[suspensionOp] || suspensionOp;
+            if (!ops.some(op => UniTaxAuth.CanPerformAction(actionMap[op] || op))) {
                 this._NotifyGuard('Permission Denied', `You do not have "${required}" rights for this ${label}.`);
                 return false;
             }
@@ -907,18 +940,8 @@ const API = {
     async PostVoucher(form) {
         if (!form || form.classList.contains('nosubmit')) return false;
 
-        // Suspension window guard (platform / workspace / user)
-        if (window.UniTaxOperations && typeof UniTaxOperations.AssertWrite === 'function') {
-            if (!UniTaxOperations.AssertWrite('create', 'voucher')) return false;
-        }
-
-        // Security check: Check if user has permission to post
-        if (window.UniTaxAuth && typeof UniTaxAuth.CanPerformAction === 'function') {
-            if (!UniTaxAuth.CanPerformAction('post') && !UniTaxAuth.CanPerformAction('create')) {
-                App.UI.Notify('Permission Denied', 'You do not have rights to post vouchers.', 'danger');
-                return false;
-            }
-        }
+        // Suspension window + server-authoritative permission gate
+        if (!(await this._AssertWriteAllowed(['post', 'create'], 'voucher'))) return false;
 
         // STRICT INPUT LIST VALIDATION: Values must strictly match the datalist
         const listCheck = await this.ValidateInputLists(form);
@@ -1401,18 +1424,8 @@ const API = {
      */
     async SaveMaster(formId, data) {
         try {
-            // Suspension window guard (platform / workspace / user)
-            if (window.UniTaxOperations && typeof UniTaxOperations.AssertWrite === 'function') {
-                if (!UniTaxOperations.AssertWrite('create', 'master record')) return false;
-            }
-
-            // Security check: Check if user has permission to create master
-            if (window.UniTaxAuth && typeof UniTaxAuth.CanPerformAction === 'function') {
-                if (!UniTaxAuth.CanPerformAction('create')) {
-                    App.UI.Notify('Permission Denied', 'You do not have permission to create master records.', 'danger');
-                    return false;
-                }
-            }
+            // Suspension window + server-authoritative permission gate
+            if (!(await this._AssertWriteAllowed('create', 'master record'))) return false;
 
             // GRC Field & Scope Validation for Masters
             if (window.UniTaxAuth && typeof UniTaxAuth.GetEffectivePermissions === 'function') {
@@ -1503,18 +1516,8 @@ const API = {
      * UPDATE VOUCHER RECORD
      */
     async UpdateVoucher(form, formId, passedKey) {
-        // Suspension window guard (platform / workspace / user)
-        if (window.UniTaxOperations && typeof UniTaxOperations.AssertWrite === 'function') {
-            if (!UniTaxOperations.AssertWrite('update', 'voucher')) return false;
-        }
-
-        // Permission-matrix update right
-        if (window.UniTaxAuth && typeof UniTaxAuth.CanPerformAction === 'function') {
-            if (!UniTaxAuth.CanPerformAction('update') && !UniTaxAuth.CanPerformAction('edit')) {
-                App.UI.Notify('Permission Denied', 'You do not have rights to update vouchers.', 'danger');
-                return false;
-            }
-        }
+        // Suspension window + server-authoritative permission gate
+        if (!(await this._AssertWriteAllowed(['update', 'edit'], 'voucher'))) return false;
 
         // STRICT INPUT LIST VALIDATION: Values must strictly match the datalist
         const listCheck = await this.ValidateInputLists(form);
@@ -1607,6 +1610,9 @@ const API = {
 
     /**
      * Direct Fetch Helper
+     *
+     * v3 layout aware: attempts the two-key layout (/Workspaces/{id}/… and /Utilities/…)
+     * first, then falls back to the legacy root-level layout. v3 wins on collision.
      */
     async Fetch(path) {
         try {
@@ -1622,7 +1628,6 @@ const API = {
                 : localStorage.getItem('workspaceUserId') || localStorage.getItem('userloginid');
 
             if (!userId || !this.DB) return null;
-            const fullPath = path.startsWith(userId) ? path : `${userId}/${path}`;
 
             const fetchWithTimeout = (ref, ms = 6000) => {
                 return Promise.race([
@@ -1630,6 +1635,22 @@ const API = {
                     new Promise((_, reject) => setTimeout(() => reject(new Error('Fetch timeout')), ms))
                 ]);
             };
+
+            // 1. Try v3 layout first (primary source of truth after migration)
+            try {
+                if (window.UniPaths && typeof UniPaths.fromLegacy === 'function') {
+                    const v3Path = UniPaths.fromLegacy(path);
+                    if (v3Path) {
+                        const v3Snap = await fetchWithTimeout(this.DB.ref(v3Path));
+                        if (v3Snap && v3Snap.exists && v3Snap.exists() && v3Snap.val()) return v3Snap.val();
+                    }
+                }
+            } catch (v3Err) {
+                console.warn("[API.Fetch] v3 lookup failed, falling back to legacy:", path, v3Err && v3Err.message);
+            }
+
+            // 2. Legacy fallback (still required for pre-migration data)
+            const fullPath = path.startsWith(userId) ? path : `${userId}/${path}`;
 
             try {
                 const snap = await fetchWithTimeout(this.DB.ref(fullPath));
@@ -1657,7 +1678,7 @@ const API = {
      * Update Record
      */
     async Update(endpoint, payload) {
-        if (!this._AssertWriteAllowed('update', 'record')) return false;
+        if (!(await this._AssertWriteAllowed('update', 'record'))) return false;
         return UniTaxCRUD.updateOne(endpoint, '', payload);
     },
 
@@ -1665,12 +1686,12 @@ const API = {
      * Delete Record
      */
     async Delete(endpoint) {
-        if (!this._AssertWriteAllowed('delete', 'record')) return false;
+        if (!(await this._AssertWriteAllowed('delete', 'record'))) return false;
         return UniTaxCRUD.deleteOne(endpoint, '');
     },
 
     async DeleteTransaction(formId, key) {
-        if (!this._AssertWriteAllowed('delete', 'voucher')) return false;
+        if (!(await this._AssertWriteAllowed('delete', 'voucher', { recordId: key }))) return false;
         try {
             await this.SoftDeleteTransaction(formId, key, true);
             App.UI.Notify('Archived', 'Transaction deleted and moved to Deleted Transactions bin.', 'success');
@@ -1682,7 +1703,7 @@ const API = {
     },
 
     async SoftDeleteTransaction(formId, key, skipGuard = false) {
-        if (!skipGuard && !this._AssertWriteAllowed('delete', 'voucher')) return false;
+        if (!skipGuard && !(await this._AssertWriteAllowed('delete', 'voucher', { recordId: key }))) return false;
         const userId = (typeof App !== 'undefined' && App.State && App.State.userId)
             ? App.State.userId
             : localStorage.getItem('workspaceUserId') || localStorage.getItem('userloginid');
@@ -1693,7 +1714,9 @@ const API = {
 
         if (!userId || !this.DB) throw new Error("Database reference unavailable.");
 
-        const path = `${userId}/Transactions/${formId}/${key}`;
+        const path = (window.UniPaths && typeof UniPaths.txPath === 'function')
+            ? UniPaths.txPath(formId, key)
+            : `${userId}/Transactions/${formId}/${key}`;
         const patch = {
             is_deleted: true,
             status: 'DELETED',
@@ -1720,7 +1743,7 @@ const API = {
     },
 
     async RestoreTransaction(formId, key) {
-        if (!this._AssertWriteAllowed('restore', 'voucher')) return false;
+        if (!(await this._AssertWriteAllowed('restore', 'voucher', { recordId: key }))) return false;
         const userId = (typeof App !== 'undefined' && App.State && App.State.userId)
             ? App.State.userId
             : localStorage.getItem('workspaceUserId') || localStorage.getItem('userloginid');
@@ -1730,7 +1753,9 @@ const API = {
 
         if (!userId || !this.DB) throw new Error("Database reference unavailable.");
 
-        const path = `${userId}/Transactions/${formId}/${key}`;
+        const path = (window.UniPaths && typeof UniPaths.txPath === 'function')
+            ? UniPaths.txPath(formId, key)
+            : `${userId}/Transactions/${formId}/${key}`;
         const patch = {
             is_deleted: false,
             status: 'POSTED',
@@ -1757,12 +1782,12 @@ const API = {
     },
 
     async SecureMasterUpdate(moduleName, recordId, payload) {
-        if (!this._AssertWriteAllowed('update', 'master record')) return false;
+        if (!(await this._AssertWriteAllowed('update', 'master record', { recordId }))) return false;
         return UniTaxCRUD.updateOne(moduleName, recordId, payload);
     },
 
     async SafeMasterDelete(moduleName, recordId) {
-        if (!this._AssertWriteAllowed('delete', 'master record')) return false;
+        if (!(await this._AssertWriteAllowed('delete', 'master record', { recordId }))) return false;
         return UniTaxCRUD.deleteOne(moduleName, recordId);
     }
 };

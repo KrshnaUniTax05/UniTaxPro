@@ -905,7 +905,7 @@
         if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'e') {
             event.preventDefault();
             if (window.GSTR1App && typeof window.GSTR1App.ExportToGSTExcel === 'function') {
-                console.log("Ctrl+E detected. Triggering GST Excel Compilation...");
+
                 window.GSTR1App.ExportToGSTExcel();
             }
         }

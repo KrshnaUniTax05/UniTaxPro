@@ -171,7 +171,6 @@
                 };
             });
             
-            console.log(`✅ Loaded ${Object.keys(masterItemCache).length} master items`);
             return masterItemCache;
         } catch (e) {
             console.warn("⚠️ Master data fetch failed:", e);
@@ -263,7 +262,6 @@
 
         // Debug logging
         if (type !== "NONE") {
-            console.log(`📄 Voucher: ${rawFormId} | Type: ${type} | Party: ${partyName}`);
         }
         
         return { type, partyName, formRaw: rawFormId };
@@ -335,11 +333,9 @@
                                     });
                                 }
                             });
-                            console.log(`✅ Loaded ${Object.keys(data).length} transactions from ${type}`);
                         }
                     })
                     .catch((err) => {
-                        console.log(`⚠️ No data for ${type} or error:`, err.message);
                     })
             );
         }
@@ -353,7 +349,6 @@
             return timeA - timeB;
         });
 
-        console.log(`✅ Total loaded ${allTransactions.length} transactions`);
         return allTransactions;
     }
 
@@ -409,7 +404,6 @@
                     // Debug: Log skipped transactions only if they have items
                     const items = Array.isArray(vch.items) ? vch.items : Object.values(vch.items || {});
                     if (items.length > 0) {
-                        console.log(`⏭️ Skipped: ${vch.formId} - No inventory impact`);
                     }
                     return;
                 }
@@ -417,7 +411,6 @@
                 const items = Array.isArray(vch.items) ? vch.items : Object.values(vch.items || {});
                 
                 if (items.length === 0) {
-                    console.log(`⚠️ No items found in voucher: ${vch.formId} - ${vch.key}`);
                     return;
                 }
                 
@@ -495,7 +488,6 @@
                 });
             });
 
-            console.log(`✅ Processed ${processedCount} transactions with inventory impact`);
 
             // Clean up empty entries
             for (let key in stockMap) {
@@ -509,7 +501,6 @@
             }
 
             globalStockData = stockMap;
-            console.log(`✅ Final ${Object.keys(globalStockData).length} stock items with activity`);
             renderSummaryTable();
 
         } catch (error) {

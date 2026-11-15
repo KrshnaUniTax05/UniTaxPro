@@ -1,0 +1,436 @@
+<!-- UniTax List Viewer — routed window (router: utilities/list-show) -->
+<!-- No chrome buttons. Shortcuts: Esc = back to origin module · Ctrl|Cmd+E = export CSV (selected columns) · Ctrl|Cmd+P = print statement (UniTaxPrintEngine). -->
+<style>
+    .ls-window { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; }
+    .ls-window .ls-titlebar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:6px 2px 8px; }
+    .ls-window .ls-title { font-size:13px; font-weight:700; color:#0f172a; display:flex; align-items:center; gap:8px; margin:0; }
+    .ls-window .ls-title i { color:#0052ea; }
+    .ls-window .ls-hint { font-size:9.5px; color:#94a3b8; letter-spacing:.02em; white-space:nowrap; }
+    .ls-window .ls-count { font-size:10px; font-weight:600; color:#475569; background:#f1f5f9; border:1px solid #e2e8f0; padding:2px 8px; border-radius:999px; letter-spacing:.04em; }
+    .ls-window .ls-card { border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; box-shadow:0 1px 2px rgba(15,23,42,.06), 0 4px 12px rgba(15,23,42,.05); background:#ffffff; }
+    .ls-table { width:100%; table-layout:fixed; border-collapse:separate; border-spacing:0; font-size:11.5px; line-height:1.2; color:#334155; }
+    .ls-table thead th { position:sticky; top:0; z-index:1; background:#f8fafc; color:#475569; font-size:9px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; text-align:left; padding:6px 10px; border-bottom:1px solid #e2e8f0; white-space:nowrap; user-select:none; cursor:pointer; }
+    .ls-table thead th:hover { color:#0f172a; background:#eef2f7; }
+    .ls-table thead th.ls-num { text-align:right; }
+    .ls-table thead th.ls-act { text-align:right; cursor:default; }
+    .ls-table thead th.ls-act:hover { background:#f8fafc; }
+    .ls-table tbody td { padding:4px 10px; border-bottom:1px solid #eef2f7; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; height:28px; vertical-align:middle; }
+    .ls-table tbody tr:nth-child(even) { background:#fcfdfe; }
+    .ls-table tbody tr:hover { background:#eef4ff; }
+    .ls-table tbody tr.ls-selected { background:#e0ecff; }
+    .ls-table tbody tr:last-child td { border-bottom:none; }
+    .ls-chk { width:13px; height:13px; accent-color:#0052ea; cursor:pointer; vertical-align:middle; }
+    .ls-date { color:#0f172a; font-weight:600; font-variant-numeric:tabular-nums; }
+    .ls-type { display:inline-block; font-size:9px; font-weight:700; letter-spacing:.06em; color:#334155; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:4px; padding:1px 6px; text-transform:uppercase; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+    .ls-entity { font-weight:600; color:#0f172a; text-transform:uppercase; }
+    .ls-ref { font-family:'JetBrains Mono', ui-monospace, monospace; font-size:10.5px; color:#1d4ed8; font-weight:600; }
+    .ls-narr { color:#64748b; font-size:10.5px; }
+    .ls-num { text-align:right; font-family:'JetBrains Mono', ui-monospace, monospace; font-variant-numeric:tabular-nums; color:#0f172a; }
+    .ls-zero { color:#cbd5e1; }
+    .ls-scroll { max-height:calc(100vh - 210px); overflow:auto; }
+    .ls-act-btn { width:28px; height:24px; padding:0; display:inline-flex; align-items:center; justify-content:center; border:1px solid #e2e8f0; background:#fff; color:#475569; border-radius:6px; font-size:13px; }
+    .ls-act-btn:hover { background:#0f172a; color:#fff; border-color:#0f172a; }
+    .ls-act-btn[aria-expanded="true"] { background:#0f172a; color:#fff; border-color:#0f172a; }
+    .ls-empty { padding:40px 10px; text-align:center; color:#94a3b8; font-size:12px; }
+    .ls-empty i { font-size:26px; display:block; margin-bottom:8px; opacity:.6; }
+    .ls-sort-ind { opacity:.8; font-size:8px; margin-left:4px; }
+
+    .ls-rowmenu { display:none; position:fixed; z-index:3000; min-width:176px; background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; box-shadow:0 10px 30px rgba(15,23,42,.18), 0 2px 6px rgba(15,23,42,.08); padding:4px; }
+    .ls-rowmenu .ls-item { display:flex; align-items:center; width:100%; gap:9px; font-size:11.5px; font-weight:600; color:#334155; background:transparent; border:0; border-radius:6px; padding:7px 10px; text-align:left; cursor:pointer; }
+    .ls-rowmenu .ls-item i { font-size:13px; }
+    .ls-rowmenu .ls-item:hover { background:#eef4ff; color:#1d4ed8; }
+    .ls-rowmenu .ls-item.ls-danger { color:#b91c1c; }
+    .ls-rowmenu .ls-item.ls-danger:hover { background:#fef2f2; color:#b91c1c; }
+
+    @media print {
+        .sidebar, #sidebar, aside, nav, header, footer, .breadcrumb, .ls-no-print, .ls-chk, .ls-rowmenu { display:none !important; }
+        .ls-scroll { max-height:none !important; overflow:visible !important; }
+        .ls-card { border:none; box-shadow:none; }
+        .ls-table { font-size:9px; }
+    }
+</style>
+
+<div class="container-fluid ls-window py-2">
+    <div class="ls-titlebar">
+        <h5 class="ls-title"><i class="bi bi-list-ul"></i><span id="lsTitle">List</span><span class="ls-count" id="lsCount">0 RECORDS</span></h5>
+        <span class="ls-hint">Esc Back &nbsp;·&nbsp; <kbd>Ctrl</kbd>+<kbd>E</kbd> Export &nbsp;·&nbsp; <kbd>Ctrl</kbd>+<kbd>P</kbd> Print Statement &nbsp;·&nbsp; Click column headers to sort</span>
+    </div>
+    <div class="ls-card">
+        <div class="ls-scroll">
+            <table class="ls-table" id="lsTable">
+                <thead id="lsThead"></thead>
+                <tbody id="lsTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="lsRowMenu" class="ls-rowmenu" role="menu">
+    <button type="button" class="ls-item" data-ls-act="edit"><i class="bi bi-eye text-primary"></i>View</button>
+    <button type="button" class="ls-item" data-ls-act="print"><i class="bi bi-printer text-body"></i>Print</button>
+    <button type="button" class="ls-item ls-danger" data-ls-act="delete"><i class="bi bi-trash"></i>Delete</button>
+</div>
+
+<script>
+(function () {
+    const fmtNum = (v) => {
+        const n = Number(v);
+        if (!isFinite(n) || n === 0) return '<span class="ls-zero">—</span>';
+        return n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+    const fmtSigned = (v) => {
+        const n = Number(v) || 0;
+        if (n === 0) return '<span class="ls-zero">—</span>';
+        return `${Math.abs(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span class="text-muted" style="font-size:9px;">${n >= 0 ? 'Dr' : 'Cr'}</span>`;
+    };
+    const esc = (s) => String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    const valOf = (o, k) => o[k] != null ? o[k] : '';
+    const rowDate = (o) => o.docDate != null ? String(o.docDate) : (o.postingDate != null ? String(o.postingDate) : '');
+    const rowDocType = (o) => o.docType != null ? String(o.docType) : (o.doc_type != null ? String(o.doc_type) : (o.documentType != null ? String(o.documentType) : (o.formId != null ? String(o.formId) : '')));
+    const rowEntity = (o) => o.entity != null ? String(o.entity) : (o.ledger != null ? String(o.ledger) : (o.displayEntityName != null ? String(o.displayEntityName) : ''));
+    const rowRef = (o) => o.refNo != null ? String(o.refNo) : (o.vch != null ? String(o.vch) : (o.docNo != null ? String(o.docNo) : ''));
+
+    const COL_DEFS = {
+        postingDate: { label: 'Date',     cls: 'ls-date', num: false, cell: o => esc(rowDate(o)), value: o => { const d = new Date(rowDate(o)); return isNaN(d) ? 0 : d.getTime(); } },
+        docDate:     { label: 'Doc Date', cls: 'ls-date', num: false, cell: o => esc((o.docDate != null ? o.docDate : (o.postingDate != null ? o.postingDate : ''))), value: o => { const d = new Date(o.docDate || o.postingDate || ''); return isNaN(d) ? 0 : d.getTime(); } },
+        docType:     { label: 'Doc Type', cls: '',        num: false, cell: o => { const t = rowDocType(o); return t ? `<span class="ls-type">${esc(t)}</span>` : ''; }, value: o => rowDocType(o).toLowerCase() },
+        refNo:       { label: 'Ref No',   cls: 'ls-ref',  num: false, cell: o => esc(rowRef(o) || '—'), value: o => rowRef(o).toLowerCase() },
+        entity:      { label: 'Entity',   cls: 'ls-entity', num: false, cell: o => esc(rowEntity(o)), value: o => rowEntity(o).toLowerCase() },
+        narration:   { label: 'Narration', cls: 'ls-narr', num: false, cell: o => esc((o.narration != null ? o.narration : '')), value: o => String(o.narration || '').toLowerCase() },
+        dr:          { label: 'Debit',    cls: 'ls-num',  num: true,  cell: o => fmtNum(o.dr), value: o => Number(o.dr) || 0 },
+        cr:          { label: 'Credit',   cls: 'ls-num',  num: true,  cell: o => fmtNum(o.cr), value: o => Number(o.cr) || 0 },
+        balance:     { label: 'Balance',  cls: 'ls-num',  num: true,  cell: o => fmtSigned(o.balance), value: o => Number(o.balance) || 0 }
+    };
+    const DEFAULT_COLS = ['postingDate', 'docType', 'entity', 'refNo', 'dr', 'cr', 'balance'];
+
+    // CRITICAL: the router re-injects this module and re-executes this script on every visit.
+    // Remove previously registered global listeners so print/export fire exactly once per action.
+    if (typeof window.__lsCleanup === 'function') { try { window.__lsCleanup(); } catch (e) {} window.__lsCleanup = null; }
+
+    const makeDynDef = (d) => ({
+        label: String(d.label == null ? d.key : d.label),
+        cls: d.cls || (d.num ? 'ls-num' : ''),
+        num: !!d.num,
+        cell: (o) => {
+            const v = o[d.key];
+            if (v === null || v === undefined || v === '') return '<span class="ls-zero">—</span>';
+            const s = String(v);
+            if (d.num) {
+                const n = Number(String(s).replace(/[,\s%₹]/g, ''));
+                if (!isNaN(n)) return n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+            return esc(s);
+        },
+        value: (o) => {
+            const v = o[d.key];
+            if (v === null || v === undefined || v === '') return d.num ? 0 : '';
+            if (d.num) { const n = Number(String(v).replace(/[,\s%₹]/g, '')); return isNaN(n) ? 0 : n; }
+            return String(v).toLowerCase();
+        }
+    });
+    const defFor = (c) => (typeof c === 'string' ? COL_DEFS[c] : (c && c.key ? makeDynDef(c) : null));
+    const colKey = (c) => (typeof c === 'string' ? c : (c && c.key) || '');
+    const colWidth = (c) => (typeof c === 'string' ? (COL_W[c] || null) : (c && c.width ? c.width : null));
+
+    const getState = () => (window.UniTaxList && typeof window.UniTaxList.State === 'function') ? (window.UniTaxList.State() || {}) : {};
+    const getRows = () => (window.UniTaxList && Array.isArray(window.UniTaxList.WindowData)) ? window.UniTaxList.WindowData : [];
+    const getCols = () => {
+        const st = getState();
+        const meta = st.meta || {};
+        let cols = Array.isArray(meta.columns) ? meta.columns.filter(c => defFor(c)) : null;
+        if (!cols || !cols.length) cols = DEFAULT_COLS.slice();
+        return cols;
+    };
+
+    // ---------- Column widths for fixed layout ----------
+    const COL_W = { postingDate: 96, docDate: 96, docType: 120, refNo: 150, entity: null, narration: null, dr: 128, cr: 128, balance: 136 };
+
+    // ---------- Export (only the user-selected columns, in order) ----------
+    const exportCsv = () => {
+        const data = getRows();
+        if (!data.length) return;
+        const cols = getCols();
+        const csvEsc = (v) => { const s = String(v == null ? '' : v); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+        const lines = [cols.map(c => defFor(c).label).join(',')];
+        data.forEach((r) => {
+            const o = (r && typeof r === 'object') ? r : { value: r };
+            const cellVal = { postingDate: rowDate(o), docDate: o.docDate != null ? o.docDate : rowDate(o), docType: rowDocType(o), refNo: rowRef(o), entity: rowEntity(o), narration: o.narration || '', dr: Number(o.dr) || 0, cr: Number(o.cr) || 0, balance: `${(Number(o.balance) || 0).toFixed(2)} ${(Number(o.balance) || 0) >= 0 ? 'Dr' : 'Cr'}` };
+            lines.push(cols.map(c => csvEsc(typeof c === 'string' ? cellVal[c] : (o[c.key] == null ? '' : o[c.key]))).join(','));
+        });
+        try {
+            const title = getState().title || 'list';
+            const slug = String(title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'list-export';
+            const blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${slug}.csv`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        } catch (e) {}
+    };
+
+    // Ctrl+P — Statement of Account PDF via UniTaxPrintEngine (same engine as the ledger screen).
+    const printStatement = () => {
+        try {
+            const rows = getRows();
+            const st = getState();
+            const acct = (st.meta && st.meta.account) || {
+                name: String(st.title || 'STATEMENT').replace(/^Ledger Statement\s*—\s*/i, '').toUpperCase(),
+                code: 'N/A',
+                fromDate: '',
+                toDate: '',
+                openingBalance: 0,
+                openingType: 'Dr'
+            };
+            const printTxns = rows.map((r) => {
+                const o = (r && typeof r === 'object') ? r : { value: r };
+                return {
+                    date: rowDate(o),
+                    valueDate: o.docDate != null ? String(o.docDate) : rowDate(o),
+                    type: rowDocType(o) || 'TXN',
+                    formId: o.formId != null ? String(o.formId) : '',
+                    doc_no: rowRef(o) || '---',
+                    particulars: rowEntity(o),
+                    narration: o.narration != null ? String(o.narration) : '',
+                    entity: rowEntity(o),
+                    debit: Number(o.dr) || 0,
+                    credit: Number(o.cr) || 0
+                };
+            });
+            if (typeof window.printLedgerStatement === 'function') {
+                window.printLedgerStatement(acct, printTxns);
+            } else {
+                window.print();
+            }
+        } catch (e) {
+            try { window.print(); } catch (e2) {}
+        }
+    };
+
+    const printRow = (formId, key) => {
+        try {
+            if (typeof window.printTransaction === 'function') { window.printTransaction(formId, key); return; }
+            if (typeof window.printDocument === 'function') { window.printDocument(formId, key); return; }
+            window.print();
+        } catch (e) {
+            try { window.print(); } catch (e2) {}
+        }
+    };
+
+    let renderRows = []; // display-order rows backing the current render (identity-stable)
+    const rowForTr = (tr) => {
+        const i = parseInt(tr && tr.getAttribute('data-idx'), 10);
+        return (!isNaN(i) && i >= 0 && i < renderRows.length) ? renderRows[i] : null;
+    };
+    const metaOf = () => (getState().meta) || {};
+
+    const openRow = (tr) => {
+        const row = rowForTr(tr);
+        const meta = metaOf();
+        if (row && typeof meta.onOpen === 'function') { try { meta.onOpen(row); } catch (e) {} return; }
+        try { window.UniTaxList.OpenInEdit(tr.getAttribute('data-lv-key') || '', tr.getAttribute('data-lv-formid') || ''); } catch (e) {}
+    };
+
+    const deleteRow = async (tr) => {
+        const key = tr.getAttribute('data-lv-key') || '';
+        const formId = tr.getAttribute('data-lv-formid') || '';
+        const row = rowForTr(tr);
+        const meta = metaOf();
+        if (row && typeof meta.onDelete === 'function') {
+            try {
+                const ok = await meta.onDelete(row);
+                if (ok === false) return;
+                const data = getRows();
+                const idx = data.indexOf(row);
+                if (idx > -1) data.splice(idx, 1);
+                render();
+            } catch (e) {
+                alert('Unable to delete this record. Please try again.');
+            }
+            return;
+        }
+        if (!key || !formId) { alert('This row has no document reference; delete is unavailable.'); return; }
+        if (!confirm('Move this transaction to the Deleted Archive?')) return;
+        try {
+            if (!(window.API && typeof API.DeleteTransaction === 'function')) throw new Error('Delete service unavailable.');
+            const ok = await API.DeleteTransaction(formId, key);
+            if (!ok) throw new Error('Delete rejected by server.');
+            const data = getRows();
+            const target = row || null;
+            const i2 = target ? data.indexOf(target) : -1;
+            if (i2 > -1) data.splice(i2, 1);
+            else {
+                const rows = Array.from(document.querySelectorAll('#lsTableBody tr.ls-row'));
+                const idx = rows.indexOf(tr);
+                if (idx > -1 && idx < data.length) data.splice(idx, 1);
+            }
+            render();
+        } catch (e) {
+            alert('Unable to delete this transaction. Please try again.');
+        }
+    };
+
+    // ---------- Fixed-position hamburger menu (escapes overflow clipping) ----------
+    const menu = document.getElementById('lsRowMenu');
+    // Universal window for every user; the destructive item is only shown to users with the delete action.
+    try {
+        if (window.UniTaxAuth && typeof window.UniTaxAuth.CanPerformAction === 'function' && !window.UniTaxAuth.CanPerformAction('delete')) {
+            const delBtn = menu ? menu.querySelector('[data-ls-act="delete"]') : null;
+            if (delBtn) delBtn.style.display = 'none';
+        }
+    } catch (e) {}
+    let menuRow = null;
+    const hideMenu = () => {
+        if (menu) menu.style.display = 'none';
+        document.querySelectorAll('.ls-act-btn[aria-expanded="true"]').forEach((b) => b.setAttribute('aria-expanded', 'false'));
+        menuRow = null;
+    };
+    const toggleMenu = (btn) => {
+        if (!menu) return;
+        const row = btn.closest('tr.ls-row');
+        if (!row) return;
+        if (menuRow === row && menu.style.display === 'block') { hideMenu(); return; }
+        menuRow = row;
+        menu.style.display = 'block';
+        const mw = menu.offsetWidth;
+        const mh = menu.offsetHeight;
+        const rect = btn.getBoundingClientRect();
+        let top = rect.bottom + 4;
+        if (top + mh > window.innerHeight - 8) top = Math.max(8, rect.top - mh - 4);
+        let left = rect.right - mw;
+        if (left < 8) left = 8;
+        menu.style.top = `${Math.round(top)}px`;
+        menu.style.left = `${Math.round(left)}px`;
+        document.querySelectorAll('.ls-act-btn[aria-expanded="true"]').forEach((b) => { if (b !== btn) b.setAttribute('aria-expanded', 'false'); });
+        btn.setAttribute('aria-expanded', 'true');
+    };
+    const runMenuAction = (act) => {
+        const tr = menuRow;
+        if (!tr) { hideMenu(); return; }
+        hideMenu();
+        if (act === 'edit') openRow(tr);
+        else if (act === 'print') printRow(tr.getAttribute('data-lv-formid') || '', tr.getAttribute('data-lv-key') || '');
+        else if (act === 'delete') deleteRow(tr);
+    };
+
+    const onDocClick = (e) => {
+        const toggle = e.target && e.target.closest ? e.target.closest('[data-ls-toggle]') : null;
+        if (toggle) { e.preventDefault(); e.stopPropagation(); toggleMenu(toggle); return; }
+        const item = e.target && e.target.closest ? e.target.closest('#lsRowMenu [data-ls-act]') : null;
+        if (item) { e.preventDefault(); runMenuAction(item.getAttribute('data-ls-act')); return; }
+        const sortTh = e.target && e.target.closest ? e.target.closest('th[data-sort]') : null;
+        if (sortTh) { e.preventDefault(); applySort(sortTh.getAttribute('data-sort')); return; }
+        if (menu && e.target && !menu.contains(e.target)) hideMenu();
+    };
+    const onScrollHide = () => hideMenu();
+    const onResizeHide = () => hideMenu();
+    document.addEventListener('click', onDocClick, true);
+    document.addEventListener('scroll', onScrollHide, true);
+    window.addEventListener('resize', onResizeHide);
+    window.__lsCleanup = function () {
+        try { document.removeEventListener('click', onDocClick, true); } catch (e) {}
+        try { document.removeEventListener('scroll', onScrollHide, true); } catch (e) {}
+        try { window.removeEventListener('resize', onResizeHide); } catch (e) {}
+        try { document.removeEventListener('keydown', onKey, true); } catch (e) {}
+    };
+
+    // ---------- Sorting ----------
+    let sortKey = null;
+    let sortDir = 1;
+    const applySort = (key) => {
+        const cols = getCols();
+        if (!cols.some(c => colKey(c) === key)) return;
+        if (sortKey === key) { sortDir = -sortDir; } else { sortKey = key; sortDir = 1; }
+        render();
+    };
+    const sortedRows = (rows) => {
+        if (!sortKey) return rows;
+        const key = sortKey;
+        const def = defFor(getCols().find(c => colKey(c) === key));
+        if (!def) return rows;
+        const arr = rows.slice();
+        arr.sort((a, b) => {
+            const oA = (a && typeof a === 'object') ? a : {};
+            const oB = (b && typeof b === 'object') ? b : {};
+            const va = def.value(oA); const vb = def.value(oB);
+            if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * sortDir;
+            return String(va).localeCompare(String(vb)) * sortDir;
+        });
+        return arr;
+    };
+
+    const render = () => {
+        hideMenu();
+        const data = getRows();
+        const cols = getCols();
+        const titleEl = document.getElementById('lsTitle');
+        if (titleEl) titleEl.textContent = getState().title || 'List';
+        const countEl = document.getElementById('lsCount');
+        if (countEl) countEl.textContent = `${data.length} RECORD${data.length === 1 ? '' : 'S'}`;
+
+        // ---- header ----
+        const thead = document.getElementById('lsThead');
+        if (thead) {
+            const sortIcon = (k) => sortKey === k ? (sortDir === 1 ? '<span class="ls-sort-ind">▲</span>' : '<span class="ls-sort-ind">▼</span>') : '<span class="ls-sort-ind" style="opacity:.3">↕</span>';
+            let html = '<tr><th class="ls-no-print" style="width:34px; cursor:default;"></th>';
+            cols.forEach(c => {
+                const def = defFor(c); if (!def) return;
+                const key = colKey(c);
+                const w = colWidth(c);
+                const width = w ? ` style="width:${w}px;"` : '';
+                const numCls = def.num ? ' ls-num' : '';
+                html += `<th class="${numCls}" data-sort="${esc(key)}"${width}>${esc(def.label)}${sortIcon(key)}</th>`;
+            });
+            html += '<th class="ls-act ls-no-print" style="width:56px;">Actions</th></tr>';
+            thead.innerHTML = html;
+        }
+
+        // ---- body ----
+        const tbody = document.getElementById('lsTableBody');
+        if (!tbody) return;
+        renderRows = sortedRows(data);
+        const rows = renderRows;
+        if (!rows.length) {
+            tbody.innerHTML = `<tr><td colspan="${cols.length + 2}"><div class="ls-empty"><i class="bi bi-inbox"></i>No list data.</div></td></tr>`;
+            return;
+        }
+        tbody.innerHTML = rows.map((r, i) => {
+            const o = (r && typeof r === 'object') ? r : { value: r };
+            const key = o.key != null ? String(o.key) : (o.id != null ? String(o.id) : '');
+            const formId = o.formId != null ? String(o.formId) : '';
+            let tds = `<td class="ls-no-print" style="text-align:center;"><input type="checkbox" class="ls-chk ut-lv-check" data-lv-key="${esc(key)}"></td>`;
+            cols.forEach(c => {
+                const def = defFor(c); if (!def) return;
+                tds += `<td class="${def.cls}">${def.cell(o)}</td>`;
+            });
+            tds += `<td class="ls-no-print" style="text-align:right;">
+                    <button type="button" class="ls-act-btn" data-ls-toggle="1" aria-expanded="false" title="Actions"><i class="bi bi-three-dots-vertical"></i></button>
+                </td>`;
+            return `<tr class="ls-row" data-idx="${i}" data-lv-key="${esc(key)}" data-lv-formid="${esc(formId)}" data-lv-open="1" title="Double click to view">${tds}</tr>`;
+        }).join('');
+
+        tbody.querySelectorAll('tr.ls-row').forEach((tr) => {
+            tr.addEventListener('dblclick', () => openRow(tr));
+            const chk = tr.querySelector('.ls-chk');
+            if (chk) chk.addEventListener('change', () => tr.classList.toggle('ls-selected', chk.checked));
+        });
+    };
+
+    // Keyboard shortcuts scoped to this module; ignored elsewhere in the app.
+    const onKey = (e) => {
+        const inListShow = /utilities\/list-show/.test((window.location && window.location.hash) || '');
+        if (!inListShow) return;
+        const mod = e.ctrlKey || e.metaKey;
+        const k = String(e.key || '').toLowerCase();
+        if (mod && k === 'e') { e.preventDefault(); exportCsv(); return; }
+        if (mod && k === 'p') { e.preventDefault(); printStatement(); return; }
+    };
+    document.addEventListener('keydown', onKey, true);
+
+    if (document.getElementById('lsTableBody')) { render(); }
+    else { document.addEventListener('DOMContentLoaded', render); }
+})();
+</script>

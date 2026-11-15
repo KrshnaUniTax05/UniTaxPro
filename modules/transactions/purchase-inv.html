@@ -86,7 +86,7 @@
                     <div class="row g-2">
                         <div class="col-md-6">
                             <label class="form-label small text-muted">Supplier GSTIN</label>
-                            <input type="text" name="auto_customer_ledger_GST" class="form-control form-control-sm bg-light font-mono" readonly placeholder="GSTIN / UIN">
+                            <input type="text" name="auto_customer_ledger_GST" data-master-sheet="LedgerCreation" class="form-control form-control-sm bg-light font-mono" readonly placeholder="GSTIN / UIN">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small text-muted">Source State (POS)</label>
@@ -190,7 +190,7 @@
                                        list="stockList" data-form-path="masters/stock-cw" required>
                                 
                                 <div class="d-flex align-items-center gap-3 px-1 mt-1 text-muted" style="font-size: 11px;">
-                                    <span>HSN/SAC: <input type="text" name="auto_item_name_itemHSN" class="border-0 bg-transparent p-0 text-muted font-mono" style="width:75px" readonly placeholder="----"></span>
+                                    <span>HSN/SAC: <input type="text" name="auto_item_name_itemHSN" data-master-sheet="Stock" class="border-0 bg-transparent p-0 text-muted font-mono" style="width:75px" readonly placeholder="----"></span>
                                     <span>GST Rate: <input type="text" name="auto_item_name_ItemTax" class="border-0 bg-transparent p-0 tax-val text-danger fw-bold font-mono" style="width:25px" readonly value="18">%</span>
                                 </div>
                             </td>
@@ -632,9 +632,7 @@
                     </div>
                 </div>
             </div>
-        </div>
     </form>
-</div>
 
 <script>
     (function InitPurchaseVoucher() {

@@ -23,7 +23,7 @@
 
                 <div class="d-flex align-items-center gap-2">
                     <button type="button" class="btn btn-erp-secondary btn-sm shadow-sm" onclick="window.printCurrentForm('journal-vch')" title="Print / Save PDF"><i class="bi bi-printer me-1 text-primary"></i> Print / PDF</button>
-                    <button type="button" class="btn btn-erp-icon" title="Reset Form" onclick="App.Router('transactions/journal-vch')" title="Reset Form">
+                    <button type="button" class="btn btn-erp-icon" title="Reset Form" onclick="App.Router('transactions/journal-vch')">
                         <i class="bi bi-arrow-counterclockwise me-1 text-primary"></i> Reset
                     </button>
                     <button type="submit" id="btnPostJournal" title="Post Journal Voucher to General Ledger" class="btn btn-erp-primary btn-sm px-4 fw-bold shadow-sm">
@@ -80,7 +80,8 @@
                         <label class="form-label small fw-bold">Parent Company / Entity</label>
                         <input type="text" name="CompanyName" id="jvCompany" class="form-control form-control-sm"
                                list="jvCompanyList" placeholder="Select Company..."
-                               data-fetch_column data-sheet_name="Companies" data-column_name="companyName&CompanyCode">
+                               data-fetch_column data-sheet_name="Companies" data-column_name="companyName&CompanyCode"
+                               data-master-sheet="Companies" autocomplete="off">
                         <datalist id="jvCompanyList"></datalist>
                     </div>
 
@@ -88,7 +89,8 @@
                         <label class="form-label small fw-bold">Cost Center / Profit Center</label>
                         <input type="text" name="project" id="jvProject" class="form-control form-control-sm"
                                list="jvProjectList" placeholder="General, Branch, Project..."
-                               data-fetch_column data-sheet_name="Projects" data-column_name="ProjectName&ProjectCode">
+                               data-fetch_column data-sheet_name="Projects" data-column_name="ProjectName&ProjectCode"
+                               data-master-sheet="Projects" autocomplete="off">
                         <datalist id="jvProjectList"></datalist>
                     </div>
 
@@ -139,7 +141,8 @@
                             <td>
                                 <input type="text" name="offset_account[]" class="form-control form-control-sm"
                                        list="jvLedgerList" placeholder="Search account..." required
-                                       data-fetch_column data-sheet_name="LedgerCreation" data-column_name="name&ledgerCode">
+                                       data-fetch_column data-sheet_name="LedgerCreation" data-column_name="name&ledgerCode"
+                                       data-master-sheet="LedgerCreation" autocomplete="off">
                             </td>
                             <td>
                                 <input type="number" name="amount_dr[]" step="0.01" min="0" class="form-control form-control-sm font-mono text-end jv-amount-dr" placeholder="0.00" oninput="window.calculateJournalTotals()">
@@ -169,7 +172,8 @@
                             <td>
                                 <input type="text" name="offset_account[]" class="form-control form-control-sm"
                                        list="jvLedgerList" placeholder="Search account..." required
-                                       data-fetch_column data-sheet_name="LedgerCreation" data-column_name="name&ledgerCode">
+                                       data-fetch_column data-sheet_name="LedgerCreation" data-column_name="name&ledgerCode"
+                                       data-master-sheet="LedgerCreation" autocomplete="off">
                             </td>
                             <td>
                                 <input type="number" name="amount_dr[]" step="0.01" min="0" class="form-control form-control-sm font-mono text-end jv-amount-dr bg-light" placeholder="0.00" disabled oninput="window.calculateJournalTotals()">
@@ -257,7 +261,8 @@
             <td>
                 <input type="text" name="offset_account[]" class="form-control form-control-sm"
                        list="jvLedgerList" placeholder="Search account..." required
-                       data-fetch_column data-sheet_name="LedgerCreation" data-column_name="name&ledgerCode">
+                       data-fetch_column data-sheet_name="LedgerCreation" data-column_name="name&ledgerCode"
+                       data-master-sheet="LedgerCreation" autocomplete="off">
             </td>
             <td>
                 <input type="number" name="amount_dr[]" step="0.01" min="0" class="form-control form-control-sm font-mono text-end jv-amount-dr bg-light" placeholder="0.00" disabled oninput="window.calculateJournalTotals()">
@@ -335,8 +340,78 @@
         }
     };
 
-    // Override Form Validation before submit
+    // ------------------------------------------------------------------
+    // DATALIST HYDRATION + STRICT MASTER-VALUE VALIDATION
+    // Every datalist-backed field (Company, Profit Center, Ledger Account)
+    // must resolve to an actual master record before the voucher can post.
+    // ------------------------------------------------------------------
     const jvForm = document.getElementById('JournalVoucherForm');
+
+    async function hydrateJournalDatalists() {
+        if (!jvForm || !window.API) return;
+        try {
+            if (typeof API.PopulateAllDatalists === 'function') {
+                await API.PopulateAllDatalists(jvForm);
+            }
+        } catch (e) {
+            console.warn('[Journal] Datalist hydration warning:', e && e.message ? e.message : e);
+        }
+    }
+
+    function jvClearInvalid(input) {
+        if (!input) return;
+        input.classList.remove('is-invalid');
+        if (input.style.borderColor) input.style.borderColor = '';
+    }
+
+    function jvValidateListInput(input) {
+        if (!input || !input.getAttribute) return true;
+        const listId = input.getAttribute('list');
+        if (!listId) return true;
+        const value = String(input.value || '').trim();
+        if (!value) { jvClearInvalid(input); return true; }
+
+        const dl = document.getElementById(listId) || jvForm.querySelector(`datalist#${listId}`);
+        if (!dl || dl.options.length === 0) {
+            // Master not loaded yet: do not block typing, submit re-checks.
+            return true;
+        }
+
+        const norm = value.toLowerCase();
+        const match = Array.from(dl.options).some(opt => String(opt.value || '').trim().toLowerCase() === norm);
+        if (match) { jvClearInvalid(input); return true; }
+
+        input.classList.add('is-invalid');
+        input.style.borderColor = '#dc3545';
+        const label = input.name === 'CompanyName' ? 'Company'
+            : input.name === 'project' ? 'Profit Center'
+            : (input.name || '').includes('offset_account') ? 'Ledger Account'
+            : 'Value';
+        if (typeof App !== 'undefined' && App.UI && App.UI.Notify) {
+            App.UI.Notify('Master Validation', `${label} "${value}" is not a registered master value. Select an option from the list.`, 'danger');
+        }
+        return false;
+    }
+
+    if (jvForm) {
+        jvForm.addEventListener('change', (e) => {
+            if (e.target && e.target.matches && e.target.matches('input[list]')) jvValidateListInput(e.target);
+        });
+        jvForm.addEventListener('blur', (e) => {
+            if (e.target && e.target.matches && e.target.matches('input[list]')) jvValidateListInput(e.target);
+        }, true);
+        // Fire once the module is mounted (InitERPLogic also hydrates; this is idempotent).
+        setTimeout(hydrateJournalDatalists, 0);
+        try {
+            if (window._jvHydrateHandler) {
+                document.removeEventListener('moduleReady', window._jvHydrateHandler);
+            }
+        } catch (e) {}
+        window._jvHydrateHandler = hydrateJournalDatalists;
+        document.addEventListener('moduleReady', window._jvHydrateHandler);
+    }
+
+    // Override Form Validation before submit
     if (jvForm) {
         const originalSubmit = jvForm.onsubmit;
         jvForm.addEventListener('submit', async function(e) {

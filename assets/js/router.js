@@ -118,10 +118,17 @@ const UniTaxRouter = {
             permission: 'transactions'
         },
         'transactions/receipt-pay': {
-            path: 'modules/transactions/receipt-vch.html',
-            title: 'Receipt Voucher',
+            path: 'modules/transactions/receipt-pay.html',
+            title: 'Contra / Receipt-Pay Voucher',
             category: 'Banking & Cash',
-            icon: 'bi-cash-coin',
+            icon: 'bi-arrow-left-right',
+            permission: 'transactions'
+        },
+        'transactions/journal-vch': {
+            path: 'modules/transactions/journal-vch.html',
+            title: 'Journal Voucher',
+            category: 'General',
+            icon: 'bi-journal-text',
             permission: 'transactions'
         },
 
@@ -182,6 +189,13 @@ const UniTaxRouter = {
             icon: 'bi-diagram-3',
             permission: 'masters'
         },
+        'masters/bulk-upload': {
+            path: 'modules/masters/bulk-upload.html',
+            title: 'Bulk Import Masters (JSON)',
+            category: 'Masters',
+            icon: 'bi-file-earmark-arrow-up',
+            permission: 'masters'
+        },
         'reports/mastermanager': {
             path: 'modules/reports/mastermanager.html',
             title: 'Master Data Manager',
@@ -235,6 +249,13 @@ const UniTaxRouter = {
             category: 'Administration',
             icon: 'bi-shield-lock-fill',
             permission: 'admin'
+        },
+        'utilities/list-show': {
+            path: 'modules/utilities/list-show.html',
+            title: 'UniTax List Viewer',
+            category: 'Utilities',
+            icon: 'bi-list',
+            permission: 'all'
         },
         'settings': {
             path: 'modules/settings.html',
@@ -422,8 +443,13 @@ const UniTaxRouter = {
             category: 'Workspace'
         };
 
-        if (loader) loader.style.display = 'flex';
-        viewport.style.opacity = '0.4';
+        // Professional module-transition loader: fade in with the target module's name
+        try {
+            const splashTitle = loader ? loader.querySelector('[data-loader-title]') : null;
+            if (splashTitle) splashTitle.textContent = `Opening ${routeDef.title || routePath}`;
+            if (loader) loader.classList.add('is-visible');
+        } catch (e) {}
+        viewport.style.opacity = '0.92';
 
         try {
             const response = await fetch(routeDef.path);
@@ -475,7 +501,11 @@ const UniTaxRouter = {
         } finally {
             this._isLoading = false;
             this._loadingRoute = null;
-            if (loader) loader.style.display = 'none';
+            if (loader) {
+                // Fade out the professional module loader
+                loader.classList.remove('is-visible');
+                loader.setAttribute('aria-hidden', 'true');
+            }
             viewport.style.opacity = '1';
         }
     },

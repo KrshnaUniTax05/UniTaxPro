@@ -31,13 +31,10 @@
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light text-muted small">
                 <tr>
-                    <th class="ps-4" style="width: 12%;">Center Code</th>
-                    <th style="width: 28%;">Profit Center & Unit</th>
-                    <th style="width: 18%;">Company Entity</th>
-                    <th style="width: 16%;">Controlling Manager</th>
-                    <th style="width: 12%;">Target / Budget</th>
-                    <th style="width: 8%;">Status</th>
-                    <th class="text-end pe-4" style="width: 6%;">Actions</th>
+                    <th class="ps-4" style="width: 14%;">Center Code</th>
+                    <th style="width: 34%;">Profit Center & Unit</th>
+                    <th style="width: 24%;">Company Entity</th>
+                    <th style="width: 28%;">Controlling Manager</th>
                 </tr>
             </thead>
             <tbody id="projectListBody">
@@ -95,7 +92,7 @@ window.ProjectManager = {
         this.RenderList(this.data);
     },
 
-    // Render List from local data
+    // Apply search + status filter
     FilterList() {
         const q = (document.getElementById('pcSearchInput')?.value || '').toLowerCase().trim();
         const status = document.getElementById('pcStatusFilter')?.value || 'ALL';
@@ -124,7 +121,7 @@ window.ProjectManager = {
         
         tbody.innerHTML = '';
         if (!dataArray || dataArray.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted"><i class="bi bi-folder-x fs-4 d-block mb-1 text-muted"></i>No matching profit centers found.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-muted"><i class="bi bi-folder-x fs-4 d-block mb-1 text-muted"></i>No matching profit centers found.</td></tr>`;
             const countEl = document.getElementById('projectCount');
             if (countEl && updateCount) countEl.innerText = `(0 records)`;
             return;
@@ -133,20 +130,12 @@ window.ProjectManager = {
         dataArray.forEach((record) => {
             if (!record || typeof record !== 'object') return;
             const id = record.ID || record.id;
-            const encodedData = encodeURIComponent(JSON.stringify(record));
+            const encodedData = encodeURIComponent(JSON.stringify(record)).replace(/'/g, '%27');
             const projectCode = record.ProjectCode || record.projectCode || '-';
             const projectName = record.ProjectName || record.projectName || 'Unknown';
             const companyName = record.CompanyName || record.companyName || '-';
             const businessUnit = record.BusinessUnit || record.businessUnit || record.Segment || 'Commercial Division';
             const managerName = record.ManagerName || record.managerName || '-';
-            
-            const budget = record.AnnualRevenueTarget || record.AnnualBudgetCap || 0;
-            const budgetStr = budget ? '₹' + parseFloat(budget).toLocaleString('en-IN') : '-';
-
-            const status = String(record.Status || 'ACTIVE').toUpperCase();
-            let statusBadge = '<span class="badge bg-success-subtle text-success border">ACTIVE</span>';
-            if (status.includes('REVIEW')) statusBadge = '<span class="badge bg-warning-subtle text-warning border">UNDER REVIEW</span>';
-            else if (status.includes('SUSPEND') || status.includes('DECOMMISSION')) statusBadge = '<span class="badge bg-danger-subtle text-danger border">INACTIVE</span>';
 
             tbody.innerHTML += `
                 <tr class="project-row" data-id="${id}" style="cursor: pointer;" ondblclick="window.ProjectManager.TriggerEdit('${id}', '${encodedData}')">
@@ -157,20 +146,6 @@ window.ProjectManager = {
                     </td>
                     <td class="text-dark small">${companyName}</td>
                     <td class="small text-muted">${managerName}</td>
-                    <td class="font-mono small fw-semibold text-dark">${budgetStr}</td>
-                    <td>${statusBadge}</td>
-                    <td class="text-end pe-4" style="white-space: nowrap;">
-                        <button class="btn btn-sm btn-light text-primary border me-1" 
-                                onclick="window.ProjectManager.TriggerEdit('${id}', '${encodedData}')"
-                                title="Edit Profit Center">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn btn-sm btn-light text-danger border" 
-                                onclick="window.ProjectManager.Delete('${id}', this)"
-                                title="Delete Profit Center">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </td>
                 </tr>
             `;
         });
@@ -178,6 +153,7 @@ window.ProjectManager = {
         const countEl = document.getElementById('projectCount');
         if (countEl && updateCount) countEl.innerText = `(${dataArray.length} records)`;
     },
+
     CreateNew() {
         sessionStorage.removeItem('EditContext_Projects');
         if (typeof App !== 'undefined' && App.Router) App.Router('masters/project-cw');
@@ -185,7 +161,8 @@ window.ProjectManager = {
     },
 
     TriggerEdit(recordId, encodedData) {
-        const data = JSON.parse(decodeURIComponent(encodedData));
+        let data = {};
+        try { data = JSON.parse(decodeURIComponent(encodedData)); } catch (e) { console.error('Edit payload decode failed', e); return; }
         sessionStorage.setItem('EditContext_Projects', JSON.stringify({ id: recordId, payload: data }));
 
         if (typeof App !== 'undefined' && App.Router) App.Router('masters/project-cw');
@@ -249,15 +226,6 @@ window.ProjectManager = {
         }
     },
 
-    FilterList() {
-        const query = document.getElementById('projectSearchFilter')?.value?.toLowerCase() || '';
-        const rows = document.querySelectorAll('#projectListBody tr.project-row');
-        
-        rows.forEach(row => {
-            const text = row.innerText.toLowerCase();
-            row.style.display = text.includes(query) ? '' : 'none';
-        });
-    }
 };
 
 // --- 3. OBSERVER: HYDRATE & FIX FORM ---
@@ -314,9 +282,13 @@ window.ProjectFormObserver = new MutationObserver((mutations) => {
 
         // --- EDIT CONTEXT MEMORY CHECK ---
         const editContextStr = sessionStorage.getItem('EditContext_Projects');
-
+        let editContextProjects = null;
         if (editContextStr) {
-            const context = JSON.parse(editContextStr);
+            try { editContextProjects = JSON.parse(editContextStr); } catch (e) { console.error('EditContext_Projects malformed — ignoring.', e); sessionStorage.removeItem('EditContext_Projects'); }
+        }
+
+        if (editContextProjects && editContextProjects.payload) {
+            const context = editContextProjects;
             const data = context.payload;
 
             let hiddenId = form.querySelector('#projectHiddenId');

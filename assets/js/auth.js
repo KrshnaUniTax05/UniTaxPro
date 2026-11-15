@@ -114,6 +114,16 @@ const UniTaxAuth = {
      * Get active user's effective permissions
      */
     GetEffectivePermissions() {
+        // SERVER-AUTHORITATIVE OVERRIDE
+        // When AuthZ has verified the signed-in user against Firebase RTDB, its
+        // envelope wins over anything stored in localStorage (devtools-safe).
+        try {
+            if (window.UniTaxAuthZ && typeof UniTaxAuthZ.SnapshotPerms === 'function') {
+                const serverPerms = UniTaxAuthZ.SnapshotPerms();
+                if (serverPerms) return serverPerms;
+            }
+        } catch (e) {}
+
         const rawRole = (localStorage.getItem('userrole') || 'user').toLowerCase().replace(/\s+/g, '_');
         const template = this.RoleTemplates[rawRole] || this.RoleTemplates['operator'] || this.RoleTemplates['viewer'];
         
@@ -242,6 +252,7 @@ const UniTaxAuth = {
         if (clean === 'dashboard') return true;
         if (clean.startsWith('settings')) return true;
         if (clean.startsWith('utilities/profile') || clean.startsWith('utilities/notification') || clean.startsWith('utilities/aboutus')) return true;
+        if (clean === 'utilities/list-show' || clean.startsWith('utilities/list-show')) return true;
         if (clean === 'transactions/edit' || clean.startsWith('transactions/edit')) return true;
         if (clean === 'help/article' || clean.startsWith('help/article')) return true;
         if (clean.startsWith('help') || clean.includes('help')) return true;

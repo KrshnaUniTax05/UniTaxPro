@@ -100,7 +100,7 @@ window.CompanyManager = {
         dataArray.forEach((record) => {
             if (!record || typeof record !== 'object') return;
             const id = record.ID || record.id;
-            const encodedData = encodeURIComponent(JSON.stringify(record));
+            const encodedData = encodeURIComponent(JSON.stringify(record)).replace(/'/g, '%27');
             const gstin = record.GSTIN || record.gstin || '-';
             const state = record.Company_State || record.companyState || record.state || '-';
             
@@ -138,7 +138,8 @@ window.CompanyManager = {
     },
 
     TriggerEdit(recordId, encodedData) {
-        const data = JSON.parse(decodeURIComponent(encodedData));
+        let data = {};
+        try { data = JSON.parse(decodeURIComponent(encodedData)); } catch (e) { console.error('Edit payload decode failed', e); return; }
         sessionStorage.setItem('EditContext_Companies', JSON.stringify({ id: recordId, payload: data }));
 
         if (typeof App !== 'undefined' && App.Router) App.Router('masters/company-cw');
@@ -265,9 +266,13 @@ window.CompanyFormObserver = new MutationObserver((mutations) => {
 
         // --- EDIT CONTEXT MEMORY CHECK ---
         const editContextStr = sessionStorage.getItem('EditContext_Companies');
-
+        let editContext = null;
         if (editContextStr) {
-            const context = JSON.parse(editContextStr);
+            try { editContext = JSON.parse(editContextStr); } catch (e) { console.error('EditContext_Companies malformed — ignoring.', e); sessionStorage.removeItem('EditContext_Companies'); }
+        }
+
+        if (editContext && editContext.payload) {
+            const context = editContext;
             const data = context.payload;
 
             let hiddenId = form.querySelector('#companyHiddenId');

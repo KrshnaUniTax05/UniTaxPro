@@ -199,7 +199,7 @@ window.ReconcileOS = {
         
         try {
             const data = await API.Fetch(endpoint);
-            console.log(`Fetched from ${endpoint}:`, data);
+
             
             this.Data = Object.entries(data || {}).map(([k, v]) => {
                 if (!v) return null;
@@ -278,6 +278,12 @@ window.ReconcileOS = {
         tbody.innerHTML = list.map(item => {
             const isRec = item.meta.ReconcilationStatus === "true";
             const rowClass = isRec ? 'row-reconciled' : 'row-unreconciled';
+            const jsSafeFormId = String(item.formId || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            const jsSafeKey = String(item.key || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            const attrSafeFormId = jsSafeFormId.replace(/"/g, '&quot;');
+            const attrSafeKey = jsSafeKey.replace(/"/g, '&quot;');
+            const qFormId = encodeURIComponent(String(item.formId || ''));
+            const qKey = encodeURIComponent(String(item.key || ''));
             const statusBadge = isRec 
                 ? '<span class="status-badge status-badge-reconciled"><i class="bi bi-check-circle-fill"></i> Reconciled</span>'
                 : '<span class="status-badge status-badge-unreconciled"><i class="bi bi-clock-fill"></i> Pending</span>';
@@ -290,9 +296,9 @@ window.ReconcileOS = {
             return `
            <tr id="row-${item.key}" 
                 class="${rowClass}" 
-                data-form-id="${item.formId}" 
-                data-key="${item.key}" 
-                ondblclick="localStorage.setItem('editContext', JSON.stringify({ type: '${item.formId}', key: '${item.key}', returnRoute: 'reports/reconcilation' })); App.Router('transactions/edit?type=${item.formId}&key=${item.key}');" 
+                data-form-id="${attrSafeFormId}" 
+                data-key="${attrSafeKey}" 
+                ondblclick="localStorage.setItem('editContext', JSON.stringify({ type: '${jsSafeFormId}', key: '${jsSafeKey}', returnRoute: 'reports/reconcilation' })); App.Router('transactions/edit?type=${qFormId}&key=${qKey}');" 
                 style="cursor: pointer;">
                 <td class="font-mono text-primary fw-bold">${item.posting_date || item.date || '---'}</td>
                 <td class="fw-bold text-dark">${item.doc_no || item.Invoice || item.voucher_no || '---'}</td>

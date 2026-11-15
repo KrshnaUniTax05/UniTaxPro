@@ -98,7 +98,7 @@ window.StockManager = {
         dataArray.forEach((record) => {
             if (!record || typeof record !== 'object') return;
             const id = record.ID || record.id;
-            const encodedData = encodeURIComponent(JSON.stringify(record));
+            const encodedData = encodeURIComponent(JSON.stringify(record)).replace(/'/g, '%27');
             const itemCode = record.Stock_Code || record.stockCode || record.itemCode || '-';
             const itemCompany = record.CompanyName || record['companyName & CompanyCode'] || '-';
             const itemunit = record.ItemUnit || record.unit || '-';
@@ -144,7 +144,8 @@ window.StockManager = {
     },
 
     TriggerEdit(recordId, encodedData) {
-        const data = JSON.parse(decodeURIComponent(encodedData));
+        let data = {};
+        try { data = JSON.parse(decodeURIComponent(encodedData)); } catch (e) { console.error('Edit payload decode failed', e); return; }
         sessionStorage.setItem('EditContext_Stock', JSON.stringify({ id: recordId, payload: data }));
 
         if (typeof App !== 'undefined' && App.Router) App.Router('masters/stock-cw');
@@ -273,9 +274,13 @@ window.StockFormObserver = new MutationObserver((mutations) => {
 
         // --- EDIT CONTEXT MEMORY CHECK ---
         const editContextStr = sessionStorage.getItem('EditContext_Stock');
-
+        let editContextStock = null;
         if (editContextStr) {
-            const context = JSON.parse(editContextStr);
+            try { editContextStock = JSON.parse(editContextStr); } catch (e) { console.error('EditContext_Stock malformed — ignoring.', e); sessionStorage.removeItem('EditContext_Stock'); }
+        }
+
+        if (editContextStock && editContextStock.payload) {
+            const context = editContextStock;
             const data = context.payload;
 
             let hiddenId = form.querySelector('#stockHiddenId');

@@ -25,18 +25,64 @@ const App = {
         this._isInitialized = true;
 
         try {
-            // 1. Synchronize State from Local Storage
-            this.State.userId = localStorage.getItem('workspaceUserId') || localStorage.getItem('userloginid');
-            this.State.workspaceUserId = localStorage.getItem('workspaceUserId') || localStorage.getItem('userloginid');
-            this.State.currentuserId = localStorage.getItem('userloginid');
-            this.State.userName = localStorage.getItem('userName') || 'User';
-            this.State.userRole = localStorage.getItem('userrole') || 'operator';
-            this.State.workspaceId = localStorage.getItem('workspaceId') || '';
+            // 2. Authentication Guard — integrity-verified session cache
+            let keepSignedIn = localStorage.getItem('keepSignedIn') === 'true';
+            let verifiedSession = null;
+            try {
+                if (window.SecureSession) {
+                    verifiedSession = await window.SecureSession.load();
+                }
+            } catch (e) { verifiedSession = null; }
 
-            // 2. Authentication Guard
-            if (!this.State.userId) {
-                window.location.href = 'login.html';
+            if (keepSignedIn && verifiedSession) {
+                // Trust the cache, but restore it from the signed body so localStorage tampering is ignored.
+                const s = verifiedSession;
+                localStorage.setItem('workspaceUserId', s.workspaceUserId || s.userId || '');
+                localStorage.setItem('workspaceId', s.workspaceId || '');
+                localStorage.setItem('userloginid', s.userId || '');
+                localStorage.setItem('userName', s.userName || localStorage.getItem('userName') || 'User');
+                localStorage.setItem('userrole', s.role || localStorage.getItem('userrole') || 'operator');
+                if (s.designation) localStorage.setItem('designation', s.designation);
+                if (s.useremail_we !== undefined) localStorage.setItem('useremail_we', s.email || '');
+                if (s.masterControl) localStorage.setItem('masterControl', s.masterControl);
+                if (s.userType) localStorage.setItem('userType', s.userType);
+                if (s.userSource) localStorage.setItem('userSource', s.userSource);
+                if (s.postingLimit !== undefined) localStorage.setItem('postingLimit', s.postingLimit);
+                if (s.canPostDirect !== undefined) localStorage.setItem('canPostDirect', String(!!s.canPostDirect));
+                if (s.canBackdate !== undefined) localStorage.setItem('canBackdate', String(!!s.canBackdate));
+                if (s.allowedProfitCenter) localStorage.setItem('allowedProfitCenter', s.allowedProfitCenter);
+                if (s.allowedLedger) localStorage.setItem('allowedLedger', s.allowedLedger);
+                if (s.assignedManagerId !== undefined) localStorage.setItem('assignedManagerId', s.assignedManagerId);
+                if (s.assignedManagerName !== undefined) localStorage.setItem('assignedManagerName', s.assignedManagerName);
+                // Reload the identity object used throughout the app
+                this.State.userId = localStorage.getItem('workspaceUserId') || localStorage.getItem('userloginid');
+                this.State.workspaceUserId = localStorage.getItem('workspaceUserId') || localStorage.getItem('userloginid');
+                this.State.currentuserId = localStorage.getItem('userloginid');
+                this.State.userName = localStorage.getItem('userName') || 'User';
+                this.State.userRole = localStorage.getItem('userrole') || 'operator';
+                this.State.workspaceId = localStorage.getItem('workspaceId') || '';
+            } else if (keepSignedIn && !verifiedSession) {
+                // Cache was tampered with or expired — wipe everything and force re-auth.
+                try { window.SecureSession.clear(); } catch (e) {}
+                ['workspaceUserId','workspaceId','userloginid','userName','useremail_we','designation','userrole',
+                 'workspaceOwnerName','masterControl','userType','userSource','postingLimit','canPostDirect','canBackdate',
+                 'allowedProfitCenter','allowedLedger','assignedManagerId','assignedManagerName','userVoucherApprovalFlow',
+                 'userPermissionsOverride','workspacePostingPeriod','keepSignedIn'].forEach(k => localStorage.removeItem(k));
+                sessionStorage.clear();
+                window.location.href = 'login.html?timeout=1&reason=' + encodeURIComponent('Session expired or was tampered with. Please sign in again.');
                 return;
+            } else {
+                // Normal boot without "Keep me signed in" — session storage carry-over
+                if (!localStorage.getItem('userloginid')) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                this.State.userId = localStorage.getItem('workspaceUserId') || localStorage.getItem('userloginid');
+                this.State.workspaceUserId = localStorage.getItem('workspaceUserId') || localStorage.getItem('userloginid');
+                this.State.currentuserId = localStorage.getItem('userloginid');
+                this.State.userName = localStorage.getItem('userName') || 'User';
+                this.State.userRole = localStorage.getItem('userrole') || 'operator';
+                this.State.workspaceId = localStorage.getItem('workspaceId') || '';
             }
 
             // 3. Global Error Boundary
@@ -56,6 +102,9 @@ const App = {
                 }
                 if (window.UniTaxOperations && typeof UniTaxOperations.InstallRealtimeSync === 'function') {
                     UniTaxOperations.InstallRealtimeSync();
+                }
+                if (window.UniTaxAuthZ && typeof UniTaxAuthZ.Install === 'function') {
+                    UniTaxAuthZ.Install();
                 }
             } catch (syncErr) {
                 console.warn('[App] Live permission / operations sync non-critical error:', syncErr);
@@ -531,6 +580,7 @@ const App = {
             logoutBtn.onclick = (e) => {
                 e.preventDefault();
                 if (confirm("Sign out of UniTax Pro?")) {
+                    try { if (window.SecureSession) window.SecureSession.clear(); } catch (e) {}
                     localStorage.clear();
                     sessionStorage.clear();
                     window.location.href = 'login.html';
@@ -608,7 +658,7 @@ const App = {
             const iconEl = document.getElementById('notifyIcon');
 
             if (!box) {
-                console.log(`[Notification ${type}] ${title}: ${message}`);
+                if (type === 'danger') console.error(`${title}: ${message}`);
                 return;
             }
 
@@ -1022,23 +1072,23 @@ NotificationEngine = {
             }
 
             // Default fallback master promotion
-            setTimeout(async () => {
-                if (this._items.length === 0) {
-                    const defaultNotice = {
-                        id: 'promo-welcome',
-                        category: 'promotion',
-                        isPromotion: true,
-                        title: 'Platform Feature Release: Governance & Approval Hub Active',
-                        subtitle: 'Review multi-tier approval matrix, pending voucher drafts, and initiate requests.',
-                        author: 'Master Platform Admin',
-                        icon: 'bi-megaphone-fill text-primary',
-                        time: 'Just now',
-                        route: 'reports/approvalmanagementsystem',
-                        tab: 'vouchers-view'
-                    };
-                    this.MergeNotifications([defaultNotice]);
-                }
-            }, 1200);
+            // setTimeout(async () => {
+            //     if (this._items.length === 0) {
+            //         const defaultNotice = {
+            //             id: 'promo-welcome',
+            //             category: 'promotion',
+            //             isPromotion: true,
+            //             title: 'Platform Feature Release: Governance & Approval Hub Active',
+            //             subtitle: 'Review multi-tier approval matrix, pending voucher drafts, and initiate requests.',
+            //             author: 'Master Platform Admin',
+            //             icon: 'bi-megaphone-fill text-primary',
+            //             time: 'Just now',
+            //             route: 'reports/approvalmanagementsystem',
+            //             tab: 'vouchers-view'
+            //         };
+            //         this.MergeNotifications([defaultNotice]);
+            //     }
+            // }, 1200);
 
         } catch (e) {
             console.warn('NotificationEngine init error:', e);

@@ -841,6 +841,17 @@
                             <div class="col-md-3"><label class="form-check small"><input type="checkbox" class="form-check-input" value="reject" id="perm_act_reject"> Reject Requests</label></div>
                             <div class="col-md-3"><label class="form-check small"><input type="checkbox" class="form-check-input" value="export" id="perm_act_export"> Export Data (CSV/Excel)</label></div>
                             <div class="col-md-3"><label class="form-check small"><input type="checkbox" class="form-check-input" value="print" id="perm_act_print"> Print Invoices / Statements</label></div>
+                            <div class="col-md-9">
+                                <label class="form-check small p-2 border rounded bg-white d-flex align-items-start gap-2 mb-0">
+                                    <input type="checkbox" class="form-check-input mt-1" id="perm_approve_override">
+                                    <span>
+                                        <strong>Approve / Reassign outside the hierarchy (Administrative override)</strong>
+                                        <span class="d-block text-muted" style="font-size: 10.5px;">
+                                            Off by default. When off, this user can approve or reassign <em>only</em> the documents assigned to them at the active hierarchy level — not even administrators can act on another approver's turn.
+                                        </span>
+                                    </span>
+                                </label>
+                            </div>
                         </div>
 
                         <!-- 3. Sensitive Field Restrictions -->
@@ -1257,23 +1268,11 @@
                         <span class="small text-muted">Tracking logins, record mutations, deletions, out-of-scope posting rejections, and administrative overrides.</span>
                         <button class="btn btn-outline-secondary btn-sm" onclick="loadAuditLogs()"><i class="bi bi-arrow-clockwise me-1"></i> Refresh Logs</button>
                     </div>
-                    <div class="table-responsive border rounded bg-white">
-                        <table class="table table-hover align-middle mb-0 master-print-table">
-                            <thead class="table-light text-muted small">
-                                <tr>
-                                    <th class="ps-3 py-2">Timestamp</th>
-                                    <th>Actor</th>
-                                    <th>Action</th>
-                                    <th>Module</th>
-                                    <th>Record ID</th>
-                                    <th>Outcome</th>
-                                    <th>Details</th>
-                                </tr>
-                            </thead>
-                            <tbody id="auditLogsBody">
-                                <tr><td colspan="7" class="text-center py-4 text-muted">Loading audit history...</td></tr>
-                            </tbody>
-                        </table>
+                    <div class="p-4 text-center border rounded bg-white" id="auditLogsPlaceholder">
+                        <i class="bi bi-layout-sidebar-inset fs-1 text-primary opacity-75 mb-2 d-block"></i>
+                        <h6 class="fw-bold mb-1">Security Audit Trail — UniTax List Viewer</h6>
+                        <p class="text-muted small mb-3">Audit events open in the routed list window (<code>utilities/list-show</code>) with column sort and CSV export.</p>
+                        <div class="small text-muted" id="auditLogsStatus">Loading audit events…</div>
                     </div>
                 </div>
 
@@ -1492,6 +1491,85 @@
         if (editOpt) editOpt.disabled = true;
     }
 
+    // =====================================================================
+    // SERVER-AUTHORITATIVE ADMIN GATE
+    // Every mutation below re-verifies the signed-in identity, role and
+    // permission matrix against Firebase RTDB. A role edited in devtools
+    // therefore cannot provision users, change rights or purge records.
+    // =====================================================================
+    const ROLE_RANK = {
+        super_administrator: 100,
+        administrator: 80,
+        co_useradmin: 60,
+        manager: 40,
+        approver: 35,
+        custom: 25,
+        operator: 20,
+        auditor: 15,
+        viewer: 10,
+        guest: 5
+    };
+    const roleRank = (r) => ROLE_RANK[String(r || '').trim().toLowerCase()] || 0;
+
+    window._adminPerms = function () {
+        try {
+            return (window.UniTaxAuthZ && typeof UniTaxAuthZ.SnapshotPerms === 'function')
+                ? UniTaxAuthZ.SnapshotPerms()
+                : null;
+        } catch (e) {
+            return null;
+        }
+    };
+
+    window._adminDeny = function (title, msg) {
+        if (window.App && App.UI && typeof App.UI.Notify === 'function') {
+            App.UI.Notify(title || 'Action Blocked', msg, 'danger');
+        } else {
+            alert(msg);
+        }
+        return false;
+    };
+
+    /**
+     * Verify an administrative action against the server before writing.
+     * Fails closed when AuthZ is unavailable or the role is not an admin.
+     */
+    window._adminGuard = async function (action, ctx) {
+        if (!window.UniTaxAuthZ || typeof UniTaxAuthZ.Require !== 'function') {
+            return window._adminDeny('Verification Unavailable',
+                'Server permission verification is unavailable. Reconnect and retry — no changes were saved.');
+        }
+        const verdict = await UniTaxAuthZ.Require(action || 'admin', Object.assign({
+            module: 'utilities/useradmincontrolpanel',
+            label: 'administrative record'
+        }, ctx || {}));
+        if (!verdict || verdict.ok !== true) {
+            return window._adminDeny('Authorization Denied',
+                (verdict && verdict.message) || 'Your assigned role does not permit this action.');
+        }
+        if (!verdict.perms || verdict.perms.isAdmin !== true) {
+            return window._adminDeny('Authorization Denied',
+                'Only a workspace Administrator may perform user administration.');
+        }
+        return true;
+    };
+
+    /**
+     * Privilege-escalation guard: the actor may never assign or modify a role
+     * whose rank exceeds their own verified server role.
+     */
+    window._adminCanManageRole = function (targetRole) {
+        const perms = window._adminPerms();
+        if (!perms) return true; // the async guard already fails closed
+        if (perms.role === 'super_administrator') return true;
+        return roleRank(targetRole) <= roleRank(perms.role);
+    };
+
+    window._adminRoleDenied = function (targetRole) {
+        return window._adminDeny('Privilege Escalation Blocked',
+            `You cannot assign the "${targetRole}" role — it exceeds your own verified authority.`);
+    };
+
     // 2. State & Variables
     const wsUserId = localStorage.getItem('workspaceUserId') || localStorage.getItem('userloginid');
     const wsLabel = document.getElementById('admin-ws-id');
@@ -1610,7 +1688,7 @@
             isWorkspaceMultiUserLicensed = wsSettings.multiUserLicensed === true || ownerData.multiUserLicensed === true || wsSettings.workspacePlan === 'multi_user' || wsSettings.workspacePlan === 'enterprise';
 
             const banner = document.getElementById('unlicensed-plan-banner');
-            const createBtn = document.getElementById('btn-tab-create');
+            const createBtn = document.getElementById('btn-tab-user-create');
             if (banner) banner.classList.toggle('d-none', isWorkspaceMultiUserLicensed);
             if (createBtn) {
                 if (!isWorkspaceMultiUserLicensed) {
@@ -1936,6 +2014,10 @@
             App.UI.Notify('Action Blocked', 'Co-User Admin cannot provision primary Administrator accounts.', 'danger');
             return;
         }
+
+        // Server verification + privilege-escalation guard
+        if (!(await window._adminGuard('create', { label: 'workspace user', recordId: email }))) return;
+        if (!window._adminCanManageRole(role)) { window._adminRoleDenied(role); return; }
 
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Provisioning...';
@@ -2307,6 +2389,17 @@
             return;
         }
 
+        // Server verification + privilege-escalation guard
+        if (!(await window._adminGuard('update', { label: 'user record', recordId: activeEditMemberKey }))) return;
+        if (!window._adminCanManageRole(role)) { window._adminRoleDenied(role); return; }
+        {
+            const priorRole = (membersData[activeEditMemberKey] || {}).role || (role === 'custom' ? 'custom' : '');
+            if (priorRole && !window._adminCanManageRole(priorRole)) {
+                window._adminRoleDenied(priorRole);
+                return;
+            }
+        }
+
         const postingLimit = parseFloat(document.getElementById('edit_posting_limit')?.value) || 0;
         const canPostDirect = document.getElementById('edit_direct_post')?.value === 'true';
         const canBackdate = document.getElementById('edit_backdate')?.value === 'true';
@@ -2392,6 +2485,12 @@
             return;
         }
 
+        if (!(await window._adminGuard('update', { label: 'user status', recordId: key }))) return;
+        {
+            const targetRole = (membersData[key] || {}).role;
+            if (targetRole && !window._adminCanManageRole(targetRole)) { window._adminRoleDenied(targetRole); return; }
+        }
+
         try {
             const suspend = String(newStatus).toLowerCase() === 'suspended';
             const patch = suspend
@@ -2421,6 +2520,10 @@
             App.UI.Notify('Action Blocked', 'You cannot remove your own administrator account.', 'danger');
             return;
         }
+
+        // Server verification + privilege-escalation guard
+        if (!(await window._adminGuard('delete', { label: 'workspace member', recordId: key }))) return;
+        if (member.role && !window._adminCanManageRole(member.role)) { window._adminRoleDenied(member.role); return; }
 
         if (confirm(`Remove "${member.name || key}" from workspace?`)) {
             try {
@@ -2521,8 +2624,8 @@
         document.getElementById('matrixUserSubtitle').innerText = `Configuring permissions for ${m.name || key}`;
 
         const overrides = m.permissions || {};
-        const activeModules = overrides.modules || roleTemplate.modules || [];
-        const activeActions = overrides.actions || roleTemplate.actions || [];
+        const activeModules = Array.isArray(overrides.modules) ? overrides.modules : (roleTemplate.modules || []);
+        const activeActions = Array.isArray(overrides.actions) ? overrides.actions : (roleTemplate.actions || []);
         const activeSens = overrides.sensitiveFields || roleTemplate.sensitiveFields || {};
 
         const hasAllModules = activeModules.includes('all');
@@ -2539,6 +2642,10 @@
             const cb = document.getElementById(`perm_act_${act}`);
             if (cb) cb.checked = activeActions.includes(act);
         });
+        if (document.getElementById('perm_approve_override')) {
+            document.getElementById('perm_approve_override').checked =
+                overrides.approveOutsideHierarchy === true || m.approveOutsideHierarchy === true;
+        }
 
         // Sensitive Fields
         document.getElementById('perm_fld_amounts').checked = !!activeSens.showFinancialAmounts;
@@ -2797,6 +2904,13 @@
         const key = document.getElementById('permUserSelect').value;
         if (!key) return;
 
+        // Server verification + privilege-escalation guard
+        if (!(await window._adminGuard('update', { label: 'permission matrix', recordId: key }))) return;
+        {
+            const targetRole = (key === wsUserId) ? 'administrator' : ((membersData[key] || {}).role || '');
+            if (targetRole && !window._adminCanManageRole(targetRole)) { window._adminRoleDenied(targetRole); return; }
+        }
+
         const selectedModules = [];
         document.querySelectorAll('.perm-module-cb:checked').forEach(cb => {
             selectedModules.push(cb.value);
@@ -2920,11 +3034,14 @@
             else if (membersData[assignedManagerId]) assignedManagerName = membersData[assignedManagerId].name || 'Assigned Manager';
         }
         const canViewMetadata = document.getElementById('perm_can_view_metadata')?.value === 'true';
+        // Administrative override (default OFF): permits approve/reassign outside hierarchy.
+        const approveOutsideHierarchy = document.getElementById('perm_approve_override')?.checked === true;
 
         const m = (key === wsUserId) ? { name: 'Owner' } : (membersData[key] || {});
         const perms = {
             modules: selectedModules,
             actions: selectedActions,
+            approveOutsideHierarchy,
             sensitiveFields: sens,
             fieldRestrictions: fieldRules,
             allowedDateFrom: dateFrom,
@@ -3143,6 +3260,7 @@
         if (window.UniTaxOperations && typeof UniTaxOperations.AssertWrite === 'function') {
             if (!UniTaxOperations.AssertWrite('restore', 'voucher')) return;
         }
+        if (!(await window._adminGuard('update', { label: 'voucher restore', recordId: key }))) return;
         if (!confirm(`Restore document #${docNo || key} back to active financial books? It will immediately reappear in General Ledger, reports, and transaction views.`)) return;
 
         try {
@@ -3172,6 +3290,7 @@
         if (window.UniTaxOperations && typeof UniTaxOperations.AssertWrite === 'function') {
             if (!UniTaxOperations.AssertWrite('delete', 'voucher')) return;
         }
+        if (!(await window._adminGuard('delete', { label: 'voucher purge', recordId: key }))) return;
         if (window.UniTaxAuth && typeof UniTaxAuth.CanPerformAction === 'function' && !UniTaxAuth.CanPerformAction('delete')) {
             App.UI.Notify('Permission Denied', 'You do not have delete rights.', 'danger');
             return;
@@ -3221,36 +3340,45 @@
     };
 
     window.loadAuditLogs = async function() {
-        const tbody = document.getElementById('auditLogsBody');
+        const statusEl = document.getElementById('auditLogsStatus');
         const countEl = document.getElementById('statAuditCount');
-        if (!tbody) return;
-
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Loading audit events...</td></tr>`;
+        if (statusEl) statusEl.innerText = 'Loading audit events…';
 
         try {
             const logs = await UniTaxAudit.FetchLogs(100);
             if (countEl) countEl.innerText = logs.length;
 
-            if (logs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">No audit events recorded yet.</td></tr>`;
-                return;
-            }
+            const rows = (logs || []).map((l, i) => ({
+                key: String(l.id || l.eventId || l._id || i),
+                formId: '',
+                timestamp: Utils.FormatDateTime(l.timestamp),
+                actor: `${l.actorName || l.actorId || ''}`,
+                action: l.action || '',
+                module: l.module || '',
+                record: l.recordId || '-',
+                outcome: l.outcome || '',
+                details: l.details || ''
+            }));
 
-            tbody.innerHTML = logs.map(l => {
-                const outcomeClass = l.outcome === 'SUCCESS' ? 'text-success' : 'text-danger';
-                return `
-                <tr>
-                    <td class="ps-3 font-mono small text-muted">${Utils.FormatDateTime(l.timestamp)}</td>
-                    <td class="small fw-bold text-dark">${Utils.EscapeHTML(l.actorName || l.actorId)}</td>
-                    <td><span class="badge bg-light text-dark border font-mono">${Utils.EscapeHTML(l.action)}</span></td>
-                    <td class="small">${Utils.EscapeHTML(l.module)}</td>
-                    <td class="font-mono small">${Utils.EscapeHTML(l.recordId || '-')}</td>
-                    <td class="small fw-bold ${outcomeClass}">${Utils.EscapeHTML(l.outcome)}</td>
-                    <td class="small text-muted">${Utils.EscapeHTML(l.details)}</td>
-                </tr>`;
-            }).join('');
+            if (statusEl) statusEl.innerText = `${rows.length} event(s) — opening List Viewer…`;
+            if (window.UniTaxList && typeof window.UniTaxList.OpenWindow === 'function') {
+                window.UniTaxList.OpenWindow(rows, {
+                    title: 'Security Audit Trail',
+                    meta: {
+                        columns: [
+                            { key: 'timestamp', label: 'Timestamp', width: 170 },
+                            { key: 'actor', label: 'Actor' },
+                            { key: 'action', label: 'Action', width: 160 },
+                            { key: 'module', label: 'Module', width: 140 },
+                            { key: 'record', label: 'Record ID', width: 150 },
+                            { key: 'outcome', label: 'Outcome', width: 110 },
+                            { key: 'details', label: 'Details' }
+                        ]
+                    }
+                });
+            }
         } catch (err) {
-            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-danger">Failed to load audit logs.</td></tr>`;
+            if (statusEl) statusEl.innerHTML = '<span class="text-danger fw-bold"><i class="bi bi-exclamation-triangle me-1"></i>Failed to load audit logs.</span>';
         }
     };
 
@@ -3277,6 +3405,7 @@
 
     window.saveGlobalPostingPeriod = async function(e) {
         if (e) e.preventDefault();
+        if (!(await window._adminGuard('update', { label: 'workspace posting period' }))) return;
         const pFrom = document.getElementById('ded_period_from').value;
         const pTo = document.getElementById('ded_period_to').value;
         const pEnforce = document.getElementById('ded_period_enforce').checked;
@@ -3329,6 +3458,8 @@
         const periodEnforce = document.getElementById('ws_period_enforce').checked;
 
         if (!name) return;
+
+        if (!(await window._adminGuard('update', { label: 'workspace profile' }))) return;
 
         try {
             const periodPayload = {
@@ -3598,8 +3729,8 @@
             const formInfo = typeLabels[v.formId] || { name: v.formId, badge: 'bg-light text-dark border' };
             const reqAmount = v.amount ? v.amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
             const dateStr = v.date ? new Date(v.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '---';
-            const canApproveAdmin = !(window.UniTaxAuth && typeof UniTaxAuth.CanPerformAction === 'function') || UniTaxAuth.CanPerformAction('approve');
-            const canRejectAdmin = !(window.UniTaxAuth && typeof UniTaxAuth.CanPerformAction === 'function') || UniTaxAuth.CanPerformAction('reject');
+            const canApproveAdmin = (window._adminApprovalOverride ? window._adminApprovalOverride() : false) || (window.UniTaxAuth && typeof UniTaxAuth.CanPerformAction === 'function' && UniTaxAuth.CanPerformAction('approve'));
+            const canRejectAdmin = (window._adminApprovalOverride ? window._adminApprovalOverride() : false) || (window.UniTaxAuth && typeof UniTaxAuth.CanPerformAction === 'function' && UniTaxAuth.CanPerformAction('reject'));
             const canDeleteAdmin = !(window.UniTaxAuth && typeof UniTaxAuth.CanPerformAction === 'function') || UniTaxAuth.CanPerformAction('delete');
 
             return `
@@ -3708,6 +3839,22 @@
         return false;
     }
 
+    /**
+     * Administrative approval override is opt-in (default OFF).
+     * Without it, even an administrator may not approve/reject a document that
+     * belongs to another approver's hierarchy level.
+     */
+    window._adminApprovalOverride = function () {
+        try {
+            const sp = (window.UniTaxAuthZ && typeof UniTaxAuthZ.SnapshotPerms === 'function')
+                ? UniTaxAuthZ.SnapshotPerms()
+                : null;
+            return !!(sp && sp.approveOutsideHierarchy === true);
+        } catch (e) {
+            return false;
+        }
+    };
+
     window.quickApproveAdminVoucher = async function(formId, txnKey, reqId, docNo) {
         if (!confirm(`Approve voucher ${docNo || txnKey} (${formId})? As Administrator, this immediately fully approves and posts it to the General Ledger for all users.`)) return;
 
@@ -3716,6 +3863,13 @@
         }
         if (window.UniTaxAuth && typeof UniTaxAuth.CanPerformAction === 'function' && !UniTaxAuth.CanPerformAction('approve')) {
             App.UI.Notify('Permission Denied', 'You do not have approval rights.', 'danger');
+            return;
+        }
+        if (!(await window._adminGuard('approve', { label: 'voucher approval', recordId: reqId || txnKey }))) return;
+        if (!window._adminApprovalOverride()) {
+            App.UI.Notify('Hierarchy Locked',
+                'Only the assignee at the active approval level may verify this document. Enable "Approve / Reassign outside the hierarchy" in the permission matrix for administrative override.',
+                'danger');
             return;
         }
 
@@ -3843,6 +3997,7 @@
             App.UI.Notify('Permission Denied', 'You do not have delete rights.', 'danger');
             return;
         }
+        if (!(await window._adminGuard('delete', { label: 'voucher deletion', recordId: reqId || txnKey }))) return;
         if (!confirm(`Permanently delete voucher ${docNo || txnKey} for ALL users?`)) return;
 
         const currentUserId = String(localStorage.getItem('userloginid') || wsUserId || 'Administrator').replace(/^#/, '');
@@ -3925,6 +4080,13 @@
         }
         if (window.UniTaxAuth && typeof UniTaxAuth.CanPerformAction === 'function' && !UniTaxAuth.CanPerformAction('reject')) {
             App.UI.Notify('Permission Denied', 'You do not have rejection rights.', 'danger');
+            return;
+        }
+        if (!(await window._adminGuard('reject', { label: 'voucher rejection', recordId: reqId || txnKey }))) return;
+        if (!window._adminApprovalOverride()) {
+            App.UI.Notify('Hierarchy Locked',
+                'Only the assignee at the active approval level may return this document. Enable "Approve / Reassign outside the hierarchy" in the permission matrix for administrative override.',
+                'danger');
             return;
         }
 

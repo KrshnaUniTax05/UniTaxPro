@@ -1,0 +1,21 @@
+<!-- UniTax List Viewer -->
+<!-- Modal shell for the JSON line-item list. The JS module (assets/js/list-viewer.js)
+     injects this shell when UniTaxList.Show/Append is invoked from any function. -->
+<div class="modal fade" id="utListViewerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 960px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="utListViewerTitle">List</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="utListViewerBody" style="background:#fff;">
+                <div class="text-center text-muted py-5"><i class="bi bi-inbox fs-4 d-block mb-2"></i>No list data.</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="utListViewerExportJson"><i class="bi bi-file-earmark-code me-1"></i>Export JSON</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="utListViewerPrint"><i class="bi bi-printer me-1"></i>Print</button>
+                <button type="button" class="btn btn-primary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

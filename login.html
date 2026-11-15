@@ -7,11 +7,11 @@
     <link rel="icon" type="image/png" href="assets/img/logo-circle.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
-    :root { 
-        --brand-color: #0052ea; 
+    :root {
+        --brand-color: #0052ea;
         --brand-hover: #003eb3;
         --text-dark: #1e293b;
         --text-muted: #64748b;
@@ -20,92 +20,93 @@
         --border-color: #e2e8f0;
     }
 
-    body { 
-        font-family: 'Inter', system-ui, -apple-system, sans-serif; 
-        font-feature-settings: "tnum" 1, "cv02" 1, "cv03" 1, "cv04" 1;
-        line-height: 1.45;
-        -webkit-font-smoothing: antialiased;
-        background: var(--bg-body); 
+    body {
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+        background: var(--bg-body);
         background-image: radial-gradient(circle at top right, rgba(0, 82, 234, 0.05), transparent 40%),
                           radial-gradient(circle at bottom left, rgba(0, 82, 234, 0.05), transparent 40%);
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        min-height: 100vh; 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
         margin: 0;
     }
-    
-    .auth-container { 
-        width: 100%; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        padding: 20px; 
-    }
 
-    .auth-card { 
-        display: flex; 
-        width: 100%; 
-        max-width: 1000px; 
-        height: 650px; 
+    .auth-container { width: 100%; display: flex; align-items: center; justify-content: center; padding: 20px; }
+
+    .auth-card {
+        display: flex;
+        width: 100%;
+        max-width: 1000px;
+        height: 650px;
         max-height: 90vh;
-        background: white; 
-        border-radius: 24px; 
-        overflow: hidden; 
+        background: white;
+        border-radius: 24px;
+        overflow: hidden;
         box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.08), 0 0 10px rgba(0,0,0,0.02);
         border: 1px solid rgba(255,255,255,0.6);
     }
 
-    /* Branding Side */
-    .auth-side-brand { 
-        width: 45%; 
-        background: linear-gradient(145deg, var(--brand-color) 0%, #001e60 100%); 
-        padding: 48px; 
-        display: flex; 
-        flex-direction: column; 
-        justify-content: space-between; 
+    .auth-side-brand {
+        width: 45%;
+        background: linear-gradient(145deg, var(--brand-color) 0%, #001e60 100%);
+        padding: 48px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
         color: white;
         position: relative;
     }
 
-    /* Form Side */
-    .auth-side-form { 
+    .auth-side-form {
         width: 55%;
-        height: auto; 
-        padding: 30px 60px; 
-        position: relative; 
+        height: auto;
+        padding: 30px 60px;
+        position: relative;
         overflow-y: auto;
         scrollbar-width: thin;
         scrollbar-color: #cbd5e1 transparent;
     }
-
     .auth-side-form::-webkit-scrollbar { width: 6px; }
     .auth-side-form::-webkit-scrollbar-track { background: transparent; }
     .auth-side-form::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
 
     .nav-pills-custom { display: flex; gap: 10px; margin-bottom: 30px; }
-    .nav-pills-custom .nav-link { 
-        color: var(--text-muted); font-weight: 600; border-radius: 12px; 
+    .nav-pills-custom .nav-link {
+        color: var(--text-muted); font-weight: 600; border-radius: 12px;
         padding: 12px 24px; transition: all 0.3s ease; border: 1px solid transparent; cursor: pointer;
     }
-    .nav-pills-custom .nav-link.active { 
+    .nav-pills-custom .nav-link.active {
         background: var(--bg-body); color: var(--brand-color); border-color: var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
 
     .form-label { font-weight: 600; color: var(--text-dark); font-size: 0.875rem; margin-bottom: 8px; display: block; }
-    .form-control { 
-        border-radius: 12px; padding: 14px 16px; border: 1px solid var(--border-color); font-size: 0.95rem; 
+    .form-control {
+        border-radius: 12px; padding: 14px 16px; border: 1px solid var(--border-color); font-size: 0.95rem;
         transition: all 0.25s ease; background: var(--bg-input); width: 100%; box-sizing: border-box; color: var(--text-dark);
     }
     .form-control::placeholder { color: #94a3b8; }
     .form-control:focus { background: white; border-color: var(--brand-color); box-shadow: 0 0 0 4px rgba(0, 82, 234, 0.1); outline: none; }
 
-    .btn-auth { 
-        background: var(--brand-color); color: white; border: none; border-radius: 12px; padding: 15px; 
+    .btn-auth {
+        background: var(--brand-color); color: white; border: none; border-radius: 12px; padding: 15px;
         font-weight: 600; font-size: 1rem; width: 100%; transition: all 0.3s ease; margin-top: 10px; cursor: pointer;
     }
     .btn-auth:hover { background: var(--brand-hover); transform: translateY(-2px); box-shadow: 0 8px 20px -6px rgba(0, 82, 234, 0.4); }
     .btn-auth:active { transform: translateY(0); }
+
+    .consent-check { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 16px; padding: 10px 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 12px; }
+    .consent-check input[type="checkbox"] { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--brand-color); cursor: pointer; flex-shrink: 0; }
+    .consent-check label { font-size: 0.78rem; color: var(--text-muted); line-height: 1.5; cursor: pointer; margin: 0; }
+    .consent-check a { color: var(--brand-color); font-weight: 600; text-decoration: none; }
+    .consent-check a:hover { text-decoration: underline; }
+
+    .otp-actions, .btn-stack { display: grid; gap: 12px; margin-top: 14px; }
+    .otp-actions .btn-auth, .btn-stack .btn-auth { margin-top: 0; }
+    .btn-auth-ghost-primary { background: transparent; color: var(--brand-color); border: 1px solid var(--border-color); }
+    .btn-auth-ghost-primary:hover { background: #eef4ff; transform: none; box-shadow: none; }
+    .btn-auth-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); }
+    .btn-auth-ghost:hover { background: var(--bg-input); transform: none; box-shadow: none; }
 
     .input-icon-wrapper { position: relative; margin-bottom: 20px; }
     .input-icon-wrapper i { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; cursor: pointer; transition: color 0.2s ease; }
@@ -159,17 +160,13 @@
                             <input type="email" name="email" class="form-control" placeholder="name@company.com" autocomplete="email" required>
                         </div>
                         <div class="mb-4">
-                            <label class="form-label">Password</label>
-                            <div class="input-icon-wrapper">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label mb-0">Password</label>
+                                <a href="javascript:void(0)" onclick="switchView('forgot')" class="small fw-semibold text-decoration-none" style="color: var(--brand-color);">Forgot password?</a>
+                            </div>
+                            <div class="input-icon-wrapper" style="margin-bottom: 0;">
                                 <input type="password" name="password" class="form-control pass-field" placeholder="••••••••" autocomplete="current-password" required>
                                 <i class="bi bi-eye-slash toggle-pass" onclick="togglePass(this)"></i>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center mt-2">
-                                <div class="form-check mb-0">
-                                    <input class="form-check-input" type="checkbox" id="keepSignedIn" name="keepSignedIn">
-                                    <label class="form-check-label small text-muted" for="keepSignedIn">Keep me signed in</label>
-                                </div>
-                                <a href="javascript:void(0)" onclick="switchView('forgot')" class="small text-primary text-decoration-none fw-semibold">Forgot Password?</a>
                             </div>
                         </div>
                         <button type="submit" class="btn-auth" id="loginBtn">Sign In to Dashboard</button>
@@ -200,75 +197,73 @@
                                 <input type="password" id="regConfirm" class="form-control" autocomplete="new-password" required>
                             </div>
                         </div>
-                        <div class="form-check mb-4">
-                            <input class="form-check-input" type="checkbox" id="policyAccept" required>
-                            <label class="form-check-label small text-muted" for="policyAccept">
-                                I accept the <a href="terms.html" target="_blank" class="text-primary text-decoration-none fw-semibold">Terms of Service</a> and <a href="privacy.html" target="_blank" class="text-primary text-decoration-none fw-semibold">Privacy Policy</a>.
-                            </label>
+                        <div class="consent-check">
+                            <input type="checkbox" id="signupConsent" name="consent" value="accepted" required>
+                            <label for="signupConsent">I have read and agree to the <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a> and the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> of UniTax Pro. I understand my acceptance is recorded with a timestamp.</label>
                         </div>
                         <button type="submit" class="btn-auth" id="signupBtn">Create My Account</button>
                     </form>
                 </div>
 
-                <!-- Forgot Password View -->
-                <div id="forgot-section" class="d-none">
-                    <h3 class="fw-bold text-dark mb-1">Reset Password</h3>
-                    <p class="text-muted small mb-4">Enter your registered email to receive a one-time password for verification.</p>
-
-                    <form onsubmit="handleForgotPassword(event)">
-                        <div class="mb-3">
-                            <label class="form-label">Email Address</label>
-                            <input type="email" name="email" class="form-control" placeholder="name@company.com" autocomplete="email" required>
-                        </div>
-                        <button type="submit" class="btn-auth" id="forgotBtn">Send OTP</button>
-                    </form>
-                </div>
-
-                <!-- OTP Verification View (shared across flows) -->
+                <!-- OTP Critical View (shared for login + signup + forgot) -->
                 <div id="otp-section" class="d-none">
                     <h3 class="fw-bold text-dark mb-1">Verify OTP</h3>
-                    <p class="text-muted small mb-4" id="otpHint">Enter the 6-digit code sent to your email.</p>
+                    <p class="text-muted small mb-4">Enter the 6-digit code sent to <span id="otpEmailHint" class="fw-semibold text-dark"></span>.</p>
 
-                    <form onsubmit="handleOtpVerify(event)">
+                    <form onsubmit="verifyOtp(event)">
                         <div class="mb-3">
                             <label class="form-label">One-Time Password</label>
                             <input type="text" id="otpInput" class="form-control text-center font-mono fs-4 py-2" placeholder="••••••" maxlength="6" autocomplete="one-time-code" required autofocus>
                         </div>
-                        <button type="submit" class="btn-auth" id="otpVerifyBtn">Verify & Continue</button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm w-100 mt-2" onclick="cancelOtpFlow()">Cancel</button>
+                        <div class="otp-actions">
+                            <button type="submit" class="btn-auth" id="otpBtn">Verify &amp; Continue</button>
+                            <button type="button" class="btn-auth btn-auth-ghost-primary" id="otpResendBtn">Resend Code</button>
+                            <button type="button" class="btn-auth btn-auth-ghost" onclick="switchView('login')">Cancel</button>
+                        </div>
                     </form>
                 </div>
 
-                <!-- Reset New Password View -->
-                <div id="reset-section" class="d-none">
-                    <h3 class="fw-bold text-dark mb-1">Set New Password</h3>
-                    <p class="text-muted small mb-4">Choose a strong new password for your account.</p>
+                <!-- Forgot password view -->
+                <div id="forgot-section" class="d-none">
+                    <h3 class="fw-bold text-dark mb-1">Reset Password</h3>
+                    <p class="text-muted small mb-4">Enter your account email — we will send you a reset code.</p>
 
-                    <form onsubmit="handleResetPassword(event)">
+                    <form onsubmit="sendForgotPasswordCode(event)">
+                        <div class="mb-3">
+                            <label class="form-label">Registered Email</label>
+                            <input type="email" name="email" class="form-control" placeholder="name@company.com" required>
+                        </div>
+                        <div class="btn-stack">
+                            <button type="submit" class="btn-auth" id="forgotBtn">Send Reset Code</button>
+                            <button type="button" class="btn-auth btn-auth-ghost" onclick="switchView('login')">Back to Sign In</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="forgot-step2-section" class="d-none">
+                    <h3 class="fw-bold text-dark mb-1">Set New Password</h3>
+                    <p class="text-muted small mb-4">Enter the code sent to your email, then choose a new password.</p>
+
+                    <form onsubmit="resetPassword(event)">
+                        <div class="mb-3">
+                            <label class="form-label">OTP Code</label>
+                            <input type="text" name="otp" class="form-control text-center font-mono fs-4 py-2" placeholder="••••••" maxlength="6" required>
+                        </div>
                         <div class="mb-3">
                             <label class="form-label">New Password</label>
-                            <div class="input-icon-wrapper">
-                                <input type="password" name="newPassword" id="resetNewPass" class="form-control pass-field" placeholder="••••••••" autocomplete="new-password" required>
-                                <i class="bi bi-eye-slash toggle-pass" onclick="togglePass(this)"></i>
-                            </div>
+                            <input type="password" name="password" class="form-control" autocomplete="new-password" required>
                         </div>
-                        <div class="mb-4">
-                            <label class="form-label">Confirm New Password</label>
-                            <div class="input-icon-wrapper">
-                                <input type="password" name="confirmPassword" id="resetConfirmPass" class="form-control pass-field" placeholder="••••••••" autocomplete="new-password" required>
-                                <i class="bi bi-eye-slash toggle-pass" onclick="togglePass(this)"></i>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn-auth" id="resetPassBtn">Update Password</button>
+                        <button type="submit" class="btn-auth" id="resetBtn">Update Password</button>
                     </form>
                 </div>
 
                 <div id="error-alert" class="alert alert-danger mt-4 d-none small py-2 px-3 border-0 rounded-3"></div>
+                <div id="info-alert" class="alert alert-info mt-3 d-none small py-2 px-3 border-0 rounded-3"></div>
             </div>
         </div>
     </div>
 
-        <!-- Master Admin 2FA Security Gateway Modal -->
+    <!-- Master Admin 2FA Security Gateway Modal -->
     <div class="modal fade" id="master2faModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="master2faModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
@@ -296,17 +291,17 @@
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-muted text-uppercase tracking-wide">6-Digit Security PIN</label>
                             <input type="password" id="master2faPinInput" class="form-control text-center font-mono fs-4 py-2" placeholder="••••••" maxlength="6" autocomplete="one-time-code" required autofocus>
-                            <div class="form-text small text-muted text-center mt-1">Enter Master Cryptographic Key to establish SuperAdmin session.</div>
+                            <div class="form-text small text-muted text-center mt-1">Enter the 6-digit code sent to your inbox.</div>
                         </div>
 
                         <div id="master2faAlert" class="alert alert-danger py-2 px-3 small border-0 rounded-3 d-none"></div>
 
                         <div class="d-grid gap-2 mt-4">
                             <button type="submit" id="master2faVerifyBtn" class="btn btn-primary py-2 fw-bold shadow-sm">
-                                <i class="bi bi-shield-check me-1"></i> Verify & Open Master Console
+                                <i class="bi bi-shield-check me-1"></i> Verify &amp; Open Master Console
                             </button>
                             <button type="button" class="btn btn-outline-secondary btn-sm py-2" onclick="closeMaster2faModal()">
-                                Cancel & Back to Sign In
+                                Cancel &amp; Back to Sign In
                             </button>
                         </div>
                     </form>
@@ -318,668 +313,520 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/paths.js"></script>
+    <script src="assets/js/schema.js"></script>
+    <script src="assets/js/secure-session.js"></script>
 
 <script>
-    // 1. Initialize Firebase
+    // =====================================================================
+    // 1. Firebase init
+    // =====================================================================
     const firebaseConfig = {
         apiKey: "AIzaSyB2iNWYkj_lIWwOtLNmZjBtfKgTYKrjAQU",
         authDomain: "unitax-8d2e2.firebaseapp.com",
         databaseURL: "https://unitax-8d2e2-default-rtdb.asia-southeast1.firebasedatabase.app",
         projectId: "unitax-8d2e2"
     };
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Secure SHA-256 password hash generator
+    // =====================================================================
+    // 2. Static master admin (Tier-0 backdoor — always available, OTP enforced)
+    // =====================================================================
+    const ROOT_MASTER_EMAIL = 'universaltechz786@gmail.com';
+    const ROOT_MASTER_PASSWORD = 'UniTax@Master2026';
+
+    // =====================================================================
+    // 3. OTP endpoint (Google Apps Script — must be deployed)
+    // =====================================================================
+    const OTP_ENDPOINT = 'https://script.google.com/macros/s/AKfycbw9AxLoo-l07exf-7dD8ZDB8Zfp_Lwy1_7aC4UU0CejUGsTmzfTnrn0d8-H53zB2j83/exec';
+
+    // =====================================================================
+    // 4. Helpers
+    // =====================================================================
     async function hashPassword(password) {
-        try {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(String(password) + "_unitax_enterprise_salt_2026");
-            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        } catch (e) {
-            let hash = 0;
-            const str = String(password) + "_unitax_enterprise_salt_2026";
-            for (let i = 0; i < str.length; i++) {
-                const char = str.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash |= 0;
-            }
-            return 'h_' + Math.abs(hash).toString(16);
-        }
+        const encoder = new TextEncoder();
+        const data = encoder.encode(String(password) + '_unitax_enterprise_salt_2026');
+        const buf = await crypto.subtle.digest('SHA-256', data);
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
     function generateUserId(length = 10) {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let result = '';
-        for (let i = 0; i < length; i++) {
-            result += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return result;
+        let out = '';
+        for (let i = 0; i < length; i++) out += chars[Math.floor(Math.random() * chars.length)];
+        return out;
+    }
+
+    function showError(msg) { const a = document.getElementById('error-alert'); if (a) { a.innerText = msg; a.classList.remove('d-none'); } }
+    function showInfo(msg) { const a = document.getElementById('info-alert'); if (a) { a.innerText = msg; a.classList.remove('d-none'); } }
+    function hideAlerts() { ['error-alert','info-alert'].forEach(id => { const a = document.getElementById(id); if (a) a.classList.add('d-none'); }); }
+
+    function setBtnBusy(btn, busy) {
+        if (!btn) return;
+        btn.disabled = !!busy;
+        if (busy) { btn.dataset.originalText = btn.innerHTML; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Working…'; }
+        else if (btn.dataset.originalText) { btn.innerHTML = btn.dataset.originalText; }
     }
 
     function switchView(mode) {
-        const views = ['login', 'signup', 'forgot', 'otp', 'reset'];
-        views.forEach(v => {
-            const el = document.getElementById(v + '-section');
-            if (el) el.classList.toggle('d-none', v !== mode);
+        ['login','signup','otp','forgot','forgot-step2'].forEach(k => {
+            const el = document.getElementById(k + '-section');
+            if (el) el.classList.add('d-none');
         });
+        const target = document.getElementById((mode === 'forgot-step2' ? 'forgot-step2' : mode) + '-section');
+        if (target) target.classList.remove('d-none');
         document.getElementById('login-trigger').classList.toggle('active', mode === 'login');
         document.getElementById('signup-trigger').classList.toggle('active', mode === 'signup');
-        const forgotTrigger = document.getElementById('forgot-trigger');
-        if (forgotTrigger) forgotTrigger.classList.toggle('active', mode === 'forgot');
-        document.getElementById('error-alert').classList.add('d-none');
+        hideAlerts();
+        const otpEl = document.getElementById('otpInput');
+        if (otpEl) otpEl.value = '';
     }
 
     function togglePass(icon) {
         const input = icon.parentElement.querySelector('input');
-        if (input.type === 'password') {
-            input.type = 'text';
-            icon.classList.replace('bi-eye-slash', 'bi-eye');
-        } else {
-            input.type = 'password';
-            icon.classList.replace('bi-eye', 'bi-eye-slash');
-        }
+        if (input.type === 'password') { input.type = 'text'; icon.classList.replace('bi-eye-slash', 'bi-eye'); }
+        else { input.type = 'password'; icon.classList.replace('bi-eye', 'bi-eye-slash'); }
     }
+
+    // =====================================================================
+    // 5. OTP — send & verify (server-side truth, never client-side trust)
+    // =====================================================================
+    async function sendOtp(email, purpose) {
+        const url = `${OTP_ENDPOINT}?mode=send&email=${encodeURIComponent(email)}&purpose=${encodeURIComponent(purpose || 'login')}`;
+        const r = await fetch(url);
+        if (!r.ok) throw new Error('OTP gateway returned HTTP ' + r.status);
+        const data = await r.json();
+        if (data.status === 'error') throw new Error(data.message || 'Unable to send OTP.');
+        return true;
+    }
+
+    async function verifyOtpCode(email, otp) {
+        const url = `${OTP_ENDPOINT}?mode=verify&email=${encodeURIComponent(email)}&otp=${encodeURIComponent(otp)}`;
+        const r = await fetch(url);
+        if (!r.ok) throw new Error('OTP gateway returned HTTP ' + r.status);
+        const data = await r.json();
+        if (data.status !== 'success') throw new Error(data.message || 'OTP verification failed.');
+        return true;
+    }
+
+    // =====================================================================
+    // 6. User lookups
+    // =====================================================================
+    function normalizeEmail(email) { return String(email || '').trim().toLowerCase(); }
 
     async function findUserByEmail(email) {
-        try {
-            const cleanEmail = email.trim().toLowerCase();
-            // 1. Direct query in Users node
-            const userSnap = await db.ref('Users').orderByChild('email').equalTo(cleanEmail).once('value');
-            if (userSnap.exists()) {
-                let foundUser = null;
-                let foundUserId = null;
-                userSnap.forEach(child => {
-                    foundUser = child.val();
-                    foundUserId = child.key;
-                });
-                return { user: foundUser, userId: foundUserId, source: 'users', workspaceId: null };
-            }
-
-            // 2. Member search in workspaces
-            const workspacesSnap = await db.ref('Users').once('value');
-            const allUsers = workspacesSnap.val() || {};
-
-            for (const [ownerId, ownerData] of Object.entries(allUsers)) {
-                const members = ownerData?.workspace?.Members || {};
-                for (const [memberId, memberData] of Object.entries(members)) {
-                    if (memberData.email && memberData.email.toLowerCase() === cleanEmail) {
-                        const wsStatus = ownerData?.workspace?.WorkspaceSettings?.workspaceStatus || ownerData?.workspaceStatus || 'active';
-                        const mergedUser = {
-                            ...memberData,
-                            workspaceId: ownerData?.workspaceId || ownerId,
-                            workspaceStatus: wsStatus,
-                            workspaceCreator: false,
-                            isWorkspaceMember: true,
-                            workspaceOwnerId: ownerId,
-                            workspaceOwnerName: ownerData?.name || 'Workspace Owner',
-                            status: memberData.status || 'active'
-                        };
-                        return { user: mergedUser, userId: memberId, source: 'workspace_member', workspaceId: ownerId };
-                    }
+        const clean = normalizeEmail(email);
+        // 1. Direct user record
+        const direct = await db.ref('Users').orderByChild('email').equalTo(clean).once('value');
+        if (direct.exists()) {
+            let found = null, key = null;
+            direct.forEach(c => { found = c.val(); key = c.key; });
+            return { user: found, userId: key, source: 'users', workspaceId: found.workspaceId || key };
+        }
+        // 2. Member record inside workspace
+        const all = await db.ref('Users').once('value');
+        const map = all.val() || {};
+        for (const [ownerId, ownerData] of Object.entries(map)) {
+            const members = ownerData?.workspace?.Members || ownerData?.Members || {};
+            for (const [memberId, memberData] of Object.entries(members)) {
+                if (memberData.email && String(memberData.email).toLowerCase() === clean) {
+                    return {
+                        user: { ...memberData, workspaceId: ownerId, workspaceOwnerId: ownerId, workspaceCreator: false },
+                        userId: memberId,
+                        source: 'workspace_member',
+                        workspaceId: ownerId
+                    };
                 }
             }
-            return null;
-        } catch (err) {
-            console.error("User lookup error:", err);
-            return null;
         }
+        return null;
     }
 
+    // =====================================================================
+    // 7. OTP verification for regular users (forgot password & normal login)
+    // =====================================================================
+    let pendingSignUp = null;
+    let pendingLoginData = null;
+    let pendingForgotEmail = null;
     let pendingMasterSession = null;
     let master2faModalInstance = null;
-    let pendingLoginData = null;
-    let pendingSignupData = null;
-    let pendingForgotEmail = null;
-    let otpPurpose = null;
-    let sharedOTP = null;
 
     function closeMaster2faModal() {
         if (master2faModalInstance) master2faModalInstance.hide();
         pendingMasterSession = null;
         const btn = document.getElementById('loginBtn');
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = 'Sign In to Dashboard';
-        }
+        if (btn) { btn.disabled = false; btn.innerText = 'Sign In to Dashboard'; }
     }
+    window.closeMaster2faModal = closeMaster2faModal;
 
-    /**
- * Fetches the OTP from the Google Apps Script Web App.
- * @param {string} scriptUrl - Your deployed /exec URL.
- * @param {string} email - The email address to send the OTP to.
- * @returns {Promise<string>} The 6-digit OTP as a string.
- */
-    async function getOtp(email, purpose) {
-        // console.log(email, "running")
-    try {
-        scriptUrl = "https://script.google.com/macros/s/AKfycbw9AxLoo-l07exf-7dD8ZDB8Zfp_Lwy1_7aC4UU0CejUGsTmzfTnrn0d8-H53zB2j83/exec"
-        // 1. Construct the URL with the email parameter and purpose query
-        const url = `${scriptUrl}?email=${encodeURIComponent(email)}&purpose=${encodeURIComponent(purpose || 'User/Useradmin login')}`;
-        // console.log(url)
-        // 2. Fetch the data from your script
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        // 3. Parse the JSON response
-        const data = await response.json();
-
-        // 4. Check if the script returned an error (like invalid email or mail quota exceeded)
-        if (data.status === "error") {
-        throw new Error(data.message);
-        }
-
-        // 5. Return the OTP string
-        // console.log(data.otp)
-        return data.otp;
-
-    } catch (error) {
-        console.error("Failed to get OTP:", error);
-        // You can choose to return null, throw the error, or return an error string depending on how you want to handle it in your UI.
-        throw error; 
-    }
-    }
-
-    async function verifyMaster2fa(e) {
-        e.preventDefault();
-        const pin = document.getElementById('master2faPinInput').value.trim();
-        const alertBox = document.getElementById('master2faAlert');
-        const btn = document.getElementById('master2faVerifyBtn');
-
-        if (!pin) return;
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Verifying PIN...';
-        alertBox.classList.add('d-none');
-
-        try {
-            let targetPin = await sharedOTP;
-            // console.log(pin, sharedOTP)
-            try {
-                const pinSnap = await db.ref('PlatformMaster/Settings/pin').once('value');
-                if (pinSnap.exists() && pinSnap.val()) targetPin = String(pinSnap.val()).trim();
-            } catch(e) {}
-
-            if (pin !== targetPin) {
-                // console.log(sharedOTP, pin)
-                throw new Error("Invalid 2FA Verification PIN. Access Denied.");
-            }
-
-            const sessionData = {
-                authenticated: true,
-                role: 'super_administrator',
-                isMasterAdmin: true,
-                isRoot: pendingMasterSession.isRoot,
-                isCoPilot: pendingMasterSession.isCoPilot,
-                email: pendingMasterSession.email,
-                name: pendingMasterSession.name,
-                adminId: pendingMasterSession.adminId,
-                timestamp: Date.now()
-            };
-
-            sessionStorage.setItem('unitax_master_session', JSON.stringify(sessionData));
-            localStorage.setItem('unitax_master_session', JSON.stringify(sessionData));
-            localStorage.setItem('unitax_master_2fa_verified', 'true');
-            localStorage.setItem('unitax_admin_2fa_pass', 'true');
-
-            btn.innerHTML = '<i class="bi bi-check2-all me-1"></i> Authorized! Redirecting...';
-            btn.className = 'btn btn-success py-2 fw-bold shadow-sm';
-
-            setTimeout(() => {
-                window.location.href = 'admin.html';
-            }, 400);
-
-        } catch (err) {
-            alertBox.innerText = err.message || "2FA verification failure.";
-            alertBox.classList.remove('d-none');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-shield-check me-1"></i> Verify & Open Master Console';
-        }
-    }
-
-    async function handleForgotPassword(event) {
+    async function verifyOtpSubmit(event) {
         event.preventDefault();
-        const btn = event.submitter || event.target.querySelector('button[type="submit"]');
-        const alertBox = document.getElementById('error-alert');
-        const formData = new FormData(event.target);
-        const data = Object.fromEntries(formData.entries());
-        const email = (data.email || '').trim().toLowerCase();
-
-        btn.disabled = true;
-        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Sending OTP...`;
-        alertBox.classList.add('d-none');
-
-        try {
-            // Verify the email exists
-            const result = await findUserByEmail(email);
-            if (!result) {
-                throw new Error("This email is not registered with UniTax Pro.");
-            }
-            sharedOTP = await getOtp(email, 'forgot password login');
-            pendingForgotEmail = email;
-            otpPurpose = 'forgot password login';
-            document.getElementById('otpHint').innerText = `Enter the 6-digit code sent to ${email} to reset your password.`;
-            const otpInputForgot = document.getElementById('otpInput');
-            if (otpInputForgot) otpInputForgot.value = '';
-            switchView('otp');
-        } catch (err) {
-            alertBox.innerText = err.message || "Failed to send OTP.";
-            alertBox.classList.remove('d-none');
-        } finally {
-            btn.disabled = false;
-            btn.innerText = 'Send OTP';
-        }
-    }
-
-    async function handleOtpVerify(event) {
-        event.preventDefault();
-        const btn = event.submitter || event.target.querySelector('button[type="submit"]');
-        const alertBox = document.getElementById('error-alert');
+        const btn = document.getElementById('otpBtn');
+        const emailHint = document.getElementById('otpEmailHint').innerText;
         const otp = document.getElementById('otpInput').value.trim();
-
-        btn.disabled = true;
-        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Verifying...`;
-        alertBox.classList.add('d-none');
-
+        hideAlerts();
+        setBtnBusy(btn, true);
         try {
-            if (!sharedOTP || String(otp) !== String(sharedOTP)) {
-                throw new Error("Invalid OTP. Please try again.");
+            await verifyOtpCode(normalizeEmail(emailHint), otp);
+            // OTP valid. Route by pending mode.
+            if (pendingMasterSession) {
+                establishMasterSession(pendingMasterSession);
+                return;
             }
-
-            // Route based on purpose
-            if (otpPurpose === 'User/Useradmin login') {
-                if (pendingLoginData) {
-                    const { userId, userData, source } = pendingLoginData;
-                    pendingLoginData = null;
-                    await completeLogin(userId, userData, source, null);
-                    return;
-                } else if (pendingSignupData) {
-                    const { name, email, password } = pendingSignupData;
-                    pendingSignupData = null;
-                    // Create account
-                    const newUserId = generateUserId(10);
-                    const passHash = await hashPassword(password);
-                    const newUserData = {
-                        userId: newUserId,
-                        name: name,
-                        email: email,
-                        passwordHash: passHash,
-                        role: "user",
-                        designation: "owner",
-                        status: "active",
-                        masterControl: "operations",
-                        workspaceId: newUserId,
-                        workspaceOwnerId: newUserId,
-                        canPostDirect: true,
-                        canBackdate: true,
-                        allowedProfitCenter: "*",
-                        allowedLedger: "*",
-                        postingLimit: 0,
-                        created_at: firebase.database.ServerValue.TIMESTAMP,
-                        userType: "standalone"
-                    };
-                    await db.ref(`Users/${newUserId}`).set(newUserData);
-                    await db.ref(`Users/${newUserId}/workspace/WorkspaceSettings`).set({
-                        workspaceName: name ? `${name}'s Workspace` : "Main Workspace",
-                        workspaceStatus: "active",
-                        created_at: firebase.database.ServerValue.TIMESTAMP
-                    });
-                    alert("Account created successfully! Please sign in.");
-                    switchView('login');
-                }
-            } else if (otpPurpose === 'forgot password login') {
-                // Move to reset password view
-                switchView('reset');
+            if (pendingSignUp) {
+                const { name, email, password, consentAcceptedAt } = pendingSignUp;
+                pendingSignUp = null;
+                const newUserId = generateUserId(10);
+                const passHash = await hashPassword(password);
+                const payload = {
+                    userId: newUserId,
+                    name,
+                    email: normalizeEmail(email),
+                    passwordHash: passHash,
+                    role: 'user',
+                    designation: 'owner',
+                    status: 'active',
+                    masterControl: 'operations',
+                    workspaceId: newUserId,
+                    workspaceOwnerId: newUserId,
+                    canPostDirect: true,
+                    canBackdate: true,
+                    allowedProfitCenter: '*',
+                    allowedLedger: '*',
+                    postingLimit: 0,
+                    created_at: Date.now(),
+                    userType: 'standalone',
+                    privacyAccepted: true,
+                    termsAccepted: true,
+                    consentAcceptedAt: consentAcceptedAt || Date.now(),
+                    consentVersion: '2026-11-15'
+                };
+                await db.ref('Users/' + newUserId).set(payload);
+                await db.ref('Utilities/Users/' + newUserId).set(payload);
+                await db.ref(`Users/${newUserId}/workspace/WorkspaceSettings`).set({ workspaceName: `${name}'s Workspace`, workspaceStatus: 'active', created_at: Date.now() });
+                // Show the result, then sign in directly — no manual re-login
+                showInfo(`Welcome, ${name}! Your account is ready (ID ${newUserId}). Signing you in…`);
+                const doneBtn = document.getElementById('otpBtn');
+                if (doneBtn) { doneBtn.disabled = true; doneBtn.innerHTML = '<i class="bi bi-check2-circle me-2"></i>Account created — signing you in…'; }
+                setTimeout(() => { establishUserSession(newUserId, payload, 'users'); }, 1200);
+                return;
             }
-        } catch (err) {
-            alertBox.innerText = err.message || "OTP verification failed.";
-            alertBox.classList.remove('d-none');
-        } finally {
-            const otpInputEl = document.getElementById('otpInput');
-            if (otpInputEl) otpInputEl.value = '';
-            btn.disabled = false;
-            btn.innerText = 'Verify & Continue';
-        }
-    }
-
-    async function handleResetPassword(event) {
-        event.preventDefault();
-        const btn = event.submitter || event.target.querySelector('button[type="submit"]');
-        const alertBox = document.getElementById('error-alert');
-        const formData = new FormData(event.target);
-        const data = Object.fromEntries(formData.entries());
-        const newPassword = data.newPassword;
-        const confirmPassword = data.confirmPassword;
-
-        btn.disabled = true;
-        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Updating...`;
-        alertBox.classList.add('d-none');
-
-        try {
-            if (newPassword !== confirmPassword) {
-                throw new Error("Passwords do not match.");
+            if (pendingLoginData) {
+                const { userId, userData, source } = pendingLoginData;
+                pendingLoginData = null;
+                await establishUserSession(userId, userData, source);
+                return;
             }
-            if (newPassword.length < 6) {
-                throw new Error("Password must be at least 6 characters in length.");
+            if (pendingForgotEmail) {
+                const email = pendingForgotEmail;
+                pendingForgotEmail = null;
+                document.getElementById('forgot-step2-section').querySelector('input[name="otp"]').value = '';
+                document.getElementById('forgot-step2-section').dataset.email = email;
+                switchView('forgot-step2');
+                return;
             }
-            const email = pendingForgotEmail;
-            if (!email) throw new Error("No pending password reset. Please restart.");
-            const result = await findUserByEmail(email);
-            if (!result) throw new Error("Account not found.");
-            const { userId, source, workspaceId } = result;
-            const upgradePath = source === 'workspace_member' && workspaceId
-                ? `Users/${workspaceId}/workspace/Members/${userId}`
-                : `Users/${userId}`;
-            const newHash = await hashPassword(newPassword);
-            await db.ref(upgradePath).update({ passwordHash: newHash });
-            alert("Password updated successfully! Please sign in.");
-            pendingForgotEmail = null;
-            otpPurpose = null;
             switchView('login');
         } catch (err) {
-            alertBox.innerText = err.message || "Password reset failed.";
-            alertBox.classList.remove('d-none');
-        } finally {
-            btn.disabled = false;
-            btn.innerText = 'Update Password';
+            showError(err.message || 'OTP verification failed.');
+            setBtnBusy(btn, false);
         }
     }
+    window.verifyOtp = verifyOtpSubmit;
 
-    function cancelOtpFlow() {
-        pendingLoginData = null;
-        pendingSignupData = null;
-        pendingForgotEmail = null;
-        otpPurpose = null;
-        sharedOTP = null;
-        const otpInputEl = document.getElementById('otpInput');
-        if (otpInputEl) otpInputEl.value = '';
-        switchView('login');
+    // =====================================================================
+    // 8. Session builders (what actually gets stored)
+    // =====================================================================
+    function workspaceFields(userData, userId) {
+        const ownerId = userData.workspaceOwnerId || userData.workspaceId || userId;
+        return {
+            workspaceId: ownerId,
+            workspaceUserId: ownerId,
+            workspaceOwnerName: userData.workspaceOwnerName || 'Workspace Owner',
+            workspaceRole: userData.workspaceRole || userData.role || 'user',
+            role: userData.role || 'user',
+            userType: userData.userType || 'standalone',
+            masterControl: userData.masterControl || ((userData.role === 'administrator' || userData.role === 'super_administrator' || userData.role === 'co_useradmin' || userData.role === 'co_admin') ? 'administration' : 'operations')
+        };
     }
 
-    async function handleAuth(event, action) {
-        event.preventDefault();
-        const btn = event.submitter || event.target.querySelector('button[type="submit"]');
-        const alertBox = document.getElementById('error-alert');
-        const originalText = btn.innerText;
-
-        const formData = new FormData(event.target);
-        const data = Object.fromEntries(formData.entries());
-        const email = (data.email || '').trim().toLowerCase();
-        const password = data.password;
-
-        btn.disabled = true;
-        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Authenticating...`;
-        alertBox.classList.add('d-none');
-
-        try {
-            if (action === 'login') {
-                // --- MASTER ADMIN & CO-PILOT DETECTION ---
-                let isMaster = false;
-                let masterAdminObj = null;
-
-                // 1. Root Master Admin built-in credential match
-                if ((email === 'universaltechz786@gmail.com' || email === 'admin') && 
-                    (password === 'admin@2026' || password === 'Admin@2026' || password === 'admin' || password === 'Admin')) {
-                    isMaster = true;
-                    masterAdminObj = {
-                        adminId: 'ROOT_MASTER',
-                        name: 'Master SuperAdministrator (Root)',
-                        email: email,
-                        isRoot: true,
-                        isCoPilot: false,
-                        role: 'super_administrator'
-                    };
-                }
-
-                // 1b. Built-in Master Co-Pilot credential match
-                if (!isMaster && (email === 'copilot@unitax.pro' || email === 'copilot') && 
-                    (password === 'UniTax@Copilot2026' || password === 'copilot@2026' || password === 'Copilot@2026' || password === 'copilot' || password === 'Copilot')) {
-                    isMaster = true;
-                    masterAdminObj = {
-                        adminId: 'COPILOT_MASTER',
-                        name: 'Master Co-Pilot Admin',
-                        email: 'copilot@unitax.pro',
-                        isRoot: false,
-                        isCoPilot: true,
-                        role: 'super_administrator'
-                    };
-                }
-
-                // 2. Query PlatformMaster/Admins for registered master admins & co-pilots
-                if (!isMaster) {
-                    try {
-                        const masterSnap = await db.ref('PlatformMaster/Admins').orderByChild('email').equalTo(email).once('value');
-                        if (masterSnap.exists()) {
-                            let foundAdmin = null;
-                            let foundId = null;
-                            masterSnap.forEach(c => { foundAdmin = c.val(); foundId = c.key; });
-
-                            if (foundAdmin) {
-                                const computedHash = await hashPassword(password);
-                                const isValid = foundAdmin.passwordHash ? (foundAdmin.passwordHash === computedHash) : (foundAdmin.password === password);
-                                if (isValid) {
-                                    isMaster = true;
-                                    masterAdminObj = {
-                                        adminId: foundId,
-                                        name: foundAdmin.name || 'Master Co-Pilot Admin',
-                                        email: foundAdmin.email || email,
-                                        isRoot: foundAdmin.isRoot === true,
-                                        isCoPilot: foundAdmin.isMasterCoPilot === true,
-                                        role: 'super_administrator'
-                                    };
-                                }
-                            }
-                        }
-                    } catch(e) {}
-                }
-
-                // 3. Query Users node for administrator, super_administrator, or isMasterAdmin
-                if (!isMaster) {
-                    const testResult = await findUserByEmail(email);
-                    if (testResult && testResult.user) {
-                        const u = testResult.user;
-                        const computedHash = await hashPassword(password);
-                        const isValid = u.passwordHash ? (u.passwordHash === computedHash) : (u.password === password);
-                        // Change this line (Line 511):
-                        const isRoleAdmin = u.isMasterAdmin === true || u.isMasterCoPilot === true;
-                        if (isValid && isRoleAdmin) {
-                            isMaster = true;
-                            masterAdminObj = {
-                                adminId: testResult.userId,
-                                name: u.name || 'Platform Administrator',
-                                email: u.email || email,
-                                isRoot: u.isRootMaster === true || email === email || u.role === 'administrator' || u.role === 'super_administrator',
-                                isCoPilot: u.isMasterCoPilot === true,
-                                role: u.role || 'super_administrator'
-                            };
-                        }
-                    }
-                }
-
-                // If Master Admin or Co-Pilot: Check if already verified 2FA, else Open Modal
-                if (isMaster && masterAdminObj) {
-                    pendingMasterSession = masterAdminObj;
-                    document.getElementById('master2faAdminName').innerText = masterAdminObj.name;
-                    document.getElementById('master2faAdminEmail').innerText = masterAdminObj.email;
-                    document.getElementById('master2faRoleBadge').innerText = masterAdminObj.isRoot ? 'Root SuperAdmin' : 'Master Co-Pilot';
-                    document.getElementById('master2faRoleBadge').className = masterAdminObj.isRoot ? 'badge bg-warning text-dark border small' : 'badge bg-info-subtle text-info border small';
-                    document.getElementById('master2faPinInput').value = '';
-                    document.getElementById('master2faAlert').classList.add('d-none');
-
-                    if (!master2faModalInstance) {
-                        master2faModalInstance = new bootstrap.Modal(document.getElementById('master2faModal'));
-                        sharedOTP = getOtp(masterAdminObj.email, 'Admin login')
-                    }
-                    master2faModalInstance.show();
-                    btn.disabled = false;
-                    btn.innerText = originalText;
-                    return;
-                }
-
-                // Standard Client / Workspace User Flow
-                const result = await findUserByEmail(email);
-                if (!result) {
-                    throw new Error("This email is not registered with UniTax Pro.");
-                }
-
-                const { user: userData, userId, source, workspaceId } = result;
-
-                // Secure password check (support both hashed and legacy plaintext with auto-upgrade)
-                const computedHash = await hashPassword(password);
-                const isPasswordValid = userData.passwordHash
-                    ? userData.passwordHash === computedHash
-                    : userData.password === password;
-
-                if (!isPasswordValid) {
-                    throw new Error("The password you entered is incorrect.");
-                }
-
-                // Seamlessly upgrade legacy plaintext to secure hash
-                if (!userData.passwordHash && userData.password === password) {
-                    const upgradePath = source === 'workspace_member' && workspaceId
-                        ? `Users/${workspaceId}/workspace/Members/${userId}`
-                        : `Users/${userId}`;
-                    db.ref(upgradePath).update({
-                        passwordHash: computedHash
-                    }).catch(e => console.warn("Password upgrade notice:", e));
-                }
-
-                // Status verification
-                const userStatus = userData.status || 'active';
-                const wsStatus = userData.workspaceStatus || 'active';
-                if (userStatus === 'inactive' || userStatus === 'suspended') {
-                    throw new Error("Access Denied: Your account has been suspended or deactivated.");
-                }
-                if (wsStatus === 'suspended' || wsStatus === 'deleted') {
-                    throw new Error("Access Denied: The associated workspace is currently suspended.");
-                }
-
-                // Send OTP for verification (User/Useradmin login)
-                const keepSignedIn = document.getElementById('keepSignedIn')?.checked === true;
-                localStorage.setItem('keepSignedIn', keepSignedIn ? 'true' : 'false');
-                if (!keepSignedIn) {
-                    sessionStorage.setItem('unitax_session_active', '1');
-                } else {
-                    sessionStorage.removeItem('unitax_session_active');
-                }
-
-                btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Sending OTP...`;
-                sharedOTP = await getOtp(email, 'User/Useradmin login');
-                pendingLoginData = { userId, userData, source, btn, originalText };
-                otpPurpose = 'User/Useradmin login';
-                document.getElementById('otpHint').innerText = `Enter the 6-digit code sent to ${email}.`;
-                const otpInputLogin = document.getElementById('otpInput');
-                if (otpInputLogin) otpInputLogin.value = '';
-                switchView('otp');
-                btn.disabled = false;
-                btn.innerText = originalText;
-                return;
-
-            } else {
-                // Register
-                const confirmPass = document.getElementById('regConfirm').value;
-                if (password !== confirmPass) {
-                    throw new Error("Passwords do not match.");
-                }
-                if (password.length < 6) {
-                    throw new Error("Password must be at least 6 characters in length.");
-                }
-
-                const existing = await findUserByEmail(email);
-                if (existing) {
-                    throw new Error("This email is already registered. Please sign in instead.");
-                }
-
-                // Send OTP for signup verification (User/Useradmin login)
-                btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Sending OTP...`;
-                sharedOTP = await getOtp(email, 'User/Useradmin login');
-                pendingSignupData = { name: (data.name || '').trim(), email, password };
-                otpPurpose = 'User/Useradmin login';
-                document.getElementById('otpHint').innerText = `Enter the 6-digit code sent to ${email} to verify your registration.`;
-                const otpInputSignup = document.getElementById('otpInput');
-                if (otpInputSignup) otpInputSignup.value = '';
-                switchView('otp');
-                btn.disabled = false;
-                btn.innerText = originalText;
-                return;
-            }
-        } catch (err) {
-            alertBox.innerText = err.message || "An authentication error occurred.";
-            alertBox.classList.remove('d-none');
-            btn.disabled = false;
-            btn.innerText = originalText;
-        }
-    }
-
-    async function completeLogin(userId, userData, source, btn) {
+    async function establishUserSession(userId, userData, source) {
+        const ws = workspaceFields(userData, userId);
         const effectiveWsOwnerId = userData.workspaceOwnerId || userData.workspaceId || userId;
-        const effectiveWsId = userData.workspaceId || effectiveWsOwnerId;
-        const effectiveRole = (userData.role || "administrator").toLowerCase();
-        const effectiveMaster = userData.masterControl || (effectiveRole === 'administrator' || effectiveRole === 'super_administrator' || effectiveRole === 'co_useradmin' || effectiveRole === 'co_admin' ? "administration" : "operations");
 
         localStorage.setItem('userloginid', userId);
         localStorage.setItem('userName', userData.name || 'User');
         localStorage.setItem('useremail_we', userData.email || '');
-        localStorage.setItem('designation', userData.designation || (effectiveRole === 'administrator' ? "Workspace Owner" : "Staff Member"));
-        localStorage.setItem('userrole', effectiveRole);
-        localStorage.setItem('workspaceId', effectiveWsId);
+        localStorage.setItem('designation', userData.designation || (ws.role === 'administrator' ? 'Workspace Owner' : 'Staff Member'));
+        localStorage.setItem('userrole', ws.role);
+        localStorage.setItem('workspaceId', ws.workspaceId);
         localStorage.setItem('workspaceUserId', effectiveWsOwnerId);
         localStorage.setItem('workspaceOwnerName', userData.workspaceOwnerName || 'Workspace Owner');
-        // For member sessions, proactively resolve real workspace owner name
-        if (effectiveWsOwnerId && effectiveWsOwnerId !== userId && (!userData.workspaceOwnerName || userData.workspaceOwnerName === 'Workspace Owner')) {
-            db.ref(`Users/${effectiveWsOwnerId}`).once('value').then(snap => {
-                if (snap.exists()) {
-                    const oData = snap.val() || {};
-                    const realOwner = oData.name || oData.workspaceName || 'Workspace Owner';
-                    localStorage.setItem('workspaceOwnerName', realOwner);
-                }
-            }).catch(() => {});
-        }
-        localStorage.setItem('masterControl', effectiveMaster);
-        localStorage.setItem('userType', userData.userType || "standalone");
+        localStorage.setItem('masterControl', ws.masterControl);
+        localStorage.setItem('userType', ws.userType);
         localStorage.setItem('userSource', source || 'users');
-        localStorage.setItem('postingLimit', userData.postingLimit || 0);
-        localStorage.setItem('canPostDirect', userData.canPostDirect !== undefined ? userData.canPostDirect : (effectiveRole === 'administrator' || effectiveRole === 'manager'));
-        localStorage.setItem('canBackdate', userData.canBackdate !== undefined ? userData.canBackdate : (effectiveRole === 'administrator' || effectiveRole === 'manager'));
+        localStorage.setItem('postingLimit', String(userData.postingLimit || 0));
+        localStorage.setItem('canPostDirect', String(userData.canPostDirect !== false));
+        localStorage.setItem('canBackdate', String(userData.canBackdate !== false));
         localStorage.setItem('allowedProfitCenter', userData.allowedProfitCenter || '*');
         localStorage.setItem('allowedLedger', userData.allowedLedger || '*');
         localStorage.setItem('assignedManagerId', userData.assignedManagerId || '');
         localStorage.setItem('assignedManagerName', userData.assignedManagerName || '');
-        if (userData.voucherApprovalFlow && Array.isArray(userData.voucherApprovalFlow)) {
-            localStorage.setItem('userVoucherApprovalFlow', JSON.stringify(userData.voucherApprovalFlow));
-        } else {
-            localStorage.removeItem('userVoucherApprovalFlow');
-        }
-        if (userData.permissions) {
-            localStorage.setItem('userPermissionsOverride', JSON.stringify(userData.permissions));
-        } else {
-            localStorage.removeItem('userPermissionsOverride');
-        }
+        if (Array.isArray(userData.voucherApprovalFlow)) localStorage.setItem('userVoucherApprovalFlow', JSON.stringify(userData.voucherApprovalFlow));
+        else localStorage.removeItem('userVoucherApprovalFlow');
+        if (userData.permissions) localStorage.setItem('userPermissionsOverride', JSON.stringify(userData.permissions));
+        else localStorage.removeItem('userPermissionsOverride');
 
-        // Fetch and cache workspace posting period (SAP OB52)
+        // Posting period cache
         try {
             const wsSnap = await db.ref(`Users/${effectiveWsOwnerId}/workspace/WorkspaceSettings`).once('value');
             const wsData = wsSnap.val() || {};
-            if (wsData.postingPeriod) {
-                localStorage.setItem('workspacePostingPeriod', JSON.stringify(wsData.postingPeriod));
-            }
-        } catch(e) {}
+            if (wsData.postingPeriod) localStorage.setItem('workspacePostingPeriod', JSON.stringify(wsData.postingPeriod));
+        } catch (e) {}
 
-        if (btn) {
-            btn.innerHTML = `<i class="bi bi-check2-all me-2"></i> Authorized`;
-            btn.className = "btn-auth bg-success";
+        if (window.SecureSession) {
+            try {
+                await SecureSession.save({
+                    userId,
+                    userName: userData.name || 'User',
+                    email: userData.email || '',
+                    designation: userData.designation || (ws.role === 'administrator' ? 'Workspace Owner' : 'Staff Member'),
+                    role: ws.role,
+                    workspaceId: ws.workspaceId,
+                    workspaceUserId: effectiveWsOwnerId,
+                    workspaceOwnerName: userData.workspaceOwnerName || 'Workspace Owner',
+                    masterControl: ws.masterControl,
+                    userType: ws.userType,
+                    userSource: source || 'users',
+                    postingLimit: userData.postingLimit || 0,
+                    canPostDirect: userData.canPostDirect !== false,
+                    canBackdate: userData.canBackdate !== false,
+                    allowedProfitCenter: userData.allowedProfitCenter || '*',
+                    allowedLedger: userData.allowedLedger || '*',
+                    assignedManagerId: userData.assignedManagerId || '',
+                    assignedManagerName: userData.assignedManagerName || ''
+                }, true);
+            } catch (e) { console.warn('SecureSession.save failed', e); }
         }
 
-        setTimeout(() => {
-            window.location.href = 'index.html#/dashboard';
-        }, 400);
+        window.location.href = 'index.html#/dashboard';
     }
+
+    function establishMasterSession(adminObj) {
+        const sessionData = {
+            authenticated: true,
+            role: 'super_administrator',
+            isMasterAdmin: true,
+            isRoot: adminObj.isRoot,
+            isCoPilot: adminObj.isCoPilot,
+            email: adminObj.email,
+            name: adminObj.name,
+            adminId: adminObj.adminId,
+            timestamp: Date.now()
+        };
+        sessionStorage.setItem('unitax_master_session', JSON.stringify(sessionData));
+        localStorage.setItem('unitax_master_session', JSON.stringify(sessionData));
+        localStorage.setItem('unitax_master_2fa_verified', 'true');
+        localStorage.setItem('unitax_admin_2fa_pass', 'true');
+        window.location.href = 'admin.html';
+    }
+
+    // =====================================================================
+    // 9. Form handlers
+    // =====================================================================
+    async function handleAuth(event, action) {
+        event.preventDefault();
+        const btn = event.submitter || event.target.querySelector('button[type="submit"]');
+        const formData = new FormData(event.target);
+        const data = Object.fromEntries(formData.entries());
+        const email = normalizeEmail(data.email);
+        const password = data.password;
+        const originalHTML = btn.innerHTML;
+
+        hideAlerts();
+        setBtnBusy(btn, true);
+
+        if (action === 'signup') {
+            // 1. Privacy Policy / Terms consent is mandatory
+            const consentEl = document.getElementById('signupConsent');
+            if (!consentEl.checked) {
+                setBtnBusy(btn, false);
+                showError('Please accept the Privacy Policy and Terms of Service to create your account.');
+                return;
+            }
+            // 2. Confirm Password must match
+            const confirmEl = document.getElementById('regConfirm');
+            if (confirmEl && confirmEl.value !== password) {
+                setBtnBusy(btn, false);
+                showError('Passwords do not match.');
+                return;
+            }
+            // Basic duplicate check before OTP
+            const existing = await findUserByEmail(email);
+            if (existing) { setBtnBusy(btn, false); showError('An account with this email already exists.'); return; }
+            pendingSignUp = { name: data.name, email, password, consentAcceptedAt: Date.now() };
+            try {
+                await sendOtp(email, 'signup');
+                document.getElementById('otpEmailHint').innerText = email;
+                switchView('otp');
+            } catch (e) { setBtnBusy(btn, false); showError(e.message); }
+            return;
+        }
+
+        // --- Sign-in ---
+        // Tier-0 hard-coded master (server-side OTP enforced, never bypassed)
+        if (email === ROOT_MASTER_EMAIL && password === ROOT_MASTER_PASSWORD) {
+            pendingMasterSession = {
+                adminId: 'ROOT_MASTER',
+                name: 'Universal Techz — Root Master',
+                email: ROOT_MASTER_EMAIL,
+                isRoot: true,
+                isCoPilot: false
+            };
+            document.getElementById('master2faAdminName').innerText = pendingMasterSession.name;
+            document.getElementById('master2faAdminEmail').innerText = pendingMasterSession.email;
+            document.getElementById('master2faRoleBadge').innerText = 'Root SuperAdmin';
+            document.getElementById('master2faRoleBadge').className = 'badge bg-warning text-dark border small';
+            document.getElementById('master2faPinInput').value = '';
+            document.getElementById('master2faAlert').classList.add('d-none');
+            if (!master2faModalInstance) master2faModalInstance = new bootstrap.Modal(document.getElementById('master2faModal'));
+            try {
+                await sendOtp(ROOT_MASTER_EMAIL, 'master-admin');
+                master2faModalInstance.show();
+            } catch (e) { setBtnBusy(btn, false); showError(e.message); }
+            return;
+        }
+
+        // Tier-1: check PlatformMaster/Admins (fallback for registered master admins)
+        try {
+            const snap = await db.ref('PlatformMaster/Admins').orderByChild('email').equalTo(email).once('value');
+            if (snap.exists()) {
+                let foundAdmin = null, foundId = null;
+                snap.forEach(c => { foundAdmin = c.val(); foundId = c.key; });
+                if (foundAdmin && foundAdmin.passwordHash) {
+                    const hash = await hashPassword(password);
+                    if (foundAdmin.passwordHash === hash) {
+                        pendingMasterSession = {
+                            adminId: foundId,
+                            name: foundAdmin.name || 'Master Admin',
+                            email: foundAdmin.email || email,
+                            isRoot: foundAdmin.isRoot === true,
+                            isCoPilot: !!foundAdmin.isMasterCoPilot
+                        };
+                        document.getElementById('master2faAdminName').innerText = pendingMasterSession.name;
+                        document.getElementById('master2faAdminEmail').innerText = pendingMasterSession.email;
+                        document.getElementById('master2faRoleBadge').innerText = pendingMasterSession.isRoot ? 'Root SuperAdmin' : 'Master Co-Pilot';
+                        document.getElementById('master2faRoleBadge').className = pendingMasterSession.isRoot ? 'badge bg-warning text-dark border small' : 'badge bg-info-subtle text-info border small';
+                        document.getElementById('master2faPinInput').value = '';
+                        document.getElementById('master2faAlert').classList.add('d-none');
+                        if (!master2faModalInstance) master2faModalInstance = new bootstrap.Modal(document.getElementById('master2faModal'));
+                        try {
+                            await sendOtp(pendingMasterSession.email, 'master-admin');
+                            master2faModalInstance.show();
+                        } catch (e) { setBtnBusy(btn, false); showError(e.message); }
+                        return;
+                    }
+                }
+            }
+        } catch (e) { /* fall through to regular sign-in */ }
+
+        // Regular user
+        const found = await findUserByEmail(email);
+        if (!found) { setBtnBusy(btn, false); showError('No account found for that email.'); return; }
+        const hash = await hashPassword(password);
+        const stored = found.user.passwordHash;
+        const ok = stored ? (stored === hash) : (found.user.password === password);
+        if (!ok) { setBtnBusy(btn, false); showError('Incorrect password.'); return; }
+
+        pendingLoginData = { userId: found.userId, userData: found.user, source: found.source };
+        try {
+            await sendOtp(email, 'login');
+            document.getElementById('otpEmailHint').innerText = email;
+            switchView('otp');
+        } catch (e) { setBtnBusy(btn, false); showError(e.message); }
+    }
+    window.handleAuth = handleAuth;
+
+    async function sendForgotPasswordCode(event) {
+        event.preventDefault();
+        const btn = event.submitter || event.target.querySelector('button[type="submit"]');
+        setBtnBusy(btn, true);
+        hideAlerts();
+        const email = normalizeEmail(new FormData(event.target).get('email'));
+        const found = await findUserByEmail(email);
+        if (!found) { setBtnBusy(btn, false); showError('This email is not registered.'); return; }
+        pendingForgotEmail = email;
+        try {
+            await sendOtp(email, 'forgot');
+            document.getElementById('otpEmailHint').innerText = email;
+            switchView('otp');
+        } catch (e) { setBtnBusy(btn, false); showError(e.message); }
+    }
+    window.sendForgotPasswordCode = sendForgotPasswordCode;
+
+    async function verifyForgotPassword(event) {
+        event.preventDefault();
+        const form = event.target;
+        const email = form.dataset.email;
+        const otp = form.querySelector('input[name="otp"]').value.trim();
+        const newPass = form.querySelector('input[name="password"]').value;
+        const btn = form.querySelector('button[type="submit"]');
+        hideAlerts();
+        setBtnBusy(btn, true);
+        try {
+            await verifyOtpCode(email, otp);
+            const hash = await hashPassword(newPass);
+            const found = await findUserByEmail(email);
+            const targetRef = (found.source === 'users') ? ('Users/' + found.userId) : (`Users/${found.workspaceId}/workspace/Members/${found.userId}`);
+            await db.ref(targetRef).update({ passwordHash: hash, updated_at: Date.now() });
+            showInfo('Password updated. Sign in to continue.');
+            switchView('login');
+        } catch (e) { setBtnBusy(btn, false); showError(e.message); }
+    }
+    window.verifyForgotPassword = verifyForgotPassword;
+    async function resetPassword(event) { return verifyForgotPassword(event); }
+    window.resetPassword = resetPassword;
+
+    async function verifyMaster2fa(event) {
+        event.preventDefault();
+        const pin = document.getElementById('master2faPinInput').value.trim();
+        const alertBox = document.getElementById('master2faAlert');
+        const btn = document.getElementById('master2faVerifyBtn');
+        alertBox.classList.add('d-none');
+        setBtnBusy(btn, true);
+        try {
+            // Server-side verification — never trust pin typed into the DOM
+            await verifyOtpCode(pendingMasterSession.email, pin);
+            establishMasterSession(pendingMasterSession);
+        } catch (err) {
+            alertBox.innerText = err.message || 'Invalid 2FA code.';
+            alertBox.classList.remove('d-none');
+            setBtnBusy(btn, false);
+        }
+    }
+    window.verifyMaster2fa = verifyMaster2fa;
+
+    // =====================================================================
+    // 10. Wire up OTP buttons
+    // =====================================================================
+    document.getElementById('otpResendBtn')?.addEventListener('click', async function() {
+        const emailHint = document.getElementById('otpEmailHint');
+        const email = normalizeEmail(emailHint.innerText);
+        this.disabled = true; this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending…';
+        try { await sendOtp(email, 'resend'); } catch (e) {}
+        this.disabled = false; this.innerHTML = 'Resend Code';
+    });
+
+    // =====================================================================
+    // 11. Startup
+    // =====================================================================
+    (function() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('timeout') === '1') {
+            showError(params.get('reason') ? decodeURIComponent(params.get('reason')) : 'Session timed out due to inactivity.');
+        }
+        hideAlerts();
+    })();
 </script>
 </body>
 </html>

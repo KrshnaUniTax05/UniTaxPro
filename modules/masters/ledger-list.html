@@ -438,7 +438,8 @@ const LedgerApp = {
         const form = await this.FetchAndInjectForm('edit');
         if (!form) return;
 
-        const data = JSON.parse(decodeURIComponent(encodedData));
+        let data = {};
+        try { data = JSON.parse(decodeURIComponent(encodedData)); } catch (e) { console.error('Edit payload decode failed', e); if (App?.UI?.Notify) App.UI.Notify('Error', 'Could not open editor — record payload is corrupted.', 'danger'); return; }
 
         let hiddenId = form.querySelector('[name="hiddenRecordId"]');
         if (!hiddenId) {
@@ -661,7 +662,7 @@ const LedgerApp = {
             entries.forEach(([id, record]) => {
                 if (!record || typeof record !== 'object') return;
                 
-                const encoded = encodeURIComponent(JSON.stringify(record));
+                const encoded = encodeURIComponent(JSON.stringify(record)).replace(/'/g, '%27');
                 const opBal = parseFloat(record.openingBalance || record.OpeningBalance || record.openingAmount || 0);
                 const ledgerNature = (record.ledgerNature || record.LedgerNature || record.nature || '').toLowerCase();
                 
