@@ -210,7 +210,10 @@ const App = {
         // Update sidebar and menu links visual indication based on RBAC permissions
         if (window.UniTaxAuth && typeof UniTaxAuth.CanAccessModule === 'function') {
             const roleStr = (this.State.userRole || localStorage.getItem('userrole') || 'operator').toLowerCase();
-            const isAdmin = ['administrator', 'super_administrator', 'co_useradmin', 'co_admin', 'workspaceowner'].includes(roleStr) || localStorage.getItem('masterControl') === 'administration';
+            const isNonPaidRole = ['standard_user', 'free_owner'].includes(roleStr);
+            const isAdmin = !isNonPaidRole &&
+                (['administrator', 'super_administrator', 'co_useradmin', 'co_admin', 'workspaceowner'].includes(roleStr) ||
+                 localStorage.getItem('masterControl') === 'administration');
 
             // Query all sidebar and navigation links across desktop and mobile
             document.querySelectorAll('.sidebar-desktop [data-route], #sidebarOffcanvas [data-route], [data-route]').forEach(link => {
@@ -844,6 +847,7 @@ NotificationEngine = {
         const role = String(localStorage.getItem('userrole') || localStorage.getItem('role') || '').toLowerCase();
         const masterControl = String(localStorage.getItem('masterControl') || '').toLowerCase();
         const email = String(localStorage.getItem('useremail') || localStorage.getItem('email') || '').toLowerCase();
+        if (['standard_user', 'free_owner'].includes(role)) return false;
         return role === 'master_admin' || role === 'super_administrator' || role === 'platform_admin' 
             || masterControl === 'administration' || masterControl === 'master' || email.includes('admin@unitax');
     },

@@ -1433,7 +1433,11 @@
     const isExplicitAdmin = ['administrator', 'super_administrator', 'workspaceowner', 'owner', 'co_useradmin', 'co_admin'].includes(userRole);
     const isNonAdmin = ['operator', 'viewer', 'auditor', 'accountant'].includes(userRole);
     const masterControl = localStorage.getItem('masterControl') || 'operations';
-    const isAuthorized = isExplicitAdmin || (!isNonAdmin && masterControl === 'administration');
+    const isPaidWorkspace = localStorage.getItem('multiUserLicensed') === 'true' ||
+        ['multi_user', 'enterprise'].includes(String(localStorage.getItem('workspacePlan') || '').toLowerCase());
+    // Admin rights alone are not enough — the workspace must hold an active
+    // multi-user license. Free owners never reach this panel.
+    const isAuthorized = isPaidWorkspace && (isExplicitAdmin || (!isNonAdmin && masterControl === 'administration'));
 
     const overlay = document.getElementById('admin-guard-overlay');
     const content = document.getElementById('admin-panel-content');
@@ -1448,7 +1452,7 @@
             content.style.setProperty('display', 'none', 'important');
         }
         if (window.App && window.App.UI && window.App.UI.Notify) {
-            window.App.UI.Notify('Access Denied', 'Access restricted to authorized Administrators only.', 'danger');
+            window.App.UI.Notify('Access Denied', 'User Admin control requires an active Paid Multi-User license and an authorized Administrator role.', 'danger');
         }
         setTimeout(() => {
             if (window.App && typeof App.Router === 'function') {
@@ -1685,7 +1689,8 @@
 
             // Paid License Verification
             const wsSettings = ownerData?.workspace?.WorkspaceSettings || {};
-            isWorkspaceMultiUserLicensed = wsSettings.multiUserLicensed === true || ownerData.multiUserLicensed === true || wsSettings.workspacePlan === 'multi_user' || wsSettings.workspacePlan === 'enterprise';
+            isWorkspaceMultiUserLicensed = wsSettings.multiUserLicensed === true || ownerData.multiUserLicensed === true ||
+                ['multi_user', 'enterprise'].includes(String(wsSettings.workspacePlan || ownerData.workspacePlan || '').toLowerCase());
 
             const banner = document.getElementById('unlicensed-plan-banner');
             const createBtn = document.getElementById('btn-tab-user-create');

@@ -188,6 +188,9 @@
                 <a href="javascript:void(0)" class="master-nav-link" onclick="switchMasterTab('tab-broadcasts', this)">
                     <i class="bi bi-broadcast"></i> System Broadcasts
                 </a>
+                <a href="javascript:void(0)" class="master-nav-link" onclick="switchMasterTab('tab-emailcenter', this)" id="nav-tab-emailcenter">
+                    <i class="bi bi-envelope-paper"></i> Email Center
+                </a>
                 <a href="javascript:void(0)" class="master-nav-link" onclick="switchMasterTab('tab-promotions', this)" id="nav-tab-promotions">
                     <i class="bi bi-megaphone"></i> Promotions & Releases
                 </a>
@@ -390,7 +393,8 @@
                                     <select id="masterUserRoleFilter" class="form-select form-select-sm" style="width: 190px;" onchange="filterGlobalUsers()">
                                         <option value="ALL">All Platform Roles</option>
                                         <option value="operator">Operator (Entry only)</option>
-                                        <option value="administrator">Workspace Owner (Admin)</option>
+                                        <option value="standard_user">Standard User (Freemium)</option>
+                                        <option value="administrator">Workspace Owner (Licensed Admin)</option>
                                         <option value="manager">Manager / Senior</option>
                                         <option value="approver">Approver</option>
                                         <option value="auditor">Auditor</option>
@@ -538,6 +542,184 @@
                                     </table>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========================================== -->
+                <!-- VIEW 4B: PROFESSIONAL EMAIL CENTER -->
+                <!-- ========================================== -->
+                <div id="tab-emailcenter" class="master-tab-view d-none">
+                    <div class="row g-3 mb-3" id="mailQueueStats">
+                        <div class="col-md-2"><div class="card border-0 shadow-sm h-100"><div class="card-body p-3"><div class="text-muted small text-uppercase fw-bold" style="font-size:10px;">Queued</div><h4 class="fw-bold mb-0 text-primary" id="mailStatQueued">0</h4></div></div></div>
+                        <div class="col-md-2"><div class="card border-0 shadow-sm h-100"><div class="card-body p-3"><div class="text-muted small text-uppercase fw-bold" style="font-size:10px;">Processing</div><h4 class="fw-bold mb-0 text-info" id="mailStatProcessing">0</h4></div></div></div>
+                        <div class="col-md-2"><div class="card border-0 shadow-sm h-100"><div class="card-body p-3"><div class="text-muted small text-uppercase fw-bold" style="font-size:10px;">Sent</div><h4 class="fw-bold mb-0 text-success" id="mailStatSent">0</h4></div></div></div>
+                        <div class="col-md-2"><div class="card border-0 shadow-sm h-100"><div class="card-body p-3"><div class="text-muted small text-uppercase fw-bold" style="font-size:10px;">Partial</div><h4 class="fw-bold mb-0 text-warning" id="mailStatPartial">0</h4></div></div></div>
+                        <div class="col-md-2"><div class="card border-0 shadow-sm h-100"><div class="card-body p-3"><div class="text-muted small text-uppercase fw-bold" style="font-size:10px;">Failed / Skipped</div><h4 class="fw-bold mb-0 text-danger" id="mailStatFailed">0</h4></div></div></div>
+                        <div class="col-md-2"><div class="card border-0 shadow-sm h-100"><div class="card-body p-3"><div class="text-muted small text-uppercase fw-bold" style="font-size:10px;">Scheduled</div><h4 class="fw-bold mb-0 text-secondary" id="mailStatScheduled">0</h4></div></div></div>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-xl-5">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                                    <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-pencil-square me-2 text-primary"></i>Compose Promotional / Personal Email</h6>
+                                    <span class="badge bg-light text-muted border" id="mailComposeCategory">transactional</span>
+                                </div>
+                                <div class="card-body p-4">
+                                    <div class="alert alert-light border small mb-3 py-2">
+                                        OTP, login, account, security, license and system alerts are sent automatically by the system and cannot be composed here. Use this panel only for promotions or a personal message to users.
+                                    </div>
+                                    <form id="emailCenterForm" onsubmit="submitEmailCampaign(event)">
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold">Email Template</label>
+                                            <select id="ec_template" class="form-select form-select-sm" onchange="onEmailTemplateChange()" required></select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold">Recipient Mode</label>
+                                            <select id="ec_mode" class="form-select form-select-sm" onchange="onEmailModeChange()">
+                                                <option value="individual">Individual email addresses</option>
+                                                <option value="audience">Audience group</option>
+                                                <option value="conditions">Conditions / filters</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3" id="ec_recipients_group">
+                                            <label class="form-label small fw-bold">Recipients (one email per line)</label>
+                                            <textarea id="ec_recipients" class="form-control form-control-sm" rows="3" placeholder="user@example.com"></textarea>
+                                        </div>
+                                        <div class="mb-3 d-none" id="ec_audience_group">
+                                            <label class="form-label small fw-bold">Audience Group</label>
+                                            <select id="ec_audience" class="form-select form-select-sm">
+                                                <option value="all">All users</option>
+                                                <option value="owners">Workspace owners / admins</option>
+                                                <option value="licensed">Licensed workspaces</option>
+                                                <option value="standard">Free / standard users</option>
+                                                <option value="operators">Operators & data entry</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3 d-none" id="ec_conditions_group">
+                                            <div class="row g-2">
+                                                <div class="col-6">
+                                                    <label class="form-label small fw-bold">License</label>
+                                                    <select id="ec_cond_license" class="form-select form-select-sm"><option value="">Any</option><option value="licensed">Licensed</option><option value="free">Free</option></select>
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="form-label small fw-bold">Status</label>
+                                                    <select id="ec_cond_status" class="form-select form-select-sm"><option value="">Any</option><option value="active">Active</option><option value="suspended">Suspended</option></select>
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="form-label small fw-bold">Role</label>
+                                                    <input id="ec_cond_role" class="form-control form-control-sm" placeholder="e.g. standard_user">
+                                                </div>
+                                                <div class="col-6">
+                                                    <label class="form-label small fw-bold">License expiring within (days)</label>
+                                                    <input id="ec_cond_days" type="number" min="0" class="form-control form-control-sm" placeholder="e.g. 7">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold">Campaign Title (for tracking)</label>
+                                            <input type="text" id="ec_title" class="form-control form-control-sm" placeholder="e.g. November release announcement">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold">Dynamic Template Values</label>
+                                            <div id="ec_vars" class="border rounded p-2 bg-light" style="max-height:260px;overflow:auto;"></div>
+                                        </div>
+                                        <div class="row g-2 mb-3">
+                                            <div class="col-6">
+                                                <label class="form-label small fw-bold">Subject override (optional)</label>
+                                                <input type="text" id="ec_subject" class="form-control form-control-sm">
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label small fw-bold">Reply-to (optional)</label>
+                                                <input type="email" id="ec_replyto" class="form-control form-control-sm">
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold">Schedule (optional - blank = queue now)</label>
+                                            <input type="datetime-local" id="ec_schedule" class="form-control form-control-sm">
+                                        </div>
+                                        <div class="d-grid gap-2">
+                                            <button type="button" class="btn btn-outline-primary btn-sm fw-bold" onclick="previewEmailCampaign()"><i class="bi bi-eye me-1"></i> Preview Rendered Email</button>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="countEmailAudience()"><i class="bi bi-people me-1"></i> Count Matching Recipients</button>
+                                            <button type="submit" id="ec_submit" class="btn btn-primary btn-sm fw-bold py-2"><i class="bi bi-send me-1"></i> Queue Campaign</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-7">
+                            <div class="card border-0 shadow-sm mb-4">
+                                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                                    <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-clock-history me-2 text-muted"></i>Campaign History</h6>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="loadEmailCampaigns()"><i class="bi bi-arrow-clockwise"></i></button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0 master-table">
+                                        <thead class="table-light small text-muted">
+                                            <tr><th class="ps-3">Campaign</th><th>Template</th><th>Audience</th><th>Status</th><th>Recipients</th><th>Created</th></tr>
+                                        </thead>
+                                        <tbody id="emailCampaignBody"><tr><td colspan="6" class="text-center py-4 text-muted">Loading campaigns...</td></tr></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                                    <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-list-check me-2 text-muted"></i>Mail Queue</h6>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="loadEmailQueue()"><i class="bi bi-arrow-clockwise"></i></button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0 master-table">
+                                        <thead class="table-light small text-muted">
+                                            <tr><th class="ps-3">Event / Template</th><th>Audience</th><th>Status</th><th>Attempts</th><th>Sent</th><th class="text-end pe-3">Error</th></tr>
+                                        </thead>
+                                        <tbody id="emailQueueBody"><tr><td colspan="6" class="text-center py-4 text-muted">Loading queue...</td></tr></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- License period modal -->
+                <div class="modal fade" id="licensePeriodModal" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow">
+                            <div class="modal-header border-bottom py-3">
+                                <h5 class="modal-title fw-bold"><i class="bi bi-patch-check me-2 text-success"></i>Activate Multi-User License</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body p-4">
+                                <p class="text-muted small mb-3">Select the license period. UniTax Pro will store the expiry date and send automatic reminders 7 days, 3 days, and on the expiry date.</p>
+                                <label class="form-label small fw-bold">License period</label>
+                                <select id="lp_period" class="form-select form-select-sm" onchange="onLicensePeriodChange()">
+                                    <option value="30">1 month (30 days)</option>
+                                    <option value="90">3 months (90 days)</option>
+                                    <option value="180">6 months (180 days)</option>
+                                    <option value="365" selected>1 year (365 days)</option>
+                                    <option value="custom">Custom - enter number of days</option>
+                                </select>
+                                <div id="lp_custom_group" class="mt-3 d-none">
+                                    <label class="form-label small fw-bold">Number of days</label>
+                                    <input type="number" id="lp_days" min="1" max="3650" class="form-control form-control-sm" placeholder="e.g. 45">
+                                </div>
+                                <div class="mt-3 p-3 bg-light border rounded small" id="lp_summary">Expiry date will be calculated after activation.</div>
+                            </div>
+                            <div class="modal-footer border-top py-3">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-success btn-sm fw-bold px-4" onclick="confirmLicensePeriod()">Activate License</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview modal -->
+                <div class="modal fade" id="emailPreviewModal" tabindex="-1">
+                    <div class="modal-dialog modal-xl modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header"><h5 class="modal-title" id="emailPreviewTitle">Email preview</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                            <div class="modal-body p-0"><iframe id="emailPreviewFrame" title="Email preview" style="width:100%;height:70vh;border:0;"></iframe></div>
                         </div>
                     </div>
                 </div>
@@ -814,7 +996,7 @@
                             </div>
                             <div class="d-flex align-items-center gap-2">
                                 <span class="badge bg-success-subtle text-success border px-2 py-1 font-mono" id="statPaidLicenseCount">0 Paid Active</span>
-                                <span class="badge bg-secondary-subtle text-secondary border px-2 py-1 font-mono" id="statFreeLicenseCount">0 Free Single-User</span>
+                                <span class="badge bg-secondary-subtle text-secondary border px-2 py-1 font-mono" id="statFreeLicenseCount">0 Standard Users</span>
                             </div>
                         </div>
                         <div class="p-3 border-bottom bg-light">
@@ -826,7 +1008,7 @@
                                     <select id="licensedWsFilter" class="form-select form-select-sm" onchange="renderLicensedWorkspaces()">
                                         <option value="ALL">All License Tiers</option>
                                         <option value="PAID">Licensed Multi-User Only</option>
-                                        <option value="FREE">Single-User / Free Accounts</option>
+                                        <option value="FREE">Standard User / Freemium Accounts</option>
                                     </select>
                                 </div>
                             </div>
@@ -840,11 +1022,12 @@
                                         <th>Current License Plan</th>
                                         <th>Multi-User Access</th>
                                         <th>Member Limit</th>
+                                        <th>License Expiry</th>
                                         <th class="text-end pe-3">License Action</th>
                                     </tr>
                                 </thead>
                                 <tbody id="masterLicensedWorkspacesBody">
-                                    <tr><td colspan="6" class="text-center py-5 text-muted">Loading licensed workspaces...</td></tr>
+                                    <tr><td colspan="7" class="text-center py-5 text-muted">Loading licensed workspaces...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -1776,6 +1959,8 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="assets/js/paths.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Templated MailApp client (queues license/status/security emails) -->
+    <script src="email-templates/webapp-mail-client.js?v=20261126i"></script>
 
     <script>
     (function() {
@@ -2130,6 +2315,7 @@
                 'tab-licensed-workspaces': 'Paid & Multi-User Licensed Workspaces',
                 'tab-master-admins': 'Master Platform Admins & Co-Pilots',
                 'tab-broadcasts': 'System Broadcasts & Alerts Dispatcher',
+                'tab-emailcenter': 'Professional Email Center',
                 'tab-promotions': 'Platform Promotions & Release Updates',
                 'tab-knowledgebase': 'Tutorials & Knowledge Base Server CMS',
                 'tab-updates': 'Utilities / Release Updates & Changelog',
@@ -2143,6 +2329,7 @@
             if (tabId === 'tab-workspaces') renderWorkspaces();
             if (tabId === 'tab-licensed-workspaces') renderLicensedWorkspaces();
             if (tabId === 'tab-master-admins') loadMasterAdmins();
+            if (tabId === 'tab-emailcenter' && typeof window.initEmailCenter === 'function') window.initEmailCenter();
             if (tabId === 'tab-promotions') renderPromotions();
             if (tabId === 'tab-knowledgebase') renderKnowledgeBase();
             if (tabId === 'tab-audit') loadMasterAuditLogs();
@@ -2450,9 +2637,12 @@
                 });
             });
 
-            // 3. Third Pass: Compile Workspaces strictly from primary tenant owners
+            // 3. Third Pass: Compile EVERY top-level account (freemium Standard
+            // User or licensed User Admin) so all accounts are visible in both
+            // the Paid Licensing manager and the Companies directory. Admin
+            // control is still gated by the license flag, never by role alone.
             Object.entries(GLOBAL_USERS).forEach(([id, u]) => {
-                if (u.isWorkspaceMember !== true && (u.workspace || u.role === 'administrator' || u.role === 'super_administrator')) {
+                if (u.isWorkspaceMember !== true) {
                     const wsSettings = u?.workspace?.WorkspaceSettings || {};
                     const membersObj = u?.workspace?.Members || {};
                     const memberList = Object.values(membersObj);
@@ -2463,10 +2653,14 @@
                         ownerId: id,
                         ownerName: u.name || 'Tenant Owner',
                         ownerEmail: u.email || '-',
+                        ownerRole: u.role || 'standard_user',
                         status: wsSettings.workspaceStatus || u.status || 'active',
                         multiUserLicensed: wsSettings.multiUserLicensed === true || u.multiUserLicensed === true,
                         plan: wsSettings.workspacePlan || u.workspacePlan || (wsSettings.multiUserLicensed ? 'multi_user' : 'single_user'),
                         quota: wsSettings.multiUserQuota || 25,
+                        licenseValidUntil: wsSettings.licenseValidUntil || u.licenseValidUntil || null,
+                        licenseValidityDays: wsSettings.licenseValidityDays || u.licenseValidityDays || 0,
+                        licenseAutoRevoked: wsSettings.licenseAutoRevoked === true || u.licenseAutoRevoked === true,
                         members: memberList.length,
                         membersList: membersObj,
                         created_at: wsSettings.created_at || u.created_at || Date.now()
@@ -2549,6 +2743,7 @@
                 const uRole = (u.role || 'operator').toLowerCase();
                 if (roleFilter !== 'all') {
                     if (roleFilter === 'operator' && uRole !== 'operator') return false;
+                    if (roleFilter === 'standard_user' && uRole !== 'standard_user') return false;
                     if (roleFilter === 'administrator' && uRole !== 'administrator' && uRole !== 'super_administrator') return false;
                     if (roleFilter === 'manager' && uRole !== 'manager') return false;
                     if (roleFilter === 'approver' && uRole !== 'approver') return false;
@@ -2570,7 +2765,9 @@
                 const isMember = u.isWorkspaceMember === true;
                 const typeBadge = isMember
                     ? `<span class="badge bg-secondary-subtle text-secondary border">Team Member</span>`
-                    : `<span class="badge bg-primary-subtle text-primary border">User Admin (Tenant Owner)</span>`;
+                    : (u.role === 'standard_user'
+                        ? `<span class="badge bg-warning-subtle text-warning border">Standard User (Freemium)</span>`
+                        : `<span class="badge bg-primary-subtle text-primary border">User Admin (Licensed)</span>`);
 
                 const parentWs = u.workspaceOwnerId || u.workspaceId || id;
                 const isActive = (u.status || 'active') === 'active';
@@ -2631,6 +2828,10 @@
 
             tbody.innerHTML = filtered.map(([id, ws]) => {
                 const isActive = ws.status === 'active';
+                const isPaid = ws.multiUserLicensed === true || ws.plan === 'multi_user' || ws.plan === 'enterprise';
+                const accessBadge = isPaid
+                    ? '<span class="badge bg-success-subtle text-success border" style="font-size:9px;">Licensed User Admin</span>'
+                    : '<span class="badge bg-warning-subtle text-warning border" style="font-size:9px;">Standard User (Free)</span>';
                 return `
                 <tr>
                     <td class="ps-3 font-mono fw-bold text-primary">#${escapeHTML(id)}</td>
@@ -2638,7 +2839,10 @@
                         <div class="fw-bold text-dark">${escapeHTML(ws.name)}</div>
                     </td>
                     <td>
-                        <div>${escapeHTML(ws.ownerName)}</div>
+                        <div class="d-flex align-items-center gap-1 flex-wrap">
+                            <span>${escapeHTML(ws.ownerName)}</span>
+                            ${accessBadge}
+                        </div>
                         <div class="small text-muted font-mono" style="font-size: 11px;">${escapeHTML(ws.ownerEmail)}</div>
                     </td>
                     <td>
@@ -2662,6 +2866,31 @@
             renderWorkspaces(val);
         };
 
+        // Build one deduplicated recipient list for a whole workspace.
+        function collectWorkspaceRecipients(wsId) {
+            const out = [];
+            const seen = new Set();
+            const add = (u) => {
+                const email = String((u && u.email) || '').trim().toLowerCase();
+                if (!email || seen.has(email)) return;
+                seen.add(email);
+                out.push({
+                    email: email,
+                    name: (u && u.name) || u.userId || 'User',
+                    vars: { userName: (u && u.name) || 'User', userEmail: email }
+                });
+            };
+            add(GLOBAL_USERS[wsId]);
+            Object.values(GLOBAL_USERS).forEach(u => {
+                if ((u.workspaceOwnerId || u.workspaceId) === wsId && u.userId !== wsId) add(u);
+            });
+            const ws = GLOBAL_WORKSPACES[wsId] || {};
+            if (ws.ownerEmail && !seen.has(String(ws.ownerEmail).toLowerCase())) {
+                add({ email: ws.ownerEmail, name: ws.ownerName || 'Workspace Owner' });
+            }
+            return out;
+        }
+
         // Toggle user status (Both top-level and nested members)
         window.toggleUserStatus = async function(userId, newStatus) {
             if (!confirm(`Confirm: Change status of user [${userId}] to ${newStatus.toUpperCase()}?`)) return;
@@ -2675,6 +2904,26 @@
                 if (existing && existing.workspaceOwnerId && existing.workspaceOwnerId !== userId) {
                     await db.ref(`Users/${existing.workspaceOwnerId}/workspace/Members/${userId}`).update(patch).catch(() => {});
                 }
+
+                // Queue templated suspension / reactivation email to the user.
+                try {
+                    const target = existing || {};
+                    const wsId = target.workspaceOwnerId || target.userId || userId;
+                    const wsRec = GLOBAL_WORKSPACES[wsId] || {};
+                    if (window.UnitaxMail && typeof UnitaxMail.userStatusChanged === 'function' && target.email) {
+                        await UnitaxMail.userStatusChanged({
+                            status: newStatus,
+                            email: target.email,
+                            name: target.name || 'User',
+                            workspaceName: (target.workspace && target.workspace.WorkspaceSettings && target.workspace.WorkspaceSettings.workspaceName) || wsRec.name || '',
+                            workspaceId: wsId,
+                            changedBy: 'Master Administrator',
+                            changedAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+                            reason: patch.suspensionReason || 'Changed by administrator'
+                        });
+                    }
+                } catch (mailErr) { console.warn('User status email queue skipped:', mailErr); }
+
                 logMasterAudit('USER_STATUS_CHANGE', `User ${userId} status changed to ${newStatus}`);
                 alert(`User status updated to ${newStatus}!`);
                 loadAllMasterData();
@@ -2692,6 +2941,22 @@
                     ? { workspaceStatus: newStatus, suspensionFrom: Date.now(), suspensionUntil: null, suspensionReason: 'Workspace suspended by Master Administrator' }
                     : { workspaceStatus: newStatus, suspensionFrom: null, suspensionUntil: null, suspensionReason: null };
                 await db.ref(`Users/${wsId}/workspace/WorkspaceSettings`).update(patch);
+
+                // Notify the owner and every provisioned member of the workspace.
+                try {
+                    const recipients = collectWorkspaceRecipients(wsId);
+                    const wsRec = GLOBAL_WORKSPACES[wsId] || {};
+                    if (window.UnitaxMail && typeof UnitaxMail.workspaceStatusChanged === 'function' && recipients.length) {
+                        await UnitaxMail.workspaceStatusChanged({
+                            status: newStatus,
+                            recipients: recipients,
+                            workspaceName: wsRec.name || '',
+                            workspaceId: wsId,
+                            changedBy: 'Master Administrator'
+                        });
+                    }
+                } catch (mailErr) { console.warn('Workspace status email queue skipped:', mailErr); }
+
                 logMasterAudit('WORKSPACE_STATUS_CHANGE', `Workspace ${wsId} status changed to ${newStatus}`);
                 alert(`Workspace status updated to ${newStatus}!`);
                 loadAllMasterData();
@@ -2724,6 +2989,23 @@
                 if (existing && existing.workspaceOwnerId && existing.workspaceOwnerId !== userId) {
                     await db.ref(`Users/${existing.workspaceOwnerId}/workspace/Members/${userId}`).remove().catch(() => {});
                 }
+                // Queue templated deletion email (MailApp gateway) before the
+                // record is gone — capture the email from GLOBAL_USERS snapshot.
+                try {
+                    const u = GLOBAL_USERS[userId] || {};
+                    if (window.UnitaxMail && typeof UnitaxMail.accountDeleted === 'function' && u.email) {
+                        await UnitaxMail.accountDeleted({
+                            email: u.email,
+                            name: u.name || name,
+                            workspaceName: (u.workspace && u.workspace.WorkspaceSettings && u.workspace.WorkspaceSettings.workspaceName) || '',
+                            workspaceId: u.workspaceOwnerId || userId,
+                            deletedBy: 'Master Administrator',
+                            deletedAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+                            reason: 'Account removed by administrator'
+                        });
+                    }
+                } catch (mailErr) { console.warn('Deletion email queue skipped:', mailErr); }
+
                 logMasterAudit('PURGE_USER', `Permanently deleted user ${name} (${userId})`);
                 alert("User purged successfully.");
                 loadAllMasterData();
@@ -2779,9 +3061,13 @@
                     name: name,
                     email: email,
                     passwordHash: passHash,
-                    role: isMember ? "operator" : "administrator",
+                    // New standalone tenants start free/unlicensed. Admin control is
+                    // granted only by toggleWorkspaceLicense() after payment.
+                    role: isMember ? "operator" : "standard_user",
                     status: "active",
-                    masterControl: isMember ? "operations" : "administration",
+                    masterControl: "operations",
+                    multiUserLicensed: false,
+                    workspacePlan: "single_user",
                     workspaceId: effectiveWsId,
                     workspaceOwnerId: effectiveWsId,
                     isWorkspaceMember: isMember,
@@ -2885,6 +3171,19 @@
         // =========================================================
         // VIEW 8: PAID & LICENSED WORKSPACES MANAGER (Requirement #7 & #9)
         // =========================================================
+        function licenseExpiryHtml(ws) {
+            if (!ws.multiUserLicensed) return '<span class="text-muted small">Not licensed</span>';
+            if (!ws.licenseValidUntil) return '<span class="badge bg-warning text-dark small">No expiry set</span>';
+            const until = new Date(ws.licenseValidUntil);
+            const days = Math.ceil((until.getTime() - Date.now()) / 86400000);
+            const dateText = until.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
+            if (days < 0 || ws.licenseAutoRevoked) {
+                return `<span class="badge bg-danger small">Expired ${dateText}</span>`;
+            }
+            const cls = days <= 1 ? 'bg-danger' : (days <= 3 ? 'bg-warning text-dark' : (days <= 7 ? 'bg-info text-dark' : 'bg-success'));
+            return `<span class="badge ${cls} small">${dateText} (${days}d)</span>`;
+        }
+
         window.renderLicensedWorkspaces = function(filterText = '') {
             const tbody = document.getElementById('masterLicensedWorkspacesBody');
             if (!tbody) return;
@@ -2905,7 +3204,7 @@
                 document.getElementById('statPaidLicenseCount').innerText = `${paidCount} Paid Active`;
             }
             if (document.getElementById('statFreeLicenseCount')) {
-                document.getElementById('statFreeLicenseCount').innerText = `${freeCount} Free Single-User`;
+                document.getElementById('statFreeLicenseCount').innerText = `${freeCount} Standard Users`;
             }
 
             const filtered = wsList.filter(ws => {
@@ -2920,7 +3219,7 @@
             });
 
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-muted">No organizations matching criteria.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-muted">No organizations matching criteria.</td></tr>`;
                 return;
             }
 
@@ -2928,7 +3227,7 @@
                 const isPaid = ws.multiUserLicensed === true || ws.plan === 'multi_user' || ws.plan === 'enterprise';
                 const planBadge = isPaid
                     ? `<span class="badge bg-success text-white"><i class="bi bi-star-fill me-1"></i> Multi-User Enterprise</span>`
-                    : `<span class="badge bg-light text-secondary border">Single-User Basic</span>`;
+                    : `<span class="badge bg-light text-secondary border">Standard User (Free)</span>`;
 
                 const quotaText = isPaid ? `${ws.quota || 25} Users Quota` : '1 User Only';
                 const staffCount = ws.members || 0;
@@ -2951,7 +3250,7 @@
                         </td>
                         <td class="small font-mono">${escapeHTML(ws.ownerEmail)}</td>
                         <td>
-                            <span class="badge bg-primary text-white font-mono small">Administrator (Owner)</span>
+                            ${ws.ownerRole === 'standard_user' ? '<span class="badge bg-warning text-dark font-mono small">Standard User (Free)</span>' : '<span class="badge bg-primary text-white font-mono small">Administrator (Owner)</span>'}
                         </td>
                         <td>
                             <span class="badge bg-success-subtle text-success border">Full Direct Post</span>
@@ -3041,6 +3340,7 @@
                         </div>
                     </td>
                     <td><span class="badge bg-light text-dark border font-mono small">${quotaText}</span></td>
+                    <td>${licenseExpiryHtml(ws)}</td>
                     <td class="text-end pe-3 text-nowrap">
                         <button class="btn btn-sm btn-primary py-0 px-2 me-1 fw-bold shadow-sm" onclick="viewWorkspaceTeamMembers('${ws.id}')" title="Inspect & Manage Team Roster">
                             <i class="bi bi-people-fill me-1"></i> Manage Roster
@@ -3059,7 +3359,7 @@
 
                 <!-- Collapsible Sub-Row (Inline Accordion) -->
                 <tr id="acc_row_${ws.id}" class="d-none" style="background-color: #f8fafc;">
-                    <td colspan="6" class="p-0 border-0">
+                    <td colspan="7" class="p-0 border-0">
                         <div class="p-3 bg-light border-start border-end border-bottom" style="box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);">
                             <div class="d-flex justify-content-between align-items-center mb-2 px-1">
                                 <div>
@@ -3095,32 +3395,141 @@
             }).join('');
         };
 
-        window.toggleWorkspaceLicense = async function(wsId, grant) {
-            const actionText = grant ? "GRANT Multi-User Enterprise License" : "REVOKE Multi-User License";
-            if (!confirm(`Confirm: ${actionText} for workspace #${wsId}?`)) return;
+        let LICENSE_PERIOD_WS_ID = null;
+
+        function licensePeriodDays() {
+            const sel = document.getElementById('lp_period');
+            const value = sel ? sel.value : '365';
+            if (value === 'custom') {
+                const days = Math.max(1, Number(document.getElementById('lp_days')?.value) || 0);
+                return { days, label: `${days} days (custom)` };
+            }
+            const days = Number(value) || 365;
+            const labels = { 30: '1 month', 90: '3 months', 180: '6 months', 365: '1 year' };
+            return { days, label: labels[days] || `${days} days` };
+        }
+
+        window.onLicensePeriodChange = function() {
+            const isCustom = document.getElementById('lp_period')?.value === 'custom';
+            document.getElementById('lp_custom_group')?.classList.toggle('d-none', !isCustom);
+            const info = document.getElementById('lp_summary');
+            if (!info) return;
+            if (isCustom) {
+                info.innerText = 'Enter the number of days to calculate the expiry date.';
+                return;
+            }
+            const p = licensePeriodDays();
+            const expiry = new Date(Date.now() + p.days * 86400000).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
+            info.innerText = `${p.label} - expires ${expiry}. Reminders: 7 days, 3 days, and expiry date.`;
+        };
+
+        window.openLicensePeriodModal = function(wsId) {
+            LICENSE_PERIOD_WS_ID = wsId;
+            const sel = document.getElementById('lp_period');
+            if (sel) sel.value = '365';
+            const custom = document.getElementById('lp_days');
+            if (custom) custom.value = '';
+            onLicensePeriodChange();
+            const ws = GLOBAL_WORKSPACES[wsId] || {};
+            const title = document.querySelector('#licensePeriodModal .modal-title');
+            if (title) title.innerHTML = `<i class="bi bi-patch-check me-2 text-success"></i>Activate License - ${escapeHTML(ws.name || '#' + wsId)}`;
+            new bootstrap.Modal(document.getElementById('licensePeriodModal')).show();
+        };
+
+        window.confirmLicensePeriod = async function() {
+            if (!LICENSE_PERIOD_WS_ID) return;
+            const p = licensePeriodDays();
+            if (p.days < 1) { alert('Enter a valid number of days.'); return; }
+            const wsId = LICENSE_PERIOD_WS_ID;
+            LICENSE_PERIOD_WS_ID = null;
+            const modal = bootstrap.Modal.getInstance(document.getElementById('licensePeriodModal'));
+            if (modal) modal.hide();
+            await applyWorkspaceLicense(wsId, true, p.days, p.label);
+        };
+
+        window.toggleWorkspaceLicense = function(wsId, grant) {
+            if (grant) {
+                openLicensePeriodModal(wsId);
+                return;
+            }
+            if (!confirm('Confirm: REVOKE Multi-User License for workspace #' + wsId + '?')) return;
+            applyWorkspaceLicense(wsId, false, 0, 'Revoked');
+        };
+
+        async function applyWorkspaceLicense(wsId, grant, validityDays, periodLabel) {
+            const actionText = grant ? 'GRANT Multi-User Enterprise License' : 'REVOKE Multi-User License';
+            const validUntil = grant ? Date.now() + validityDays * 86400000 : null;
+            const expiryDate = validUntil ? new Date(validUntil).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' }) : '';
+            const wsSnapshot = GLOBAL_WORKSPACES[wsId] || {};
+            const ownerSnapshot = GLOBAL_USERS[wsId] || {};
+            const wasLicensed = wsSnapshot.multiUserLicensed === true || ownerSnapshot.multiUserLicensed === true;
+            const previousExpiryValue = ownerSnapshot.licenseValidUntil || wsSnapshot.licenseValidUntil || null;
+            const previousExpiryDate = previousExpiryValue
+                ? new Date(previousExpiryValue).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })
+                : 'Not available';
 
             try {
                 const patch = {
                     multiUserLicensed: grant,
                     workspacePlan: grant ? 'multi_user' : 'single_user',
                     multiUserQuota: grant ? 25 : 1,
-                    licensedAt: firebase.database.ServerValue.TIMESTAMP
+                    licensedAt: firebase.database.ServerValue.TIMESTAMP,
+                    licenseValidUntil: validUntil,
+                    licenseValidityDays: grant ? validityDays : 0,
+                    licenseAutoRevoked: false,
+                    periodLabel: grant ? periodLabel : ''
                 };
 
                 await db.ref(`Users/${wsId}/workspace/WorkspaceSettings`).update(patch);
-                // Also update top level user record
+                // Top-level owner record: license grant is what unlocks User Admin
+                // control. Revoking sends the owner back to Standard User.
                 await db.ref(`Users/${wsId}`).update({
                     multiUserLicensed: grant,
-                    workspacePlan: grant ? 'multi_user' : 'single_user'
+                    workspacePlan: grant ? 'multi_user' : 'single_user',
+                    role: grant ? 'administrator' : 'standard_user',
+                    masterControl: grant ? 'administration' : 'operations',
+                    licenseValidUntil: validUntil,
+                    licenseValidityDays: grant ? validityDays : 0,
+                    licenseAutoRevoked: false,
+                    periodLabel: grant ? periodLabel : ''
                 }).catch(() => {});
 
-                logMasterAudit('LICENSE_STATUS_CHANGE', `${actionText} for workspace #${wsId}`, wsId);
-                alert(`Workspace #${wsId} license updated! Status: ${grant ? 'MULTI-USER ACTIVE' : 'SINGLE-USER'}`);
+                // Queue templated license email (MailApp gateway).
+                try {
+                    const wsRec = GLOBAL_WORKSPACES[wsId] || {};
+                    const owner = GLOBAL_USERS[wsId] || {};
+                    if (window.UnitaxMail && typeof UnitaxMail.licenseChanged === 'function' && owner.email) {
+                        await UnitaxMail.licenseChanged({
+                            grant,
+                            renewal: grant && wasLicensed,
+                            email: owner.email,
+                            name: owner.name || 'User',
+                            workspaceName: wsRec.name || (owner.name ? `${owner.name}'s Workspace` : `Workspace #${wsId}`),
+                            workspaceId: wsId,
+                            changedBy: 'Master Administrator',
+                            changedAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+                            planName: grant ? 'Multi-User Enterprise' : 'Standard User',
+                            memberLimit: grant ? 25 : 1,
+                            periodLabel: grant ? periodLabel : '',
+                            daysValid: grant ? validityDays : 0,
+                            previousExpiryDate: previousExpiryDate,
+                            expiryDate: expiryDate,
+                            impactMessage: grant
+                                ? `Your team can provision up to 25 members. Renewal reminders will be sent 7 days, 3 days, and on ${expiryDate}.`
+                                : 'Team provisioning is now unavailable until a license is granted again.'
+                        });
+                    }
+                } catch (mailErr) { console.warn('License email queue skipped:', mailErr); }
+
+                logMasterAudit('LICENSE_STATUS_CHANGE', `${actionText} (${periodLabel}) for workspace #${wsId}`, wsId);
+                alert(grant
+                    ? `Workspace #${wsId} licensed for ${periodLabel}. Expires ${expiryDate}. Automatic reminders are enabled.`
+                    : `Workspace #${wsId} license revoked. Status: STANDARD USER (FREE).`);
                 loadAllMasterData();
             } catch (e) {
-                alert("License update error: " + e.message);
+                alert('License update error: ' + e.message);
             }
-        };
+        }
 
         
         // =========================================================
@@ -3185,7 +3594,7 @@
                     </td>
                     <td class="small font-mono">${escapeHTML(ws.ownerEmail)}</td>
                     <td>
-                        <span class="badge bg-primary text-white font-mono small">Administrator (Owner)</span>
+                        ${ws.ownerRole === 'standard_user' ? '<span class="badge bg-warning text-dark font-mono small">Standard User (Free)</span>' : '<span class="badge bg-primary text-white font-mono small">Administrator (Owner)</span>'}
                     </td>
                     <td>
                         <span class="badge bg-success-subtle text-success border">Full Direct Post</span>
@@ -3279,6 +3688,24 @@
                     await db.ref(`Users/${wsId}/workspace/Members/${userId}`).update(patch);
                     await db.ref(`Users/${userId}`).update(patch).catch(() => {});
                 }
+
+                // Queue templated suspension / reactivation email (MailApp gateway).
+                try {
+                    const target = isOwner ? (GLOBAL_USERS[wsId] || {}) : (GLOBAL_USERS[userId] || {});
+                    const wsRec = GLOBAL_WORKSPACES[wsId] || {};
+                    if (window.UnitaxMail && typeof UnitaxMail.userStatusChanged === 'function' && target.email) {
+                        await UnitaxMail.userStatusChanged({
+                            status: newStatus,
+                            email: target.email,
+                            name: target.name || 'User',
+                            workspaceName: wsRec.name || '',
+                            workspaceId: wsId,
+                            changedBy: 'Master Administrator',
+                            changedAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+                            reason: patch.suspensionReason || 'Changed by administrator'
+                        });
+                    }
+                } catch (mailErr) { console.warn('Status-change email queue skipped:', mailErr); }
 
                 logMasterAudit('USER_STATUS_CHANGE', `Master changed status of ${targetType} #${userId} in WS #${wsId} to ${newStatus}`, wsId);
                 alert(`Account status updated to ${newStatus.toUpperCase()}!`);
@@ -3422,8 +3849,24 @@
         window.deleteMemberInMaster = async function(wsId, memberId, memberName) {
             if (!confirm(`Warning: Permanently purge team member [${memberName}] (#${memberId}) from workspace #${wsId}?`)) return;
             try {
+                // Capture the member before deletion so the email can still be sent.
+                const member = GLOBAL_USERS[memberId] || {};
                 await db.ref(`Users/${wsId}/workspace/Members/${memberId}`).remove();
                 await db.ref(`Users/${memberId}`).remove().catch(() => {});
+                try {
+                    const wsRec = GLOBAL_WORKSPACES[wsId] || {};
+                    if (window.UnitaxMail && typeof UnitaxMail.accountDeleted === 'function' && member.email) {
+                        await UnitaxMail.accountDeleted({
+                            email: member.email,
+                            name: member.name || memberName,
+                            workspaceName: wsRec.name || '',
+                            workspaceId: wsId,
+                            deletedBy: 'Master Administrator',
+                            deletedAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+                            reason: 'Team member removed by administrator'
+                        });
+                    }
+                } catch (mailErr) { console.warn('Member deletion email queue skipped:', mailErr); }
                 logMasterAudit('PURGE_MEMBER', `Purged member ${memberId} from workspace ${wsId}`, wsId);
                 alert("Team member purged successfully!");
                 await loadAllMasterData();
@@ -3764,6 +4207,25 @@
                     await db.ref(`${cleanUserId}/PlatformMaster/Broadcasts/${newPromoId}`).set(payload);
                     await db.ref(`Users/${cleanUserId}/Notifications/${newPromoId}`).set(payload);
                 }
+
+                // Promotional delivery by email. System/security broadcasts
+                // are intentionally not emailed by admins here.
+                try {
+                    if (window.UnitaxMail && typeof UnitaxMail.promotion === 'function') {
+                        const promoAudience = audience === 'specific_user' ? 'conditions' : (audience === 'workspace' ? 'conditions' : audience);
+                        await UnitaxMail.promotion({
+                            version: payload.version || 'Platform Update',
+                            headline: title,
+                            featureList: narration,
+                            releaseUrl: route ? `index.html#/${route}` : 'index.html',
+                            audience: promoAudience,
+                            conditions: audience === 'workspace'
+                                ? { workspaceId: targetWorkspace }
+                                : (audience === 'specific_user' ? { userId: targetUser } : null),
+                            requestedBy: 'Master Administrator'
+                        });
+                    }
+                } catch (mailErr) { console.warn('Promotional email queue skipped:', mailErr); }
 
                 logMasterAudit('CREATE_NOTIFICATION', `Dispatched notification: "${title}" to scope [${audience}]`);
                 alert("Master Admin notification dispatched successfully to ERP clients!");
@@ -4355,6 +4817,11 @@ Client Webapp URL: index.html#/help/article?id=${articleId}`);
                     createdAt: firebase.database.ServerValue.TIMESTAMP
                 });
 
+                // System / security broadcasts stay in-app only. Automatic
+                // system emails are generated by their own handlers, and admin
+                // email is limited to promotions + personal messages in the
+                // Email Center.
+
                 logMasterAudit('DISPATCH_BROADCAST', `Dispatched broadcast: ${title} (${target})`);
                 alert("Broadcast alert successfully dispatched to all active ERP sessions!");
                 document.getElementById('masterBroadcastForm').reset();
@@ -4415,6 +4882,269 @@ Client Webapp URL: index.html#/help/article?id=${articleId}`);
                 loadBroadcastHistory();
             } catch (e) {
                 alert("Error: " + e.message);
+            }
+        };
+
+        // =========================================================
+        // PROFESSIONAL EMAIL CENTER (templated, queued, trackable)
+        // =========================================================
+        const MAIL_AUTO_KEYS = new Set([
+            'appName', 'supportEmail', 'year', 'loginUrl', 'ipAddress',
+            'approxLocation', 'device', 'browser', 'requestedAt', 'senderName', 'replyTo'
+        ]);
+        let EMAIL_TEMPLATES = [];
+        let EMAIL_CENTER_READY = false;
+
+        // Only admin-composable categories are exposed here. OTP, login,
+        // account, security, license and system alerts are fully automatic.
+        const MANUAL_MAIL_CATEGORIES = ['promotional', 'custom'];
+        const MAIL_FALLBACK_TEMPLATES = [
+            'promotion_release', 'system_maintenance', 'broadcast_announcement', 'custom_message'
+        ].map(id => ({
+            templateId: id,
+            category: id === 'custom_message' ? 'custom' : 'promotional',
+            sender: id === 'custom_message' ? 'transactional' : 'marketing',
+            requiredKeys: []
+        }));
+
+        async function ensureEmailTemplates() {
+            if (EMAIL_TEMPLATES.length) return EMAIL_TEMPLATES;
+            try {
+                const r = await fetch('email-templates/templates.json', { cache: 'no-store' });
+                if (r.ok) {
+                    const data = await r.json();
+                    if (Array.isArray(data) && data.length) {
+                        EMAIL_TEMPLATES = data.filter(t => MANUAL_MAIL_CATEGORIES.includes(t.category));
+                    }
+                }
+            } catch (e) { /* local file mode - use fallback */ }
+            if (!EMAIL_TEMPLATES.length) EMAIL_TEMPLATES = MAIL_FALLBACK_TEMPLATES;
+            return EMAIL_TEMPLATES;
+        }
+
+        window.initEmailCenter = async function() {
+            const select = document.getElementById('ec_template');
+            if (!select) return;
+            if (!EMAIL_CENTER_READY) {
+                EMAIL_CENTER_READY = true;
+                await ensureEmailTemplates();
+                select.innerHTML = EMAIL_TEMPLATES.map(t =>
+                    `<option value="${escapeHTML(t.templateId)}">${escapeHTML(t.templateId)} (${escapeHTML(t.category)})</option>`
+                ).join('');
+                if (window.UnitaxMail && typeof UnitaxMail.watchQueue === 'function') {
+                    try { UnitaxMail.watchQueue(renderMailStats); } catch (e) {}
+                }
+            }
+            onEmailModeChange();
+            onEmailTemplateChange();
+            loadEmailCampaigns();
+            loadEmailQueue();
+            if (window.flushUnitaxMailOutbox) window.flushUnitaxMailOutbox().catch(() => {});
+        };
+
+        function renderMailStats(s) {
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = v; };
+            set('mailStatQueued', s.queued || 0);
+            set('mailStatProcessing', s.processing || 0);
+            set('mailStatSent', s.sent || 0);
+            set('mailStatPartial', s.partial || 0);
+            set('mailStatFailed', (s.failed || 0) + (s.skipped || 0));
+            set('mailStatScheduled', s.scheduled || 0);
+        }
+
+        window.onEmailModeChange = function() {
+            const mode = document.getElementById('ec_mode')?.value || 'individual';
+            document.getElementById('ec_recipients_group')?.classList.toggle('d-none', mode !== 'individual');
+            document.getElementById('ec_audience_group')?.classList.toggle('d-none', mode !== 'audience');
+            document.getElementById('ec_conditions_group')?.classList.toggle('d-none', mode !== 'conditions');
+        };
+
+        window.onEmailTemplateChange = function() {
+            const id = document.getElementById('ec_template')?.value;
+            const meta = EMAIL_TEMPLATES.find(t => t.templateId === id) || {};
+            const badge = document.getElementById('mailComposeCategory');
+            if (badge) badge.innerText = meta.category === 'custom' ? 'personal message / UniTax Pro' : (meta.sender === 'marketing' ? 'promotional / UniTax Pro Notifications' : 'transactional / UniTax Pro');
+            const keys = (meta.requiredKeys || []).filter(k => !MAIL_AUTO_KEYS.has(k));
+            const host = document.getElementById('ec_vars');
+            if (!host) return;
+            host.innerHTML = keys.map(k => {
+                const label = k.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase());
+                return `<div class="mb-2">
+                    <label class="form-label small fw-semibold mb-0" style="font-size:11px;">${escapeHTML(label)}</label>
+                    <input class="form-control form-control-sm" data-ec-var="${escapeHTML(k)}" placeholder="{{${escapeHTML(k)}}}">
+                </div>`;
+            }).join('') + `<div class="mt-2">
+                <label class="form-label small fw-semibold mb-0" style="font-size:11px;">Additional values (JSON, optional)</label>
+                <textarea id="ec_vars_json" class="form-control form-control-sm" rows="2" placeholder='{"key":"value"}'></textarea>
+            </div>`;
+            const title = document.getElementById('ec_title');
+            if (title && !title.value) title.value = id.replace(/_/g, ' ');
+        };
+
+        function emailCenterVars() {
+            const vars = { userName: 'User' };
+            const templateId = document.getElementById('ec_template')?.value || '';
+            if (templateId === 'custom_message') {
+                vars.actionRequired = vars.actionRequired || 'You may reply to this email if you need any assistance.';
+                vars.detailsUrl = vars.detailsUrl || location.origin + '/index.html';
+            }
+            document.querySelectorAll('[data-ec-var]').forEach(el => {
+                const v = el.value.trim();
+                if (v) vars[el.dataset.ecVar] = v;
+            });
+            const extra = document.getElementById('ec_vars_json')?.value.trim();
+            if (extra) {
+                try { Object.assign(vars, JSON.parse(extra)); }
+                catch (e) { throw new Error('Additional values must be valid JSON.'); }
+            }
+            if (!vars.actionRequired && templateId === 'custom_message') {
+                vars.actionRequired = 'You may reply to this email if you need any assistance.';
+            }
+            if (!vars.detailsUrl && templateId === 'custom_message') {
+                vars.detailsUrl = location.origin + '/index.html';
+            }
+            return vars;
+        }
+
+        function emailCenterAudience() {
+            const mode = document.getElementById('ec_mode')?.value || 'individual';
+            if (mode === 'individual') {
+                const text = document.getElementById('ec_recipients')?.value || '';
+                const recipients = text.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean)
+                    .map(email => ({ email, name: email.split('@')[0], vars: {} }));
+                return { recipients, audience: 'custom', conditions: null };
+            }
+            if (mode === 'audience') {
+                return { recipients: null, audience: document.getElementById('ec_audience')?.value || 'all', conditions: null };
+            }
+            const conditions = {
+                license: document.getElementById('ec_cond_license')?.value || '',
+                status: document.getElementById('ec_cond_status')?.value || '',
+                role: document.getElementById('ec_cond_role')?.value.trim() || '',
+                daysToExpiry: document.getElementById('ec_cond_days')?.value || ''
+            };
+            return { recipients: null, audience: 'conditions', conditions };
+        }
+
+        window.previewEmailCampaign = async function() {
+            try {
+                if (!window.UnitaxMail) throw new Error('Mail client is not loaded.');
+                const templateId = document.getElementById('ec_template').value;
+                const values = emailCenterVars();
+                const meta = EMAIL_TEMPLATES.find(t => t.templateId === templateId) || {};
+                if (meta.category === 'promotional' && !values.unsubscribeUrl) {
+                    values.unsubscribeUrl = location.origin + '/unsubscribe.html';
+                }
+                const data = await UnitaxMail.preview(templateId, values);
+                document.getElementById('emailPreviewTitle').innerText = data.subject || 'Email preview';
+                const frame = document.getElementById('emailPreviewFrame');
+                frame.srcdoc = data.htmlBody || '<p>No HTML body returned.</p>';
+                new bootstrap.Modal(document.getElementById('emailPreviewModal')).show();
+            } catch (e) { alert('Preview failed: ' + e.message); }
+        };
+
+        window.countEmailAudience = async function() {
+            try {
+                const a = emailCenterAudience();
+                let count = a.recipients ? a.recipients.length : null;
+                if (count === null && window.UnitaxMail?.previewAudience) {
+                    const rows = await UnitaxMail.previewAudience(a.conditions);
+                    count = rows.length;
+                }
+                alert('Matching recipients: ' + (count == null ? 'unknown (resolved by server)' : count));
+            } catch (e) { alert('Audience count failed: ' + e.message); }
+        };
+
+        window.submitEmailCampaign = async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('ec_submit');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Queueing...';
+            try {
+                if (!window.UnitaxMail) throw new Error('Mail client is not loaded.');
+                const a = emailCenterAudience();
+                const scheduledAt = document.getElementById('ec_schedule')?.value;
+                const templateId = document.getElementById('ec_template').value;
+                const meta = EMAIL_TEMPLATES.find(t => t.templateId === templateId) || {};
+                const values = emailCenterVars();
+                if (meta.category === 'promotional' && !values.unsubscribeUrl) {
+                    values.unsubscribeUrl = location.origin + '/unsubscribe.html';
+                }
+                const result = await UnitaxMail.campaign({
+                    templateId: templateId,
+                    category: meta.category || 'transactional',
+                    recipients: a.recipients,
+                    audience: a.audience,
+                    conditions: a.conditions,
+                    varMap: values,
+                    campaignTitle: document.getElementById('ec_title')?.value || 'Untitled campaign',
+                    subjectOverride: document.getElementById('ec_subject')?.value || '',
+                    replyTo: document.getElementById('ec_replyto')?.value || '',
+                    scheduledAt: scheduledAt ? new Date(scheduledAt).getTime() : null,
+                    requestedBy: 'Master Administrator'
+                });
+                if (typeof logMasterAudit === 'function') {
+                    logMasterAudit('EMAIL_CAMPAIGN', `Queued ${result.campaignId}: ${document.getElementById('ec_template').value}`);
+                }
+                alert('Campaign queued: ' + result.campaignId + '\nThe Apps Script gateway will deliver it within 1 minute.');
+                loadEmailCampaigns();
+                loadEmailQueue();
+            } catch (err) {
+                alert('Campaign failed: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-send me-1"></i> Queue Campaign';
+            }
+        };
+
+        window.loadEmailCampaigns = async function() {
+            const body = document.getElementById('emailCampaignBody');
+            if (!body) return;
+            try {
+                const snap = await db.ref('System/EmailCampaigns').limitToLast(20).once('value');
+                const rows = Object.entries(snap.val() || {}).reverse();
+                if (!rows.length) {
+                    body.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No campaigns yet.</td></tr>';
+                    return;
+                }
+                const color = { sent: 'success', partial: 'warning', failed: 'danger', skipped: 'secondary', scheduled: 'info', queued: 'primary' };
+                body.innerHTML = rows.map(([id, c]) => `
+                    <tr>
+                        <td class="ps-3"><div class="fw-bold small">${escapeHTML(c.title || id)}</div><div class="text-muted small font-monospace">${escapeHTML(id)}</div></td>
+                        <td><span class="badge bg-light text-dark border small">${escapeHTML(c.templateId || '')}</span></td>
+                        <td class="small">${escapeHTML(c.audience || '')}</td>
+                        <td><span class="badge bg-${color[c.status] || 'secondary'} small">${escapeHTML(c.status || 'queued')}</span>${c.error ? `<div class="text-danger small text-truncate" style="max-width:180px;">${escapeHTML(c.error)}</div>` : ''}</td>
+                        <td class="small">${c.sentCount != null ? `${c.sentCount}/${c.recipientCount || '?'}` : (c.recipientCount || '-')}</td>
+                        <td class="text-muted small">${new Date(c.createdAt || Date.now()).toLocaleString('en-IN')}</td>
+                    </tr>`).join('');
+            } catch (e) {
+                body.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">Failed to load campaigns.</td></tr>';
+            }
+        };
+
+        window.loadEmailQueue = async function() {
+            const body = document.getElementById('emailQueueBody');
+            if (!body) return;
+            try {
+                const snap = await db.ref('System/EmailQueue').limitToLast(20).once('value');
+                const rows = Object.entries(snap.val() || {}).reverse();
+                if (!rows.length) {
+                    body.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">Queue is empty.</td></tr>';
+                    return;
+                }
+                const color = { sent: 'success', partial: 'warning', failed: 'danger', skipped: 'secondary', scheduled: 'info', queued: 'primary', processing: 'info' };
+                body.innerHTML = rows.map(([id, j]) => `
+                    <tr>
+                        <td class="ps-3"><div class="fw-bold small">${escapeHTML(j.event || j.templateId || 'email')}</div><div class="text-muted small">${escapeHTML(j.templateId || '')}</div></td>
+                        <td class="small">${escapeHTML(j.audience || 'custom')}</td>
+                        <td><span class="badge bg-${color[j.status] || 'secondary'} small">${escapeHTML(j.status || 'queued')}</span></td>
+                        <td class="small">${j.attempts || 0}</td>
+                        <td class="small">${j.sentCount != null ? `${j.sentCount}/${j.recipientCount || '?'}` : '-'}</td>
+                        <td class="text-end pe-3 text-danger small">${escapeHTML(j.error || '')}</td>
+                    </tr>`).join('');
+                if (window.UnitaxMail?.queueStats) renderMailStats(await UnitaxMail.queueStats());
+            } catch (e) {
+                body.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">Failed to load queue.</td></tr>';
             }
         };
 
@@ -4594,6 +5324,9 @@ Client Webapp URL: index.html#/help/article?id=${articleId}`);
                 alert('Could not save platform settings: ' + err.message);
             }
         };
+
+        // Retry any mail jobs that were queued offline.
+        if (window.flushUnitaxMailOutbox) window.flushUnitaxMailOutbox().catch(() => {});
 
         // Bootstrap on page load (Execute immediately + lifecycle handlers)
         checkMasterSession();

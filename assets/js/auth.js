@@ -98,6 +98,16 @@ const UniTaxAuth = {
             canApprove: false,
             sensitiveFields: { showFinancialAmounts: true, showProfitMargins: true, showBankAccounts: true }
         },
+        'standard_user': {
+            name: 'Standard User',
+            description: 'Freemium / guest workspace account. Core ERP access only — no User Admin Control Panel until licensed.',
+            modules: ['masters', 'transactions', 'reports', 'settings', 'utilities'],
+            actions: ['create', 'read', 'update', 'delete', 'post', 'export', 'print', 'view_metadata'],
+            dataScope: 'all',
+            canPostDirectly: true,
+            canApprove: true,
+            sensitiveFields: { showFinancialAmounts: true, showProfitMargins: true, showBankAccounts: true }
+        },
         'custom': {
             name: 'Custom Defined Role',
             description: 'Custom security profile with tailored granular matrix permissions',
@@ -243,7 +253,7 @@ const UniTaxAuth = {
         // Admin & Co-User Admin override (strict check: non-admin roles cannot be bypassed by stale masterControl)
         const role = String(perms.role || '').toLowerCase();
         const isAdminRole = ['super_administrator', 'administrator', 'co_useradmin', 'co_admin'].includes(role);
-        const isNonAdminRole = ['operator', 'viewer', 'auditor', 'accountant'].includes(role);
+        const isNonAdminRole = ['operator', 'viewer', 'auditor', 'accountant', 'standard_user', 'free_owner'].includes(role);
         if (isAdminRole || (!isNonAdminRole && localStorage.getItem('masterControl') === 'administration')) {
             return true;
         }
@@ -257,8 +267,11 @@ const UniTaxAuth = {
         if (clean === 'help/article' || clean.startsWith('help/article')) return true;
         if (clean.startsWith('help') || clean.includes('help')) return true;
         if (clean.startsWith('help') || clean.startsWith('help/')) return true;
-        // Admin Panel restricted to administrators
+        // Admin Panel restricted to administrators AND a paid multi-user license.
+        const isLicensedWorkspace = localStorage.getItem('multiUserLicensed') === 'true' ||
+            ['multi_user', 'enterprise'].includes(String(localStorage.getItem('workspacePlan') || '').toLowerCase());
         if (clean.startsWith('utilities/useradmin')) {
+            if (!isLicensedWorkspace) return false;
             return perms.role === 'administrator' || perms.role === 'co_useradmin' || perms.role === 'co_admin' || perms.actions.includes('admin');
         }
 
@@ -299,6 +312,9 @@ const UniTaxAuth = {
         return !!perms.sensitiveFields[fieldName];
     }
 };
+
+// Backward-compatible aliases for accounts created during the free-owner rollout.
+UniTaxAuth.RoleTemplates.free_owner = UniTaxAuth.RoleTemplates.standard_user;
 
 /**
  * Enterprise Audit Logger

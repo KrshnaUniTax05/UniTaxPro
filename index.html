@@ -55,7 +55,7 @@
             try {
                 if (localStorage.getItem('userloginid') && localStorage.getItem('keepSignedIn') !== 'true') {
                     if (!sessionStorage.getItem('unitax_session_active')) {
-                        ['userloginid','userName','useremail_we','designation','userrole','workspaceId','workspaceUserId','workspaceOwnerName','masterControl','userType','userSource','postingLimit','canPostDirect','canBackdate','allowedProfitCenter','allowedLedger','assignedManagerId','assignedManagerName','userVoucherApprovalFlow','userPermissionsOverride','workspacePostingPeriod','keepSignedIn'].forEach(k => localStorage.removeItem(k));
+                        ['userloginid','userName','useremail_we','designation','userrole','workspaceId','workspaceUserId','workspaceOwnerName','masterControl','multiUserLicensed','workspacePlan','userType','userSource','postingLimit','canPostDirect','canBackdate','allowedProfitCenter','allowedLedger','assignedManagerId','assignedManagerName','userVoucherApprovalFlow','userPermissionsOverride','workspacePostingPeriod','keepSignedIn'].forEach(k => localStorage.removeItem(k));
                         window.location.replace('login.html');
                     }
                 }
@@ -492,6 +492,8 @@
     <script src="assets/js/print-engine.js"></script>
     <script src="assets/js/list-viewer.js"></script>
     <script src="assets/js/app.js"></script>
+    <!-- Templated MailApp client (available to all modules via window.UnitaxMail) -->
+    <script src="email-templates/webapp-mail-client.js?v=20261126i"></script>
 
 <!-- Plan Expired Modal -->
 <div class="modal fade" id="planExpiredModal" tabindex="-1" aria-labelledby="planExpiredModalLabel" aria-hidden="true">
@@ -510,5 +512,9 @@
     </div>
   </div>
 </div>
+<script>
+    // Retry mail events that were queued while offline.
+    if (window.flushUnitaxMailOutbox) window.flushUnitaxMailOutbox().catch(function () {});
+</script>
 </body>
 </html>

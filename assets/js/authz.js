@@ -118,6 +118,10 @@ const UniTaxAuthZ = {
             hod: 'manager',
             operator: 'operator',
             user: 'operator',
+            standard_user: 'standard_user',
+            free_owner: 'standard_user',
+            trial_owner: 'standard_user',
+            guest: 'standard_user',
             plain_user: 'operator',
             staff: 'operator',
             accountant: 'operator',
@@ -132,8 +136,7 @@ const UniTaxAuthZ = {
             auditor: 'auditor',
             statutory_auditor: 'auditor',
             custom: 'custom',
-            custom_role: 'custom',
-            guest: 'guest'
+            custom_role: 'custom'
         };
         return aliases[role] || '';
     },

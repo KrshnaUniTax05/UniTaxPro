@@ -1,0 +1,2736 @@
+﻿templateId,category,sender,subject,htmlBody,textBody,requiredKeys,active,updatedAt,description
+"otp_login","transactional","transactional","{{appName}} login OTP: {{otp}}","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>{{appName}} login OTP: {{otp}}</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#1e3a5f"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#1e3a5f;"">One-time password</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">We received a request to sign in to your UniTax Pro account. Use the code below to complete verification.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #1e3a5f;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <p style=""margin:0 0 12px 0;"">Your one-time password is:</p>
+      <div style=""font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:32px;font-weight:700;letter-spacing:7px;color:#1f2937;background:#ffffff;border:1px dashed #b8c4d2;border-radius:6px;padding:18px;text-align:center;"">{{otp}}</div>
+      <p style=""margin:14px 0 0 0;font-size:13px;color:#6b7280;"">Valid for {{expiryMinutes}} minutes. Never share this code with anyone, including UniTax Pro staff.</p>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#1e3a5f"" style=""border-radius:5px;"">
+        <a href=""{{loginUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Open secure sign-in</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+We received a request to sign in to your UniTax Pro account. Use the code below to complete verification.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+Your one-time password is {{otp}}. Valid for {{expiryMinutes}} minutes. Never share this code with anyone.
+
+Open secure sign-in: {{loginUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,otp,expiryMinutes,userEmail,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Login OTP with location and IP badges."
+"otp_signup","transactional","transactional","Verify your new {{appName}} account","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>Verify your new {{appName}} account</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#1e3a5f"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#1e3a5f;"">Verify your account</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">Your workspace has been created. Confirm the request using the verification code below.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #1e3a5f;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <div style=""font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:32px;font-weight:700;letter-spacing:7px;color:#1f2937;background:#ffffff;border:1px dashed #b8c4d2;border-radius:6px;padding:18px;text-align:center;"">{{otp}}</div>
+      <p style=""margin:14px 0 0 0;font-size:13px;color:#6b7280;"">Workspace: {{workspaceName}} ({{workspaceId}}). Code expires in {{expiryMinutes}} minutes.</p>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#1e3a5f"" style=""border-radius:5px;"">
+        <a href=""{{loginUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Verify your account</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+Your workspace has been created. Confirm the request using the verification code below.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+Your signup verification code is {{otp}} for workspace {{workspaceName}} ({{workspaceId}}). Expires in {{expiryMinutes}} minutes.
+
+Verify your account: {{loginUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,otp,expiryMinutes,workspaceName,workspaceId,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Signup verification OTP with request context."
+"otp_resend","transactional","transactional","New {{appName}} OTP: {{otp}}","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>New {{appName}} OTP: {{otp}}</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#1e3a5f"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#1e3a5f;"">New verification code</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">You requested a fresh one-time password for your UniTax Pro account.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #1e3a5f;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <div style=""font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:32px;font-weight:700;letter-spacing:7px;color:#1f2937;background:#ffffff;border:1px dashed #b8c4d2;border-radius:6px;padding:18px;text-align:center;"">{{otp}}</div>
+      <p style=""margin:14px 0 0 0;font-size:13px;color:#6b7280;"">This code replaces any earlier code and is valid for {{expiryMinutes}} minutes.</p>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#1e3a5f"" style=""border-radius:5px;"">
+        <a href=""{{loginUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Verify now</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+You requested a fresh one-time password for your UniTax Pro account.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+Your new one-time password is {{otp}}. It replaces earlier codes and expires in {{expiryMinutes}} minutes.
+
+Verify now: {{loginUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,otp,expiryMinutes,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Resend OTP; older codes are invalidated."
+"otp_master_2fa","transactional","transactional","{{appName}} master console code: {{otp}}","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>{{appName}} master console code: {{otp}}</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#1e3a5f"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#1e3a5f;"">Master console verification</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">A second-factor code was requested for the UniTax Pro master console.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #1e3a5f;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <div style=""font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:32px;font-weight:700;letter-spacing:7px;color:#1f2937;background:#ffffff;border:1px dashed #b8c4d2;border-radius:6px;padding:18px;text-align:center;"">{{otp}}</div>
+      <p style=""margin:14px 0 0 0;font-size:13px;color:#6b7280;"">Valid for {{expiryMinutes}} minutes. If you did not request this, contact {{supportEmail}} immediately.</p>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#1e3a5f"" style=""border-radius:5px;"">
+        <a href=""{{adminUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Open master console</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+A second-factor code was requested for the UniTax Pro master console.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+Master console verification code: {{otp}}. Valid for {{expiryMinutes}} minutes.
+
+Open master console: {{adminUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,adminName,otp,expiryMinutes,adminUrl,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Master admin 2FA with request context."
+"account_created","transactional","transactional","Welcome to {{appName}}, {{userName}}","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>Welcome to {{appName}}, {{userName}}</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#2f6f4f"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#2f6f4f;"">Account created</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">Your UniTax Pro account has been provisioned successfully. Your workspace details are below.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #2f6f4f;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""font-size:14px;"">
+        <tr><td style=""padding:5px 0;color:#6b7280;width:150px;"">Email</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{userEmail}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Workspace</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{workspaceName}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Workspace ID</td><td style=""padding:5px 0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:600;color:#1e3a5f;"">{{workspaceId}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Role</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{roleName}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Created</td><td style=""padding:5px 0;color:#4b5563;"">{{createdAt}} by {{createdBy}}</td></tr>
+      </table>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#2f6f4f"" style=""border-radius:5px;"">
+        <a href=""{{loginUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Sign in to your workspace</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+Your UniTax Pro account has been provisioned successfully. Your workspace details are below.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+Your UniTax Pro account was created for {{userName}} ({{userEmail}}). Workspace: {{workspaceName}} / {{workspaceId}}. Role: {{roleName}}. Created {{createdAt}} by {{createdBy}}.
+
+Sign in to your workspace: {{loginUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,userEmail,workspaceName,workspaceId,roleName,createdAt,createdBy,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Sent after signup or master provisioning."
+"account_deleted","transactional","transactional","Account deleted: {{workspaceId}}","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>Account deleted: {{workspaceId}}</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#9b2c2c"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#9b2c2c;"">Account deleted</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">Your UniTax Pro account and workspace access have been permanently removed.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #9b2c2c;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""font-size:14px;"">
+        <tr><td style=""padding:5px 0;color:#6b7280;width:150px;"">Workspace</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{workspaceName}} ({{workspaceId}})</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Deleted</td><td style=""padding:5px 0;color:#4b5563;"">{{deletedAt}} by {{deletedBy}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Reason</td><td style=""padding:5px 0;color:#4b5563;"">{{reason}}</td></tr>
+      </table>
+      <p style=""margin:16px 0 0 0;font-size:13px;color:#6b7280;"">If you did not request this, contact {{supportEmail}} immediately.</p>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#9b2c2c"" style=""border-radius:5px;"">
+        <a href=""mailto:{{supportEmail}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Contact support</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+Your UniTax Pro account and workspace access have been permanently removed.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+Your UniTax Pro account {{workspaceId}} was deleted on {{deletedAt}} by {{deletedBy}}. Reason: {{reason}}.
+
+Contact support: mailto:{{supportEmail}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,workspaceName,workspaceId,deletedAt,deletedBy,reason,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Permanent deletion confirmation."
+"account_suspended","transactional","transactional","{{appName}} account suspended","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>{{appName}} account suspended</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#8a5a12"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8a5a12;"">Account suspended</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">Access to your UniTax Pro workspace has been temporarily suspended by an administrator.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #8a5a12;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""font-size:14px;"">
+        <tr><td style=""padding:5px 0;color:#6b7280;width:150px;"">Workspace</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{workspaceName}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Suspended</td><td style=""padding:5px 0;color:#4b5563;"">{{suspendedAt}} by {{suspendedBy}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Reason</td><td style=""padding:5px 0;color:#4b5563;"">{{reason}}</td></tr>
+      </table>
+      <p style=""margin:16px 0 0 0;font-size:13px;color:#6b7280;"">Your data is safe. You can sign in again once access is restored.</p>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#8a5a12"" style=""border-radius:5px;"">
+        <a href=""{{reactivationUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Check reactivation status</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+Access to your UniTax Pro workspace has been temporarily suspended by an administrator.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+Access to your UniTax Pro workspace was suspended on {{suspendedAt}} by {{suspendedBy}}. Reason: {{reason}}.
+
+Check reactivation status: {{reactivationUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,workspaceName,workspaceId,suspendedAt,suspendedBy,reason,reactivationUrl,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Suspension notice with request context."
+"account_reactivated","transactional","transactional","{{appName}} access restored","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>{{appName}} access restored</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#2f6f4f"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#2f6f4f;"">Access restored</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">Your UniTax Pro workspace access has been reactivated and is ready to use.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #2f6f4f;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <p style=""margin:0 0 12px 0;"">Workspace <strong style=""color:#1f2937;"">{{workspaceName}}</strong> ({{workspaceId}}) is active again as of {{reactivatedAt}}.</p>
+      <p style=""margin:0;font-size:13px;color:#6b7280;"">Reactivated by {{reactivatedBy}}. We recommend reviewing your recent account activity.</p>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#2f6f4f"" style=""border-radius:5px;"">
+        <a href=""{{loginUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Sign in securely</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+Your UniTax Pro workspace access has been reactivated and is ready to use.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+Your UniTax Pro workspace {{workspaceId}} was reactivated on {{reactivatedAt}} by {{reactivatedBy}}.
+
+Sign in securely: {{loginUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,workspaceName,workspaceId,reactivatedAt,reactivatedBy,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Reactivation confirmation."
+"forgot_password","transactional","transactional","Password reset OTP: {{otp}}","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>Password reset OTP: {{otp}}</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#1e3a5f"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#1e3a5f;"">Password reset</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">We received a request to reset the password for your UniTax Pro account.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #1e3a5f;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <div style=""font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:32px;font-weight:700;letter-spacing:7px;color:#1f2937;background:#ffffff;border:1px dashed #b8c4d2;border-radius:6px;padding:18px;text-align:center;"">{{otp}}</div>
+      <p style=""margin:14px 0 0 0;font-size:13px;color:#6b7280;"">Enter this code on the reset page. Valid for {{expiryMinutes}} minutes. If you did not request this, ignore this message.</p>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#1e3a5f"" style=""border-radius:5px;"">
+        <a href=""{{resetUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Set a new password</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+We received a request to reset the password for your UniTax Pro account.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+Your password reset code is {{otp}}. Valid for {{expiryMinutes}} minutes. Ignore this message if you did not request it.
+
+Set a new password: {{resetUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,userEmail,otp,expiryMinutes,resetUrl,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Forgot-password OTP with request context."
+"password_reset","transactional","transactional","Reset your {{appName}} password","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>Reset your {{appName}} password</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#1e3a5f"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#1e3a5f;"">Password reset</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">Use the verification code below to choose a new password for your UniTax Pro account.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #1e3a5f;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <div style=""font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:32px;font-weight:700;letter-spacing:7px;color:#1f2937;background:#ffffff;border:1px dashed #b8c4d2;border-radius:6px;padding:18px;text-align:center;"">{{otp}}</div>
+      <p style=""margin:14px 0 0 0;font-size:13px;color:#6b7280;"">Code expires in {{expiryMinutes}} minutes.</p>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#1e3a5f"" style=""border-radius:5px;"">
+        <a href=""{{resetUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Reset password</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+Use the verification code below to choose a new password for your UniTax Pro account.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+Your password reset code is {{otp}}. Expires in {{expiryMinutes}} minutes.
+
+Reset password: {{resetUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,otp,expiryMinutes,resetUrl,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Legacy alias for forgot_password."
+"password_changed","transactional","transactional","Your {{appName}} password was changed","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>Your {{appName}} password was changed</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#2f6f4f"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#2f6f4f;"">Security confirmation</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">The password for your UniTax Pro account was updated successfully.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #2f6f4f;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""font-size:14px;"">
+        <tr><td style=""padding:5px 0;color:#6b7280;width:150px;"">Changed</td><td style=""padding:5px 0;color:#4b5563;"">{{changedAt}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Device</td><td style=""padding:5px 0;color:#4b5563;"">{{device}} / {{browser}}</td></tr>
+      </table>
+      <p style=""margin:16px 0 0 0;font-size:13px;color:#6b7280;"">If this was not you, secure your account immediately.</p>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#2f6f4f"" style=""border-radius:5px;"">
+        <a href=""{{securityUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Review account security</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+The password for your UniTax Pro account was updated successfully.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+Your UniTax Pro password was changed on {{changedAt}} from {{device}}. Contact support if unexpected.
+
+Review account security: {{securityUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,changedAt,securityUrl,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Post-change confirmation."
+"security_update","transactional","transactional","Security update: {{updateTitle}}","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>Security update: {{updateTitle}}</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#9b2c2c"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#9b2c2c;"">Security update</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">We made a security change that affects your UniTax Pro account. Please review the details below.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #9b2c2c;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <p style=""margin:0 0 10px 0;font-weight:600;color:#1f2937;"">{{updateTitle}}</p>
+      <p style=""margin:0 0 12px 0;"">{{updateMessage}}</p>
+      <p style=""margin:0;font-size:13px;color:#6b7280;"">{{actionRequired}}</p>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#9b2c2c"" style=""border-radius:5px;"">
+        <a href=""{{securityUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Review security details</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+We made a security change that affects your UniTax Pro account. Please review the details below.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+Security update: {{updateTitle}}. {{updateMessage}} {{actionRequired}}
+
+Review security details: {{securityUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,updateTitle,updateMessage,actionRequired,securityUrl,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Security policy or change notification."
+"security_alert","transactional","transactional","Security alert: {{updateTitle}}","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>Security alert: {{updateTitle}}</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#9b2c2c"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#9b2c2c;"">Security alert</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">A security event was recorded for your UniTax Pro account. Please review it promptly.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #9b2c2c;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <p style=""margin:0 0 12px 0;"">{{updateMessage}}</p>
+      <p style=""margin:0;font-size:13px;color:#6b7280;"">{{actionRequired}}</p>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#9b2c2c"" style=""border-radius:5px;"">
+        <a href=""{{securityUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Secure my account</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+A security event was recorded for your UniTax Pro account. Please review it promptly.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+Security alert: {{updateMessage}} {{actionRequired}}
+
+Secure my account: {{securityUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,updateTitle,updateMessage,actionRequired,securityUrl,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Urgent security notice."
+"suspicious_login_attempt","transactional","transactional","Suspicious sign-in from {{approxLocation}}","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>Suspicious sign-in from {{approxLocation}}</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#9b2c2c"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#9b2c2c;"">Suspicious activity</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">Someone attempted to sign in to your UniTax Pro workspace. The attempt did not succeed.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #9b2c2c;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""font-size:14px;"">
+        <tr><td style=""padding:5px 0;color:#6b7280;width:150px;"">Workspace</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{workspaceName}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Attempted</td><td style=""padding:5px 0;color:#4b5563;"">{{attemptedAt}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Result</td><td style=""padding:5px 0;font-weight:600;color:#9b2c2c;"">{{blocked}}</td></tr>
+      </table>
+      <p style=""margin:16px 0 0 0;font-size:13px;color:#6b7280;"">If this was you, no action is needed. Otherwise, reset your password now.</p>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#9b2c2c"" style=""border-radius:5px;"">
+        <a href=""{{secureAccountUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Secure my account</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+Someone attempted to sign in to your UniTax Pro workspace. The attempt did not succeed.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+A sign-in attempt was blocked for your UniTax Pro workspace from {{ipAddress}} ({{approxLocation}}) at {{attemptedAt}}. Result: {{blocked}}.
+
+Secure my account: {{secureAccountUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,workspaceName,attemptedAt,blocked,secureAccountUrl,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Blocked login alert with location and IP badges."
+"account_security","transactional","transactional","Account security summary for {{workspaceName}}","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>Account security summary for {{workspaceName}}</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#2b6b63"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#2b6b63;"">Account security</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">Here is the latest security state for your UniTax Pro account.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #2b6b63;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <p style=""margin:0 0 12px 0;"">{{securitySummary}}</p>
+      <p style=""margin:0;font-size:13px;color:#6b7280;"">Last successful sign-in: {{lastLoginAt}}</p>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#2b6b63"" style=""border-radius:5px;"">
+        <a href=""{{securityUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Open security settings</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+Here is the latest security state for your UniTax Pro account.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+Security summary: {{securitySummary}} Last sign-in: {{lastLoginAt}}.
+
+Open security settings: {{securityUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,workspaceName,securitySummary,lastLoginAt,securityUrl,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Periodic or on-request security summary."
+"workspace_licensed","transactional","transactional","Multi-user license active: {{workspaceName}}","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>Multi-user license active: {{workspaceName}}</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#2f6f4f"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#2f6f4f;"">License activated</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">Your UniTax Pro workspace has been upgraded successfully. Team provisioning is now available.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #2f6f4f;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""font-size:14px;"">
+        <tr><td style=""padding:5px 0;color:#6b7280;width:150px;"">Plan</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{planName}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Member limit</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{memberLimit}} users</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Activated</td><td style=""padding:5px 0;color:#4b5563;"">{{licensedAt}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Period</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{periodLabel}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Expires</td><td style=""padding:5px 0;color:#4b5563;"">{{expiryDate}}</td></tr>
+      </table>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#2f6f4f"" style=""border-radius:5px;"">
+        <a href=""{{adminUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Open User Admin panel</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+Your UniTax Pro workspace has been upgraded successfully. Team provisioning is now available.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+Your workspace {{workspaceName}} was licensed on {{licensedAt}}. Plan: {{planName}}. Period: {{periodLabel}}. Expires: {{expiryDate}}. Member limit: {{memberLimit}}.
+
+Open User Admin panel: {{adminUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,workspaceName,workspaceId,planName,memberLimit,licensedAt,adminUrl,periodLabel,expiryDate,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Sent when a multi-user license is granted."
+"license_renewed","transactional","transactional","License renewed: {{workspaceName}}","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>License renewed: {{workspaceName}}</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#2f6f4f"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#2f6f4f;"">License renewed</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">Your UniTax Pro multi-user license has been renewed and remains active.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #2f6f4f;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""font-size:14px;"">
+        <tr><td style=""padding:5px 0;color:#6b7280;width:150px;"">Plan</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{planName}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Period</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{periodLabel}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Renewed</td><td style=""padding:5px 0;color:#4b5563;"">{{renewedAt}} by {{changedBy}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Previous expiry</td><td style=""padding:5px 0;color:#4b5563;"">{{previousExpiryDate}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">New expiry</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{expiryDate}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Validity</td><td style=""padding:5px 0;color:#4b5563;"">{{daysValid}} days</td></tr>
+      </table>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#2f6f4f"" style=""border-radius:5px;"">
+        <a href=""{{adminUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Open User Admin panel</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+Your UniTax Pro multi-user license has been renewed and remains active.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+Your workspace {{workspaceName}} license was renewed on {{renewedAt}} for {{periodLabel}} ({{daysValid}} days). New expiry: {{expiryDate}}. Previous expiry: {{previousExpiryDate}}.
+
+Open User Admin panel: {{adminUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,workspaceName,workspaceId,planName,periodLabel,renewedAt,changedBy,previousExpiryDate,expiryDate,daysValid,adminUrl,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Sent when an existing license is renewed or extended."
+"workspace_license_revoked","transactional","transactional","License revoked: {{workspaceName}}","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>License revoked: {{workspaceName}}</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#8a5a12"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8a5a12;"">License changed</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">The multi-user license for your UniTax Pro workspace was revoked.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #8a5a12;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""font-size:14px;"">
+        <tr><td style=""padding:5px 0;color:#6b7280;width:150px;"">Workspace</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{workspaceName}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Revoked</td><td style=""padding:5px 0;color:#4b5563;"">{{revokedAt}} by {{revokedBy}}</td></tr>
+      </table>
+      <p style=""margin:16px 0 0 0;font-size:13px;color:#6b7280;"">{{impactMessage}}</p>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#8a5a12"" style=""border-radius:5px;"">
+        <a href=""mailto:{{supportEmail}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Contact administrator</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+The multi-user license for your UniTax Pro workspace was revoked.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+The license for {{workspaceName}} was revoked on {{revokedAt}} by {{revokedBy}}. {{impactMessage}}
+
+Contact administrator: mailto:{{supportEmail}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,workspaceName,workspaceId,revokedAt,revokedBy,impactMessage,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Sent when a license is revoked."
+"promotion_release","promotional","marketing","{{appName}} {{version}}: {{headline}}","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>{{appName}} {{version}}: {{headline}}</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#1e3a5f"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">PRODUCT UPDATES</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#1e3a5f;"">What is new</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">We are pleased to share the latest updates to UniTax Pro.</p>
+            
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #1e3a5f;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <p style=""margin:0 0 10px 0;font-weight:600;color:#1f2937;"">Release {{version}}</p>
+      <div style=""font-size:14px;line-height:1.9;"">{{featureList}}</div>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#1e3a5f"" style=""border-radius:5px;"">
+        <a href=""{{releaseUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Read release notes</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro Notifications</div>
+          <div style=""margin-bottom:14px;"">You are receiving this because you subscribed to UniTax Pro Notifications.</div>
+       <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin:4px 0 14px;"">
+         <tr>
+           <td bgcolor=""#ffffff"" style=""border:1px solid #cbd5e0;border-radius:5px;"">
+             <a href=""{{unsubscribeUrl}}"" style=""display:inline-block;padding:9px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;font-weight:600;color:#4b5563;text-decoration:none;"">Unsubscribe</a>
+           </td>
+         </tr>
+       </table>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+We are pleased to share the latest updates to UniTax Pro.
+
+Release {{version}}: {{headline}}. {{featureList}}
+
+Read release notes: {{releaseUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro Notifications
+Unsubscribe: {{unsubscribeUrl}}","appName,supportEmail,year,loginUrl,userName,version,headline,featureList,releaseUrl,unsubscribeUrl","TRUE","2026-11-26","Release announcement with unsubscribe button."
+"system_maintenance","promotional","marketing","Maintenance: {{appName}} on {{maintenanceDate}}","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>Maintenance: {{appName}} on {{maintenanceDate}}</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#1e3a5f"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">PRODUCT UPDATES</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#1e3a5f;"">System notice</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">UniTax Pro will be briefly unavailable for scheduled maintenance.</p>
+            
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #1e3a5f;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""font-size:14px;"">
+        <tr><td style=""padding:5px 0;color:#6b7280;width:150px;"">Date</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{maintenanceDate}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Window</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{startTime}} to {{endTime}}</td></tr>
+      </table>
+      <p style=""margin:16px 0 0 0;font-size:13px;color:#6b7280;"">{{impactMessage}}</p>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#1e3a5f"" style=""border-radius:5px;"">
+        <a href=""{{statusUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Check service status</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro Notifications</div>
+          <div style=""margin-bottom:14px;"">You are receiving this because you subscribed to UniTax Pro Notifications.</div>
+       <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin:4px 0 14px;"">
+         <tr>
+           <td bgcolor=""#ffffff"" style=""border:1px solid #cbd5e0;border-radius:5px;"">
+             <a href=""{{unsubscribeUrl}}"" style=""display:inline-block;padding:9px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;font-weight:600;color:#4b5563;text-decoration:none;"">Unsubscribe</a>
+           </td>
+         </tr>
+       </table>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+UniTax Pro will be briefly unavailable for scheduled maintenance.
+
+Scheduled maintenance on {{maintenanceDate}}, {{startTime}} to {{endTime}}. {{impactMessage}}
+
+Check service status: {{statusUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro Notifications
+Unsubscribe: {{unsubscribeUrl}}","appName,supportEmail,year,loginUrl,userName,maintenanceDate,startTime,endTime,impactMessage,statusUrl,unsubscribeUrl","TRUE","2026-11-26","Planned downtime notice with unsubscribe button."
+"broadcast_announcement","promotional","marketing","{{announcementTitle}}","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>{{announcementTitle}}</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#1e3a5f"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">PRODUCT UPDATES</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#1e3a5f;"">Announcement</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">A new announcement is available from the UniTax Pro team.</p>
+            
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #1e3a5f;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <div style=""font-size:14px;line-height:1.9;"">{{announcementMessage}}</div>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#1e3a5f"" style=""border-radius:5px;"">
+        <a href=""{{readUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Read announcement</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro Notifications</div>
+          <div style=""margin-bottom:14px;"">You are receiving this because you subscribed to UniTax Pro Notifications.</div>
+       <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin:4px 0 14px;"">
+         <tr>
+           <td bgcolor=""#ffffff"" style=""border:1px solid #cbd5e0;border-radius:5px;"">
+             <a href=""{{unsubscribeUrl}}"" style=""display:inline-block;padding:9px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;font-weight:600;color:#4b5563;text-decoration:none;"">Unsubscribe</a>
+           </td>
+         </tr>
+       </table>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+A new announcement is available from the UniTax Pro team.
+
+{{announcementTitle}} - {{announcementMessage}}
+
+Read announcement: {{readUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro Notifications
+Unsubscribe: {{unsubscribeUrl}}","appName,supportEmail,year,loginUrl,userName,announcementTitle,announcementMessage,readUrl,unsubscribeUrl","TRUE","2026-11-26","Master-admin broadcast with unsubscribe button."
+"license_expiring","transactional","transactional","Action needed: {{appName}} license expires in {{daysRemaining}} days","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>Action needed: {{appName}} license expires in {{daysRemaining}} days</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#8a5a12"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8a5a12;"">License renewal</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">Your UniTax Pro multi-user license is approaching its renewal date. Please review it to avoid interruption.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #8a5a12;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""font-size:14px;"">
+        <tr><td style=""padding:5px 0;color:#6b7280;width:150px;"">Workspace</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{workspaceName}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Plan</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{planName}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Expires</td><td style=""padding:5px 0;color:#4b5563;"">{{expiryDate}} ({{daysRemaining}} days left)</td></tr>
+      </table>
+      <p style=""margin:16px 0 0 0;font-size:13px;color:#6b7280;"">Renew early so your team keeps full access without interruption.</p>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#8a5a12"" style=""border-radius:5px;"">
+        <a href=""{{renewalUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Renew license</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+Your UniTax Pro multi-user license is approaching its renewal date. Please review it to avoid interruption.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+Your UniTax Pro license for {{workspaceName}} expires on {{expiryDate}} ({{daysRemaining}} days left). Renew at {{renewalUrl}}.
+
+Renew license: {{renewalUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,workspaceName,workspaceId,planName,expiryDate,daysRemaining,renewalUrl,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Pre-expiry renewal reminder for licensed workspaces (7/3/1 day schedule)."
+"license_expiring_7day","transactional","transactional","7 days left: renew your {{appName}} license","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>7 days left: renew your {{appName}} license</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#8a5a12"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8a5a12;"">License renewal - 7 days</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">Your UniTax Pro multi-user license will expire in 7 days. Renew now to avoid any interruption for your team.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #8a5a12;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""font-size:14px;"">
+        <tr><td style=""padding:5px 0;color:#6b7280;width:150px;"">Workspace</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{workspaceName}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Plan</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{planName}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Expires</td><td style=""padding:5px 0;color:#4b5563;"">{{expiryDate}}</td></tr>
+      </table>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#8a5a12"" style=""border-radius:5px;"">
+        <a href=""{{renewalUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Renew license now</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+Your UniTax Pro multi-user license will expire in 7 days. Renew now to avoid any interruption for your team.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+Your UniTax Pro license for {{workspaceName}} expires in 7 days on {{expiryDate}}. Renew at {{renewalUrl}}.
+
+Renew license now: {{renewalUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,workspaceName,workspaceId,planName,expiryDate,renewalUrl,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Automatic first reminder: exactly 7 days before expiry."
+"license_expiring_3day","transactional","transactional","3 days left: renew your {{appName}} license","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>3 days left: renew your {{appName}} license</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#8a5a12"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8a5a12;"">License renewal - 3 days</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">This is a second reminder that your UniTax Pro multi-user license expires in 3 days.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #8a5a12;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""font-size:14px;"">
+        <tr><td style=""padding:5px 0;color:#6b7280;width:150px;"">Workspace</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{workspaceName}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Plan</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{planName}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Expires</td><td style=""padding:5px 0;color:#4b5563;"">{{expiryDate}}</td></tr>
+      </table>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#8a5a12"" style=""border-radius:5px;"">
+        <a href=""{{renewalUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Renew license now</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+This is a second reminder that your UniTax Pro multi-user license expires in 3 days.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+Your UniTax Pro license for {{workspaceName}} expires in 3 days on {{expiryDate}}. Renew at {{renewalUrl}}.
+
+Renew license now: {{renewalUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,workspaceName,workspaceId,planName,expiryDate,renewalUrl,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Automatic second reminder: exactly 3 days before expiry."
+"license_expiring_today","transactional","transactional","Final notice: {{appName}} license expires today","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>Final notice: {{appName}} license expires today</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#a13b12"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#a13b12;"">License renewal - today</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">Your UniTax Pro multi-user license expires today. Renew today to keep your team active without interruption.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #a13b12;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""font-size:14px;"">
+        <tr><td style=""padding:5px 0;color:#6b7280;width:150px;"">Workspace</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{workspaceName}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Plan</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{planName}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Expires</td><td style=""padding:5px 0;color:#4b5563;"">{{expiryDate}}</td></tr>
+      </table>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#a13b12"" style=""border-radius:5px;"">
+        <a href=""{{renewalUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Renew license today</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+Your UniTax Pro multi-user license expires today. Renew today to keep your team active without interruption.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+Your UniTax Pro license for {{workspaceName}} expires today ({{expiryDate}}). Renew at {{renewalUrl}}.
+
+Renew license today: {{renewalUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,workspaceName,workspaceId,planName,expiryDate,renewalUrl,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Automatic final reminder: on the expiry date."
+"license_expired","transactional","transactional","License expired: {{workspaceName}}","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>License expired: {{workspaceName}}</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#9b2c2c"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#9b2c2c;"">License expired</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">The multi-user license for your UniTax Pro workspace has expired and the workspace is now on the free plan.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #9b2c2c;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""font-size:14px;"">
+        <tr><td style=""padding:5px 0;color:#6b7280;width:150px;"">Workspace</td><td style=""padding:5px 0;font-weight:600;color:#1f2937;"">{{workspaceName}}</td></tr>
+        <tr><td style=""padding:5px 0;color:#6b7280;"">Expired</td><td style=""padding:5px 0;color:#4b5563;"">{{expiredAt}}</td></tr>
+      </table>
+      <p style=""margin:16px 0 0 0;font-size:13px;color:#6b7280;"">{{impactMessage}}</p>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#9b2c2c"" style=""border-radius:5px;"">
+        <a href=""{{renewalUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Restore your license</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+The multi-user license for your UniTax Pro workspace has expired and the workspace is now on the free plan.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+The UniTax Pro license for {{workspaceName}} expired on {{expiredAt}}. {{impactMessage}}
+
+Restore your license: {{renewalUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,workspaceName,workspaceId,expiredAt,impactMessage,renewalUrl,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Sent when a license reaches its expiry date."
+"system_alert","transactional","transactional","{{appName}} alert: {{alertTitle}}","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>{{appName}} alert: {{alertTitle}}</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#1e3a5f"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">SECURE NOTIFICATION</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#1e3a5f;"">System alert</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">This is an important system notification about your UniTax Pro account.</p>
+            
+  <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin:26px 0 6px;"">
+    <tr>
+      <td style=""padding:13px 15px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;"">
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">Location: <strong style=""color:#1f2937;"">{{approxLocation}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">IP: <strong style=""color:#1f2937;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;"">{{ipAddress}}</strong></span>
+        <span style=""display:inline-block;padding:4px 10px;margin:0 6px 6px 0;background:#ffffff;border:1px solid #dbe3ec;border-radius:4px;"">{{device}} / {{browser}}</span>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #1e3a5f;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <p style=""margin:0 0 12px 0;"">{{alertMessage}}</p>
+      <p style=""margin:0;font-size:13px;color:#6b7280;"">{{actionRequired}}</p>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#1e3a5f"" style=""border-radius:5px;"">
+        <a href=""{{detailsUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">View details</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is an automated account or security notification from UniTax Pro. Please do not reply.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+This is an important system notification about your UniTax Pro account.
+
+Request context:
+Location: {{approxLocation}}
+IP: {{ipAddress}}
+Device: {{device}} / {{browser}}
+
+{{alertTitle}}: {{alertMessage}} {{actionRequired}}
+
+View details: {{detailsUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,alertTitle,alertMessage,actionRequired,detailsUrl,ipAddress,approxLocation,device,browser","TRUE","2026-11-26","Generic system / platform alert sent by master administrators."
+"custom_message","custom","transactional","{{messageTitle}}","<!doctype html>
+<html lang=""en"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+  <title>{{messageTitle}}</title>
+</head>
+<body style=""margin:0;padding:0;background:#f4f6f9;"">
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background:#f4f6f9;padding:34px 12px;"">
+  <tr>
+    <td align=""center"">
+      <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width:640px;background:#ffffff;border:1px solid #e2e8f0;border-radius:9px;"">
+        <tr>
+          <td height=""4"" bgcolor=""#1e3a5f"" style=""font-size:0;line-height:0;"">&nbsp;</td>
+        </tr>
+        <tr>
+          <td style=""padding:26px 44px 20px 44px;border-bottom:1px solid #e2e8f0;"">
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"">
+              <tr>
+                <td style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:19px;font-weight:700;color:#1e3a5f;letter-spacing:-.01em;"">UniTax Pro</td>
+                <td align=""right"" style=""font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;color:#6b7280;text-transform:uppercase;"">PERSONAL MESSAGE</td>
+              </tr>
+            </table>
+            <div style=""margin-top:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#1e3a5f;"">Personal message</div>
+          </td>
+        </tr>
+        <tr>
+          <td style=""padding:32px 44px 36px 44px;"">
+            <p style=""margin:0 0 22px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.8;color:#4b5563;"">Dear {{userName}},</p>
+            <p style=""margin:0 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.85;color:#4b5563;"">The UniTax Pro team has sent you a personal message.</p>
+            
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:10px;"">
+              <tr>
+                <td style=""padding:20px 22px;background:#f8fafc;border:1px solid #e2e8f0;border-left:3px solid #1e3a5f;border-radius:5px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.85;color:#4b5563;"">
+                  <p style=""margin:0 0 12px 0;"">{{messageBody}}</p>
+      <p style=""margin:0;font-size:13px;color:#6b7280;"">{{actionRequired}}</p>
+                </td>
+              </tr>
+            </table>
+            
+  <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:28px;"">
+    <tr>
+      <td bgcolor=""#1e3a5f"" style=""border-radius:5px;"">
+        <a href=""{{detailsUrl}}"" style=""display:inline-block;padding:13px 26px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:600;letter-spacing:.01em;color:#ffffff;text-decoration:none;"">Read more</a>
+      </td>
+    </tr>
+  </table>
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:34px;"">
+              <tr><td width=""34"" height=""1"" bgcolor=""#e2e8f0"" style=""font-size:0;line-height:0;"">&nbsp;</td><td>&nbsp;</td></tr>
+            </table>
+            <p style=""margin:14px 0 4px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#4b5563;"">Sincerely,</p>
+            <p style=""margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#1f2937;"">The UniTax Pro Team</p>
+          </td>
+        </tr>
+        <tr>
+
+        <td style=""border-top:1px solid #e2e8f0;padding:24px 44px 28px 44px;background:#fbfcfe;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:1.9;color:#6b7280;"">
+          <div style=""font-weight:700;color:#4b5563;letter-spacing:.02em;"">UniTax Pro</div>
+          <div style=""margin-bottom:10px;"">This is a personal message sent to you by the UniTax Pro team. You may reply to this email.</div>
+          <div style=""margin-top:10px;"">{{appName}} | <a href=""mailto:{{supportEmail}}"" style=""color:#6b7280;text-decoration:underline;"">{{supportEmail}}</a></div>
+          <div>Copyright {{year}} UniTax Pro. All rights reserved.</div>
+        </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>","Dear {{userName}},
+
+The UniTax Pro team has sent you a personal message.
+
+{{messageTitle}} {{messageBody}} {{actionRequired}}
+
+Read more: {{detailsUrl}}
+
+Sincerely,
+The UniTax Pro Team
+---
+{{appName}} | {{supportEmail}}
+Copyright {{year}} UniTax Pro. All rights reserved.
+UniTax Pro
+This is an automated notification. Please do not reply.","appName,supportEmail,year,loginUrl,userName,messageTitle,messageBody,actionRequired,detailsUrl","TRUE","2026-11-26","Admin-composed personal message to connect with a user or audience."

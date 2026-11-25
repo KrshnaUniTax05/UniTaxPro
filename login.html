@@ -208,7 +208,11 @@
                 <!-- OTP Critical View (shared for login + signup + forgot) -->
                 <div id="otp-section" class="d-none">
                     <h3 class="fw-bold text-dark mb-1">Verify OTP</h3>
-                    <p class="text-muted small mb-4">Enter the 6-digit code sent to <span id="otpEmailHint" class="fw-semibold text-dark"></span>.</p>
+                    <p class="text-muted small mb-3">Enter the 6-digit code sent to <span id="otpEmailHint" class="fw-semibold text-dark"></span>.</p>
+                    <div id="otpSecurityContext" class="alert alert-light border small py-2 px-3 mb-3 d-none">
+                        <i class="bi bi-shield-lock me-1"></i>
+                        <span id="otpSecurityContextText"></span>
+                    </div>
 
                     <form onsubmit="verifyOtp(event)">
                         <div class="mb-3">
@@ -284,7 +288,10 @@
                             <i class="bi bi-key-fill fs-3"></i>
                         </div>
                         <h6 class="fw-bold text-dark mb-1" id="master2faAdminName">Master Administrator</h6>
-                        <p class="text-muted small mb-0 font-mono" id="master2faAdminEmail">admin@unitax.pro</p>
+                        <p class="text-muted small mb-2 font-mono" id="master2faAdminEmail">admin@unitax.pro</p>
+                        <div id="master2faSecurityContext" class="small text-muted mb-0 d-none">
+                            <i class="bi bi-globe2 me-1"></i><span id="master2faSecurityContextText"></span>
+                        </div>
                     </div>
 
                     <form id="master2faForm" onsubmit="verifyMaster2fa(event)">
@@ -316,6 +323,8 @@
     <script src="assets/js/paths.js"></script>
     <script src="assets/js/schema.js"></script>
     <script src="assets/js/secure-session.js"></script>
+    <!-- Templated MailApp client (queues account/security emails) -->
+    <script src="email-templates/webapp-mail-client.js?v=20261126i"></script>
 
 <script>
     // =====================================================================
@@ -334,12 +343,23 @@
     // 2. Static master admin (Tier-0 backdoor — always available, OTP enforced)
     // =====================================================================
     const ROOT_MASTER_EMAIL = 'universaltechz786@gmail.com';
-    const ROOT_MASTER_PASSWORD = 'UniTax@Master2026';
+    const ROOT_MASTER_PASSWORD = 'Admin@2026';
 
     // =====================================================================
-    // 3. OTP endpoint (Google Apps Script — must be deployed)
+    // 3. OTP delivery
     // =====================================================================
-    const OTP_ENDPOINT = 'https://script.google.com/macros/s/AKfycbw9AxLoo-l07exf-7dD8ZDB8Zfp_Lwy1_7aC4UU0CejUGsTmzfTnrn0d8-H53zB2j83/exec';
+    // OTP is generated and verified server-side by the canonical Apps Script
+    // gateway (window.UnitaxMail.otp). The old standalone OTP endpoint is gone.
+    let otpPurpose = 'login';
+
+    // Public-IP geolocation (no browser geolocation permission / click needed).
+    // ipwho.is is CORS-enabled and returns city / region / country from the
+    // public IP address that the browser uses for the request.
+    // Primary provider. ipwho.is is tried first; ipapi.co and ipify are free
+    // fallbacks used when the primary returns 429 (Too Many Requests).
+    const IP_GEO_ENDPOINT = 'https://ipwho.is/';
+    const IP_GEO_CACHE_KEY = 'unitax_ip_context_v1';
+    let otpContextCache = null;
 
     // =====================================================================
     // 4. Helpers
@@ -392,21 +412,143 @@
     // =====================================================================
     // 5. OTP — send & verify (server-side truth, never client-side trust)
     // =====================================================================
+    // Fetch approximate network context from the public IP. This does NOT use
+    // navigator.geolocation, so the user is never prompted for a browser click.
+    async function fetchGeoJson(url, timeoutMs) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs || 2500);
+        try {
+            const response = await fetch(url, { signal: controller.signal, cache: 'no-store' });
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return await response.json();
+        } finally {
+            clearTimeout(timer);
+        }
+    }
+
+    function readCachedIpContext() {
+        try {
+            const raw = sessionStorage.getItem(IP_GEO_CACHE_KEY);
+            if (!raw) return null;
+            const cached = JSON.parse(raw);
+            const maxAge = 6 * 60 * 60 * 1000;
+            if (cached && cached.ip && cached.cachedAt && Date.now() - cached.cachedAt < maxAge) {
+                return cached;
+            }
+        } catch (e) { /* storage may be disabled */ }
+        return null;
+    }
+
+    function saveIpContext(ctx) {
+        try {
+            sessionStorage.setItem(IP_GEO_CACHE_KEY, JSON.stringify(Object.assign({ cachedAt: Date.now() }, ctx)));
+        } catch (e) { /* storage may be disabled */ }
+    }
+
+    function normaliseGeo(geo, source) {
+        if (!geo) return null;
+        const ip = geo.ip || geo.ipAddress || '';
+        if (!ip) return null;
+        const city = geo.city || geo.cityName || '';
+        const region = geo.region || geo.state || geo.regionName || '';
+        const country = geo.country || geo.country_name || geo.countryName || '';
+        const lat = geo.latitude != null ? String(geo.latitude) : (geo.lat != null ? String(geo.lat) : '');
+        const lon = geo.longitude != null ? String(geo.longitude) : (geo.lon != null ? String(geo.lon) : '');
+        const place = [city, region, country].filter(Boolean).join(', ');
+        return {
+            ip: String(ip),
+            location: place || (lat && lon ? `${lat}, ${lon}` : 'Approximate location unavailable'),
+            city, region, country, lat, lon, source: source || 'geo'
+        };
+    }
+
+    async function lookupIpWho() {
+        const g = await fetchGeoJson(IP_GEO_ENDPOINT, 2500);
+        if (g.success === false || !g.ip) throw new Error(g.message || 'ipwho.is lookup failed');
+        return normaliseGeo(g, 'ipwho.is');
+    }
+
+    async function lookupIpApi() {
+        const g = await fetchGeoJson('https://ipapi.co/json/', 2500);
+        if (g.error || !g.ip) throw new Error(g.reason || 'ipapi.co lookup failed');
+        return normaliseGeo(g, 'ipapi.co');
+    }
+
+    async function lookupFreeIpApi() {
+        const g = await fetchGeoJson('https://freeipapi.com/api/json', 2500);
+        if (!g.ipAddress) throw new Error('freeipapi lookup failed');
+        return normaliseGeo(g, 'freeipapi.com');
+    }
+
+    async function lookupIpify() {
+        const g = await fetchGeoJson('https://api.ipify.org?format=json', 2500);
+        if (!g.ip) throw new Error('ipify lookup failed');
+        return normaliseGeo(g, 'ipify');
+    }
+
+    async function getOtpContext() {
+        if (otpContextCache) return otpContextCache;
+        const cached = readCachedIpContext();
+        if (cached) {
+            otpContextCache = cached;
+            return cached;
+        }
+
+        const empty = { ip: '', location: '', city: '', region: '', country: '', lat: '', lon: '', source: 'unavailable' };
+        const providers = [lookupIpWho, lookupIpApi, lookupFreeIpApi, lookupIpify];
+        for (const provider of providers) {
+            try {
+                const found = await provider();
+                if (found && found.ip) {
+                    otpContextCache = found;
+                    saveIpContext(found);
+                    return found;
+                }
+            } catch (e) {
+                // A 429 or timeout on one provider must never block OTP.
+                console.warn('IP context provider skipped:', e.message);
+            }
+        }
+
+        otpContextCache = empty;
+        return empty;
+    }
+
+    // Context is still collected for the email badges, but it is intentionally
+    // hidden on the sign-in screen; users do not need to see IP/location text.
+    function renderOtpContext() {
+        ['otpSecurityContext', 'master2faSecurityContext'].forEach(id => {
+            const box = document.getElementById(id);
+            const label = document.getElementById(id + 'Text');
+            if (!box || !label) return;
+            label.innerText = '';
+            box.classList.add('d-none');
+        });
+    }
+
     async function sendOtp(email, purpose) {
-        const url = `${OTP_ENDPOINT}?mode=send&email=${encodeURIComponent(email)}&purpose=${encodeURIComponent(purpose || 'login')}`;
-        const r = await fetch(url);
-        if (!r.ok) throw new Error('OTP gateway returned HTTP ' + r.status);
-        const data = await r.json();
-        if (data.status === 'error') throw new Error(data.message || 'Unable to send OTP.');
+        if (!window.UnitaxMail || !window.UnitaxMail.otp) {
+            throw new Error('Mail gateway is not loaded. Please refresh the page.');
+        }
+        const requested = purpose || 'login';
+        const isResend = requested === 'resend';
+        // A resend keeps the original verification purpose so the code can be
+        // verified against the same server-side record.
+        if (!isResend) otpPurpose = requested;
+        const ctx = await getOtpContext();
+        renderOtpContext(ctx);
+        await window.UnitaxMail.otp.send(normalizeEmail(email), isResend ? otpPurpose : requested, {
+            userName: (document.getElementById('regName')?.value) || 'User',
+            templateId: isResend ? 'otp_resend' : undefined
+        });
         return true;
     }
 
-    async function verifyOtpCode(email, otp) {
-        const url = `${OTP_ENDPOINT}?mode=verify&email=${encodeURIComponent(email)}&otp=${encodeURIComponent(otp)}`;
-        const r = await fetch(url);
-        if (!r.ok) throw new Error('OTP gateway returned HTTP ' + r.status);
-        const data = await r.json();
-        if (data.status !== 'success') throw new Error(data.message || 'OTP verification failed.');
+    async function verifyOtpCode(email, otp, purpose) {
+        if (!window.UnitaxMail || !window.UnitaxMail.otp) {
+            throw new Error('Mail gateway is not loaded. Please refresh the page.');
+        }
+        await window.UnitaxMail.otp.verify(normalizeEmail(email), otp, purpose || otpPurpose);
         return true;
     }
 
@@ -484,10 +626,14 @@
                     name,
                     email: normalizeEmail(email),
                     passwordHash: passHash,
-                    role: 'user',
+                    // Standard freemium/guest owner: never an administrator / super-administrator.
+                    // User Admin control is unlocked only when the workspace is licensed.
+                    role: 'standard_user',
                     designation: 'owner',
                     status: 'active',
                     masterControl: 'operations',
+                    multiUserLicensed: false,
+                    workspacePlan: 'single_user',
                     workspaceId: newUserId,
                     workspaceOwnerId: newUserId,
                     canPostDirect: true,
@@ -505,6 +651,18 @@
                 await db.ref('Users/' + newUserId).set(payload);
                 await db.ref('Utilities/Users/' + newUserId).set(payload);
                 await db.ref(`Users/${newUserId}/workspace/WorkspaceSettings`).set({ workspaceName: `${name}'s Workspace`, workspaceStatus: 'active', created_at: Date.now() });
+                // Queue the templated "account created" email (MailApp gateway).
+                // Never let a mail failure block account creation / sign-in.
+                try {
+                    if (window.UnitaxMail && typeof UnitaxMail.accountCreated === 'function') {
+                        await UnitaxMail.accountCreated({
+                            name, email: normalizeEmail(email),
+                            workspaceName: `${name}'s Workspace`, workspaceId: newUserId,
+                            roleName: 'Standard User', createdBy: 'system',
+                            createdAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
+                        });
+                    }
+                } catch (mailErr) { console.warn('Account-created email queue skipped:', mailErr); }
                 // Show the result, then sign in directly — no manual re-login
                 showInfo(`Welcome, ${name}! Your account is ready (ID ${newUserId}). Signing you in…`);
                 const doneBtn = document.getElementById('otpBtn');
@@ -544,9 +702,12 @@
             workspaceUserId: ownerId,
             workspaceOwnerName: userData.workspaceOwnerName || 'Workspace Owner',
             workspaceRole: userData.workspaceRole || userData.role || 'user',
-            role: userData.role || 'user',
+            role: userData.role || 'standard_user',
             userType: userData.userType || 'standalone',
-            masterControl: userData.masterControl || ((userData.role === 'administrator' || userData.role === 'super_administrator' || userData.role === 'co_useradmin' || userData.role === 'co_admin') ? 'administration' : 'operations')
+            // A standard_user can never inherit admin control from a stale flag.
+            masterControl: userData.role === 'standard_user'
+                ? 'operations'
+                : (userData.masterControl || ((userData.role === 'administrator' || userData.role === 'super_administrator' || userData.role === 'co_useradmin' || userData.role === 'co_admin') ? 'administration' : 'operations'))
         };
     }
 
@@ -577,12 +738,19 @@
         if (userData.permissions) localStorage.setItem('userPermissionsOverride', JSON.stringify(userData.permissions));
         else localStorage.removeItem('userPermissionsOverride');
 
-        // Posting period cache
+        // Posting period + license cache. The license flag drives User Admin
+        // panel visibility; a free owner stays in operations mode.
+        let wsData = {};
         try {
             const wsSnap = await db.ref(`Users/${effectiveWsOwnerId}/workspace/WorkspaceSettings`).once('value');
-            const wsData = wsSnap.val() || {};
+            wsData = wsSnap.val() || {};
             if (wsData.postingPeriod) localStorage.setItem('workspacePostingPeriod', JSON.stringify(wsData.postingPeriod));
         } catch (e) {}
+        const licensePlan = wsData.workspacePlan || userData.workspacePlan || '';
+        const isLicensed = wsData.multiUserLicensed === true || userData.multiUserLicensed === true ||
+            ['multi_user', 'enterprise'].includes(licensePlan);
+        localStorage.setItem('multiUserLicensed', String(isLicensed));
+        localStorage.setItem('workspacePlan', licensePlan || (isLicensed ? 'multi_user' : 'single_user'));
 
         if (window.SecureSession) {
             try {
@@ -596,6 +764,8 @@
                     workspaceUserId: effectiveWsOwnerId,
                     workspaceOwnerName: userData.workspaceOwnerName || 'Workspace Owner',
                     masterControl: ws.masterControl,
+                    multiUserLicensed: isLicensed,
+                    workspacePlan: licensePlan || (isLicensed ? 'multi_user' : 'single_user'),
                     userType: ws.userType,
                     userSource: source || 'users',
                     postingLimit: userData.postingLimit || 0,
@@ -779,6 +949,16 @@
             const found = await findUserByEmail(email);
             const targetRef = (found.source === 'users') ? ('Users/' + found.userId) : (`Users/${found.workspaceId}/workspace/Members/${found.userId}`);
             await db.ref(targetRef).update({ passwordHash: hash, updated_at: Date.now() });
+            // Security confirmation email (queued; never blocks the reset).
+            try {
+                if (window.UnitaxMail && typeof UnitaxMail.passwordChanged === 'function') {
+                    await UnitaxMail.passwordChanged({
+                        email,
+                        name: found.user?.name || 'User',
+                        workspaceName: found.user?.workspaceName || ''
+                    });
+                }
+            } catch (mailErr) { console.warn('Password-change email queue skipped:', mailErr); }
             showInfo('Password updated. Sign in to continue.');
             switchView('login');
         } catch (e) { setBtnBusy(btn, false); showError(e.message); }
@@ -802,6 +982,17 @@
             alertBox.innerText = err.message || 'Invalid 2FA code.';
             alertBox.classList.remove('d-none');
             setBtnBusy(btn, false);
+            // Failed master 2FA is a security event worth notifying.
+            try {
+                if (window.UnitaxMail && typeof UnitaxMail.suspiciousLogin === 'function' && pendingMasterSession?.email) {
+                    await UnitaxMail.suspiciousLogin({
+                        email: pendingMasterSession.email,
+                        name: pendingMasterSession.name || 'Master Administrator',
+                        workspaceName: 'Master Console',
+                        blocked: 'Blocked - invalid second factor'
+                    });
+                }
+            } catch (mailErr) { console.warn('Security alert queue skipped:', mailErr); }
         }
     }
     window.verifyMaster2fa = verifyMaster2fa;
@@ -826,6 +1017,7 @@
             showError(params.get('reason') ? decodeURIComponent(params.get('reason')) : 'Session timed out due to inactivity.');
         }
         hideAlerts();
+        if (window.flushUnitaxMailOutbox) window.flushUnitaxMailOutbox().catch(() => {});
     })();
 </script>
 </body>
